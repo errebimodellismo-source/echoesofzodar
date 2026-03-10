@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "./supabase";
 
 /* ══════════════════════════════════════════════
@@ -176,6 +176,37 @@ async function dbGetPartyState(partyCode) {
     completed: data.quest_completed || [],
     combat: data.combat || null,
   };
+}
+
+// Items / Shop
+async function dbGetItems() {
+  const { data } = await supabase.from("items").select("*").order("name", { ascending: true });
+  return data || [];
+}
+
+async function dbSaveItem(item) {
+  await supabase.from("items").upsert({
+    id: item.id,
+    name: item.name,
+    emoji: item.emoji,
+    type: item.type,
+    description: item.description,
+    bonus_atk: item.bonus_atk || 0,
+    bonus_def: item.bonus_def || 0,
+    bonus_mag: item.bonus_mag || 0,
+    bonus_hp: item.bonus_hp || 0,
+    price: item.price || 0,
+    available: item.available !== false,
+    updated_at: new Date().toISOString(),
+  });
+}
+
+async function dbDeleteItem(itemId) {
+  await supabase.from("items").delete().eq("id", itemId);
+}
+
+async function dbAddPlayerItem(playerId, itemId) {
+  await supabase.from("player_items").insert({ player_id: playerId, item_id: itemId });
 }
 
 async function dbDeleteMessages(partyCode) {
@@ -527,7 +558,7 @@ function MasterPanel({ setScreen }) {
   }
   function saveEditM() { setMonsters(prev=>prev.map(x=>x.id===editM.id?editM:x)); setEditM(null); }
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"users",l:"👤 Iscritti"}];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"market",l:"🏪 Market"},{k:"users",l:"👤 Iscritti"}];
   const EMOJIS=["👺","💀","🐉","🧛","👿","🦇","🕷️","🐺","🧟","🔥","🌊","⚡","☠️","🦁","🐍","🦂","👁️","🗿","🧌","😈"];
 
   return (
@@ -766,6 +797,7 @@ function MasterPanel({ setScreen }) {
 
       {tab==="players" && <PlayersView />}
       {tab==="party" && <PartiesView />}
+      {tab==="market" && <MarketView />}
       {tab==="users" && <UsersView />}
     </div>
   );
@@ -949,6 +981,166 @@ function UsersView() {
   );
 }
 
+function MarketView() {
+  const [items, setItems] = useState([]);
+  const [editItem, setEditItem] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saved, setSaved] = useState(false);
+
+  useEffect(()=>{
+    const load = async () => { setLoading(true); setItems(await dbGetItems()); setLoading(false); };
+    load();
+  },[]);
+
+  const save = async (item) => {
+    await dbSaveItem(item);
+    setSaved(true);
+    setTimeout(()=>setSaved(false),2200);
+    setEditItem(null);
+    setItems(await dbGetItems());
+  };
+
+  const remove = async (itemId) => {
+    if(!window.confirm("Eliminare questo oggetto dal catalogo?")) return;
+    await dbDeleteItem(itemId);
+    setItems(prev=>prev.filter(i=>i.id!==itemId));
+  };
+
+  return (
+    <div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
+        <div>
+          <div style={{ fontFamily:"'Cinzel',serif", fontWeight:700, color:"#e2d9c5" }}>🏪 Market</div>
+          <div style={{ fontSize:"0.85rem", color:"#6b7280" }}>{items.length} oggetti</div>
+        </div>
+        <BigBtn onClick={()=>setEditItem({id:`i_${Date.now()}`,name:"",emoji:"",type:"weapon",description:"",bonus_atk:0,bonus_def:0,bonus_mag:0,bonus_hp:0,price:100,available:true})} gold icon="✨">+ Nuovo</BigBtn>
+      </div>
+
+      {loading && <div style={{ color:"#6b7280" }}>Caricamento...</div>}
+
+      {editItem && (
+        <Card title={editItem.id?"Modifica Oggetto":"Nuovo Oggetto"}>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+            <div><label style={labelStyle}>Nome</label><input style={inputStyle} value={editItem.name} onChange={e=>setEditItem(i=>({...i,name:e.target.value}))} /></div>
+            <div><label style={labelStyle}>Emoji</label><input style={inputStyle} value={editItem.emoji} onChange={e=>setEditItem(i=>({...i,emoji:e.target.value}))} /></div>
+            <div>
+              <label style={labelStyle}>Tipo</label>
+              <select style={{...inputStyle,cursor:"pointer"}} value={editItem.type} onChange={e=>setEditItem(i=>({...i,type:e.target.value}))}>
+                <option value="weapon">Arma</option>
+                <option value="armor">Armatura</option>
+                <option value="accessory">Accessorio</option>
+              </select>
+            </div>
+            <div><label style={labelStyle}>Prezzo</label><input style={inputStyle} type="number" value={editItem.price} onChange={e=>setEditItem(i=>({...i,price:+e.target.value}))} /></div>
+          </div>
+          <label style={{...labelStyle,marginTop:10}}>Descrizione</label>
+          <textarea style={{...inputStyle,height:70,resize:"vertical"}} value={editItem.description} onChange={e=>setEditItem(i=>({...i,description:e.target.value}))} />
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginTop:10 }}>
+            <div><label style={labelStyle}>Bonus ATK</label><input style={inputStyle} type="number" value={editItem.bonus_atk} onChange={e=>setEditItem(i=>({...i,bonus_atk:+e.target.value}))} /></div>
+            <div><label style={labelStyle}>Bonus DEF</label><input style={inputStyle} type="number" value={editItem.bonus_def} onChange={e=>setEditItem(i=>({...i,bonus_def:+e.target.value}))} /></div>
+            <div><label style={labelStyle}>Bonus MAG</label><input style={inputStyle} type="number" value={editItem.bonus_mag} onChange={e=>setEditItem(i=>({...i,bonus_mag:+e.target.value}))} /></div>
+            <div><label style={labelStyle}>Bonus HP</label><input style={inputStyle} type="number" value={editItem.bonus_hp} onChange={e=>setEditItem(i=>({...i,bonus_hp:+e.target.value}))} /></div>
+          </div>
+          <div style={{ display:"flex", gap:10, marginTop:12 }}>
+            <BigBtn onClick={()=>save(editItem)} gold icon="💾">Salva</BigBtn>
+            <SmallBtn onClick={()=>setEditItem(null)}>Annulla</SmallBtn>
+          </div>
+        </Card>
+      )}
+
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:10 }}>
+        {items.map(it=>(
+          <div key={it.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
+            <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
+              <span style={{ fontSize:"1.5rem" }}>{it.emoji||"🧩"}</span>
+              <div style={{ flex:1 }}>
+                <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{it.name}</div>
+                <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{it.type}</div>
+              </div>
+              <SmallBtn onClick={()=>setEditItem(it)}>✏️</SmallBtn>
+              <SmallBtn red onClick={()=>remove(it.id)}>🗑️</SmallBtn>
+            </div>
+            <div style={{ fontSize:"0.75rem", color:"#4b5563", marginBottom:6 }}>{it.description}</div>
+            <div style={{ display:"flex", gap:8, fontSize:"0.72rem", color:"#6b7280" }}>
+              <span>⚔️+{it.bonus_atk||0}</span><span>🛡️+{it.bonus_def||0}</span><span>🔮+{it.bonus_mag||0}</span><span>❤️+{it.bonus_hp||0}</span>
+            </div>
+            <div style={{ marginTop:8, fontSize:"0.75rem", color:"#c4b5fd" }}>💰 {it.price} oro</div>
+          </div>
+        ))}
+      </div>
+      {saved && <div style={{ position:"fixed", bottom:16, right:16, padding:"0.8rem 1rem", background:"rgba(52,211,153,0.15)", border:"1px solid #065f46", borderRadius:6, color:"#065f46" }}>Salvataggio completato!</div>}
+    </div>
+  );
+}
+
+function ShopView({ me, setMeRaw, addMsg }) {
+  const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(()=>{
+    const load = async () => {
+      setLoading(true);
+      try {
+        const all = await dbGetItems();
+        setItems(all.filter(i=>i.available));
+      } catch(e) {
+        setError(e.message||"Errore durante il caricamento del negozio");
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  },[]);
+
+  const buyItem = async (item) => {
+    if(!me) return;
+    if(me.gold < (item.price||0)) { window.alert("Non hai abbastanza oro."); return; }
+    if(!window.confirm(`Acquistare ${item.name} per ${item.price} oro?`)) return;
+    const updated = {
+      ...me,
+      gold: me.gold - (item.price||0),
+      atk: me.atk + (item.bonus_atk||0),
+      def: me.def + (item.bonus_def||0),
+      mag: me.mag + (item.bonus_mag||0),
+      maxHp: me.maxHp + (item.bonus_hp||0),
+      hp: me.hp + (item.bonus_hp||0),
+    };
+    await dbSavePlayer(updated);
+    await dbAddPlayerItem(me.id, item.id);
+    setMeRaw(updated);
+    await addMsg(`🛒 **${me.name}** ha comprato **${item.name}** per ${item.price} oro!`, "info", "Sistema");
+  };
+
+  return (
+    <div>
+      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🛒 Negozio</h3>
+      {loading && <div style={{ color:"#6b7280" }}>Caricamento...</div>}
+      {error && <div style={{ color:"#fca5a5" }}>{error}</div>}
+      {!loading && !items.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun oggetto disponibile.</div>}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
+        {items.map(it=>(
+          <div key={it.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
+            <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
+              <span style={{ fontSize:"1.5rem" }}>{it.emoji||"🧩"}</span>
+              <div style={{ flex:1 }}>
+                <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{it.name}</div>
+                <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{it.type}</div>
+              </div>
+              <span style={{ fontSize:"0.85rem", color:"#c4b5fd" }}>💰 {it.price}</span>
+            </div>
+            <div style={{ fontSize:"0.75rem", color:"#4b5563", marginBottom:6 }}>{it.description}</div>
+            <div style={{ display:"flex", gap:8, fontSize:"0.72rem", color:"#6b7280" }}>
+              <span>⚔️+{it.bonus_atk||0}</span><span>🛡️+{it.bonus_def||0}</span><span>🔮+{it.bonus_mag||0}</span><span>❤️+{it.bonus_hp||0}</span>
+            </div>
+            <BigBtn onClick={()=>buyItem(it)} gold icon="🛒">Compra</BigBtn>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 /* ══════════════════════════════════════════════
    GAME SCREEN
 ══════════════════════════════════════════════ */
@@ -971,7 +1163,7 @@ function GameScreen({ myId, setScreen }) {
 
   const code = me?.partyCode;
 
-  async function refreshAll(partyCode) {
+  const refreshAll = useCallback(async (partyCode) => {
     if(!partyCode) return;
     const [msgs, players, state] = await Promise.all([
       dbGetMessages(partyCode),
@@ -983,7 +1175,7 @@ function GameScreen({ myId, setScreen }) {
     setQs(state);
     const freshMe = players.find(p=>p.id===myId);
     if(freshMe) setMeRaw(freshMe);
-  }
+  }, [myId]);
 
   useEffect(()=>{
     async function init() {
@@ -1004,7 +1196,7 @@ function GameScreen({ myId, setScreen }) {
     }
     init();
     return ()=>{ if(subRef.current) supabase.removeChannel(subRef.current); };
-  },[myId]);
+  },[myId, refreshAll]);
 
   useEffect(()=>{ msgEnd.current?.scrollIntoView({behavior:"smooth"}); },[messages]);
 
@@ -1332,7 +1524,7 @@ function GameScreen({ myId, setScreen }) {
       {/* MAIN */}
       <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
         <div style={{ display:"flex", gap:0, borderBottom:"1px solid #0f172a", background:"rgba(4,4,12,0.98)", flexShrink:0 }}>
-          {[["chat","💬 Chat"],["quest","📜 Missioni"],["combat","⚔️ Battaglia"]].map(([k,l])=>(
+          {[["chat","💬 Chat"],["quest","📜 Missioni"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>(
             <button key={k} onClick={()=>setTab(k)} style={{ padding:"0.6rem 1.2rem", background:tab===k?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k?"2px solid #7c3aed":"2px solid transparent", color:tab===k?"#c4b5fd":"#4b5563", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", letterSpacing:"0.05em" }}>
               {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}
             </button>
@@ -1358,6 +1550,7 @@ function GameScreen({ myId, setScreen }) {
             <button onClick={handleInput} style={{ padding:"0.65rem 1.2rem", background:"#3b0764", border:"none", borderRadius:4, color:"#a78bfa", cursor:"pointer", fontSize:"1rem" }}>⏎</button>
           </div>
         </>}
+        {tab==="shop" && <ShopView me={me} setMeRaw={setMeRaw} addMsg={addMsg} />} 
 
         {tab==="quest" && (
           <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
