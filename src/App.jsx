@@ -170,11 +170,29 @@ async function dbGetPartyState(partyCode) {
 }
 
 /* ══════════════════════════════════════════════
+   MASTER PASSWORD
+══════════════════════════════════════════════ */
+const MASTER_PASSWORD = "ByBy101112!";
+
+/* ══════════════════════════════════════════════
    ROOT
 ══════════════════════════════════════════════ */
 export default function App() {
   const [screen, setScreen] = useState("landing");
   const [myId, setMyId] = useState(() => localStorage.getItem("eoz_myId") || null);
+  const [authUser, setAuthUser] = useState(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(()=>{
+    supabase.auth.getSession().then(({data:{session}})=>{
+      setAuthUser(session?.user || null);
+      setAuthLoading(false);
+    });
+    const {data:{subscription}} = supabase.auth.onAuthStateChange((_,session)=>{
+      setAuthUser(session?.user || null);
+    });
+    return ()=>subscription.unsubscribe();
+  },[]);
 
   function goGame(id) {
     setMyId(id);
@@ -182,13 +200,110 @@ export default function App() {
     setScreen("game");
   }
 
+  if(authLoading) return <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:"#06060e", color:"#4b5563", fontFamily:"'Cinzel',serif" }}>⏳ Caricamento...</div>;
+
   return (
     <div style={{ minHeight:"100vh", background:"#06060e", fontFamily:"'Crimson Pro',Georgia,serif", color:"#e2d9c5", position:"relative" }}>
       <div style={{ position:"fixed", inset:0, background:"radial-gradient(ellipse at 15% 50%,rgba(109,40,217,.1) 0%,transparent 55%),radial-gradient(ellipse at 85% 10%,rgba(180,83,9,.08) 0%,transparent 50%)", pointerEvents:"none", zIndex:0 }} />
-      {screen==="landing" && <Landing setScreen={setScreen} goGame={goGame} myId={myId} />}
-      {screen==="create"  && <CreateChar setScreen={setScreen} goGame={goGame} />}
-      {screen==="master"  && <MasterPanel setScreen={setScreen} />}
-      {screen==="game"    && <GameScreen myId={myId} setScreen={setScreen} />}
+      {screen==="master" && <MasterPanelAuth setScreen={setScreen} />}
+      {screen!=="master" && !authUser && <AuthScreen setAuthUser={setAuthUser} setScreen={setScreen} setMyId={setMyId} goGame={goGame} />}
+      {screen!=="master" && authUser && screen==="landing" && <Landing setScreen={setScreen} goGame={goGame} myId={myId} authUser={authUser} setAuthUser={setAuthUser} />}
+      {screen!=="master" && authUser && screen==="create"  && <CreateChar setScreen={setScreen} goGame={goGame} authUser={authUser} />}
+      {screen!=="master" && authUser && screen==="game"    && <GameScreen myId={myId} setScreen={setScreen} />}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   AUTH SCREEN
+══════════════════════════════════════════════ */
+function AuthScreen({ setAuthUser, setScreen, setMyId, goGame }) {
+  const [mode, setMode] = useState("login");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState("");
+  const meta = getMeta();
+
+  async function handleAuth() {
+    if(!email.trim()||!password.trim()) return;
+    setLoading(true); setError(""); setSuccess("");
+    if(mode==="login") {
+      const {data,error:e} = await supabase.auth.signInWithPassword({email,password});
+      if(e) { setError("Email o password errati."); setLoading(false); return; }
+      setAuthUser(data.user);
+      const {data:players} = await supabase.from("players").select("id").eq("id", data.user.id);
+      if(players&&players.length>0) { setMyId(data.user.id); localStorage.setItem("eoz_myId",data.user.id); setScreen("game"); }
+      else setScreen("landing");
+    } else {
+      const {error:e} = await supabase.auth.signUp({email,password});
+      if(e) { setError(e.message); setLoading(false); return; }
+      setSuccess("✅ Registrazione completata! Ora puoi accedere.");
+      setMode("login");
+    }
+    setLoading(false);
+  }
+
+  return (
+    <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100vh", padding:"2rem 1rem" }}>
+      <p style={{ fontFamily:"'Cinzel',serif", color:"#4c1d95", fontSize:"1rem", letterSpacing:"0.6em", margin:"0 0 0.5rem" }}>᛭ ZODAR ᛭</p>
+      <h1 style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(2rem,7vw,4rem)", margin:"0.2rem 0 2rem", background:"linear-gradient(135deg,#fbbf24,#f59e0b,#b45309)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", letterSpacing:"0.12em" }}>
+        {meta.worldName}
+      </h1>
+      <div style={{ width:"100%", maxWidth:400, background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:8, padding:"2rem" }}>
+        <div style={{ display:"flex", gap:0, marginBottom:"1.5rem", border:"1px solid #1f2937", borderRadius:6, overflow:"hidden" }}>
+          {[["login","🔑 Accedi"],["register","⚔️ Registrati"]].map(([k,l])=>(
+            <button key={k} onClick={()=>{ setMode(k); setError(""); setSuccess(""); }}
+              style={{ flex:1, padding:"0.6rem", background:mode===k?"rgba(109,40,217,0.3)":"transparent", border:"none", color:mode===k?"#c4b5fd":"#6b7280", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.8rem", letterSpacing:"0.05em" }}>
+              {l}
+            </button>
+          ))}
+        </div>
+        <label style={labelStyle}>Email</label>
+        <input style={{...inputStyle,marginBottom:12}} type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="la-tua@email.com" autoComplete="email" />
+        <label style={labelStyle}>Password</label>
+        <input style={{...inputStyle,marginBottom:16}} type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="••••••••" onKeyDown={e=>e.key==="Enter"&&handleAuth()} />
+        {error && <div style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:12, padding:"0.5rem 0.7rem", background:"rgba(239,68,68,0.1)", border:"1px solid #7f1d1d", borderRadius:4 }}>{error}</div>}
+        {success && <div style={{ color:"#6ee7b7", fontSize:"0.82rem", marginBottom:12, padding:"0.5rem 0.7rem", background:"rgba(52,211,153,0.1)", border:"1px solid #065f46", borderRadius:4 }}>{success}</div>}
+        <BigBtn onClick={handleAuth} gold disabled={loading} icon={mode==="login"?"🔑":"⚔️"}>
+          {loading?"Attendere..." : mode==="login"?"Entra nel Mondo":"Crea Account"}
+        </BigBtn>
+        <div style={{ marginTop:"1.5rem", textAlign:"center" }}>
+          <button onClick={()=>setScreen("master")} style={{ background:"none", border:"none", color:"#1f2937", cursor:"pointer", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em" }}>🎲 Accesso Master</button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   MASTER PANEL AUTH WRAPPER
+══════════════════════════════════════════════ */
+function MasterPanelAuth({ setScreen }) {
+  const [pwd, setPwd] = useState("");
+  const [ok, setOk] = useState(false);
+  const [err, setErr] = useState(false);
+
+  if(ok) return <MasterPanel setScreen={setScreen} />;
+
+  return (
+    <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100vh", padding:"2rem", background:"#06060e" }}>
+      <div style={{ width:"100%", maxWidth:360, background:"rgba(255,255,255,0.02)", border:"1px solid #374151", borderRadius:8, padding:"2rem", textAlign:"center" }}>
+        <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>🎲</div>
+        <h2 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.2rem", marginBottom:"0.5rem" }}>Pannello Master</h2>
+        <p style={{ color:"#4b5563", fontSize:"0.78rem", marginBottom:"1.5rem" }}>Accesso riservato al Master</p>
+        <label style={labelStyle}>Password</label>
+        <input style={{...inputStyle,marginBottom:12,textAlign:"center",letterSpacing:"0.2em"}} type="password" value={pwd}
+          onChange={e=>{ setPwd(e.target.value); setErr(false); }}
+          placeholder="••••••••"
+          onKeyDown={e=>e.key==="Enter"&&(pwd===MASTER_PASSWORD?setOk(true):setErr(true))} />
+        {err && <div style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:12 }}>❌ Password errata!</div>}
+        <div style={{ display:"flex", gap:8, justifyContent:"center" }}>
+          <BigBtn onClick={()=>pwd===MASTER_PASSWORD?setOk(true):setErr(true)} gold icon="🔓">Entra</BigBtn>
+          <SmallBtn onClick={()=>setScreen("landing")}>← Indietro</SmallBtn>
+        </div>
+      </div>
     </div>
   );
 }
@@ -196,8 +311,13 @@ export default function App() {
 /* ══════════════════════════════════════════════
    LANDING
 ══════════════════════════════════════════════ */
-function Landing({ setScreen, goGame, myId }) {
+function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   const meta = getMeta();
+  async function logout() {
+    await supabase.auth.signOut();
+    setAuthUser(null);
+    localStorage.removeItem("eoz_myId");
+  }
   return (
     <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100vh", padding:"2rem 1rem", textAlign:"center" }}>
       {meta.logo
@@ -211,9 +331,10 @@ function Landing({ setScreen, goGame, myId }) {
       <div style={{ display:"flex", flexDirection:"column", gap:12, width:"100%", maxWidth:320 }}>
         <BigBtn onClick={()=>setScreen("create")} gold icon="⚔️">Crea il tuo Eroe</BigBtn>
         {myId && <BigBtn onClick={()=>goGame(myId)} icon="🗺️">Torna all'Avventura</BigBtn>}
-        <BigBtn onClick={()=>setScreen("master")} dark icon="🎲">Pannello Master</BigBtn>
+        <BigBtn onClick={logout} dark icon="🚪">Esci</BigBtn>
       </div>
-      <p style={{ marginTop:"2.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE · FANTASY · MULTIPLAYER ONLINE</p>
+      {authUser && <p style={{ marginTop:"1rem", color:"#374151", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
+      <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE · FANTASY · MULTIPLAYER ONLINE</p>
     </div>
   );
 }
@@ -221,7 +342,7 @@ function Landing({ setScreen, goGame, myId }) {
 /* ══════════════════════════════════════════════
    CREATE CHARACTER
 ══════════════════════════════════════════════ */
-function CreateChar({ setScreen, goGame }) {
+function CreateChar({ setScreen, goGame, authUser }) {
   const [name, setName] = useState("");
   const [cls,  setCls]  = useState("warrior");
   const [race, setRace] = useState("human");
@@ -234,7 +355,7 @@ function CreateChar({ setScreen, goGame }) {
   async function create() {
     if(!name.trim() || loading) return;
     setLoading(true);
-    const id = "p_"+Math.random().toString(36).slice(2,9);
+    const id = authUser ? authUser.id : "p_"+Math.random().toString(36).slice(2,9);
     const partyCode = code.trim().toUpperCase() || Math.random().toString(36).slice(2,6).toUpperCase();
     const maxHp = c.hp + r.hpB;
     const player = {
