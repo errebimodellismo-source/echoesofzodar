@@ -89,7 +89,14 @@ function DEFAULT_QUESTS() {
     difficulty:"Facile", xpReward:150, goldReward:60,
     steps:[
       "Il party parte all'alba verso la miniera abbandonata a nord della città. L'aria odora di zolfo.",
-      "All'ingresso trovate ossa frantumate e artigli sul legno marcio. Qualcosa di grosso vive qui dentro.",
+      {
+        text: "All'ingresso trovate ossa frantumate e artigli sul legno marcio. Qualcosa di grosso vive qui dentro.",
+        choices: {
+          good: { text: "Accendete torce e procedete furtivi.", xp: 15, gold: 8 },
+          neutral: { text: "Avanzate con cautela, senza fretta.", xp: 10, gold: 5 },
+          bad: { text: "Urlate per intimidire (e attirare attenzioni)...", xp: 5, gold: 2 },
+        }
+      },
       "Nelle gallerie buie — i **Goblin delle Rocce** attaccano! Digita **combatti** per iniziare la battaglia.",
       "Una voce profonda echeggia nelle profondità: *«Chi osa disturbare il mio sonno eterno...»*",
       "Al terzo livello: il **Troll delle Caverne** vi sbarra la strada. Boss battle!",
@@ -508,7 +515,11 @@ function MasterPanel({ setScreen }) {
     setQuests(prev=>[...prev,q]); setEditQ({...q});
   }
   function saveEditQ() { setQuests(prev=>prev.map(x=>x.id===editQ.id?editQ:x)); setEditQ(null); }
-  function addStepToQ() { if(!newStep.trim()) return; setEditQ(q=>({...q,steps:[...q.steps,newStep.trim()]})); setNewStep(""); }
+  function addStepToQ() {
+    if(!newStep.trim()) return;
+    setEditQ(q=>({...q,steps:[...q.steps,{ text:newStep.trim(), choices:{ good:{}, neutral:{}, bad:{} } }]}));
+    setNewStep("");
+  }
   function addEnemyToQ(monster) { setEditQ(q=>({...q,enemies:[...q.enemies,{...monster,maxHp:monster.hp,id:"e_"+Date.now()}]})); }
   function addMonster() {
     const m={id:"m_"+Date.now(),name:"Nuova Creatura",emoji:"👾",hp:30,atk:8,def:3,xp:20,desc:"",isBoss:false};
@@ -620,18 +631,50 @@ function MasterPanel({ setScreen }) {
           </Card>
           <Card title="📍 Scene della Missione">
             <p style={{ color:"#4b5563", fontSize:"0.75rem", marginBottom:10 }}>Ogni scena viene narrata quando i giocatori digitano <strong style={{color:"#a78bfa"}}>avanza</strong>. Puoi usare **grassetto** e *corsivo*.</p>
-            {editQ.steps.map((s,i)=>(
-              <div key={i} style={{ display:"flex", gap:6, marginBottom:6, alignItems:"flex-start" }}>
-                <span style={{ color:"#4b5563", fontSize:"0.8rem", minWidth:22, paddingTop:10 }}>{i+1}.</span>
-                <textarea style={{...inputStyle,flex:1,height:60,resize:"vertical",fontSize:"0.85rem"}} value={s}
-                  onChange={e=>{ const st=[...editQ.steps]; st[i]=e.target.value; setEditQ(q=>({...q,steps:st})); }} />
-                <div style={{ display:"flex", flexDirection:"column", gap:3, paddingTop:2 }}>
-                  <button onClick={()=>{ const st=[...editQ.steps]; if(i>0){[st[i],st[i-1]]=[st[i-1],st[i]]; setEditQ(q=>({...q,steps:st}));} }} style={iconBtnStyle}>↑</button>
-                  <button onClick={()=>{ const st=[...editQ.steps]; if(i<st.length-1){[st[i],st[i+1]]=[st[i+1],st[i]]; setEditQ(q=>({...q,steps:st}));} }} style={iconBtnStyle}>↓</button>
-                  <button onClick={()=>setEditQ(q=>({...q,steps:q.steps.filter((_,j)=>j!==i)}))} style={{...iconBtnStyle,color:"#f87171"}}>✕</button>
+            {editQ.steps.map((s,i)=>{
+              const step = typeof s === "string" ? { text: s } : (s || { text: "" });
+              const choices = step.choices || {};
+              const setStepAt = (newStep) => { const st=[...editQ.steps]; st[i]=newStep; setEditQ(q=>({...q,steps:st})); };
+              const updateStep = (updates) => setStepAt({ ...step, ...updates });
+              const updateChoice = (key, field, value) => {
+                const existing = choices[key] || {};
+                setStepAt({ ...step, choices: { ...choices, [key]: { ...existing, [field]: value } } });
+              };
+              return (
+                <div key={i} style={{ border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:8, marginBottom:8 }}>
+                  <div style={{ display:"flex", gap:6, marginBottom:6, alignItems:"flex-start" }}>
+                    <span style={{ color:"#4b5563", fontSize:"0.8rem", minWidth:22, paddingTop:10 }}>{i+1}.</span>
+                    <textarea style={{...inputStyle,flex:1,height:60,resize:"vertical",fontSize:"0.85rem"}} value={step.text}
+                      onChange={e=>updateStep({ text: e.target.value })} />
+                    <div style={{ display:"flex", flexDirection:"column", gap:3, paddingTop:2 }}>
+                      <button onClick={()=>{ const st=[...editQ.steps]; if(i>0){[st[i],st[i-1]]=[st[i-1],st[i]]; setEditQ(q=>({...q,steps:st}));} }} style={iconBtnStyle}>↑</button>
+                      <button onClick={()=>{ const st=[...editQ.steps]; if(i<st.length-1){[st[i],st[i+1]]=[st[i+1],st[i]]; setEditQ(q=>({...q,steps:st}));} }} style={iconBtnStyle}>↓</button>
+                      <button onClick={()=>setEditQ(q=>({...q,steps:q.steps.filter((_,j)=>j!==i)}))} style={{...iconBtnStyle,color:"#f87171"}}>✕</button>
+                    </div>
+                  </div>
+                  <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginTop:6 }}>
+                    {[
+                      ["good","✅ Buona"],
+                      ["neutral","➖ Media"],
+                      ["bad","❌ Sbagliata"],
+                    ].map(([key,label])=>{
+                      const choice = choices[key] || {};
+                      return (
+                        <div key={key} style={{ background:"rgba(255,255,255,0.04)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:8 }}>
+                          <div style={{ fontSize:"0.72rem", fontWeight:700, marginBottom:4 }}>{label}</div>
+                          <input style={{...inputStyle,marginBottom:6}} value={choice.text||""} placeholder="Testo scelta" onChange={e=>updateChoice(key,"text",e.target.value)} />
+                          <div style={{ display:"flex", gap:6 }}>
+                            <input style={{...inputStyle,flex:1}} type="number" value={choice.xp||0} placeholder="XP" onChange={e=>updateChoice(key,"xp",e.target.value)} />
+                            <input style={{...inputStyle,flex:1}} type="number" value={choice.gold||0} placeholder="Oro" onChange={e=>updateChoice(key,"gold",e.target.value)} />
+                          </div>
+                          <input style={{...inputStyle,marginTop:6}} type="number" value={choice.nextStep||""} placeholder="Prossima scena (#)" onChange={e=>updateChoice(key,"nextStep",e.target.value)} />
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
             <div style={{ display:"flex", gap:8, marginTop:8 }}>
               <textarea style={{...inputStyle,flex:1,height:55,resize:"vertical",fontSize:"0.85rem"}} value={newStep} onChange={e=>setNewStep(e.target.value)} placeholder="Scrivi la prossima scena..." />
               <BigBtn onClick={addStepToQ} gold>+ Aggiungi</BigBtn>
@@ -1069,27 +1112,92 @@ function GameScreen({ myId, setScreen }) {
     await addMsg(`⚔️ **MISSIONE: ${q.title}**\n\n${q.desc}\n\n*${q.flavor}*\n\n🎯 Ricompensa: **${q.xpReward} XP** · **${q.goldReward} oro**\n\nDigita **avanza** per iniziare!`, "quest","Master");
   }
 
+  function isChoiceStep(step) {
+    return step && typeof step === "object" && step.choices && typeof step.choices === "object";
+  }
+
+  function stepText(step) {
+    if(!step) return "";
+    return typeof step === "string" ? step : step.text || "";
+  }
+
+  function getStepChoices(step) {
+    if(!isChoiceStep(step)) return null;
+    return step.choices;
+  }
+
+  async function postQuestStepMessage(q, stepIndex) {
+    const step = q.steps[stepIndex];
+    await addMsg(`📍 **${q.title} — Scena ${stepIndex+1}/${q.steps.length}**\n\n${stepText(step)}`, "quest","Master");
+  }
+
+  async function completeQuest(q) {
+    const xpE = Math.floor(q.xpReward/Math.max(partyPlayers.length,1));
+    const goldE = Math.floor(q.goldReward/Math.max(partyPlayers.length,1));
+    for(const p of partyPlayers) {
+      let up={...p,xp:p.xp+xpE,gold:p.gold+goldE};
+      while(up.xp>=xpForLevel(up.level)){up.xp-=xpForLevel(up.level);up.level++;up.maxHp+=10;up.hp=up.maxHp;up.atk+=2;up.def+=1;up.mag+=1;}
+      await dbSavePlayer(up);
+      if(up.id===myId) setMeRaw(up);
+    }
+    const newQs={...qs,active:false,step:0,currentId:null,completed:[...(qs.completed||[]),q.id]};
+    await saveQState(newQs);
+    await addMsg(`🎉 **MISSIONE COMPLETATA: ${q.title}!**\n\n✨ +${xpE} XP a testa · 💰 +${goldE} oro a testa`, "victory","Master");
+  }
+
   async function advanceQuest() {
     const quests = getQuests();
     const q = quests.find(x=>x.id===qs?.currentId);
     if(!q||!qs?.active){ await addMsg("📋 Nessuna missione attiva.","system","Sistema"); return; }
     const step = qs.step;
-    await addMsg(`📍 **${q.title} — Scena ${step+1}/${q.steps.length}**\n\n${q.steps[step]||""}`, "quest","Master");
+    await postQuestStepMessage(q, step);
+
+    const stepData = q.steps[step];
+    if(isChoiceStep(stepData)) {
+      await addMsg("Scegli un'opzione per proseguire.", "system", "Sistema");
+      return;
+    }
+
     if(step+1>=q.steps.length) {
-      const xpE=Math.floor(q.xpReward/Math.max(partyPlayers.length,1));
-      const goldE=Math.floor(q.goldReward/Math.max(partyPlayers.length,1));
+      await completeQuest(q);
+    } else {
+      const newQs={...qs,step:step+1};
+      await saveQState(newQs);
+    }
+  }
+
+  async function chooseQuestOption(choiceKey) {
+    const quests = getQuests();
+    const q = quests.find(x=>x.id===qs?.currentId);
+    if(!q||!qs?.active) return;
+    const step = qs.step;
+    const stepData = q.steps[step];
+    const choices = getStepChoices(stepData);
+    if(!choices) return;
+    const choice = choices[choiceKey];
+    if(!choice) return;
+
+    await addMsg(`🧭 **Scelta:** ${choice.text || choiceKey}`, "quest", "Master");
+
+    const xpE = Math.max(0, Number(choice.xp)||0);
+    const goldE = Math.max(0, Number(choice.gold)||0);
+    if(xpE||goldE) {
       for(const p of partyPlayers) {
         let up={...p,xp:p.xp+xpE,gold:p.gold+goldE};
         while(up.xp>=xpForLevel(up.level)){up.xp-=xpForLevel(up.level);up.level++;up.maxHp+=10;up.hp=up.maxHp;up.atk+=2;up.def+=1;up.mag+=1;}
         await dbSavePlayer(up);
         if(up.id===myId) setMeRaw(up);
       }
-      const newQs={...qs,active:false,step:0,currentId:null,completed:[...(qs.completed||[]),q.id]};
-      await saveQState(newQs);
-      await addMsg(`🎉 **MISSIONE COMPLETATA: ${q.title}!**\n\n✨ +${xpE} XP a testa · 💰 +${goldE} oro a testa`, "victory","Master");
+      await addMsg(`✨ +${xpE} XP a testa · 💰 +${goldE} oro a testa`, "victory", "Master");
+    }
+
+    const nextStep = choice.nextStep != null ? Number(choice.nextStep) : step+1;
+    if(nextStep >= (q.steps?.length||0)) {
+      await completeQuest(q);
     } else {
-      const newQs={...qs,step:step+1};
+      const newQs={...qs,step:nextStep};
       await saveQState(newQs);
+      await postQuestStepMessage(q, nextStep);
     }
   }
 
@@ -1262,10 +1370,27 @@ function GameScreen({ myId, setScreen }) {
                 </div>
                 <p style={{ color:"#fde68a", fontSize:"0.85rem", marginBottom:10 }}>Scena {qs.step} di {currentQ.steps.length}</p>
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
-                  <BigBtn onClick={advanceQuest} gold icon="⏭️">Avanza</BigBtn>
-                  {currentQ.enemies?.length>0&&!combat?.active&&(
-                    <BigBtn onClick={()=>startCombat(currentQ)} icon="⚔️">Inizia Combattimento</BigBtn>
-                  )}
+                  {(() => {
+                    const stepData = currentQ?.steps?.[qs.step];
+                    const choices = stepData && typeof stepData === "object" && stepData.choices ? stepData.choices : null;
+                    if(choices) {
+                      return (
+                        <>
+                          <SmallBtn onClick={()=>chooseQuestOption("good")}>✅ {choices.good?.text||"Buona"}</SmallBtn>
+                          <SmallBtn onClick={()=>chooseQuestOption("neutral")}>➖ {choices.neutral?.text||"Media"}</SmallBtn>
+                          <SmallBtn red onClick={()=>chooseQuestOption("bad")}>❌ {choices.bad?.text||"Sbagliata"}</SmallBtn>
+                        </>
+                      );
+                    }
+                    return (
+                      <>
+                        <BigBtn onClick={advanceQuest} gold icon="⏭️">Avanza</BigBtn>
+                        {currentQ.enemies?.length>0&&!combat?.active&&(
+                          <BigBtn onClick={()=>startCombat(currentQ)} icon="⚔️">Inizia Combattimento</BigBtn>
+                        )}
+                      </>
+                    );
+                  })()}
                   <SmallBtn red onClick={async ()=>{
                     if(!window.confirm("Abbandonare la missione in corso? I progressi andranno persi.")) return;
                     await saveQState({...qs, active:false, step:0, combat:null});
