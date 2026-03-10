@@ -68,7 +68,7 @@ function fmt(t=""){ return t.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").rep
    LOCAL STORAGE HELPERS (per quests/monsters/meta)
 ══════════════════════════════════════════════ */
 function lsGet(key, def) { try { const r=localStorage.getItem(key); return r?JSON.parse(r):def; } catch { return def; } }
-function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch {} }
+function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch { /* ignore */ } }
 
 function getQuests()   { return lsGet("eoz_quests",   DEFAULT_QUESTS()); }
 function getMonsters() { return lsGet("eoz_monsters",  DEFAULT_MONSTERS); }
@@ -207,7 +207,7 @@ export default function App() {
     <div style={{ minHeight:"100vh", background:"#06060e", fontFamily:"'Crimson Pro',Georgia,serif", color:"#e2d9c5", position:"relative" }}>
       <div style={{ position:"fixed", inset:0, background:"radial-gradient(ellipse at 15% 50%,rgba(109,40,217,.1) 0%,transparent 55%),radial-gradient(ellipse at 85% 10%,rgba(180,83,9,.08) 0%,transparent 50%)", pointerEvents:"none", zIndex:0 }} />
       {screen==="master" && <MasterPanelAuth setScreen={setScreen} />}
-      {screen!=="master" && !authUser && <AuthScreen setAuthUser={setAuthUser} setScreen={setScreen} setMyId={setMyId} goGame={goGame} />}
+      {screen!=="master" && !authUser && <AuthScreen setAuthUser={setAuthUser} setScreen={setScreen} setMyId={setMyId} />}
       {screen!=="master" && authUser && screen==="landing" && <Landing setScreen={setScreen} goGame={goGame} myId={myId} authUser={authUser} setAuthUser={setAuthUser} />}
       {screen!=="master" && authUser && screen==="create"  && <CreateChar setScreen={setScreen} goGame={goGame} authUser={authUser} />}
       {screen!=="master" && authUser && screen==="game"    && <GameScreen myId={myId} setScreen={setScreen} />}
@@ -218,7 +218,7 @@ export default function App() {
 /* ══════════════════════════════════════════════
    AUTH SCREEN
 ══════════════════════════════════════════════ */
-function AuthScreen({ setAuthUser, setScreen, setMyId, goGame }) {
+function AuthScreen({ setAuthUser, setScreen, setMyId }) {
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -746,6 +746,7 @@ function GameScreen({ myId, setScreen }) {
   const [qs, setQs] = useState({ currentId:null, step:0, active:false, completed:[], combat:null });
   const [input, setInput] = useState("");
   const [diceAnim, setDiceAnim] = useState(false);
+  const [diceResult, setDiceResult] = useState(null);
   const [tab, setTab] = useState("chat");
   const msgEnd = useRef(null);
   const inputRef = useRef(null);
@@ -790,14 +791,6 @@ function GameScreen({ myId, setScreen }) {
 
   useEffect(()=>{ msgEnd.current?.scrollIntoView({behavior:"smooth"}); },[messages]);
 
-  async function setMe(updater) {
-    setMeRaw(prev => {
-      const next = typeof updater==="function" ? updater(prev) : updater;
-      dbSavePlayer(next);
-      return next;
-    });
-  }
-
   async function addMsg(content, type="narration", author=null) {
     await dbSendMessage({ party_code:code, author:author||me?.name, content, type });
   }
@@ -839,7 +832,13 @@ function GameScreen({ myId, setScreen }) {
     if(hit) { dmg = Math.max(1, attacker.atk + roll(6) - Math.floor(target.def/2)); if(isCrit) dmg*=2; }
     const tidx = combatants.findIndex(c=>c.id===target.id);
     combatants[tidx] = {...target, hp:Math.max(0,target.hp-dmg)};
-    setDiceAnim(true); setTimeout(()=>setDiceAnim(false),500);
+
+    // Show a dice roll overlay
+    setDiceResult({ stage:"rolling" });
+    setDiceAnim(true);
+    setTimeout(()=>{ setDiceResult({ stage:"result", value: hitRoll }); }, 800);
+    setTimeout(()=>{ setDiceResult(null); }, 1500);
+    setTimeout(()=>setDiceAnim(false),500);
 
     let log = `${attacker.emoji||"⚔️"} **${attacker.name}** attacca ${target.emoji} **${target.name}**\n`;
     log += `🎲 Tiro: ${hitRoll}${isCrit?" — **CRITICO!**":""}\n`;
@@ -850,19 +849,22 @@ function GameScreen({ myId, setScreen }) {
     let nextRound = combat.round;
     if(nextTurn>=combatants.length){ nextTurn=0; nextRound++; }
 
-    // Nemico contrattacca
-    const nextActor = combatants[nextTurn%combatants.length];
-    if(nextActor && !nextActor.isPlayer && nextActor.hp>0) {
-      const pt = partyPlayers[Math.floor(Math.random()*partyPlayers.length)];
+    // Nemici continuano ad attaccare finché è il loro turno e sono vivi
+    while(true) {
+      const nextActor = combatants[nextTurn%combatants.length];
+      if(!nextActor || nextActor.isPlayer || nextActor.hp<=0) break;
+      const alivePlayers = partyPlayers.filter(p=>p.hp>0);
+      if(!alivePlayers.length) break;
+      const pt = alivePlayers[roll(alivePlayers.length)-1];
       if(pt) {
         const edmg = Math.max(1, nextActor.atk + roll(4) - Math.floor(pt.def/3));
         const updPt = {...pt, hp:Math.max(0,pt.hp-edmg)};
         await dbSavePlayer(updPt);
         if(pt.id===myId) setMeRaw(updPt);
         log += `\n\n${nextActor.emoji} **${nextActor.name}** contrattacca **${pt.name}** per **${edmg} danni**!`;
-        nextTurn = nextTurn+1;
-        if(nextTurn>=combatants.length){nextTurn=0;nextRound++;}
       }
+      nextTurn++;
+      if(nextTurn>=combatants.length){nextTurn=0;nextRound++;}
     }
 
     const allDead = combatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
@@ -941,6 +943,22 @@ function GameScreen({ myId, setScreen }) {
 
   return (
     <div style={{ display:"flex", height:"100vh", overflow:"hidden", position:"relative", zIndex:1 }}>
+      {diceResult && (
+        <div style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.85)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div style={{ textAlign:"center", color:"#fff" }}>
+            {diceResult.stage==="rolling" ? (
+              <span className={diceAnim?"dice-spin":""} style={{ fontSize:"4rem", display:"inline-block" }}>🎲</span>
+            ) : (
+              <div style={{ fontSize:"4rem", color: diceResult.value===20?"#fbbf24": diceResult.value===1?"#f87171":"#fff", fontFamily:"'Cinzel',serif" }}>
+                {diceResult.value}
+                <div style={{ fontSize:"1.2rem", marginTop:"0.3rem" }}>
+                  {diceResult.value===20 ? "CRITICO!" : diceResult.value===1 ? "FALLIMENTO CRITICO!" : ""}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
       {/* SIDEBAR */}
       <aside style={{ width:200, flexShrink:0, background:"rgba(4,4,12,0.98)", borderRight:"1px solid #0f172a", display:"flex", flexDirection:"column", gap:8, padding:"0.7rem", overflowY:"auto" }}>
         <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.75rem", color:"#4c1d95", letterSpacing:"0.1em", paddingBottom:8, borderBottom:"1px solid #0f172a" }}>⚜️ {getMeta().worldName}</div>
