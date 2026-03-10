@@ -14,6 +14,7 @@ import { supabase } from "./supabase";
     @keyframes fadeUp   { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
     @keyframes goldenGlow { 0%,100%{text-shadow:0 0 20px rgba(251,191,36,.5)} 50%{text-shadow:0 0 50px rgba(251,191,36,.9),0 0 100px rgba(245,158,11,.4)} }
     @keyframes diceRoll { 0%{transform:rotate(0deg) scale(1)} 50%{transform:rotate(180deg) scale(1.3)} 100%{transform:rotate(360deg) scale(1)} }
+    @keyframes sparkle { 0%{opacity:1;transform:translateY(0) scale(0.8)} 100%{opacity:0;transform:translateY(-120px) scale(1.4)} }
     @keyframes pulseRed { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} 50%{box-shadow:0 0 0 6px rgba(239,68,68,.3)} }
     .msg-in   { animation: fadeUp 0.25s ease; }
     .dice-spin{ animation: diceRoll 0.5s ease; }
@@ -949,10 +950,29 @@ function GameScreen({ myId, setScreen }) {
             {diceResult.stage==="rolling" ? (
               <span className={diceAnim?"dice-spin":""} style={{ fontSize:"4rem", display:"inline-block" }}>🎲</span>
             ) : (
-              <div style={{ fontSize:"4rem", color: diceResult.value===20?"#fbbf24": diceResult.value===1?"#f87171":"#fff", fontFamily:"'Cinzel',serif" }}>
-                {diceResult.value}
-                <div style={{ fontSize:"1.2rem", marginTop:"0.3rem" }}>
-                  {diceResult.value===20 ? "CRITICO!" : diceResult.value===1 ? "FALLIMENTO CRITICO!" : ""}
+              <div style={{ position:"relative" }}>
+                {diceResult.value===20 && (
+                  <div style={{ position:"absolute", inset:0, pointerEvents:"none" }}>
+                    {Array.from({length:8}).map((_,i)=>(
+                      <span key={i} style={{
+                        position:"absolute",
+                        left:`${10 + i*10}%`,
+                        top:"60%",
+                        width:10,
+                        height:10,
+                        borderRadius:"50%",
+                        background:"radial-gradient(circle, rgba(255,223,93,1) 0%, rgba(255,223,93,0) 70%)",
+                        animation:"sparkle 1s ease-out",
+                        animationDelay:`${i*80}ms`
+                      }} />
+                    ))}
+                  </div>
+                )}
+                <div style={{ fontSize:"4rem", color: diceResult.value===20?"#fbbf24": diceResult.value===1?"#f87171":"#fff", fontFamily:"'Cinzel',serif" }}>
+                  {diceResult.value}
+                  <div style={{ fontSize:"1.2rem", marginTop:"0.3rem" }}>
+                    {diceResult.value===20 ? "CRITICO!" : diceResult.value===1 ? "FALLIMENTO CRITICO!" : ""}
+                  </div>
                 </div>
               </div>
             )}
