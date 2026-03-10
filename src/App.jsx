@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+﻿import { useState, useEffect, useRef } from "react";
 import { supabase } from "./supabase";
 
 /* ══════════════════════════════════════════════
@@ -57,6 +57,7 @@ const RACES = {
   tiefling:  { name:"Tiefling",  emoji:"😈", hpB:0,  atkB:0, defB:1, magB:5, initB:1, desc:"Sangue infernale, resistenza al fuoco" },
 };
 const DIFF_COLOR = { "Facile":"#22c55e","Medio":"#fbbf24","Difficile":"#f97316","Molto Difficile":"#ef4444","Leggendario":"#a855f7" };
+const BACKGROUND_URL = "https://oaqjsuaqbzkvoljbmmjx.supabase.co/storage/v1/object/public/assets/ChatGPT_Image_10_mar_2026__02_57_11.png";
 
 function xpForLevel(l){ return Math.floor(100*Math.pow(1.5,l-1)); }
 function d(n){ return Math.floor(Math.random()*n)+1; }
@@ -319,7 +320,7 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
     localStorage.removeItem("eoz_myId");
   }
   return (
-    <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100vh", padding:"2rem 1rem", textAlign:"center" }}>
+    <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100vh", padding:"2rem 1rem", textAlign:"center", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundAttachment:"fixed" }}>
       {meta.logo
         ? <img src={meta.logo} alt="logo" style={{ maxWidth:260, maxHeight:160, objectFit:"contain", marginBottom:"1rem", filter:"drop-shadow(0 0 24px rgba(251,191,36,.5))" }} />
         : <p style={{ fontFamily:"'Cinzel',serif", color:"#4c1d95", fontSize:"1rem", letterSpacing:"0.6em", margin:"0 0 0.5rem" }}>᛭ ZODAR ᛭</p>
