@@ -171,6 +171,34 @@ async function dbGetPartyState(partyCode) {
   };
 }
 
+async function dbDeleteMessages(partyCode) {
+  await supabase.from("messages").delete().eq("party_code", partyCode);
+}
+
+async function dbDeletePlayers(partyCode) {
+  await supabase.from("players").delete().eq("party_code", partyCode);
+}
+
+async function dbDeletePartyState(partyCode) {
+  await supabase.from("party_state").delete().eq("party_code", partyCode);
+}
+
+async function resetPartyCombat(partyCode) {
+  const state = await dbGetPartyState(partyCode);
+  await dbSavePartyState(partyCode, { ...state, combat: null });
+}
+
+async function resetPartyCampaign(partyCode) {
+  await dbDeleteMessages(partyCode);
+  await resetPartyCombat(partyCode);
+}
+
+async function deleteParty(partyCode) {
+  await dbDeleteMessages(partyCode);
+  await dbDeletePlayers(partyCode);
+  await dbDeletePartyState(partyCode);
+}
+
 /* ══════════════════════════════════════════════
    MASTER PASSWORD
 ══════════════════════════════════════════════ */
@@ -488,7 +516,7 @@ function MasterPanel({ setScreen }) {
   }
   function saveEditM() { setMonsters(prev=>prev.map(x=>x.id===editM.id?editM:x)); setEditM(null); }
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"}];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"users",l:"👤 Iscritti"}];
   const EMOJIS=["👺","💀","🐉","🧛","👿","🦇","🕷️","🐺","🧟","🔥","🌊","⚡","☠️","🦁","🐍","🦂","👁️","🗿","🧌","😈"];
 
   return (
@@ -694,6 +722,8 @@ function MasterPanel({ setScreen }) {
       )}
 
       {tab==="players" && <PlayersView />}
+      {tab==="party" && <PartiesView />}
+      {tab==="users" && <UsersView />}
     </div>
   );
 }
@@ -715,6 +745,10 @@ function PlayersView() {
       {!players.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun giocatore ancora.</div>}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
         {players.map(p=>{ const cls=CLASSES[p.class]||{}; const race=RACES[p.race]||{};
+          const baseHp = (cls.hp||0) + (race.hpB||0);
+          const baseAtk = (cls.atk||0) + (race.atkB||0);
+          const baseDef = (cls.def||0) + (race.defB||0);
+          const baseMag = (cls.mag||0) + (race.magB||0);
           return (
             <div key={p.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
               <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
@@ -729,13 +763,152 @@ function PlayersView() {
               <div style={{ display:"flex", gap:10, fontSize:"0.72rem", color:"#6b7280", marginTop:5 }}>
                 <span>✨{p.xp}/{xpForLevel(p.level)}XP</span><span>💰{p.gold}oro</span><span>🏷️{p.party_code}</span>
               </div>
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:10 }}>
+                <SmallBtn onClick={async()=>{
+                  const upd={...p, level:1, xp:0, gold:0, hp:baseHp, max_hp:baseHp, atk:baseAtk, def:baseDef, mag:baseMag};
+                  await dbSavePlayer(upd);
+                  setPlayers(prev=>prev.map(x=>x.id===p.id?upd:x));
+                }}>🔄 Reset PG</SmallBtn>
+                <SmallBtn onClick={async()=>{
+                  const upd={...p, hp:p.max_hp};
+                  await dbSavePlayer(upd);
+                  setPlayers(prev=>prev.map(x=>x.id===p.id?upd:x));
+                }}>❤️ Cura Tutto</SmallBtn>
+                <SmallBtn onClick={async()=>{
+                  const add = parseInt(window.prompt("Quanto oro aggiungere?", "0"),10);
+                  if(!add||isNaN(add)) return;
+                  const upd={...p, gold:(p.gold||0)+add};
+                  await dbSavePlayer(upd);
+                  setPlayers(prev=>prev.map(x=>x.id===p.id?upd:x));
+                }}>💰 Dai Oro</SmallBtn>
+              </div>
             </div>
           );
         })}
       </div>
+
+      {/* Party management for each party */}
     </div>
   );
 }
+
+function PartiesView() {
+  const [parties, setParties] = useState([]);
+  const [working, setWorking] = useState({});
+  const [error, setError] = useState(null);
+
+  useEffect(()=>{
+    let active = true;
+    const load = async () => {
+      const { data, error } = await supabase.from("players").select("party_code");
+      if(error) {
+        setError(error.message || "Impossibile caricare i party");
+        return;
+      }
+      if(!active) return;
+      const codes = Array.from(new Set((data||[]).map(r=>r.party_code).filter(Boolean)));
+      setParties(codes);
+    };
+    load();
+    const interval = setInterval(load, 5000);
+    return ()=>{ active=false; clearInterval(interval); };
+  },[]);
+
+  const handleAction = async (partyCode, action) => {
+    setWorking(w=>({ ...w, [partyCode]: action }));
+    try {
+      if(action === "combat") await resetPartyCombat(partyCode);
+      if(action === "campaign") await resetPartyCampaign(partyCode);
+      if(action === "delete") {
+        await deleteParty(partyCode);
+        setParties(prev=>prev.filter(c=>c!==partyCode));
+      }
+    } finally {
+      setWorking(w=>({ ...w, [partyCode]: null }));
+    }
+  };
+
+  return (
+    <div>
+      <p style={{ color:"#6b7280", fontSize:"0.85rem", marginBottom:"1rem" }}>{parties.length} party trovati · aggiornamento automatico</p>
+      {error && <div style={{ color:"#fca5a5", marginBottom:"1rem" }}>{error}</div>}
+      {!parties.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun party ancora.</div>}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
+        {parties.map(code=>(
+          <div key={code} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
+            <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, marginBottom:6 }}>Party: {code}</div>
+            <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+              <SmallBtn disabled={!!working[code]} onClick={()=>handleAction(code, "combat")}>⚔️ Reset Combattimento</SmallBtn>
+              <SmallBtn disabled={!!working[code]} onClick={()=>{
+                if(window.confirm("Resetta tutte le chat del party e lo stato di combattimento?")) handleAction(code, "campaign");
+              }}>🧹 Reset Campagna</SmallBtn>
+              <SmallBtn red disabled={!!working[code]} onClick={()=>{
+                if(window.confirm("Eliminare completamente questo party (messaggi, giocatori, stato)?")) handleAction(code, "delete");
+              }}>💥 Elimina Party</SmallBtn>
+            </div>
+            {working[code] && <div style={{ marginTop:8, color:"#a78bfa", fontSize:"0.78rem" }}>In corso: {working[code]}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function UsersView() {
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+
+  useEffect(()=>{
+    const load = async () => {
+      try {
+        const { data, error } = await supabase.auth.admin.listUsers();
+        if(error) throw error;
+        setUsers(data?.users || []);
+      } catch(e) {
+        // Fallback: show registered players if we can't list auth users
+        const { data, error: playersErr } = await supabase.from("players").select("id,name,party_code");
+        if(playersErr) {
+          setError(e.message || "Impossibile caricare gli iscritti");
+        } else {
+          setUsers((data||[]).map(p=>({ id:p.id, email:p.name, party_code:p.party_code })));
+          setError("Nessun accesso all'admin auth; elenco giocatori registrati.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
+  },[]);
+
+  return (
+    <div>
+      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, marginBottom:"1rem", flexWrap:"wrap" }}>
+        <div>
+          <div style={{ fontFamily:"'Cinzel',serif", fontWeight:700, color:"#e2d9c5" }}>Master password</div>
+          <div style={{ fontFamily:"monospace", color:"#c4b5fd" }}>{showPassword?MASTER_PASSWORD:"••••••••••"}</div>
+        </div>
+        <SmallBtn onClick={()=>setShowPassword(v=>!v)}>{showPassword?"👁️ Nascondi":"👁️ Mostra"}</SmallBtn>
+      </div>
+      {error && <div style={{ color:"#fca5a5", marginBottom:"1rem" }}>{error}</div>}
+      {loading && <div style={{ color:"#6b7280" }}>Caricamento...</div>}
+      {!loading && !users.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun iscritto trovato.</div>}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
+        {users.map(u=>(
+          <div key={u.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
+            <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{u.email||u.id}</div>
+            {u.party_code && <div style={{ fontSize:"0.75rem", color:"#6b7280" }}>Party: {u.party_code}</div>}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════════
+   GAME SCREEN
+══════════════════════════════════════════════ */
 
 /* ══════════════════════════════════════════════
    GAME SCREEN
@@ -1088,10 +1261,16 @@ function GameScreen({ myId, setScreen }) {
                   <div style={{ height:"100%", background:"linear-gradient(90deg,#b45309,#fbbf24)", width:`${qs.step/currentQ.steps.length*100}%` }} />
                 </div>
                 <p style={{ color:"#fde68a", fontSize:"0.85rem", marginBottom:10 }}>Scena {qs.step} di {currentQ.steps.length}</p>
-                <BigBtn onClick={advanceQuest} gold icon="⏭️">Avanza</BigBtn>
-                {currentQ.enemies?.length>0&&!combat?.active&&(
-                  <div style={{ marginTop:8 }}><BigBtn onClick={()=>startCombat(currentQ)} icon="⚔️">Inizia Combattimento</BigBtn></div>
-                )}
+                <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+                  <BigBtn onClick={advanceQuest} gold icon="⏭️">Avanza</BigBtn>
+                  {currentQ.enemies?.length>0&&!combat?.active&&(
+                    <BigBtn onClick={()=>startCombat(currentQ)} icon="⚔️">Inizia Combattimento</BigBtn>
+                  )}
+                  <SmallBtn red onClick={async ()=>{
+                    if(!window.confirm("Abbandonare la missione in corso? I progressi andranno persi.")) return;
+                    await saveQState({...qs, active:false, step:0, combat:null});
+                  }}>❌ Abbandona Missione</SmallBtn>
+                </div>
               </div>
             )}
             {getQuests().filter(q=>q.active).map(q=>{
