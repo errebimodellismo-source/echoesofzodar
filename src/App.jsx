@@ -850,10 +850,17 @@ function GameScreen({ myId, setScreen }) {
     let nextRound = combat.round;
     if(nextTurn>=combatants.length){ nextTurn=0; nextRound++; }
 
-    // Nemici continuano ad attaccare finché è il loro turno e sono vivi
+    // Nemici continuano ad attaccare finché è il loro turno (saltano i morti)
     while(true) {
       const nextActor = combatants[nextTurn%combatants.length];
-      if(!nextActor || nextActor.isPlayer || nextActor.hp<=0) break;
+      if(!nextActor) break;
+      if(nextActor.isPlayer) break;
+      if(nextActor.hp<=0) {
+        nextTurn++;
+        if(nextTurn>=combatants.length){nextTurn=0;nextRound++;}
+        continue;
+      }
+
       const alivePlayers = partyPlayers.filter(p=>p.hp>0);
       if(!alivePlayers.length) break;
       const pt = alivePlayers[roll(alivePlayers.length)-1];
