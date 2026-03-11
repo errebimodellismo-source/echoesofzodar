@@ -1535,6 +1535,7 @@ function ShopView({ me, setMeRaw, addMsg }) {
 ---------------------------------------------- */
 function GameScreen({ myId, setScreen }) {
   const [me, setMeRaw] = useState(null);
+  if(!me || !me.class) return <div style={{color:'white', fontSize:'1.5rem', padding:'2rem', textAlign:'center'}}>⏳ Caricamento personaggio...</div>;
   const [messages, setMessages] = useState([]);
   const [partyPlayers, setPartyPlayers] = useState([]);
   const [qs, setQs] = useState({ currentId:null, step:0, active:false, completed:[], combat:null });
