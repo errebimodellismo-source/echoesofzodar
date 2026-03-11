@@ -1604,6 +1604,70 @@ function GameScreen({ myId, setScreen }) {
 
   useEffect(()=>{ msgEnd.current?.scrollIntoView({behavior:"smooth"}); },[messages]);
 
+  // Auto-attack when it's a monster's turn
+  useEffect(()=>{
+    const combat = qs?.combat;
+    if(!combat?.active) return;
+    const combatants = combat.combatants || [];
+    const actor = combatants[combat.turn % combatants.length];
+    if(!actor || actor.isPlayer || actor.hp <= 0) return;
+
+    const timer = setTimeout(async () => {
+      // Re-read latest state from db to avoid stale closure
+      const latestQs = await dbGetPartyState(code);
+      const latestCombat = latestQs?.combat;
+      if(!latestCombat?.active) return;
+      const latestCombatants = [...latestCombat.combatants];
+      const latestActor = latestCombatants[latestCombat.turn % latestCombatants.length];
+      if(!latestActor || latestActor.isPlayer || latestActor.hp <= 0) return;
+
+      const latestPlayers = await dbGetPlayers(code);
+      const alivePlayers = latestPlayers.filter(p => (p?.hp||0) > 0);
+      if(!alivePlayers.length) return;
+
+      const pt = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+      const edmg = Math.max(1, latestActor.atk + roll(4) - Math.floor(pt.def/3));
+      const updPt = {...pt, hp: Math.max(0, pt.hp - edmg)};
+      await dbSavePlayer(updPt);
+      if(updPt.id === myId) setMeRaw(updPt);
+
+      let log = `${latestActor.emoji||"👾"} **${latestActor.name}** attacca **${pt.name}** per **${edmg} danni**!`;
+
+      let nextTurn = latestCombat.turn + 1;
+      let nextRound = latestCombat.round;
+      if(nextTurn >= latestCombatants.length){ nextTurn = 0; nextRound++; }
+
+      // Skip dead monsters in sequence
+      while(true) {
+        const nextActor = latestCombatants[nextTurn % latestCombatants.length];
+        if(!nextActor) break;
+        if(nextActor.isPlayer) break;
+        if(nextActor.hp <= 0) {
+          nextTurn++;
+          if(nextTurn >= latestCombatants.length){ nextTurn = 0; nextRound++; }
+          continue;
+        }
+        // Another live monster: attack too
+        const pt2 = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+        const edmg2 = Math.max(1, nextActor.atk + roll(4) - Math.floor(pt2.def/3));
+        const updPt2 = {...pt2, hp: Math.max(0, pt2.hp - edmg2)};
+        await dbSavePlayer(updPt2);
+        if(updPt2.id === myId) setMeRaw(updPt2);
+        log += `\n${nextActor.emoji||"👾"} **${nextActor.name}** attacca **${pt2.name}** per **${edmg2} danni**!`;
+        nextTurn++;
+        if(nextTurn >= latestCombatants.length){ nextTurn = 0; nextRound++; }
+      }
+
+      const allDead = latestCombatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
+      const newCombat = {...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound};
+      await dbSavePartyState(code, {...latestQs, combat: allDead ? null : newCombat});
+      await dbSendMessage({ party_code: code, author: "Battaglia", content: log, type: "combat" });
+      if(allDead) await dbSendMessage({ party_code: code, author: "Sistema", content: "🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", type: "victory" });
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [qs?.combat?.turn, qs?.combat?.active, myId, code]);
+
   if(!me || !me.class) return <div style={{color:'white', fontSize:'1.5rem', padding:'2rem', textAlign:'center'}}>⏳ Caricamento personaggio...</div>;
 
   async function addMsg(content, type="narration", author=null) {
