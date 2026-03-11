@@ -635,7 +635,6 @@ export default function App() {
 
   return (
     <div style={{ minHeight:"100vh", background:"#06060e", fontFamily:"'Crimson Pro',Georgia,serif", color:"#e2d9c5", position:"relative" }}>
-      <div style={{ position:"fixed", inset:0, background:"radial-gradient(ellipse at 15% 50%,rgba(109,40,217,.1) 0%,transparent 55%),radial-gradient(ellipse at 85% 10%,rgba(180,83,9,.08) 0%,transparent 50%)", pointerEvents:"none", zIndex:0 }} />
       {screen==="master" && <MasterPanelAuth setScreen={setScreen} />}
       {screen!=="master" && !authUser && <AuthScreen setAuthUser={setAuthUser} setScreen={setScreen} setMyId={setMyId} />}
       {screen!=="master" && authUser && screen==="landing" && <Landing setScreen={setScreen} goGame={goGame} myId={myId} authUser={authUser} setAuthUser={setAuthUser} />}
@@ -681,12 +680,14 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
   }
 
   return (
-    <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100vh", padding:"2rem 1rem" }}>
-      <p style={{ fontFamily:"'Cinzel',serif", color:"#4c1d95", fontSize:"1rem", letterSpacing:"0.6em", margin:"0 0 0.5rem" }}>? ZODAR ?</p>
+    <div style={{ minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", position:"relative" }}>
+      <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.45)" }} />
+      <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", width:"100%", padding:"2rem 1rem" }}>
+      <p style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontSize:"1rem", letterSpacing:"0.6em", margin:"0 0 0.5rem" }}>⚔ ZODAR ⚔</p>
       <h1 style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(2rem,7vw,4rem)", margin:"0.2rem 0 2rem", background:"linear-gradient(135deg,#fbbf24,#f59e0b,#b45309)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", letterSpacing:"0.12em" }}>
         {meta.worldName}
       </h1>
-      <div style={{ width:"100%", maxWidth:400, background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:8, padding:"2rem" }}>
+      <div style={{ width:"100%", maxWidth:400, background:"rgba(0,0,0,0.55)", border:"1px solid #374151", borderRadius:8, padding:"2rem" }}>
         <div style={{ display:"flex", gap:0, marginBottom:"1.5rem", border:"1px solid #1f2937", borderRadius:6, overflow:"hidden" }}>
           {[["login","🔐 Accedi"],["register","📝 Registrati"]].map(([k,l])=>(
             <button key={k} onClick={()=>{ setMode(k); setError(""); setSuccess(""); }}
@@ -707,6 +708,7 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
         <div style={{ marginTop:"1.5rem", textAlign:"center" }}>
           <button onClick={()=>setScreen("master")} style={{ background:"none", border:"none", color:"#1f2937", cursor:"pointer", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em" }}>🛡️ Accesso Master</button>
         </div>
+      </div>
       </div>
     </div>
   );
@@ -774,23 +776,27 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   }
 
   return (
-    <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100vh", padding:"2rem 1rem", textAlign:"center", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundAttachment:"fixed" }}>
-      {meta.logo
-        ? <img src={meta.logo} alt="logo" style={{ maxWidth:260, maxHeight:160, objectFit:"contain", marginBottom:"1rem", filter:"drop-shadow(0 0 24px rgba(251,191,36,.5))" }} />
-        : <p style={{ fontFamily:"'Cinzel',serif", color:"#4c1d95", fontSize:"1rem", letterSpacing:"0.6em", margin:"0 0 0.5rem" }}>? ZODAR ?</p>
-      }
-      <h1 style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(2.2rem,8vw,5rem)", margin:"0.2rem 0", background:"linear-gradient(135deg,#fbbf24,#f59e0b,#b45309)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", letterSpacing:"0.12em", animation:"goldenGlow 4s ease-in-out infinite" }}>
-        {meta.worldName}
-      </h1>
-      <p style={{ fontFamily:"'Cinzel',serif", fontSize:"clamp(0.65rem,2vw,0.85rem)", color:"#7c3aed", letterSpacing:"0.3em", textTransform:"uppercase", margin:"0.2rem 0 2.5rem" }}>{meta.worldSub}</p>
-      <div style={{ display:"flex", flexDirection:"column", gap:12, width:"100%", maxWidth:320 }}>
-        <BigBtn onClick={()=>setScreen("create")} gold icon="🛠️">Crea il tuo Eroe</BigBtn>
-        {myId && <BigBtn onClick={handleTornaAvventura} icon="🏹">Torna all'Avventura</BigBtn>}
-        <BigBtn onClick={logout} dark icon="🚪">Esci</BigBtn>
+    <>
+      <div style={{ position:"fixed", inset:0, backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", zIndex:0 }} />
+      <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.55)", zIndex:1 }} />
+      <div style={{ position:"relative", zIndex:2, minHeight:"100vh", width:"100vw", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"2rem 1rem" }}>
+        {meta.logo
+          ? <img src={meta.logo} alt="logo" style={{ maxWidth:260, maxHeight:160, objectFit:"contain", marginBottom:"1rem", filter:"drop-shadow(0 0 24px rgba(251,191,36,.5))" }} />
+          : <p style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontSize:"1rem", letterSpacing:"0.6em", margin:"0 0 0.5rem" }}>⚔ ZODAR ⚔</p>
+        }
+        <h1 style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(2.2rem,8vw,5rem)", margin:"0.2rem 0", background:"linear-gradient(135deg,#fbbf24,#f59e0b,#b45309)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", letterSpacing:"0.12em", animation:"goldenGlow 4s ease-in-out infinite" }}>
+          {meta.worldName}
+        </h1>
+        <p style={{ fontFamily:"'Cinzel',serif", fontSize:"clamp(0.65rem,2vw,0.85rem)", color:"#c4b5fd", letterSpacing:"0.3em", textTransform:"uppercase", margin:"0.2rem 0 2.5rem" }}>{meta.worldSub}</p>
+        <div style={{ display:"flex", flexDirection:"column", gap:12, width:"100%", maxWidth:320 }}>
+          <BigBtn onClick={()=>setScreen("create")} gold icon="🛠️">Crea il tuo Eroe</BigBtn>
+          {myId && <BigBtn onClick={handleTornaAvventura} icon="🏹">Torna all'Avventura</BigBtn>}
+          <BigBtn onClick={logout} dark icon="🚪">Esci</BigBtn>
+        </div>
+        {authUser && <p style={{ marginTop:"1rem", color:"#d1d5db", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
+        <p style={{ marginTop:"1.5rem", color:"#9ca3af", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE • FANTASY • MULTIPLAYER ONLINE</p>
       </div>
-      {authUser && <p style={{ marginTop:"1rem", color:"#374151", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
-      <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE • FANTASY • MULTIPLAYER ONLINE</p>
-    </div>
+    </>
   );
 }
 
