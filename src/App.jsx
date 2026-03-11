@@ -1,4 +1,4 @@
-﻿import { useState, useEffect, useRef, useCallback } from "react";
+﻿import React, { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "./supabase";
 
 /* ----------------------------------------------
@@ -1535,7 +1535,6 @@ function ShopView({ me, setMeRaw, addMsg }) {
 ---------------------------------------------- */
 function GameScreen({ myId, setScreen }) {
   const [me, setMeRaw] = useState(null);
-  if(!me || !me.class) return <div style={{color:'white', fontSize:'1.5rem', padding:'2rem', textAlign:'center'}}>⏳ Caricamento personaggio...</div>;
   const [messages, setMessages] = useState([]);
   const [partyPlayers, setPartyPlayers] = useState([]);
   const [qs, setQs] = useState({ currentId:null, step:0, active:false, completed:[], combat:null });
@@ -1602,6 +1601,8 @@ function GameScreen({ myId, setScreen }) {
   },[myId, refreshAll]);
 
   useEffect(()=>{ msgEnd.current?.scrollIntoView({behavior:"smooth"}); },[messages]);
+
+  if(!me || !me.class) return <div style={{color:'white', fontSize:'1.5rem', padding:'2rem', textAlign:'center'}}>⏳ Caricamento personaggio...</div>;
 
   async function addMsg(content, type="narration", author=null) {
     await dbSendMessage({ party_code:code, author:author||me?.name, content, type });
