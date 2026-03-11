@@ -1992,49 +1992,51 @@ function GameScreen({ myId, setScreen }) {
       {diceResult && (
         <div style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.85)", display:"flex", alignItems:"center", justifyContent:"center" }}>
           <div style={{ textAlign:"center", color:"#fff" }}>
-            {diceResult.stage==="rolling" ? (
-              <span className={diceAnim?"dice-spin":""} style={{ width:"8rem", height:"8rem", display:"inline-block", color:"#fbbf24" }}>
-                <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%"}}>
-                  <polygon points="50,8 92,32 92,68 50,92 8,68 8,32" fill="none" stroke="currentColor" strokeWidth="2"/>
-                  <polygon points="50,8 92,32 8,32" fill="rgba(255,215,0,0.15)" stroke="currentColor" strokeWidth="1.5"/>
-                  <polygon points="8,32 50,8 29,50" fill="rgba(255,215,0,0.1)" stroke="currentColor" strokeWidth="1.5"/>
-                  <polygon points="92,32 71,50 50,8" fill="rgba(255,215,0,0.2)" stroke="currentColor" strokeWidth="1.5"/>
-                  <polygon points="29,50 50,8 71,50" fill="rgba(255,215,0,0.25)" stroke="currentColor" strokeWidth="1.5"/>
-                  <polygon points="8,32 29,50 8,68" fill="rgba(255,215,0,0.1)" stroke="currentColor" strokeWidth="1.5"/>
-                  <polygon points="92,32 92,68 71,50" fill="rgba(255,215,0,0.2)" stroke="currentColor" strokeWidth="1.5"/>
-                  <polygon points="29,50 50,92 8,68" fill="rgba(255,215,0,0.1)" stroke="currentColor" strokeWidth="1.5"/>
-                  <polygon points="71,50 92,68 50,92" fill="rgba(255,215,0,0.15)" stroke="currentColor" strokeWidth="1.5"/>
-                  <polygon points="29,50 71,50 50,92" fill="rgba(255,215,0,0.2)" stroke="currentColor" strokeWidth="1.5"/>
-                  <text x="50" y="55" textAnchor="middle" fontSize="18" fontWeight="bold" fill="currentColor" fontFamily="serif">20</text>
+            <div style={{ position:"relative" }}>
+              {diceResult.stage!=="rolling" && diceResult.value===20 && (
+                <div style={{ position:"absolute", inset:0, pointerEvents:"none" }}>
+                  {Array.from({length:8}).map((_,i)=>(
+                    <span key={i} style={{
+                      position:"absolute",
+                      left:`${10 + i*10}%`,
+                      top:"60%",
+                      width:10,
+                      height:10,
+                      borderRadius:"50%",
+                      background:"radial-gradient(circle, rgba(255,223,93,1) 0%, rgba(255,223,93,0) 70%)",
+                      animation:"sparkle 1s ease-out",
+                      animationDelay:`${i*80}ms`
+                    }} />
+                  ))}
+                </div>
+              )}
+              <span className={diceResult.stage==="rolling" && diceAnim?"dice-spin":""} style={{ width:"10rem", height:"10rem", display:"inline-block" }}>
+                <svg viewBox="0 0 120 120" style={{width:"100%",height:"100%",filter:"drop-shadow(0 0 20px rgba(255,215,0,0.8))"}}>
+                  <defs>
+                    <radialGradient id="faceGrad" cx="40%" cy="35%">
+                      <stop offset="0%" stopColor="#fff9c4"/>
+                      <stop offset="60%" stopColor="#f59e0b"/>
+                      <stop offset="100%" stopColor="#92400e"/>
+                    </radialGradient>
+                  </defs>
+                  <polygon points="60,6 111,36 111,84 60,114 9,84 9,36" fill="url(#faceGrad)" stroke="#fbbf24" strokeWidth="2"/>
+                  <polygon points="60,6 111,36 60,60" fill="rgba(255,255,255,0.15)" stroke="#fbbf24" strokeWidth="1"/>
+                  <polygon points="9,36 60,60 60,6" fill="rgba(0,0,0,0.2)" stroke="#fbbf24" strokeWidth="1"/>
+                  <polygon points="111,36 111,84 60,60" fill="rgba(255,255,255,0.1)" stroke="#fbbf24" strokeWidth="1"/>
+                  <polygon points="9,84 60,60 9,36" fill="rgba(0,0,0,0.3)" stroke="#fbbf24" strokeWidth="1"/>
+                  <polygon points="111,84 60,114 60,60" fill="rgba(0,0,0,0.25)" stroke="#fbbf24" strokeWidth="1"/>
+                  <polygon points="60,114 9,84 60,60" fill="rgba(0,0,0,0.35)" stroke="#fbbf24" strokeWidth="1"/>
+                  <text x="60" y="67" textAnchor="middle" fontSize="26" fontWeight="900" fill="white" fontFamily="Georgia, serif">
+                    {diceResult.stage==="rolling" ? "?" : diceResult.value}
+                  </text>
                 </svg>
               </span>
-            ) : (
-              <div style={{ position:"relative" }}>
-                {diceResult.value===20 && (
-                  <div style={{ position:"absolute", inset:0, pointerEvents:"none" }}>
-                    {Array.from({length:8}).map((_,i)=>(
-                      <span key={i} style={{
-                        position:"absolute",
-                        left:`${10 + i*10}%`,
-                        top:"60%",
-                        width:10,
-                        height:10,
-                        borderRadius:"50%",
-                        background:"radial-gradient(circle, rgba(255,223,93,1) 0%, rgba(255,223,93,0) 70%)",
-                        animation:"sparkle 1s ease-out",
-                        animationDelay:`${i*80}ms`
-                      }} />
-                    ))}
-                  </div>
-                )}
-                <div style={{ fontSize:"4rem", color: diceResult.value===20?"#fbbf24": diceResult.value===1?"#f87171":"#fff", fontFamily:"'Cinzel',serif" }}>
-                  {diceResult.value}
-                  <div style={{ fontSize:"1.2rem", marginTop:"0.3rem" }}>
-                    {diceResult.value===20 ? "CRITICO!" : diceResult.value===1 ? "FALLIMENTO CRITICO!" : ""}
-                  </div>
+              {diceResult.stage!=="rolling" && (
+                <div style={{ fontSize:"1.2rem", marginTop:"0.5rem", color: diceResult.value===20?"#fbbf24": diceResult.value===1?"#f87171":"#fff", fontFamily:"'Cinzel',serif" }}>
+                  {diceResult.value===20 ? "CRITICO!" : diceResult.value===1 ? "FALLIMENTO CRITICO!" : ""}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
