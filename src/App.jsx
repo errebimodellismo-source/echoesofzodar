@@ -1638,26 +1638,10 @@ function GameScreen({ myId, setScreen }) {
       let nextTurn = latestCombat.turn + 1;
       let nextRound = latestCombat.round;
       if(nextTurn >= latestCombatants.length){ nextTurn = 0; nextRound++; }
-
-      // Skip dead monsters in sequence
-      while(true) {
-        const nextActor = latestCombatants[nextTurn % latestCombatants.length];
-        if(!nextActor) break;
-        if(nextActor.isPlayer) break;
-        if(nextActor.hp <= 0) {
-          nextTurn++;
-          if(nextTurn >= latestCombatants.length){ nextTurn = 0; nextRound++; }
-          continue;
-        }
-        // Another live monster: attack too
-        const pt2 = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-        const edmg2 = Math.max(1, nextActor.atk + roll(4) - Math.floor(pt2.def/3));
-        const updPt2 = {...pt2, hp: Math.max(0, pt2.hp - edmg2)};
-        await dbSavePlayer(updPt2);
-        if(updPt2.id === myId) setMeRaw(updPt2);
-        log += `\n${nextActor.emoji||"👾"} **${nextActor.name}** attacca **${pt2.name}** per **${edmg2} danni**!`;
-        nextTurn++;
-        if(nextTurn >= latestCombatants.length){ nextTurn = 0; nextRound++; }
+      // Skip dead combatants
+      let safety = 0;
+      while(latestCombatants[nextTurn]?.hp<=0 && safety++<latestCombatants.length){
+        nextTurn++; if(nextTurn>=latestCombatants.length){nextTurn=0;nextRound++;}
       }
 
       const allDead = latestCombatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
@@ -1707,8 +1691,8 @@ function GameScreen({ myId, setScreen }) {
     const targets = combatants.filter(c=>!c.isPlayer&&c.hp>0);
     if(!targets.length) { await endCombat(); return; }
     const target = targets[0];
-    const isCrit = roll(20)===20;
     const hitRoll = roll(20);
+    const isCrit = hitRoll===20;
     const hit = hitRoll > target.def;
     let dmg = 0;
     if(hit) { dmg = Math.max(1, attacker.atk + roll(6) - Math.floor(target.def/2)); if(isCrit) dmg*=2; }
@@ -1730,30 +1714,10 @@ function GameScreen({ myId, setScreen }) {
     let nextTurn = combat.turn + 1;
     let nextRound = combat.round;
     if(nextTurn>=combatants.length){ nextTurn=0; nextRound++; }
-
-    // Nemici continuano ad attaccare finch� � il loro turno (saltano i morti)
-    while(true) {
-      const nextActor = combatants[nextTurn%combatants.length];
-      if(!nextActor) break;
-      if(nextActor.isPlayer) break;
-      if(nextActor.hp<=0) {
-        nextTurn++;
-        if(nextTurn>=combatants.length){nextTurn=0;nextRound++;}
-        continue;
-      }
-
-      const alivePlayers = partyPlayers.filter(p=> (p?.hp||0) > 0 );
-      if(!alivePlayers.length) break;
-      const pt = alivePlayers[roll(alivePlayers.length)-1];
-      if(pt) {
-        const edmg = Math.max(1, nextActor.atk + roll(4) - Math.floor(pt.def/3));
-        const updPt = {...pt, hp:Math.max(0,pt.hp-edmg)};
-        await dbSavePlayer(updPt);
-        if(pt.id===myId) setMeRaw(updPt);
-        log += `\n\n${nextActor.emoji} **${nextActor.name}** contrattacca **${pt.name}** per **${edmg} danni**!`;
-      }
-      nextTurn++;
-      if(nextTurn>=combatants.length){nextTurn=0;nextRound++;}
+    // Skip dead combatants
+    let safety = 0;
+    while(combatants[nextTurn]?.hp<=0 && safety++<combatants.length){
+      nextTurn++; if(nextTurn>=combatants.length){nextTurn=0;nextRound++;}
     }
 
     const allDead = combatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
