@@ -777,7 +777,7 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
 
   return (
     <div style={{ position:"relative", minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", backgroundColor:"transparent", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", overflow:"hidden", textAlign:"center", padding:"2rem 1rem" }}>
-      <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.55)", pointerEvents:"none" }} />
+      <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.25)", pointerEvents:"none" }} />
       <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", width:"100%" }}>
         {meta.logo
           ? <img src={meta.logo} alt="logo" style={{ maxWidth:260, maxHeight:160, objectFit:"contain", marginBottom:"1rem", filter:"drop-shadow(0 0 24px rgba(251,191,36,.5))" }} />
