@@ -634,7 +634,7 @@ export default function App() {
   if(authLoading) return <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:"#06060e", color:"#4b5563", fontFamily:"'Cinzel',serif" }}>? Caricamento...</div>;
 
   return (
-    <div style={{ minHeight:"100vh", background:"#06060e", fontFamily:"'Crimson Pro',Georgia,serif", color:"#e2d9c5", position:"relative" }}>
+    <div style={{ minHeight:"100vh", background:screen==="landing"?"transparent":"#06060e", fontFamily:"'Crimson Pro',Georgia,serif", color:"#e2d9c5", position:"relative" }}>
       {screen==="master" && <MasterPanelAuth setScreen={setScreen} />}
       {screen!=="master" && !authUser && <AuthScreen setAuthUser={setAuthUser} setScreen={setScreen} setMyId={setMyId} />}
       {screen!=="master" && authUser && screen==="landing" && <Landing setScreen={setScreen} goGame={goGame} myId={myId} authUser={authUser} setAuthUser={setAuthUser} />}
@@ -776,10 +776,9 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   }
 
   return (
-    <>
-      <div style={{ position:"fixed", inset:0, backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", zIndex:0 }} />
-      <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.55)", zIndex:1 }} />
-      <div style={{ position:"relative", zIndex:2, minHeight:"100vh", width:"100vw", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"2rem 1rem" }}>
+    <div style={{ position:"relative", minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", backgroundColor:"transparent", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", overflow:"hidden", textAlign:"center", padding:"2rem 1rem" }}>
+      <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.55)", pointerEvents:"none" }} />
+      <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", width:"100%" }}>
         {meta.logo
           ? <img src={meta.logo} alt="logo" style={{ maxWidth:260, maxHeight:160, objectFit:"contain", marginBottom:"1rem", filter:"drop-shadow(0 0 24px rgba(251,191,36,.5))" }} />
           : <p style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontSize:"1rem", letterSpacing:"0.6em", margin:"0 0 0.5rem" }}>⚔ ZODAR ⚔</p>
@@ -796,7 +795,7 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
         {authUser && <p style={{ marginTop:"1rem", color:"#d1d5db", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
         <p style={{ marginTop:"1.5rem", color:"#9ca3af", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE • FANTASY • MULTIPLAYER ONLINE</p>
       </div>
-    </>
+    </div>
   );
 }
 
