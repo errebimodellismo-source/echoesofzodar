@@ -35,29 +35,29 @@ import { supabase } from "./supabase";
    CONSTANTS
 ---------------------------------------------- */
 const CLASSES = {
-  barbarian:{ name:"Barbaro",   emoji:"??", color:"#dc2626", hp:140, atk:17, def:8,  mag:0,  init:2, desc:"Furia incontrollabile, resistenza brutale" },
-  bard:     { name:"Bardo",     emoji:"??", color:"#f97316", hp:78,  atk:9,  def:5,  mag:13, init:3, desc:"Magia attraverso musica e parole" },
-  cleric:   { name:"Chierico",  emoji:"?", color:"#f59e0b", hp:95,  atk:7,  def:9,  mag:15, init:1, desc:"Potere divino e guarigione sacra" },
-  druid:    { name:"Druido",    emoji:"??", color:"#84cc16", hp:80,  atk:8,  def:7,  mag:14, init:2, desc:"Magia naturale e trasformazione" },
-  warrior:  { name:"Guerriero", emoji:"??", color:"#ef4444", hp:120, atk:15, def:11, mag:1,  init:2, desc:"Maestro delle armi e del combattimento" },
-  monk:     { name:"Monaco",    emoji:"??", color:"#06b6d4", hp:88,  atk:13, def:10, mag:4,  init:5, desc:"Arti marziali e disciplina del ki" },
-  paladin:  { name:"Paladino",  emoji:"???", color:"#facc15", hp:110, atk:12, def:13, mag:8,  init:1, desc:"Guerriero sacro, paladino della giustizia" },
-  ranger:   { name:"Ranger",    emoji:"??", color:"#14b8a6", hp:90,  atk:13, def:7,  mag:6,  init:3, desc:"Esploratore e cacciatore di mostri" },
-  rogue:    { name:"Ladro",     emoji:"???", color:"#22c55e", hp:82,  atk:14, def:6,  mag:4,  init:5, desc:"Furtivit�, trappole e attacchi subdoli" },
-  sorcerer: { name:"Stregone",  emoji:"??", color:"#8b5cf6", hp:68,  atk:6,  def:3,  mag:22, init:2, desc:"Magia innata nel sangue" },
-  warlock:  { name:"Warlock",   emoji:"??", color:"#7c3aed", hp:72,  atk:8,  def:4,  mag:20, init:2, desc:"Patti con entit� oscure e potere proibito" },
-  mage:     { name:"Mago",      emoji:"??", color:"#a855f7", hp:65,  atk:5,  def:3,  mag:24, init:2, desc:"Studio arcano e incantesimi devastanti" },
+  barbarian:{ name:"Barbaro",   emoji:"🪓", color:"#dc2626", hp:140, atk:17, def:8,  mag:0,  init:2, desc:"Furia incontrollabile, resistenza brutale" },
+  bard:     { name:"Bardo",     emoji:"🎵", color:"#f97316", hp:78,  atk:9,  def:5,  mag:13, init:3, desc:"Magia attraverso musica e parole" },
+  cleric:   { name:"Chierico",  emoji:"⛪", color:"#f59e0b", hp:95,  atk:7,  def:9,  mag:15, init:1, desc:"Potere divino e guarigione sacra" },
+  druid:    { name:"Druido",    emoji:"🌿", color:"#84cc16", hp:80,  atk:8,  def:7,  mag:14, init:2, desc:"Magia naturale e trasformazione" },
+  warrior:  { name:"Guerriero", emoji:"⚔️", color:"#ef4444", hp:120, atk:15, def:11, mag:1,  init:2, desc:"Maestro delle armi e del combattimento" },
+  monk:     { name:"Monaco",    emoji:"🥋", color:"#06b6d4", hp:88,  atk:13, def:10, mag:4,  init:5, desc:"Arti marziali e disciplina del ki" },
+  paladin:  { name:"Paladino",  emoji:"🛡️", color:"#facc15", hp:110, atk:12, def:13, mag:8,  init:1, desc:"Guerriero sacro, paladino della giustizia" },
+  ranger:   { name:"Ranger",    emoji:"🏹", color:"#14b8a6", hp:90,  atk:13, def:7,  mag:6,  init:3, desc:"Esploratore e cacciatore di mostri" },
+  rogue:    { name:"Ladro",     emoji:"🗡️", color:"#22c55e", hp:82,  atk:14, def:6,  mag:4,  init:5, desc:"Furtività, trappole e attacchi subdoli" },
+  sorcerer: { name:"Stregone",  emoji:"🪄", color:"#8b5cf6", hp:68,  atk:6,  def:3,  mag:22, init:2, desc:"Magia innata nel sangue" },
+  warlock:  { name:"Warlock",   emoji:"🔮", color:"#7c3aed", hp:72,  atk:8,  def:4,  mag:20, init:2, desc:"Patti con entità oscure e potere proibito" },
+  mage:     { name:"Mago",      emoji:"🧙‍♂️", color:"#a855f7", hp:65,  atk:5,  def:3,  mag:24, init:2, desc:"Studio arcano e incantesimi devastanti" },
 };
 const RACES = {
-  human:     { name:"Umano",     emoji:"??", hpB:5,  atkB:1, defB:1, magB:1, initB:1, desc:"Versatili e ambiziosi, eccellono in tutto" },
-  dwarf:     { name:"Nano",      emoji:"??", hpB:25, atkB:1, defB:5, magB:0, initB:-1,desc:"Resistenti come la roccia, esperti artigiani" },
-  elf:       { name:"Elfo",      emoji:"??", hpB:0,  atkB:1, defB:1, magB:3, initB:2, desc:"Agili e magici, percezione soprannaturale" },
-  halfling:  { name:"Halfling",  emoji:"??", hpB:0,  atkB:0, defB:2, magB:0, initB:4, desc:"Fortunati e furtivi, sempre positivi" },
-  dragonborn:{ name:"Dragonide", emoji:"??", hpB:10, atkB:3, defB:2, magB:2, initB:0, desc:"Discendenti dei draghi, soffio draconico" },
-  gnome:     { name:"Gnomo",     emoji:"??", hpB:0,  atkB:0, defB:1, magB:6, initB:2, desc:"Ingegnosi e curiosi, magia illusoria naturale" },
-  halfelf:   { name:"Mezzelfo",  emoji:"??", hpB:0,  atkB:2, defB:1, magB:2, initB:2, desc:"Il meglio di due mondi, carismatici" },
-  halforc:   { name:"Mezzorco",  emoji:"??", hpB:15, atkB:5, defB:1, magB:0, initB:1, desc:"Forza bruta e resistenza feroce" },
-  tiefling:  { name:"Tiefling",  emoji:"??", hpB:0,  atkB:0, defB:1, magB:5, initB:1, desc:"Sangue infernale, resistenza al fuoco" },
+  human:     { name:"Umano",     emoji:"👤", hpB:5,  atkB:1, defB:1, magB:1, initB:1, desc:"Versatili e ambiziosi, eccellono in tutto" },
+  dwarf:     { name:"Nano",      emoji:"🧔", hpB:25, atkB:1, defB:5, magB:0, initB:-1,desc:"Resistenti come la roccia, esperti artigiani" },
+  elf:       { name:"Elfo",      emoji:"🧝", hpB:0,  atkB:1, defB:1, magB:3, initB:2, desc:"Agili e magici, percezione soprannaturale" },
+  halfling:  { name:"Halfling",  emoji:"🧒", hpB:0,  atkB:0, defB:2, magB:0, initB:4, desc:"Fortunati e furtivi, sempre positivi" },
+  dragonborn:{ name:"Dragonide", emoji:"🐉", hpB:10, atkB:3, defB:2, magB:2, initB:0, desc:"Discendenti dei draghi, soffio draconico" },
+  gnome:     { name:"Gnomo",     emoji:"🧙‍♂️", hpB:0,  atkB:0, defB:1, magB:6, initB:2, desc:"Ingegnosi e curiosi, magia illusoria naturale" },
+  halfelf:   { name:"Mezzelfo",  emoji:"🧝‍♂️", hpB:0,  atkB:2, defB:1, magB:2, initB:2, desc:"Il meglio di due mondi, carismatici" },
+  halforc:   { name:"Mezzorco",  emoji:"👹", hpB:15, atkB:5, defB:1, magB:0, initB:1, desc:"Forza bruta e resistenza feroce" },
+  tiefling:  { name:"Tiefling",  emoji:"👿", hpB:0,  atkB:0, defB:1, magB:5, initB:1, desc:"Sangue infernale, resistenza al fuoco" },
 };
 const DIFF_COLOR = { "Facile":"#22c55e","Medio":"#fbbf24","Difficile":"#f97316","Molto Difficile":"#ef4444","Leggendario":"#a855f7" };
 const BACKGROUND_URL = "https://oaqjsuaqbzkvoljbmmjx.supabase.co/storage/v1/object/public/assets/ChatGPT_Image_10_mar_2026__02_57_11.png";
@@ -418,17 +418,17 @@ function DEFAULT_QUESTS() {
       "Vittoria! Il troll cade tra un ruggito e il silenzio. I minatori sono liberi!",
     ],
     enemies:[
-      {id:"e1",name:"Goblin delle Rocce",emoji:"??",hp:22,maxHp:22,atk:6,def:2,xp:18,isBoss:false},
-      {id:"e3",name:"Troll delle Caverne",emoji:"??",hp:95,maxHp:95,atk:16,def:7,xp:80,isBoss:true},
+      {id:"e1",name:"Goblin delle Rocce",emoji:"🗿",hp:22,maxHp:22,atk:6,def:2,xp:18,isBoss:false},
+      {id:"e3",name:"Troll delle Caverne",emoji:"🧌",hp:95,maxHp:95,atk:16,def:7,xp:80,isBoss:true},
     ],
   }];
 }
 const DEFAULT_MONSTERS = [
-  {id:"m1",name:"Goblin",       emoji:"??",hp:20,atk:5,def:2,xp:15,desc:"Piccolo e subdolo"},
-  {id:"m2",name:"Orco Guerriero",emoji:"??",hp:60,atk:12,def:5,xp:40,desc:"Brutale e resistente"},
-  {id:"m3",name:"Drago Rosso",  emoji:"??",hp:200,atk:30,def:15,xp:200,desc:"Terrore del continente",isBoss:true},
-  {id:"m4",name:"Vampiro",      emoji:"??",hp:90,atk:18,def:8,xp:80,desc:"Signore della notte",isBoss:true},
-  {id:"m5",name:"Scheletro",    emoji:"??",hp:25,atk:7,def:3,xp:18,desc:"Non-morto eterno"},
+  {id:"m1",name:"Goblin",       emoji:"🧌",hp:20,atk:5,def:2,xp:15,desc:"Piccolo e subdolo"},
+  {id:"m2",name:"Orco Guerriero",emoji:"🪓",hp:60,atk:12,def:5,xp:40,desc:"Brutale e resistente"},
+  {id:"m3",name:"Drago Rosso",  emoji:"🐉",hp:200,atk:30,def:15,xp:200,desc:"Terrore del continente",isBoss:true},
+  {id:"m4",name:"Vampiro",      emoji:"🧛",hp:90,atk:18,def:8,xp:80,desc:"Signore della notte",isBoss:true},
+  {id:"m5",name:"Scheletro",    emoji:"💀",hp:25,atk:7,def:3,xp:18,desc:"Non-morto eterno"},
 ];
 
 /* ----------------------------------------------
@@ -446,9 +446,9 @@ async function dbSendMessage(msg) {
 async function dbSavePlayer(p) {
   await supabase.from("players").upsert({
     id: p.id, name: p.name, party_code: p.partyCode,
-    class: p.class, race: p.race,
-    hp: p.hp, max_hp: p.maxHp, atk: p.atk, def: p.def,
-    mag: p.mag, init: p.init, xp: p.xp, level: p.level, gold: p.gold,
+    class: p?.class || 'warrior', race: p?.race || 'human',
+    hp: p?.hp || 0, max_hp: p?.maxHp || 0, atk: p?.atk || 0, def: p?.def || 0,
+    mag: p?.mag || 0, init: p?.init || 1, xp: p?.xp || 0, level: p?.level || 1, gold: p?.gold || 0,
     updated_at: new Date().toISOString(),
   });
 }
@@ -456,10 +456,10 @@ async function dbSavePlayer(p) {
 async function dbGetPlayers(partyCode) {
   const { data } = await supabase.from("players").select("*").eq("party_code", partyCode);
   return (data || []).map(r => ({
-    id: r.id, name: r.name, partyCode: r.party_code,
-    class: r.class, race: r.race,
-    hp: r.hp, maxHp: r.max_hp, atk: r.atk, def: r.def,
-    mag: r.mag, init: r.init, xp: r.xp, level: r.level, gold: r.gold,
+    id: r?.id, name: r?.name, partyCode: r?.party_code,
+    class: r?.class || 'warrior', race: r?.race || 'human',
+    hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
+    mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0,
   }));
 }
 
@@ -558,6 +558,36 @@ async function deleteParty(partyCode) {
 const MASTER_PASSWORD = "ByBy101112!";
 
 /* ----------------------------------------------
+   ERROR BOUNDARY
+---------------------------------------------- */
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { error: null, info: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { error };
+  }
+  componentDidCatch(error, info) {
+    this.setState({ info });
+    console.error("ErrorBoundary caught:", error, info);
+  }
+  render() {
+    if(this.state.error) {
+      return (
+        <div style={{ padding:20, color:"#f8fafc", background:"#091b2d", minHeight:"100vh" }}>
+          <h2 style={{ color:"#f87171" }}>Errore durante il caricamento della schermata di gioco</h2>
+          <p>{this.state.error?.message || this.state.error?.toString()}</p>
+          <pre style={{ whiteSpace:"pre-wrap", fontSize:"0.75rem", color:"#cbd5e1" }}>{this.state.info?.componentStack}</pre>
+          <button onClick={this.props.onReset} style={{ marginTop:12, padding:"0.6rem 1rem", background:"#4f46e5", color:"#f8fafc", border:"none", borderRadius:4, cursor:"pointer" }}>Torna al menu</button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+/* ----------------------------------------------
    ROOT
 ---------------------------------------------- */
 export default function App() {
@@ -577,10 +607,26 @@ export default function App() {
     return ()=>subscription.unsubscribe();
   },[]);
 
-  function goGame(id) {
-    setMyId(id);
-    localStorage.setItem("eoz_myId", id);
-    setScreen("game");
+  async function goGame(id) {
+    const validId = (id||"").toString().trim();
+    if(!validId) {
+      alert("ID personaggio non valido. Effettua il login o crea un personaggio.");
+      setScreen("landing");
+      return;
+    }
+    setMyId(validId);
+    localStorage.setItem("eoz_myId", validId);
+
+    // Assicuriamoci che i dati del personaggio siano stati caricati da Firebase prima di passare alla schermata di gioco.
+    try {
+      const { data, error } = await supabase.from("players").select("id").eq("id", validId).single();
+      if(error || !data) throw error || new Error("Personaggio non trovato");
+      setScreen("game");
+    } catch(e) {
+      console.error("Errore caricamento personaggio:", e);
+      alert("Impossibile caricare il personaggio. Torna al menu e riprova.");
+      setScreen("landing");
+    }
   }
 
   if(authLoading) return <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:"#06060e", color:"#4b5563", fontFamily:"'Cinzel',serif" }}>? Caricamento...</div>;
@@ -592,7 +638,11 @@ export default function App() {
       {screen!=="master" && !authUser && <AuthScreen setAuthUser={setAuthUser} setScreen={setScreen} setMyId={setMyId} />}
       {screen!=="master" && authUser && screen==="landing" && <Landing setScreen={setScreen} goGame={goGame} myId={myId} authUser={authUser} setAuthUser={setAuthUser} />}
       {screen!=="master" && authUser && screen==="create"  && <CreateChar setScreen={setScreen} goGame={goGame} authUser={authUser} />}
-      {screen!=="master" && authUser && screen==="game"    && <GameScreen myId={myId} setScreen={setScreen} />}
+      {screen!=="master" && authUser && screen==="game" && (
+        <ErrorBoundary onReset={()=>setScreen("landing")}> 
+          <GameScreen myId={myId} setScreen={setScreen} />
+        </ErrorBoundary>
+      )}
     </div>
   );
 }
@@ -636,7 +686,7 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
       </h1>
       <div style={{ width:"100%", maxWidth:400, background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:8, padding:"2rem" }}>
         <div style={{ display:"flex", gap:0, marginBottom:"1.5rem", border:"1px solid #1f2937", borderRadius:6, overflow:"hidden" }}>
-          {[["login","?? Accedi"],["register","?? Registrati"]].map(([k,l])=>(
+          {[["login","🔐 Accedi"],["register","📝 Registrati"]].map(([k,l])=>(
             <button key={k} onClick={()=>{ setMode(k); setError(""); setSuccess(""); }}
               style={{ flex:1, padding:"0.6rem", background:mode===k?"rgba(109,40,217,0.3)":"transparent", border:"none", color:mode===k?"#c4b5fd":"#6b7280", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.8rem", letterSpacing:"0.05em" }}>
               {l}
@@ -649,11 +699,11 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
         <input style={{...inputStyle,marginBottom:16}} type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="��������" onKeyDown={e=>e.key==="Enter"&&handleAuth()} />
         {error && <div style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:12, padding:"0.5rem 0.7rem", background:"rgba(239,68,68,0.1)", border:"1px solid #7f1d1d", borderRadius:4 }}>{error}</div>}
         {success && <div style={{ color:"#6ee7b7", fontSize:"0.82rem", marginBottom:12, padding:"0.5rem 0.7rem", background:"rgba(52,211,153,0.1)", border:"1px solid #065f46", borderRadius:4 }}>{success}</div>}
-        <BigBtn onClick={handleAuth} gold disabled={loading} icon={mode==="login"?"??":"??"}>
+        <BigBtn onClick={handleAuth} gold disabled={loading} icon={mode==="login"?"🔑":"📝"}>
           {loading?"Attendere..." : mode==="login"?"Entra nel Mondo":"Crea Account"}
         </BigBtn>
         <div style={{ marginTop:"1.5rem", textAlign:"center" }}>
-          <button onClick={()=>setScreen("master")} style={{ background:"none", border:"none", color:"#1f2937", cursor:"pointer", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em" }}>?? Accesso Master</button>
+          <button onClick={()=>setScreen("master")} style={{ background:"none", border:"none", color:"#1f2937", cursor:"pointer", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em" }}>🛡️ Accesso Master</button>
         </div>
       </div>
     </div>
@@ -683,7 +733,7 @@ function MasterPanelAuth({ setScreen }) {
           onKeyDown={e=>e.key==="Enter"&&(pwd===MASTER_PASSWORD?setOk(true):setErr(true))} />
         {err && <div style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:12 }}>? Password errata!</div>}
         <div style={{ display:"flex", gap:8, justifyContent:"center" }}>
-          <BigBtn onClick={()=>pwd===MASTER_PASSWORD?setOk(true):setErr(true)} gold icon="??">Entra</BigBtn>
+          <BigBtn onClick={()=>pwd===MASTER_PASSWORD?setOk(true):setErr(true)} gold icon="🗝️">Entra</BigBtn>
           <SmallBtn onClick={()=>setScreen("landing")}>? Indietro</SmallBtn>
         </div>
       </div>
@@ -701,6 +751,26 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
     setAuthUser(null);
     localStorage.removeItem("eoz_myId");
   }
+
+  async function handleTornaAvventura() {
+    try {
+      const saved = localStorage.getItem("eoz_myId");
+      if(!saved) {
+        alert("Nessun personaggio salvato trovato!");
+        return;
+      }
+      const id = saved.trim();
+      if(!id) {
+        alert("Dati personaggio non validi!");
+        return;
+      }
+      await goGame(id);
+    } catch(e) {
+      console.error("Errore caricamento:", e);
+      alert("Errore nel caricare il personaggio: " + (e?.message || e));
+    }
+  }
+
   return (
     <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100vh", padding:"2rem 1rem", textAlign:"center", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundAttachment:"fixed" }}>
       {meta.logo
@@ -712,12 +782,12 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
       </h1>
       <p style={{ fontFamily:"'Cinzel',serif", fontSize:"clamp(0.65rem,2vw,0.85rem)", color:"#7c3aed", letterSpacing:"0.3em", textTransform:"uppercase", margin:"0.2rem 0 2.5rem" }}>{meta.worldSub}</p>
       <div style={{ display:"flex", flexDirection:"column", gap:12, width:"100%", maxWidth:320 }}>
-        <BigBtn onClick={()=>setScreen("create")} gold icon="??">Crea il tuo Eroe</BigBtn>
-        {myId && <BigBtn onClick={()=>goGame(myId)} icon="???">Torna all'Avventura</BigBtn>}
-        <BigBtn onClick={logout} dark icon="??">Esci</BigBtn>
+        <BigBtn onClick={()=>setScreen("create")} gold icon="🛠️">Crea il tuo Eroe</BigBtn>
+        {myId && <BigBtn onClick={handleTornaAvventura} icon="🏹">Torna all'Avventura</BigBtn>}
+        <BigBtn onClick={logout} dark icon="🚪">Esci</BigBtn>
       </div>
       {authUser && <p style={{ marginTop:"1rem", color:"#374151", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
-      <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE � FANTASY � MULTIPLAYER ONLINE</p>
+      <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE • FANTASY • MULTIPLAYER ONLINE</p>
     </div>
   );
 }
@@ -868,7 +938,7 @@ function MasterPanel({ setScreen }) {
   }
   function addEnemyToQ(monster) { setEditQ(q=>({...q,enemies:[...q.enemies,{...monster,maxHp:monster.hp,id:"e_"+Date.now()}]})); }
   function addMonster() {
-    const m={id:"m_"+Date.now(),name:"Nuova Creatura",emoji:"??",hp:30,atk:8,def:3,xp:20,desc:"",isBoss:false};
+    const m={id:"m_"+Date.now(),name:"Nuova Creatura",emoji:"🧩",hp:30,atk:8,def:3,xp:20,desc:"",isBoss:false};
     setMonsters(prev=>[...prev,m]); setEditM({...m});
   }
   function saveEditM() { setMonsters(prev=>prev.map(x=>x.id===editM.id?editM:x)); setEditM(null); }
@@ -1134,24 +1204,24 @@ function PlayersView() {
       <p style={{ color:"#6b7280", fontSize:"0.85rem", marginBottom:"1rem" }}>{players.length} avventurieri � aggiornamento automatico</p>
       {!players.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun giocatore ancora.</div>}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
-        {players.map(p=>{ const cls=CLASSES[p.class]||{}; const race=RACES[p.race]||{};
+        {players.map(p=>{ const cls=CLASSES[p?.class||'warrior']||{}; const race=RACES[p?.race||'human']||{};
           const baseHp = (cls.hp||0) + (race.hpB||0);
           const baseAtk = (cls.atk||0) + (race.atkB||0);
           const baseDef = (cls.def||0) + (race.defB||0);
           const baseMag = (cls.mag||0) + (race.magB||0);
           return (
-            <div key={p.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
+            <div key={p?.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
               <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
                 <span style={{ fontSize:"1.5rem" }}>{cls.emoji}</span>
                 <div style={{ flex:1 }}>
-                  <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{p.name}</div>
-                  <div style={{ color:"#4b5563", fontSize:"0.68rem" }}>{race.emoji} {race.name} � {cls.name} � Lv.{p.level}</div>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{p?.name}</div>
+                  <div style={{ color:"#4b5563", fontSize:"0.68rem" }}>{race.emoji} {race.name} � {cls.name} � Lv.{p?.level||1}</div>
                 </div>
-                <span style={{ padding:"2px 7px", background:"#3b0764", borderRadius:3, fontSize:"0.68rem", color:"#c4b5fd" }}>Lv.{p.level}</span>
+                <span style={{ padding:"2px 7px", background:"#3b0764", borderRadius:3, fontSize:"0.68rem", color:"#c4b5fd" }}>Lv.{p?.level||1}</span>
               </div>
-              <HpBar cur={p.hp} max={p.max_hp} />
+              <HpBar cur={p?.hp||0} max={p?.max_hp||0} />
               <div style={{ display:"flex", gap:10, fontSize:"0.72rem", color:"#6b7280", marginTop:5 }}>
-                <span>?{p.xp}/{xpForLevel(p.level)}XP</span><span>??{p.gold}oro</span><span>???{p.party_code}</span>
+                <span>?{p?.xp||0}/{xpForLevel(p?.level||1)}XP</span><span>??{p?.gold||0}oro</span><span>???{p?.party_code||""}</span>
               </div>
               <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:10 }}>
                 <SmallBtn onClick={async()=>{
@@ -1481,34 +1551,50 @@ function GameScreen({ myId, setScreen }) {
 
   const refreshAll = useCallback(async (partyCode) => {
     if(!partyCode) return;
-    const [msgs, players, state] = await Promise.all([
-      dbGetMessages(partyCode),
-      dbGetPlayers(partyCode),
-      dbGetPartyState(partyCode),
-    ]);
-    setMessages(msgs);
-    setPartyPlayers(players);
-    setQs(state);
-    const freshMe = players.find(p=>p.id===myId);
-    if(freshMe) setMeRaw(freshMe);
+    try {
+      const [msgs, players, state] = await Promise.all([
+        dbGetMessages(partyCode),
+        dbGetPlayers(partyCode),
+        dbGetPartyState(partyCode),
+      ]);
+      setMessages(msgs);
+      setPartyPlayers(players);
+      setQs({ currentId:null, step:0, active:false, completed:[], combat:null, ...state });
+      const freshMe = players.find(p=>p.id===myId);
+      if(freshMe) setMeRaw(freshMe);
+    } catch(e) {
+      console.error("Errore refreshAll:", e);
+    }
   }, [myId]);
 
   useEffect(()=>{
     async function init() {
-      const { data } = await supabase.from("players").select("*").eq("id", myId).single();
-      if(!data) return;
-      const p = { id:data.id, name:data.name, partyCode:data.party_code, class:data.class, race:data.race, hp:data.hp, maxHp:data.max_hp, atk:data.atk, def:data.def, mag:data.mag, init:data.init, xp:data.xp, level:data.level, gold:data.gold };
-      setMeRaw(p);
-      await refreshAll(p.partyCode);
-      // Realtime subscription
-      subRef.current = supabase.channel("party_"+p.partyCode)
-        .on("postgres_changes", { event:"INSERT", schema:"public", table:"messages", filter:`party_code=eq.${p.partyCode}` },
-          () => refreshAll(p.partyCode))
-        .on("postgres_changes", { event:"*", schema:"public", table:"players", filter:`party_code=eq.${p.partyCode}` },
-          () => refreshAll(p.partyCode))
-        .on("postgres_changes", { event:"*", schema:"public", table:"party_state", filter:`party_code=eq.${p.partyCode}` },
-          () => refreshAll(p.partyCode))
-        .subscribe();
+      if(!myId) {
+        setScreen("landing");
+        return;
+      }
+      try {
+        const { data } = await supabase.from("players").select("*").eq("id", myId).single();
+        if(!data) {
+          setScreen("landing");
+          return;
+        }
+        const p = { id:data.id, name:data.name, partyCode:data.party_code, class:data.class, race:data.race, hp:data.hp, maxHp:data.max_hp, atk:data.atk, def:data.def, mag:data.mag, init:data.init, xp:data.xp, level:data.level, gold:data.gold };
+        setMeRaw(p);
+        await refreshAll(p.partyCode);
+        // Realtime subscription
+        subRef.current = supabase.channel("party_"+p.partyCode)
+          .on("postgres_changes", { event:"INSERT", schema:"public", table:"messages", filter:`party_code=eq.${p.partyCode}` },
+            () => refreshAll(p.partyCode))
+          .on("postgres_changes", { event:"*", schema:"public", table:"players", filter:`party_code=eq.${p.partyCode}` },
+            () => refreshAll(p.partyCode))
+          .on("postgres_changes", { event:"*", schema:"public", table:"party_state", filter:`party_code=eq.${p.partyCode}` },
+            () => refreshAll(p.partyCode))
+          .subscribe();
+      } catch(e) {
+        console.error("Errore inizializzazione game:", e);
+        setScreen("landing");
+      }
     }
     init();
     return ()=>{ if(subRef.current) supabase.removeChannel(subRef.current); };
@@ -1528,10 +1614,10 @@ function GameScreen({ myId, setScreen }) {
   // -- COMBATTIMENTO --
   async function startCombat(quest) {
     const enemies = quest.enemies.map(e=>({...e, hp:e.maxHp||e.hp, maxHp:e.maxHp||e.hp}));
-    const players = partyPlayers.map(p=>({ id:p.id, name:p.name, emoji:CLASSES[p.class]?.emoji||"⚔️", hp:p.hp, maxHp:p.maxHp, atk:p.atk, def:p.def, mag:p.mag, init:p.init||1, isPlayer:true }));
+    const players = partyPlayers.map(p=>({ id:p?.id, name:p?.name, emoji:CLASSES[p?.class||'warrior']?.emoji||"⚔️", hp:p?.hp||0, maxHp:p?.maxHp||0, atk:p?.atk||0, def:p?.def||0, mag:p?.mag||0, init:p?.init||1, isPlayer:true }));
     const allCombatants = [...players,...enemies].map(c=>({...c, rollInit:(c.init||1)+roll(20)}));
     allCombatants.sort((a,b)=>b.rollInit-a.rollInit);
-    const spellSlots = Object.fromEntries(players.map(p=>[p.id, getSpellSlots(p.level)]));
+    const spellSlots = Object.fromEntries(players.map(p=>[p.id, getSpellSlots(p.level||1)]));
     const newCombat = { active:true, combatants:allCombatants, turn:0, round:1, spellSlots };
     const newQs = {...qs, combat:newCombat};
     await saveQState(newQs);
@@ -1586,7 +1672,7 @@ function GameScreen({ myId, setScreen }) {
         continue;
       }
 
-      const alivePlayers = partyPlayers.filter(p=>p.hp>0);
+      const alivePlayers = partyPlayers.filter(p=> (p?.hp||0) > 0 );
       if(!alivePlayers.length) break;
       const pt = alivePlayers[roll(alivePlayers.length)-1];
       if(pt) {
@@ -1668,7 +1754,7 @@ function GameScreen({ myId, setScreen }) {
       if(nextActor.isPlayer) break;
       if(nextActor.hp<=0) { nextTurn++; if(nextTurn>=newCombatants.length){nextTurn=0; nextRound++;} continue; }
 
-      const alivePlayers = partyPlayers.filter(p=>p.hp>0);
+      const alivePlayers = partyPlayers.filter(p=> (p?.hp||0) > 0 );
       if(!alivePlayers.length) break;
       const pt = alivePlayers[roll(alivePlayers.length)-1];
       if(pt) {
@@ -1800,9 +1886,9 @@ function GameScreen({ myId, setScreen }) {
     const c=raw.toLowerCase();
     if(c==="avanza") await advanceQuest();
     else if(c==="aiuto") await addMsg(`?? **Comandi:**\n� **avanza** � prosegui nella missione\n� **stato** � il tuo personaggio\n� **party** � chi c'� nel party\n� **classifica** � punti e livelli\n� Qualsiasi testo ? chat`, "system","Sistema");
-    else if(c==="stato") { if(me) await addMsg(`${CLASSES[me.class]?.emoji} **${me.name}** � ${RACES[me.race]?.name} ${CLASSES[me.class]?.name} � Lv.${me.level}\n??${me.hp}/${me.maxHp} ??${me.atk} ???${me.def} ??${me.mag}\n?XP ${me.xp}/${xpForLevel(me.level)} � ??${me.gold} oro`,"info",me.name); }
-    else if(c==="party") { const lines=partyPlayers.map(p=>`${CLASSES[p.class]?.emoji} **${p.name}** Lv.${p.level} ??${p.hp}/${p.maxHp}`); await addMsg(`?? **Party [${code}]**\n${lines.join("\n")}`,"info","Master"); }
-    else if(c==="classifica") { const sorted=[...partyPlayers].sort((a,b)=>b.level-a.level); await addMsg(`?? **Classifica**\n${sorted.map((p,i)=>`${["??","??","??"][i]||"  "} ${CLASSES[p.class]?.emoji} **${p.name}** Lv.${p.level} � ${p.xp}XP`).join("\n")}`,"info","Master"); }
+    else if(c==="stato") { if(me) await addMsg(`${CLASSES[me?.class||'warrior']?.emoji} **${me.name}** � ${RACES[me?.race||'human']?.name} ${CLASSES[me?.class||'warrior']?.name} � Lv.${me.level}\n??${me.hp||0}/${me.maxHp||0} ??${me.atk||0} ???${me.def||0} ??${me.mag||0}\n?XP ${me.xp||0}/${xpForLevel(me.level||1)} � ??${me.gold||0} oro`,`info`,me.name); }
+    else if(c==="party") { const lines=partyPlayers.map(p=>`${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} ??${p?.hp||0}/${p?.maxHp||0}`); await addMsg(`?? **Party [${code}]**\n${lines.join("\n")}`,"info","Master"); }
+    else if(c==="classifica") { const sorted=[...partyPlayers].sort((a,b)=>b.level-a.level); await addMsg(`?? **Classifica**\n${sorted.map((p,i)=>`${["??","??","??"][i]||"  "} ${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} � ${p.xp||0}XP`).join("\n")}`,"info","Master"); }
     else await addMsg(raw, "chat", me?.name);
     inputRef.current?.focus();
   }
@@ -1817,19 +1903,19 @@ function GameScreen({ myId, setScreen }) {
     chat:     {bg:"rgba(255,255,255,0.025)",border:"#1f2937",color:"#f3f4f6"},
   };
 
+  if(!me) return <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", color:"#f3f4f6", fontFamily:"'Cinzel',serif", fontSize:"1.2rem" }}>Caricamento...</div>;
+
   const combat = qs?.combat;
   const myTurn = combat?.active && combat.combatants?.[combat.turn%combat.combatants.length]?.id===myId;
-  const isCaster = MAGIC_CLASSES.includes(me.class);
-  const spellSlots = combat?.spellSlots?.[myId] || getSpellSlots(me.level);
-  const availableSpells = isCaster ? availableSpellsFor(me.class, me.level) : [];
+  const isCaster = MAGIC_CLASSES.includes(me?.class);
+  const spellSlots = combat?.spellSlots?.[myId] || getSpellSlots(me?.level);
+  const availableSpells = isCaster ? availableSpellsFor(me?.class, me?.level) : [];
   const spellLevels = Object.keys(spellSlots).filter(l=>spellSlots[l]>0).map(Number).sort((a,b)=>a-b);
   const spellsByLevel = spellLevels.reduce((acc, lvl) => {
     acc[lvl] = availableSpells.filter(s => Number(s.slot) === lvl);
     return acc;
   }, {});
   const currentQ = qs?.active ? getQuests().find(x=>x.id===qs.currentId) : null;
-
-  if(!me) return <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", color:"#4b5563", fontFamily:"'Cinzel',serif" }}>? Connessione al mondo...</div>;
 
   return (
     <div style={{ display:"flex", height:"100vh", overflow:"hidden", position:"relative", zIndex:1 }}>
@@ -1873,10 +1959,10 @@ function GameScreen({ myId, setScreen }) {
         <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.75rem", color:"#4c1d95", letterSpacing:"0.1em", paddingBottom:8, borderBottom:"1px solid #0f172a" }}>?? {getMeta().worldName}</div>
         <div style={{ background:"rgba(109,40,217,0.1)", border:"1px solid #3b0764", borderRadius:5, padding:"0.6rem" }}>
           <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:5 }}>
-            <span style={{ fontSize:"1.3rem" }}>{CLASSES[me.class]?.emoji}</span>
+            <span style={{ fontSize:"1.3rem" }}>{CLASSES[me?.class]?.emoji}</span>
             <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontFamily:"'Cinzel',serif", color:"#f9fafb", fontSize:"0.82rem", fontWeight:700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{me.name}</div>
-              <div style={{ color:"#4b5563", fontSize:"0.62rem" }}>{RACES[me.race]?.name} {CLASSES[me.class]?.name}</div>
+              <div style={{ fontFamily:"'Cinzel',serif", color:"#f9fafb", fontSize:"0.82rem", fontWeight:700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{me?.name}</div>
+              <div style={{ color:"#4b5563", fontSize:"0.62rem" }}>{RACES[me?.race]?.name} {CLASSES[me?.class]?.name}</div>
             </div>
             <span style={{ padding:"1px 5px", background:"#3b0764", borderRadius:3, fontSize:"0.62rem", color:"#a78bfa", flexShrink:0 }}>Lv.{me.level}</span>
           </div>
@@ -1886,7 +1972,7 @@ function GameScreen({ myId, setScreen }) {
             <span style={{ color:"#fb923c" }}>??{me.atk}</span>
             <span style={{ color:"#60a5fa" }}>???{me.def}</span>
           </div>
-          {MAGIC_CLASSES.includes(me.class) && (
+          {isCaster && (
             <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.65rem", marginTop:4 }}>
               <span style={{ color:"#a78bfa" }}>??{me.mag}</span>
               <span style={{ color:"#c4b4ff" }}>📿 Slot: {totalSlots(spellSlots)} ({formatSpellSlots(spellSlots)})</span>
@@ -1901,15 +1987,15 @@ function GameScreen({ myId, setScreen }) {
         <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #0f172a", borderRadius:4, padding:"0.5rem" }}>
           <div style={{ fontSize:"0.58rem", color:"#374151", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>?? Party � {code}</div>
           {partyPlayers.filter(p=>p.id!==myId).map(p=>(
-            <div key={p.id} style={{ display:"flex", gap:5, alignItems:"center", marginBottom:3 }}>
-              <span style={{ fontSize:"0.9rem" }}>{CLASSES[p.class]?.emoji}</span>
+            <div key={p?.id} style={{ display:"flex", gap:5, alignItems:"center", marginBottom:3 }}>
+              <span style={{ fontSize:"0.9rem" }}>{CLASSES[p?.class||'warrior']?.emoji}</span>
               <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:"0.72rem", color:"#d1d5db", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</div>
+                <div style={{ fontSize:"0.72rem", color:"#d1d5db", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p?.name}</div>
                 <div style={{ height:2, background:"#0f172a", borderRadius:1, overflow:"hidden", marginTop:1 }}>
-                  <div style={{ height:"100%", background:p.hp/p.maxHp>0.5?"#22c55e":p.hp/p.maxHp>0.25?"#f59e0b":"#ef4444", width:`${Math.min(100,p.hp/p.maxHp*100)}%` }} />
+                  <div style={{ height:"100%", background:(p?.hp||0)/(p?.maxHp||1)>0.5?"#22c55e":(p?.hp||0)/(p?.maxHp||1)>0.25?"#f59e0b":"#ef4444", width:`${Math.min(100,(p?.hp||0)/(p?.maxHp||1)*100)}%` }} />
                 </div>
               </div>
-              <span style={{ fontSize:"0.6rem", color:"#4b5563", flexShrink:0 }}>Lv.{p.level}</span>
+              <span style={{ fontSize:"0.6rem", color:"#4b5563", flexShrink:0 }}>Lv.{p?.level||1}</span>
             </div>
           ))}
           {partyPlayers.length<=1&&<div style={{ color:"#1f2937", fontSize:"0.68rem" }}>Solo per ora</div>}
@@ -2158,7 +2244,6 @@ function SmallBtn({ children, onClick, red }) {
 function Card({ title, children }) {
   return (
     <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #0f172a", borderRadius:6, padding:"1rem", marginBottom:"0.8rem" }}>
-      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.68rem", color:"#374151", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:"0.7rem", borderBottom:"1px solid #0f172a", paddingBottom:"0.4rem" }}>{title}</div>
       {children}
     </div>
   );
