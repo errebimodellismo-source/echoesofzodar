@@ -1997,7 +1997,21 @@ function GameScreen({ myId, setScreen }) {
         <div style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.85)", display:"flex", alignItems:"center", justifyContent:"center" }}>
           <div style={{ textAlign:"center", color:"#fff" }}>
             {diceResult.stage==="rolling" ? (
-              <span className={diceAnim?"dice-spin":""} style={{ fontSize:"4rem", display:"inline-block" }}>🎲</span>
+              <span className={diceAnim?"dice-spin":""} style={{ width:"8rem", height:"8rem", display:"inline-block", color:"#fbbf24" }}>
+                <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%"}}>
+                  <polygon points="50,8 92,32 92,68 50,92 8,68 8,32" fill="none" stroke="currentColor" strokeWidth="2"/>
+                  <polygon points="50,8 92,32 8,32" fill="rgba(255,215,0,0.15)" stroke="currentColor" strokeWidth="1.5"/>
+                  <polygon points="8,32 50,8 29,50" fill="rgba(255,215,0,0.1)" stroke="currentColor" strokeWidth="1.5"/>
+                  <polygon points="92,32 71,50 50,8" fill="rgba(255,215,0,0.2)" stroke="currentColor" strokeWidth="1.5"/>
+                  <polygon points="29,50 50,8 71,50" fill="rgba(255,215,0,0.25)" stroke="currentColor" strokeWidth="1.5"/>
+                  <polygon points="8,32 29,50 8,68" fill="rgba(255,215,0,0.1)" stroke="currentColor" strokeWidth="1.5"/>
+                  <polygon points="92,32 92,68 71,50" fill="rgba(255,215,0,0.2)" stroke="currentColor" strokeWidth="1.5"/>
+                  <polygon points="29,50 50,92 8,68" fill="rgba(255,215,0,0.1)" stroke="currentColor" strokeWidth="1.5"/>
+                  <polygon points="71,50 92,68 50,92" fill="rgba(255,215,0,0.15)" stroke="currentColor" strokeWidth="1.5"/>
+                  <polygon points="29,50 71,50 50,92" fill="rgba(255,215,0,0.2)" stroke="currentColor" strokeWidth="1.5"/>
+                  <text x="50" y="55" textAnchor="middle" fontSize="18" fontWeight="bold" fill="currentColor" fontFamily="serif">20</text>
+                </svg>
+              </span>
             ) : (
               <div style={{ position:"relative" }}>
                 {diceResult.value===20 && (
