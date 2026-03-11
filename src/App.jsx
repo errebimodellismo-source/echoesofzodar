@@ -725,7 +725,7 @@ function MasterPanelAuth({ setScreen }) {
   return (
     <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100vh", padding:"2rem", background:"#06060e" }}>
       <div style={{ width:"100%", maxWidth:360, background:"rgba(255,255,255,0.02)", border:"1px solid #374151", borderRadius:8, padding:"2rem", textAlign:"center" }}>
-        <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>??</div>
+        <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>🔒</div>
         <h2 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.2rem", marginBottom:"0.5rem" }}>Pannello Master</h2>
         <p style={{ color:"#4b5563", fontSize:"0.78rem", marginBottom:"1.5rem" }}>Accesso riservato al Master</p>
         <label style={labelStyle}>Password</label>
@@ -822,7 +822,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
     await dbSavePlayer(player);
     const meta = getMeta();
     await dbSendMessage({ party_code:partyCode, author:"Sistema", type:"system",
-      content:`?? **${player.name} il ${c.name}** � entrato nel mondo di **${meta.worldName}**! ${c.emoji}` });
+      content:`⚔️ **${player.name} il ${c.name}** � entrato nel mondo di **${meta.worldName}**! ${c.emoji}` });
     setLoading(false);
     goGame(id);
   }
@@ -843,19 +843,19 @@ function CreateChar({ setScreen, goGame, authUser }) {
       </div>
 
       {step===0 && (
-        <Card title="?? Come ti chiamerai?">
+        <Card title="✏️ Come ti chiamerai?">
           <input style={inputStyle} value={name} onChange={e=>setName(e.target.value)} placeholder="Il nome del tuo eroe..." maxLength={24} autoFocus onKeyDown={e=>e.key==="Enter"&&name.trim()&&setStep(1)} />
           <div style={{ marginTop:"1rem" }}><BigBtn onClick={()=>name.trim()&&setStep(1)} gold disabled={!name.trim()}>Avanti ?</BigBtn></div>
         </Card>
       )}
       {step===1 && (
-        <Card title="?? Scegli la tua Classe">
+        <Card title="⚔️ Scegli la tua Classe">
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))", gap:8 }}>
             {Object.entries(CLASSES).map(([k,v])=>(
               <button key={k} onClick={()=>setCls(k)} style={{ padding:"0.8rem 0.5rem", background:cls===k?"rgba(109,40,217,0.3)":"rgba(255,255,255,0.03)", border:`2px solid ${cls===k?v.color:"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
                 <span style={{ fontSize:"1.8rem" }}>{v.emoji}</span>
                 <strong style={{ fontFamily:"'Cinzel',serif", color:cls===k?v.color:"#d1d5db", fontSize:"0.82rem" }}>{v.name}</strong>
-                {cls===k && <div style={{ fontSize:"0.62rem", color:"#9ca3af", textAlign:"center" }}>??{v.hp} ??{v.atk} ???{v.def} ??{v.mag}</div>}
+                {cls===k && <div style={{ fontSize:"0.62rem", color:"#9ca3af", textAlign:"center" }}>❤️{v.hp} ⚔️{v.atk} 🛡️{v.def} ✨{v.mag}</div>}
               </button>
             ))}
           </div>
@@ -866,7 +866,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
         </Card>
       )}
       {step===2 && (
-        <Card title="?? Scegli la tua Razza">
+        <Card title="🌍 Scegli la tua Razza">
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))", gap:8 }}>
             {Object.entries(RACES).map(([k,v])=>(
               <button key={k} onClick={()=>setRace(k)} style={{ padding:"0.7rem 0.4rem", background:race===k?"rgba(109,40,217,0.3)":"rgba(255,255,255,0.03)", border:`2px solid ${race===k?"#a78bfa":"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
@@ -885,13 +885,13 @@ function CreateChar({ setScreen, goGame, authUser }) {
         </Card>
       )}
       {step===3 && (
-        <Card title="?? Codice Party">
+        <Card title="👥 Codice Party">
           <div style={{ background:"rgba(109,40,217,0.1)", border:"1px solid #4c1d95", borderRadius:6, padding:"0.8rem", marginBottom:"1rem", display:"flex", gap:12, alignItems:"center" }}>
             <span style={{ fontSize:"2rem" }}>{c.emoji}</span>
             <div>
               <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontWeight:700 }}>{name||"Il tuo eroe"}</div>
               <div style={{ color:"#9ca3af", fontSize:"0.78rem" }}>{RACES[race].emoji} {RACES[race].name} � {c.name} � Lv.1</div>
-              <div style={{ color:"#6b7280", fontSize:"0.7rem", marginTop:2 }}>??{c.hp+r.hpB} ??{c.atk+r.atkB} ???{c.def+r.defB} ??{c.mag+r.magB}</div>
+              <div style={{ color:"#6b7280", fontSize:"0.7rem", marginTop:2 }}>❤️{c.hp+r.hpB} ⚔️{c.atk+r.atkB} 🛡️{c.def+r.defB} ✨{c.mag+r.magB}</div>
             </div>
           </div>
           <label style={labelStyle}>Codice Party</label>
@@ -899,7 +899,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
           <p style={{ color:"#4b5563", fontSize:"0.75rem", margin:"6px 0 0", lineHeight:1.5 }}>Il codice party � la tua stanza online. Condividilo con i tuoi giocatori!</p>
           <div style={{ display:"flex", gap:8, marginTop:"1rem" }}>
             <SmallBtn onClick={()=>setStep(2)}>? Indietro</SmallBtn>
-            <BigBtn onClick={create} gold icon="??" disabled={loading}>{loading?"Creando...":"Inizia l'Avventura!"}</BigBtn>
+            <BigBtn onClick={create} gold icon="⭐" disabled={loading}>{loading?"Creando...":"Inizia l'Avventura!"}</BigBtn>
           </div>
         </Card>
       )}
@@ -945,17 +945,17 @@ function MasterPanel({ setScreen }) {
   }
   function saveEditM() { setMonsters(prev=>prev.map(x=>x.id===editM.id?editM:x)); setEditM(null); }
 
-  const TABS = [{k:"world",l:"?? Mondo"},{k:"quests",l:"?? Missioni"},{k:"monsters",l:"?? Bestiari"},{k:"players",l:"?? Giocatori"},{k:"party",l:"?? Party"},{k:"market",l:"?? Market"},{k:"users",l:"?? Iscritti"}];
-  const EMOJIS=["??","??","??","??","??","??","???","??","??","??","??","?","??","??","??","??","???","??","??","??"];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"market",l:"🏪 Market"},{k:"users",l:"👤 Iscritti"}];
+  const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
 
   return (
     <div style={{ position:"relative", zIndex:1, maxWidth:860, margin:"0 auto", padding:"1rem" }}>
       <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:"1.2rem", paddingBottom:"1rem", borderBottom:"1px solid #1f2937", flexWrap:"wrap" }}>
         <div style={{ flex:1 }}>
-          <h1 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.4rem", margin:0 }}>?? Pannello Master</h1>
+          <h1 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.4rem", margin:0 }}>🎲 Pannello Master</h1>
           <p style={{ color:"#4b5563", fontSize:"0.78rem", margin:0 }}>Il tuo strumento di controllo</p>
         </div>
-        <BigBtn onClick={saveAll} gold icon={saved?"?":"??"}>{saved?"Salvato!":"Salva tutto"}</BigBtn>
+        <BigBtn onClick={saveAll} gold icon={saved?"?":"⭐"}>{saved?"Salvato!":"Salva tutto"}</BigBtn>
         <SmallBtn onClick={()=>setScreen("landing")}>? Esci</SmallBtn>
       </div>
       <div style={{ display:"flex", gap:6, marginBottom:"1.2rem", flexWrap:"wrap" }}>
@@ -969,21 +969,21 @@ function MasterPanel({ setScreen }) {
 
       {tab==="world" && (
         <div style={{ display:"flex", flexDirection:"column", gap:"1rem" }}>
-          <Card title="?? Nome del Mondo">
+          <Card title="🌍 Nome del Mondo">
             <label style={labelStyle}>Nome principale</label>
             <input style={inputStyle} value={meta.worldName} onChange={e=>setMeta(m=>({...m,worldName:e.target.value}))} />
             <label style={{...labelStyle,marginTop:10}}>Sottotitolo</label>
             <input style={inputStyle} value={meta.worldSub} onChange={e=>setMeta(m=>({...m,worldSub:e.target.value}))} />
           </Card>
-          <Card title="??? Logo del Gioco">
+          <Card title="🖼️ Logo del Gioco">
             <div style={{ display:"flex", alignItems:"center", gap:"1rem", flexWrap:"wrap" }}>
               {meta.logo && <img src={meta.logo} alt="logo" style={{ maxWidth:180, maxHeight:110, objectFit:"contain", borderRadius:4, border:"1px solid #374151" }} />}
               <div>
                 <label style={{ display:"inline-block", padding:"0.7rem 1.4rem", background:"rgba(109,40,217,0.25)", border:"1px solid #7c3aed", borderRadius:5, cursor:"pointer", color:"#c4b5fd", fontFamily:"'Cinzel',serif", fontSize:"0.85rem" }}>
-                  ?? Carica Logo
+                  📁 Carica Logo
                   <input type="file" accept="image/*" onChange={handleLogo} style={{ display:"none" }} />
                 </label>
-                {meta.logo && <button onClick={()=>setMeta(m=>({...m,logo:null}))} style={{ marginLeft:8, padding:"0.5rem 0.8rem", background:"rgba(239,68,68,0.15)", border:"1px solid #ef4444", borderRadius:4, color:"#fca5a5", cursor:"pointer", fontSize:"0.8rem" }}>??? Rimuovi</button>}
+                {meta.logo && <button onClick={()=>setMeta(m=>({...m,logo:null}))} style={{ marginLeft:8, padding:"0.5rem 0.8rem", background:"rgba(239,68,68,0.15)", border:"1px solid #ef4444", borderRadius:4, color:"#fca5a5", cursor:"pointer", fontSize:"0.8rem" }}>🗑️ Rimuovi</button>}
               </div>
             </div>
           </Card>
@@ -1008,14 +1008,14 @@ function MasterPanel({ setScreen }) {
                     </div>
                     <p style={{ color:"#6b7280", fontSize:"0.8rem", margin:"0 0 6px" }}>{q.desc||"Nessuna descrizione."}</p>
                     <div style={{ display:"flex", gap:14, fontSize:"0.72rem", color:"#4b5563" }}>
-                      <span>? {q.xpReward} XP</span><span>?? {q.goldReward} oro</span>
-                      <span>?? {q.steps.length} scene</span><span>?? {q.enemies.length} nemici</span>
+                      <span>⭐ {q.xpReward} XP</span><span>💰 {q.goldReward} oro</span>
+                      <span>🎭 {q.steps.length} scene</span><span>👾 {q.enemies.length} nemici</span>
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:6, flexShrink:0 }}>
-                    <SmallBtn onClick={()=>setQuests(prev=>prev.map(x=>x.id===q.id?{...x,active:!x.active}:x))}>{q.active?"??":"??"}</SmallBtn>
-                    <SmallBtn onClick={()=>setEditQ({...q})}>??</SmallBtn>
-                    <SmallBtn red onClick={()=>{ if(window.confirm("Elimina?")) setQuests(prev=>prev.filter(x=>x.id!==q.id)); }}>???</SmallBtn>
+                    <SmallBtn onClick={()=>setQuests(prev=>prev.map(x=>x.id===q.id?{...x,active:!x.active}:x))}>{q.active?"⭐":"⭐"}</SmallBtn>
+                    <SmallBtn onClick={()=>setEditQ({...q})}>✏️</SmallBtn>
+                    <SmallBtn red onClick={()=>{ if(window.confirm("Elimina?")) setQuests(prev=>prev.filter(x=>x.id!==q.id)); }}>🗑️</SmallBtn>
                   </div>
                 </div>
               </div>
@@ -1027,11 +1027,11 @@ function MasterPanel({ setScreen }) {
       {tab==="quests" && editQ && (
         <div>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:"1rem", flexWrap:"wrap" }}>
-            <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, flex:1 }}>?? {editQ.title}</h3>
-            <BigBtn onClick={saveEditQ} gold icon="??">Salva Missione</BigBtn>
+            <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, flex:1 }}>📜 {editQ.title}</h3>
+            <BigBtn onClick={saveEditQ} gold icon="⭐">Salva Missione</BigBtn>
             <SmallBtn onClick={()=>setEditQ(null)}>? Annulla</SmallBtn>
           </div>
-          <Card title="?? Informazioni Base">
+          <Card title="📋 Informazioni Base">
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
               <div><label style={labelStyle}>Titolo</label><input style={inputStyle} value={editQ.title} onChange={e=>setEditQ(q=>({...q,title:e.target.value}))} /></div>
               <div><label style={labelStyle}>Difficolt�</label>
@@ -1047,7 +1047,7 @@ function MasterPanel({ setScreen }) {
             <label style={{...labelStyle,marginTop:10}}>Citazione narrativa</label>
             <textarea style={{...inputStyle,height:52,resize:"vertical"}} value={editQ.flavor} onChange={e=>setEditQ(q=>({...q,flavor:e.target.value}))} placeholder="�Una frase epica...�" />
           </Card>
-          <Card title="?? Scene della Missione">
+          <Card title="🎭 Scene della Missione">
             <p style={{ color:"#4b5563", fontSize:"0.75rem", marginBottom:10 }}>Ogni scena viene narrata quando i giocatori digitano <strong style={{color:"#a78bfa"}}>avanza</strong>. Puoi usare **grassetto** e *corsivo*.</p>
             {editQ.steps.map((s,i)=>{
               const step = typeof s === "string" ? { text: s } : (s || { text: "" });
@@ -1098,13 +1098,13 @@ function MasterPanel({ setScreen }) {
               <BigBtn onClick={addStepToQ} gold>+ Aggiungi</BigBtn>
             </div>
           </Card>
-          <Card title="?? Nemici della Missione">
+          <Card title="👾 Nemici della Missione">
             <div style={{ display:"flex", flexDirection:"column", gap:5, marginBottom:10 }}>
               {editQ.enemies.map((en,i)=>(
                 <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"0.4rem 0.7rem", background:"rgba(239,68,68,0.06)", border:`1px solid ${en.isBoss?"#f59e0b":"rgba(239,68,68,0.2)"}`, borderRadius:4 }}>
                   <span style={{ fontSize:"1.2rem" }}>{en.emoji}</span>
-                  <span style={{ color:en.isBoss?"#fbbf24":"#e2d9c5", fontWeight:en.isBoss?700:400 }}>{en.name}{en.isBoss?" ??":""}</span>
-                  <span style={{ color:"#4b5563", fontSize:"0.72rem" }}>??{en.hp} ??{en.atk} ???{en.def} ?{en.xp}xp</span>
+                  <span style={{ color:en.isBoss?"#fbbf24":"#e2d9c5", fontWeight:en.isBoss?700:400 }}>{en.name}{en.isBoss?" ⭐":""}</span>
+                  <span style={{ color:"#4b5563", fontSize:"0.72rem" }}>❤️{en.hp} ⚔️{en.atk} 🛡️{en.def} ⭐{en.xp}xp</span>
                   <button onClick={()=>setEditQ(q=>({...q,enemies:q.enemies.filter((_,j)=>j!==i)}))} style={{ marginLeft:"auto", ...iconBtnStyle, color:"#f87171" }}>?</button>
                 </div>
               ))}
@@ -1114,7 +1114,7 @@ function MasterPanel({ setScreen }) {
               {monsters.map(m=>(
                 <button key={m.id} onClick={()=>addEnemyToQ(m)}
                   style={{ padding:"0.4rem 0.7rem", background:"rgba(255,255,255,0.04)", border:`1px solid ${m.isBoss?"#f59e0b":"#374151"}`, borderRadius:4, color:"#d1d5db", cursor:"pointer", fontSize:"0.8rem", fontFamily:"inherit" }}>
-                  {m.emoji} {m.name}{m.isBoss?" ??":""}
+                  {m.emoji} {m.name}{m.isBoss?" ⭐":""}
                 </button>
               ))}
             </div>
@@ -1134,16 +1134,16 @@ function MasterPanel({ setScreen }) {
                 <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
                   <span style={{ fontSize:"2rem" }}>{m.emoji}</span>
                   <div>
-                    <div style={{ fontFamily:"'Cinzel',serif", color:m.isBoss?"#fbbf24":"#e2d9c5", fontWeight:700 }}>{m.name}{m.isBoss?" ??":""}</div>
+                    <div style={{ fontFamily:"'Cinzel',serif", color:m.isBoss?"#fbbf24":"#e2d9c5", fontWeight:700 }}>{m.name}{m.isBoss?" ⭐":""}</div>
                     <div style={{ color:"#4b5563", fontSize:"0.68rem" }}>{m.desc}</div>
                   </div>
                 </div>
                 <div style={{ display:"flex", gap:10, fontSize:"0.73rem", color:"#6b7280", marginBottom:8 }}>
-                  <span>??{m.hp}</span><span>??{m.atk}</span><span>???{m.def}</span><span>?{m.xp}xp</span>
+                  <span>❤️{m.hp}</span><span>⚔️{m.atk}</span><span>🛡️{m.def}</span><span>⭐{m.xp}xp</span>
                 </div>
                 <div style={{ display:"flex", gap:6 }}>
-                  <SmallBtn onClick={()=>setEditM({...m})}>??</SmallBtn>
-                  <SmallBtn red onClick={()=>{ if(window.confirm("Elimina?")) setMonsters(prev=>prev.filter(x=>x.id!==m.id)); }}>???</SmallBtn>
+                  <SmallBtn onClick={()=>setEditM({...m})}>✏️</SmallBtn>
+                  <SmallBtn red onClick={()=>{ if(window.confirm("Elimina?")) setMonsters(prev=>prev.filter(x=>x.id!==m.id)); }}>🗑️</SmallBtn>
                 </div>
               </div>
             ))}
@@ -1154,8 +1154,8 @@ function MasterPanel({ setScreen }) {
       {tab==="monsters" && editM && (
         <div>
           <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:"1rem" }}>
-            <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, flex:1 }}>?? Modifica Creatura</h3>
-            <BigBtn onClick={saveEditM} gold icon="??">Salva</BigBtn>
+            <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, flex:1 }}>👾 Modifica Creatura</h3>
+            <BigBtn onClick={saveEditM} gold icon="⭐">Salva</BigBtn>
             <SmallBtn onClick={()=>setEditM(null)}>? Annulla</SmallBtn>
           </div>
           <Card title="Scheda Creatura">
@@ -1176,7 +1176,7 @@ function MasterPanel({ setScreen }) {
             <textarea style={{...inputStyle,height:70,resize:"vertical"}} value={editM.desc} onChange={e=>setEditM(m=>({...m,desc:e.target.value}))} />
             <div style={{ display:"flex", alignItems:"center", gap:8, marginTop:10 }}>
               <input type="checkbox" id="bossChk" checked={!!editM.isBoss} onChange={e=>setEditM(m=>({...m,isBoss:e.target.checked}))} style={{ width:18, height:18 }} />
-              <label htmlFor="bossChk" style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontSize:"0.85rem", cursor:"pointer" }}>� un Boss ??</label>
+              <label htmlFor="bossChk" style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontSize:"0.85rem", cursor:"pointer" }}>⭐ un Boss ⭐</label>
             </div>
           </Card>
         </div>
@@ -1223,26 +1223,26 @@ function PlayersView() {
               </div>
               <HpBar cur={p?.hp||0} max={p?.max_hp||0} />
               <div style={{ display:"flex", gap:10, fontSize:"0.72rem", color:"#6b7280", marginTop:5 }}>
-                <span>?{p?.xp||0}/{xpForLevel(p?.level||1)}XP</span><span>??{p?.gold||0}oro</span><span>???{p?.party_code||""}</span>
+                <span>⭐{p?.xp||0}/{xpForLevel(p?.level||1)}XP</span><span>💰{p?.gold||0}oro</span><span>🆔{p?.party_code||""}</span>
               </div>
               <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:10 }}>
                 <SmallBtn onClick={async()=>{
                   const upd={...p, level:1, xp:0, gold:0, hp:baseHp, max_hp:baseHp, atk:baseAtk, def:baseDef, mag:baseMag};
                   await dbSavePlayer(upd);
                   setPlayers(prev=>prev.map(x=>x.id===p.id?upd:x));
-                }}>?? Reset PG</SmallBtn>
+                }}>🔄 Reset PG</SmallBtn>
                 <SmallBtn onClick={async()=>{
                   const upd={...p, hp:p.max_hp};
                   await dbSavePlayer(upd);
                   setPlayers(prev=>prev.map(x=>x.id===p.id?upd:x));
-                }}>?? Cura Tutto</SmallBtn>
+                }}>❤️ Cura Tutto</SmallBtn>
                 <SmallBtn onClick={async()=>{
                   const add = parseInt(window.prompt("Quanto oro aggiungere?", "0"),10);
                   if(!add||isNaN(add)) return;
                   const upd={...p, gold:(p.gold||0)+add};
                   await dbSavePlayer(upd);
                   setPlayers(prev=>prev.map(x=>x.id===p.id?upd:x));
-                }}>?? Dai Oro</SmallBtn>
+                }}>💰 Dai Oro</SmallBtn>
               </div>
             </div>
           );
@@ -1300,13 +1300,13 @@ function PartiesView() {
           <div key={code} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
             <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, marginBottom:6 }}>Party: {code}</div>
             <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-              <SmallBtn disabled={!!working[code]} onClick={()=>handleAction(code, "combat")}>?? Reset Combattimento</SmallBtn>
+              <SmallBtn disabled={!!working[code]} onClick={()=>handleAction(code, "combat")}>💀 Reset Combattimento</SmallBtn>
               <SmallBtn disabled={!!working[code]} onClick={()=>{
                 if(window.confirm("Resetta tutte le chat del party e lo stato di combattimento?")) handleAction(code, "campaign");
-              }}>?? Reset Campagna</SmallBtn>
+              }}>🔄 Reset Campagna</SmallBtn>
               <SmallBtn red disabled={!!working[code]} onClick={()=>{
                 if(window.confirm("Eliminare completamente questo party (messaggi, giocatori, stato)?")) handleAction(code, "delete");
-              }}>?? Elimina Party</SmallBtn>
+              }}>🗑️ Elimina Party</SmallBtn>
             </div>
             {working[code] && <div style={{ marginTop:8, color:"#a78bfa", fontSize:"0.78rem" }}>In corso: {working[code]}</div>}
           </div>
@@ -1351,7 +1351,7 @@ function UsersView() {
           <div style={{ fontFamily:"'Cinzel',serif", fontWeight:700, color:"#e2d9c5" }}>Master password</div>
           <div style={{ fontFamily:"monospace", color:"#c4b5fd" }}>{showPassword?MASTER_PASSWORD:"����������"}</div>
         </div>
-        <SmallBtn onClick={()=>setShowPassword(v=>!v)}>{showPassword?"??? Nascondi":"??? Mostra"}</SmallBtn>
+        <SmallBtn onClick={()=>setShowPassword(v=>!v)}>{showPassword?"👁️ Nascondi":"👁️ Mostra"}</SmallBtn>
       </div>
       {error && <div style={{ color:"#fca5a5", marginBottom:"1rem" }}>{error}</div>}
       {loading && <div style={{ color:"#6b7280" }}>Caricamento...</div>}
@@ -1397,7 +1397,7 @@ function MarketView() {
     <div>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
         <div>
-          <div style={{ fontFamily:"'Cinzel',serif", fontWeight:700, color:"#e2d9c5" }}>?? Market</div>
+          <div style={{ fontFamily:"'Cinzel',serif", fontWeight:700, color:"#e2d9c5" }}>🏪 Market</div>
           <div style={{ fontSize:"0.85rem", color:"#6b7280" }}>{items.length} oggetti</div>
         </div>
         <BigBtn onClick={()=>setEditItem({id:`i_${Date.now()}`,name:"",emoji:"",type:"weapon",description:"",bonus_atk:0,bonus_def:0,bonus_mag:0,bonus_hp:0,price:100,available:true})} gold icon="?">+ Nuovo</BigBtn>
@@ -1429,7 +1429,7 @@ function MarketView() {
             <div><label style={labelStyle}>Bonus HP</label><input style={inputStyle} type="number" value={editItem.bonus_hp} onChange={e=>setEditItem(i=>({...i,bonus_hp:+e.target.value}))} /></div>
           </div>
           <div style={{ display:"flex", gap:10, marginTop:12 }}>
-            <BigBtn onClick={()=>save(editItem)} gold icon="??">Salva</BigBtn>
+            <BigBtn onClick={()=>save(editItem)} gold icon="⭐">Salva</BigBtn>
             <SmallBtn onClick={()=>setEditItem(null)}>Annulla</SmallBtn>
           </div>
         </Card>
@@ -1439,19 +1439,19 @@ function MarketView() {
         {items.map(it=>(
           <div key={it.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
             <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
-              <span style={{ fontSize:"1.5rem" }}>{it.emoji||"??"}</span>
+              <span style={{ fontSize:"1.5rem" }}>{it.emoji||"⭐"}</span>
               <div style={{ flex:1 }}>
                 <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{it.name}</div>
                 <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{it.type}</div>
               </div>
-              <SmallBtn onClick={()=>setEditItem(it)}>??</SmallBtn>
-              <SmallBtn red onClick={()=>remove(it.id)}>???</SmallBtn>
+              <SmallBtn onClick={()=>setEditItem(it)}>✏️</SmallBtn>
+              <SmallBtn red onClick={()=>remove(it.id)}>🗑️</SmallBtn>
             </div>
             <div style={{ fontSize:"0.75rem", color:"#4b5563", marginBottom:6 }}>{it.description}</div>
             <div style={{ display:"flex", gap:8, fontSize:"0.72rem", color:"#6b7280" }}>
-              <span>??+{it.bonus_atk||0}</span><span>???+{it.bonus_def||0}</span><span>??+{it.bonus_mag||0}</span><span>??+{it.bonus_hp||0}</span>
+              <span>⚔️+{it.bonus_atk||0}</span><span>🛡️+{it.bonus_def||0}</span><span>✨+{it.bonus_mag||0}</span><span>❤️+{it.bonus_hp||0}</span>
             </div>
-            <div style={{ marginTop:8, fontSize:"0.75rem", color:"#c4b5fd" }}>?? {it.price} oro</div>
+            <div style={{ marginTop:8, fontSize:"0.75rem", color:"#c4b5fd" }}>💰 {it.price} oro</div>
           </div>
         ))}
       </div>
@@ -1496,12 +1496,12 @@ function ShopView({ me, setMeRaw, addMsg }) {
     await dbSavePlayer(updated);
     await dbAddPlayerItem(me.id, item.id);
     setMeRaw(updated);
-    await addMsg(`?? **${me.name}** ha comprato **${item.name}** per ${item.price} oro!`, "info", "Sistema");
+    await addMsg(`⚔️ **${me.name}** ha comprato **${item.name}** per ${item.price} oro!`, "info", "Sistema");
   };
 
   return (
     <div>
-      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>?? Negozio</h3>
+      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🛒 Negozio</h3>
       {loading && <div style={{ color:"#6b7280" }}>Caricamento...</div>}
       {error && <div style={{ color:"#fca5a5" }}>{error}</div>}
       {!loading && !items.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun oggetto disponibile.</div>}
@@ -1509,18 +1509,18 @@ function ShopView({ me, setMeRaw, addMsg }) {
         {items.map(it=>(
           <div key={it.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
             <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
-              <span style={{ fontSize:"1.5rem" }}>{it.emoji||"??"}</span>
+              <span style={{ fontSize:"1.5rem" }}>{it.emoji||"⭐"}</span>
               <div style={{ flex:1 }}>
                 <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{it.name}</div>
                 <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{it.type}</div>
               </div>
-              <span style={{ fontSize:"0.85rem", color:"#c4b5fd" }}>?? {it.price}</span>
+              <span style={{ fontSize:"0.85rem", color:"#c4b5fd" }}>💰 {it.price}</span>
             </div>
             <div style={{ fontSize:"0.75rem", color:"#4b5563", marginBottom:6 }}>{it.description}</div>
             <div style={{ display:"flex", gap:8, fontSize:"0.72rem", color:"#6b7280" }}>
-              <span>??+{it.bonus_atk||0}</span><span>???+{it.bonus_def||0}</span><span>??+{it.bonus_mag||0}</span><span>??+{it.bonus_hp||0}</span>
+              <span>⚔️+{it.bonus_atk||0}</span><span>🛡️+{it.bonus_def||0}</span><span>✨+{it.bonus_mag||0}</span><span>❤️+{it.bonus_hp||0}</span>
             </div>
-            <BigBtn onClick={()=>buyItem(it)} gold icon="??">Compra</BigBtn>
+            <BigBtn onClick={()=>buyItem(it)} gold icon="⭐">Compra</BigBtn>
           </div>
         ))}
       </div>
@@ -1625,7 +1625,7 @@ function GameScreen({ myId, setScreen }) {
     const newCombat = { active:true, combatants:allCombatants, turn:0, round:1, spellSlots };
     const newQs = {...qs, combat:newCombat};
     await saveQState(newQs);
-    await addMsg(`?? **BATTAGLIA INIZIATA!** Round 1\n\n**Ordine di Iniziativa:**\n${allCombatants.map((c,i)=>`${i+1}. ${c.emoji||"??"} ${c.name} (${c.rollInit})`).join("\n")}`, "combat", "Sistema");
+    await addMsg(`⚔️ **BATTAGLIA INIZIATA!** Round 1\n\n**Ordine di Iniziativa:**\n${allCombatants.map((c,i)=>`${i+1}. ${c.emoji||"⭐"} ${c.name} (${c.rollInit})`).join("\n")}`, "combat", "Sistema");
     setTab("combat");
   }
 
@@ -1636,7 +1636,7 @@ function GameScreen({ myId, setScreen }) {
     const turn = combat.turn % combatants.length;
     const attacker = combatants[turn];
     if(!attacker?.isPlayer || attacker.id!==myId) {
-      await addMsg(`?? Non � il tuo turno! Tocca a **${combatants[turn]?.name}**`, "system","Sistema"); return;
+      await addMsg(`⚔️ Non � il tuo turno! Tocca a **${combatants[turn]?.name}**`, "system","Sistema"); return;
     }
     const targets = combatants.filter(c=>!c.isPlayer&&c.hp>0);
     if(!targets.length) { await endCombat(); return; }
@@ -1656,10 +1656,10 @@ function GameScreen({ myId, setScreen }) {
     setTimeout(()=>{ setDiceResult(null); }, 1500);
     setTimeout(()=>setDiceAnim(false),500);
 
-    let log = `${attacker.emoji||"??"} **${attacker.name}** attacca ${target.emoji} **${target.name}**\n`;
-    log += `?? Tiro: ${hitRoll}${isCrit?" � **CRITICO!**":""}\n`;
-    if(hit) log += `?? Danno: **${dmg}**${isCrit?" (�2 critico!)":""}\n?? ${target.name}: ${combatants[tidx].hp}/${target.maxHp} HP`;
-    else log += `??? Mancato!`;
+    let log = `${attacker.emoji||"⭐"} **${attacker.name}** attacca ${target.emoji} **${target.name}**\n`;
+    log += `🎲 Tiro: ${hitRoll}${isCrit?" � **CRITICO!**":""}\n`;
+    if(hit) log += `⚔️ Danno: **${dmg}**${isCrit?" (×2 critico!)":""}\n❤️ ${target.name}: ${combatants[tidx].hp}/${target.maxHp} HP`;
+    else log += `⚔️? Mancato!`;
 
     let nextTurn = combat.turn + 1;
     let nextRound = combat.round;
@@ -1785,14 +1785,14 @@ function GameScreen({ myId, setScreen }) {
     setSpellMenu(false);
     const newQs = {...qs, combat:null};
     await saveQState(newQs);
-    await addMsg("?? **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", "victory","Sistema");
+    await addMsg("🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", "victory","Sistema");
   }
 
   // -- QUEST --
   async function acceptQuest(q) {
     const newQs = {...qs, currentId:q.id, step:0, active:true};
     await saveQState(newQs);
-    await addMsg(`?? **MISSIONE: ${q.title}**\n\n${q.desc}\n\n*${q.flavor}*\n\n?? Ricompensa: **${q.xpReward} XP** � **${q.goldReward} oro**\n\nDigita **avanza** per iniziare!`, "quest","Master");
+    await addMsg(`⚔️ **MISSIONE: ${q.title}**\n\n${q.desc}\n\n*${q.flavor}*\n\n⭐ Ricompensa: **${q.xpReward} XP** � **${q.goldReward} oro**\n\nDigita **avanza** per iniziare!`, "quest","Master");
   }
 
   function isChoiceStep(step) {
@@ -1811,7 +1811,7 @@ function GameScreen({ myId, setScreen }) {
 
   async function postQuestStepMessage(q, stepIndex) {
     const step = q.steps[stepIndex];
-    await addMsg(`?? **${q.title} � Scena ${stepIndex+1}/${q.steps.length}**\n\n${stepText(step)}`, "quest","Master");
+    await addMsg(`⚔️ **${q.title} � Scena ${stepIndex+1}/${q.steps.length}**\n\n${stepText(step)}`, "quest","Master");
   }
 
   async function completeQuest(q) {
@@ -1825,13 +1825,13 @@ function GameScreen({ myId, setScreen }) {
     }
     const newQs={...qs,active:false,step:0,currentId:null,completed:[...(qs.completed||[]),q.id]};
     await saveQState(newQs);
-    await addMsg(`?? **MISSIONE COMPLETATA: ${q.title}!**\n\n? +${xpE} XP a testa � ?? +${goldE} oro a testa`, "victory","Master");
+    await addMsg(`⚔️ **MISSIONE COMPLETATA: ${q.title}!**\n\n⭐ +${xpE} XP a testa � 💰 +${goldE} oro a testa`, "victory","Master");
   }
 
   async function advanceQuest() {
     const quests = getQuests();
     const q = quests.find(x=>x.id===qs?.currentId);
-    if(!q||!qs?.active){ await addMsg("?? Nessuna missione attiva.","system","Sistema"); return; }
+    if(!q||!qs?.active){ await addMsg("ℹ️ Nessuna missione attiva.","system","Sistema"); return; }
     const step = qs.step;
     await postQuestStepMessage(q, step);
 
@@ -1860,7 +1860,7 @@ function GameScreen({ myId, setScreen }) {
     const choice = choices[choiceKey];
     if(!choice) return;
 
-    await addMsg(`?? **Scelta:** ${choice.text || choiceKey}`, "quest", "Master");
+    await addMsg(`⚔️ **Scelta:** ${choice.text || choiceKey}`, "quest", "Master");
 
     const xpE = Math.max(0, Number(choice.xp)||0);
     const goldE = Math.max(0, Number(choice.gold)||0);
@@ -1871,7 +1871,7 @@ function GameScreen({ myId, setScreen }) {
         await dbSavePlayer(up);
         if(up.id===myId) setMeRaw(up);
       }
-      await addMsg(`? +${xpE} XP a testa � ?? +${goldE} oro a testa`, "victory", "Master");
+      await addMsg(`⭐ +${xpE} XP a testa � 💰 +${goldE} oro a testa`, "victory", "Master");
     }
 
     const nextStep = choice.nextStep != null ? Number(choice.nextStep) : step+1;
@@ -1889,10 +1889,10 @@ function GameScreen({ myId, setScreen }) {
     setInput("");
     const c=raw.toLowerCase();
     if(c==="avanza") await advanceQuest();
-    else if(c==="aiuto") await addMsg(`?? **Comandi:**\n� **avanza** � prosegui nella missione\n� **stato** � il tuo personaggio\n� **party** � chi c'� nel party\n� **classifica** � punti e livelli\n� Qualsiasi testo ? chat`, "system","Sistema");
-    else if(c==="stato") { if(me) await addMsg(`${CLASSES[me?.class||'warrior']?.emoji} **${me.name}** � ${RACES[me?.race||'human']?.name} ${CLASSES[me?.class||'warrior']?.name} � Lv.${me.level}\n??${me.hp||0}/${me.maxHp||0} ??${me.atk||0} ???${me.def||0} ??${me.mag||0}\n?XP ${me.xp||0}/${xpForLevel(me.level||1)} � ??${me.gold||0} oro`,`info`,me.name); }
-    else if(c==="party") { const lines=partyPlayers.map(p=>`${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} ??${p?.hp||0}/${p?.maxHp||0}`); await addMsg(`?? **Party [${code}]**\n${lines.join("\n")}`,"info","Master"); }
-    else if(c==="classifica") { const sorted=[...partyPlayers].sort((a,b)=>b.level-a.level); await addMsg(`?? **Classifica**\n${sorted.map((p,i)=>`${["??","??","??"][i]||"  "} ${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} � ${p.xp||0}XP`).join("\n")}`,"info","Master"); }
+    else if(c==="aiuto") await addMsg(`⚔️ **Comandi:**\n� **avanza** � prosegui nella missione\n� **stato** � il tuo personaggio\n� **party** � chi c'� nel party\n� **classifica** � punti e livelli\n� Qualsiasi testo ? chat`, "system","Sistema");
+    else if(c==="stato") { if(me) await addMsg(`${CLASSES[me?.class||'warrior']?.emoji} **${me.name}** � ${RACES[me?.race||'human']?.name} ${CLASSES[me?.class||'warrior']?.name} � Lv.${me.level}\n❤️${me.hp||0}/${me.maxHp||0} ⚔️${me.atk||0} 🛡️${me.def||0} ✨${me.mag||0}\n⭐XP ${me.xp||0}/${xpForLevel(me.level||1)} | 💰${me.gold||0} oro`,`info`,me.name); }
+    else if(c==="party") { const lines=partyPlayers.map(p=>`${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} ❤️${p?.hp||0}/${p?.maxHp||0}`); await addMsg(`⚔️ **Party [${code}]**\n${lines.join("\n")}`,"info","Master"); }
+    else if(c==="classifica") { const sorted=[...partyPlayers].sort((a,b)=>b.level-a.level); await addMsg(`⚔️ **Classifica**\n${sorted.map((p,i)=>`${["⭐","⭐","⭐"][i]||"  "} ${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} � ${p.xp||0}XP`).join("\n")}`,"info","Master"); }
     else await addMsg(raw, "chat", me?.name);
     inputRef.current?.focus();
   }
@@ -1927,7 +1927,7 @@ function GameScreen({ myId, setScreen }) {
         <div style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.85)", display:"flex", alignItems:"center", justifyContent:"center" }}>
           <div style={{ textAlign:"center", color:"#fff" }}>
             {diceResult.stage==="rolling" ? (
-              <span className={diceAnim?"dice-spin":""} style={{ fontSize:"4rem", display:"inline-block" }}>??</span>
+              <span className={diceAnim?"dice-spin":""} style={{ fontSize:"4rem", display:"inline-block" }}>🎲</span>
             ) : (
               <div style={{ position:"relative" }}>
                 {diceResult.value===20 && (
@@ -1960,7 +1960,7 @@ function GameScreen({ myId, setScreen }) {
       )}
       {/* SIDEBAR */}
       <aside style={{ width:200, flexShrink:0, background:"rgba(4,4,12,0.98)", borderRight:"1px solid #0f172a", display:"flex", flexDirection:"column", gap:8, padding:"0.7rem", overflowY:"auto" }}>
-        <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.75rem", color:"#4c1d95", letterSpacing:"0.1em", paddingBottom:8, borderBottom:"1px solid #0f172a" }}>?? {getMeta().worldName}</div>
+        <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.75rem", color:"#4c1d95", letterSpacing:"0.1em", paddingBottom:8, borderBottom:"1px solid #0f172a" }}>⚔️ {getMeta().worldName}</div>
         <div style={{ background:"rgba(109,40,217,0.1)", border:"1px solid #3b0764", borderRadius:5, padding:"0.6rem" }}>
           <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:5 }}>
             <span style={{ fontSize:"1.3rem" }}>{CLASSES[me?.class]?.emoji}</span>
@@ -1972,13 +1972,13 @@ function GameScreen({ myId, setScreen }) {
           </div>
           <HpBar cur={me.hp} max={me.maxHp} />
           <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.65rem", marginTop:4 }}>
-            <span style={{ color:"#f87171" }}>??{me.hp}/{me.maxHp}</span>
-            <span style={{ color:"#fb923c" }}>??{me.atk}</span>
-            <span style={{ color:"#60a5fa" }}>???{me.def}</span>
+            <span style={{ color:"#f87171" }}>❤️{me.hp}/{me.maxHp}</span>
+            <span style={{ color:"#fb923c" }}>⚔️{me.atk}</span>
+            <span style={{ color:"#60a5fa" }}>🛡️{me.def}</span>
           </div>
           {isCaster && (
             <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.65rem", marginTop:4 }}>
-              <span style={{ color:"#a78bfa" }}>??{me.mag}</span>
+              <span style={{ color:"#a78bfa" }}>✨{me.mag}</span>
               <span style={{ color:"#c4b4ff" }}>📿 Slot: {totalSlots(spellSlots)} ({formatSpellSlots(spellSlots)})</span>
             </div>
           )}
@@ -1989,7 +1989,7 @@ function GameScreen({ myId, setScreen }) {
         </div>
 
         <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #0f172a", borderRadius:4, padding:"0.5rem" }}>
-          <div style={{ fontSize:"0.58rem", color:"#374151", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>?? Party � {code}</div>
+          <div style={{ fontSize:"0.58rem", color:"#374151", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>👥 Party — {code}</div>
           {partyPlayers.filter(p=>p.id!==myId).map(p=>(
             <div key={p?.id} style={{ display:"flex", gap:5, alignItems:"center", marginBottom:3 }}>
               <span style={{ fontSize:"0.9rem" }}>{CLASSES[p?.class||'warrior']?.emoji}</span>
@@ -2007,7 +2007,7 @@ function GameScreen({ myId, setScreen }) {
 
         {currentQ && (
           <div style={{ background:"rgba(180,83,9,0.08)", border:"1px solid #78350f", borderRadius:4, padding:"0.5rem" }}>
-            <div style={{ fontSize:"0.58rem", color:"#78350f", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:3 }}>?? Missione</div>
+            <div style={{ fontSize:"0.58rem", color:"#78350f", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:3 }}>📜 Missione</div>
             <div style={{ color:"#fbbf24", fontSize:"0.75rem", fontWeight:700, marginBottom:3 }}>{currentQ.title}</div>
             <div style={{ height:3, background:"#0f172a", borderRadius:2, overflow:"hidden" }}>
               <div style={{ height:"100%", background:"linear-gradient(90deg,#b45309,#fbbf24)", width:`${qs.step/currentQ.steps.length*100}%` }} />
@@ -2018,8 +2018,8 @@ function GameScreen({ myId, setScreen }) {
 
         {combat?.active && (
           <div style={{ background:myTurn?"rgba(239,68,68,0.15)":"rgba(239,68,68,0.06)", border:`1px solid ${myTurn?"#ef4444":"#7f1d1d"}`, borderRadius:4, padding:"0.5rem" }}>
-            <div style={{ fontSize:"0.62rem", color:myTurn?"#ef4444":"#7f1d1d", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:3 }}>?? Round {combat.round}</div>
-            <div style={{ color:myTurn?"#fca5a5":"#6b7280", fontSize:"0.75rem", fontWeight:700 }}>{myTurn?"?? TUO TURNO!":"Attendi..."}</div>
+            <div style={{ fontSize:"0.62rem", color:myTurn?"#ef4444":"#7f1d1d", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:3 }}>⚔️ Round {combat.round}</div>
+            <div style={{ color:myTurn?"#fca5a5":"#6b7280", fontSize:"0.75rem", fontWeight:700 }}>{myTurn?"⚔️ TUO TURNO!":"Attendi..."}</div>
           </div>
         )}
 
@@ -2029,7 +2029,7 @@ function GameScreen({ myId, setScreen }) {
       {/* MAIN */}
       <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
         <div style={{ display:"flex", gap:0, borderBottom:"1px solid #0f172a", background:"rgba(4,4,12,0.98)", flexShrink:0 }}>
-          {[["chat","?? Chat"],["quest","?? Missioni"],["shop","?? Negozio"],["combat","?? Battaglia"]].map(([k,l])=>(
+          {[["chat","💬 Chat"],["quest","📜 Missioni"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>(
             <button key={k} onClick={()=>setTab(k)} style={{ padding:"0.6rem 1.2rem", background:tab===k?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k?"2px solid #7c3aed":"2px solid transparent", color:tab===k?"#c4b5fd":"#4b5563", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", letterSpacing:"0.05em" }}>
               {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}
             </button>
@@ -2059,10 +2059,10 @@ function GameScreen({ myId, setScreen }) {
 
         {tab==="quest" && (
           <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
-            <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>?? Missioni</h3>
+            <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>📜 Missioni</h3>
             {qs?.active && currentQ && (
               <div style={{ background:"rgba(245,158,11,0.08)", border:"1px solid #b45309", borderRadius:6, padding:"1rem", marginBottom:"1rem" }}>
-                <div style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontWeight:700, marginBottom:4 }}>?? IN CORSO: {currentQ.title}</div>
+                <div style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontWeight:700, marginBottom:4 }}>📜 IN CORSO: {currentQ.title}</div>
                 <div style={{ height:5, background:"#0f172a", borderRadius:3, overflow:"hidden", marginBottom:8 }}>
                   <div style={{ height:"100%", background:"linear-gradient(90deg,#b45309,#fbbf24)", width:`${qs.step/currentQ.steps.length*100}%` }} />
                 </div>
@@ -2082,9 +2082,9 @@ function GameScreen({ myId, setScreen }) {
                     }
                     return (
                       <>
-                        <BigBtn onClick={advanceQuest} gold icon="??">Avanza</BigBtn>
+                        <BigBtn onClick={advanceQuest} gold icon="⭐">Avanza</BigBtn>
                         {currentQ.enemies?.length>0&&!combat?.active&&(
-                          <BigBtn onClick={()=>startCombat(currentQ)} icon="??">Inizia Combattimento</BigBtn>
+                          <BigBtn onClick={()=>startCombat(currentQ)} icon="⭐">Inizia Combattimento</BigBtn>
                         )}
                       </>
                     );
@@ -2110,10 +2110,10 @@ function GameScreen({ myId, setScreen }) {
                       <p style={{ color:"#6b7280", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
                       {q.flavor&&<p style={{ color:"#4b5563", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{q.flavor}</p>}
                       <div style={{ display:"flex", gap:14, fontSize:"0.73rem", color:"#4b5563" }}>
-                        <span>? {q.xpReward} XP</span><span>?? {q.goldReward} oro</span><span>?? {q.steps.length} scene</span>
+                        <span>⭐ {q.xpReward} XP</span><span>💰 {q.goldReward} oro</span><span>🎭 {q.steps.length} scene</span>
                       </div>
                     </div>
-                    {!done&&!qs?.active&&<BigBtn onClick={()=>acceptQuest(q)} gold icon="??">Accetta</BigBtn>}
+                    {!done&&!qs?.active&&<BigBtn onClick={()=>acceptQuest(q)} gold icon="⭐">Accetta</BigBtn>}
                   </div>
                 </div>
               );
@@ -2125,15 +2125,15 @@ function GameScreen({ myId, setScreen }) {
           <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
             {!combat?.active ? (
               <div style={{ textAlign:"center", padding:"3rem", color:"#374151" }}>
-                <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>??</div>
+                <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>🔒</div>
                 <p>Nessuna battaglia in corso.</p>
                 <p style={{ fontSize:"0.8rem" }}>Accetta una missione e usa il tab Missioni per iniziare il combattimento.</p>
               </div>
             ) : (
               <div>
                 <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:"1rem" }}>
-                  <h3 style={{ fontFamily:"'Cinzel',serif", color:"#ef4444", margin:0 }}>?? Battaglia � Round {combat.round}</h3>
-                  {myTurn&&<span style={{ padding:"3px 10px", background:"rgba(239,68,68,0.3)", border:"1px solid #ef4444", borderRadius:4, color:"#fca5a5", fontSize:"0.78rem" }}>?? TUO TURNO</span>}
+                  <h3 style={{ fontFamily:"'Cinzel',serif", color:"#ef4444", margin:0 }}>⚔️ Battaglia — Round {combat.round}</h3>
+                  {myTurn&&<span style={{ padding:"3px 10px", background:"rgba(239,68,68,0.3)", border:"1px solid #ef4444", borderRadius:4, color:"#fca5a5", fontSize:"0.78rem" }}>⚔️ TUO TURNO</span>}
                 </div>
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))", gap:8, marginBottom:"1rem" }}>
                   {combat.combatants.map((c,i)=>{
@@ -2141,9 +2141,9 @@ function GameScreen({ myId, setScreen }) {
                     return (
                       <div key={c.id||i} style={{ background:isActive?"rgba(239,68,68,0.1)":"rgba(255,255,255,0.02)", border:`2px solid ${isActive?"#ef4444":c.isPlayer?"#3b0764":"#7f1d1d"}`, borderRadius:6, padding:"0.7rem", opacity:c.hp<=0?0.4:1 }}>
                         <div style={{ display:"flex", gap:6, alignItems:"center", marginBottom:5 }}>
-                          <span style={{ fontSize:"1.4rem" }}>{c.emoji||"??"}</span>
+                          <span style={{ fontSize:"1.4rem" }}>{c.emoji||"⭐"}</span>
                           <div style={{ flex:1 }}>
-                            <div style={{ fontFamily:"'Cinzel',serif", color:c.isPlayer?"#c4b5fd":"#fca5a5", fontSize:"0.8rem", fontWeight:700 }}>{c.name}{c.isBoss?" ??":""}</div>
+                            <div style={{ fontFamily:"'Cinzel',serif", color:c.isPlayer?"#c4b5fd":"#fca5a5", fontSize:"0.8rem", fontWeight:700 }}>{c.name}{c.isBoss?" ⭐":""}</div>
                             <div style={{ fontSize:"0.62rem", color:"#4b5563" }}>Init: {c.rollInit}</div>
                           </div>
                           {isActive&&<span style={{ fontSize:"0.6rem", padding:"1px 4px", background:"#7f1d1d", borderRadius:3, color:"#fca5a5" }}>?</span>}
@@ -2187,7 +2187,7 @@ function GameScreen({ myId, setScreen }) {
                       <>
                         <div style={{ display:"flex", justifyContent:"center", gap:10, flexWrap:"wrap" }}>
                           <button onClick={doAttack} style={{ padding:"1rem 2.2rem", background:"linear-gradient(135deg,#7f1d1d,#dc2626)", border:"2px solid #ef4444", borderRadius:6, color:"#fee2e2", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.1rem", cursor:"pointer", letterSpacing:"0.08em" }}>
-                            <span className={diceAnim?"dice-spin":""} style={{ display:"inline-block", marginRight:8 }}>??</span>
+                            <span className={diceAnim?"dice-spin":""} style={{ display:"inline-block", marginRight:8 }}>🎲</span>
                             ATTACCA!
                           </button>
                           {isCaster && (
