@@ -1975,22 +1975,27 @@ function GameScreen({ myId, setScreen }) {
                 </div>
               )}
               <span className={diceResult.stage==="rolling" && diceAnim?"dice-spin":""} style={{ width:"10rem", height:"10rem", display:"inline-block" }}>
-                <svg viewBox="0 0 120 120" style={{width:"100%",height:"100%",filter:"drop-shadow(0 0 20px rgba(255,215,0,0.8))"}}>
+                <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:"drop-shadow(0 4px 16px rgba(255,200,0,0.7))"}}>
                   <defs>
-                    <radialGradient id="faceGrad" cx="40%" cy="35%">
-                      <stop offset="0%" stopColor="#fff9c4"/>
-                      <stop offset="60%" stopColor="#f59e0b"/>
-                      <stop offset="100%" stopColor="#92400e"/>
-                    </radialGradient>
+                    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#fde68a"/>
+                      <stop offset="100%" stopColor="#b45309"/>
+                    </linearGradient>
+                    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#f59e0b"/>
+                      <stop offset="100%" stopColor="#7c2d12"/>
+                    </linearGradient>
+                    <linearGradient id="g3" x1="100%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#fbbf24"/>
+                      <stop offset="100%" stopColor="#451a03"/>
+                    </linearGradient>
                   </defs>
-                  <polygon points="60,6 111,36 111,84 60,114 9,84 9,36" fill="url(#faceGrad)" stroke="#fbbf24" strokeWidth="2"/>
-                  <polygon points="60,6 111,36 60,60" fill="rgba(255,255,255,0.15)" stroke="#fbbf24" strokeWidth="1"/>
-                  <polygon points="9,36 60,60 60,6" fill="rgba(0,0,0,0.2)" stroke="#fbbf24" strokeWidth="1"/>
-                  <polygon points="111,36 111,84 60,60" fill="rgba(255,255,255,0.1)" stroke="#fbbf24" strokeWidth="1"/>
-                  <polygon points="9,84 60,60 9,36" fill="rgba(0,0,0,0.3)" stroke="#fbbf24" strokeWidth="1"/>
-                  <polygon points="111,84 60,114 60,60" fill="rgba(0,0,0,0.25)" stroke="#fbbf24" strokeWidth="1"/>
-                  <polygon points="60,114 9,84 60,60" fill="rgba(0,0,0,0.35)" stroke="#fbbf24" strokeWidth="1"/>
-                  <text x="60" y="67" textAnchor="middle" fontSize="26" fontWeight="900" fill="white" fontFamily="Georgia, serif">
+                  <polygon points="50,5 15,35 30,85" fill="url(#g3)" stroke="#fbbf24" strokeWidth="1.5" strokeLinejoin="round"/>
+                  <polygon points="50,5 85,35 70,85" fill="url(#g2)" stroke="#fbbf24" strokeWidth="1.5" strokeLinejoin="round"/>
+                  <polygon points="50,5 15,35 85,35" fill="url(#g1)" stroke="#fbbf24" strokeWidth="1.5" strokeLinejoin="round"/>
+                  <polygon points="15,35 30,85 70,85 85,35" fill="url(#g2)" stroke="#fbbf24" strokeWidth="1.5" strokeLinejoin="round"/>
+                  <line x1="50" y1="5" x2="50" y2="85" stroke="#fbbf24" strokeWidth="0.8" opacity="0.5"/>
+                  <text x="50" y="64" textAnchor="middle" fontSize="22" fontWeight="900" fill="white" fontFamily="Georgia,serif" stroke="#92400e" strokeWidth="1">
                     {diceResult.stage==="rolling" ? "?" : diceResult.value}
                   </text>
                 </svg>
