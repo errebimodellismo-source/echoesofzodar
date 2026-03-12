@@ -77,6 +77,9 @@ function missionDifficultyLabel(value) {
 }
 const BACKGROUND_URL = "https://fv5-4.files.fm/thumb_show.php?i=qdtav95gc2&view&v=1&PHPSESSID=964a794e4d1fe9b3c7e7e8a4950eb15086c6dfc9";
 const MASTER_PASSWORD = "ByBy101112!";
+function debugCharacterFlow(step, payload) {
+  console.log(`[CHAR_FLOW] ${step}`, payload ?? "");
+}
 const MASTER_EMAILS = (import.meta.env.VITE_MASTER_EMAILS || "")
   .split(",")
   .map(email => email.trim().toLowerCase())
@@ -123,6 +126,11 @@ const SPELL_SLOTS = {
 
 const SPELLS = {
   mage:{
+    0:[
+      {id:"mg01",name:"Scintilla Arcana",emoji:"✨",dmg:"1d6",type:"damage",slots:0,desc:"Dardo minore di energia pura, gratuito ogni turno"},
+      {id:"mg02",name:"Raggio di Brina",emoji:"❄️",dmg:"1d8",type:"damage",slots:0,desc:"Un gelo rapido che ferisce senza consumare slot"},
+      {id:"mg03",name:"Mano Folgorante",emoji:"⚡",dmg:"1d6",type:"damage",slots:0,desc:"Scarica breve e precisa, perfetta come trucchetto base"},
+    ],
     1:[
       {id:"mg11",name:"Dardo Incantato",emoji:"✨",dmg:"3d4+3",type:"damage",slots:1,desc:"3 dardi magici infallibili che non mancano mai"},
       {id:"mg12",name:"Mano Bruciante",emoji:"🔥",dmg:"3d6",type:"damage",slots:1,desc:"Cono di fiamme che brucia i nemici vicini"},
@@ -400,6 +408,10 @@ function parseDice(dice) {
 function rollDice(dice) {
   return parseDice(dice);
 }
+function getPrimaryDieSides(dice, fallback = 20) {
+  const match = String(dice || "").match(/d(\d+)/i);
+  return match ? Number(match[1]) : fallback;
+}
 
 function getSpellSlots(level) {
   const base = SPELL_SLOTS[level] || SPELL_SLOTS[1];
@@ -423,6 +435,13 @@ function totalSlots(slots) {
 function formatSpellSlots(slots) {
   if(!slots) return "0";
   return Object.entries(slots).map(([lvl,count])=>`${lvl}:${count}`).join(" ");
+}
+function maxPreparedSpellsForLevel(level) {
+  if(level <= 1) return 2;
+  if(level === 2) return 3;
+  if(level === 3) return 4;
+  if(level === 4) return 5;
+  return Math.min(10, level + 1);
 }
 
 /* ----------------------------------------------
@@ -936,11 +955,28 @@ function isEquippableItem(item) {
 function equipmentKey(playerId) {
   return `eoz_equipment_${playerId}`;
 }
+function preparedSpellsKey(playerId) {
+  return `eoz_prepared_spells_${playerId}`;
+}
 function getStoredEquipment(playerId) {
   return lsGet(equipmentKey(playerId), { weapon:null, armor:null, shield:null });
 }
 function saveStoredEquipment(playerId, equipment) {
   lsSet(equipmentKey(playerId), equipment);
+}
+function getStoredPreparedSpells(playerId, spells=[]) {
+  return lsGet(preparedSpellsKey(playerId), spells.map(spell => spell.id));
+}
+function saveStoredPreparedSpells(playerId, spellIds) {
+  lsSet(preparedSpellsKey(playerId), spellIds);
+}
+function spellEffectSummary(spell) {
+  if(!spell) return [];
+  const details = [];
+  details.push(spell.slots === 0 ? "Gratis" : `Costo: slot ${spell.slots}`);
+  if(spell.dmg && spell.dmg !== "0") details.push(spell.type === "heal" ? `Cura: ${spell.dmg}` : `Danno: ${spell.dmg}`);
+  else details.push(`Tipo: ${spell.type || "speciale"}`);
+  return details;
 }
 function getBaseStats(player) {
   const cls = CLASSES[player?.class || "warrior"] || CLASSES.warrior;
@@ -1052,6 +1088,113 @@ function getCombatDamageDie(actor) {
   if((actor?.atk || 0) >= 8) return "1d8";
   return "1d6";
 }
+function getCombatAttackBonus(actor) {
+  return Math.max(1, Math.floor((actor?.atk || 0) / 3));
+}
+function resolveWeaponAttack(attacker, target, weaponDie) {
+  const hitRoll = roll(20);
+  const isCrit = hitRoll === 20;
+  const attackBonus = getCombatAttackBonus(attacker);
+  const attackTotal = hitRoll + attackBonus;
+  const targetCa = Math.max(8, target?.def || 10);
+  const hit = isCrit || attackTotal >= targetCa;
+  const damageRoll = hit ? rollDice(weaponDie || "1d6") : 0;
+  const damage = hit ? damageRoll + (isCrit ? damageRoll : 0) : 0;
+  return { hitRoll, isCrit, attackBonus, attackTotal, targetCa, damageRoll, damage, weaponDie: weaponDie || "1d6" };
+}
+function formatWeaponAttackLog(attacker, target, resolved, weaponName, targetHpAfter, targetMaxHp) {
+  const header = `${attacker?.emoji || "⭐"} **${attacker?.name}** attacca ${target?.emoji || "⭐"} **${target?.name}**`;
+  const hitLine = `🎯 Tiro per colpire: **d20 ${resolved.hitRoll} + bonus ${resolved.attackBonus} = ${resolved.attackTotal}** contro CA **${resolved.targetCa}**`;
+  if(!resolved.hit) return `${header}\n${hitLine}\n❌ **Mancato**`;
+  const critNote = resolved.isCrit ? " — **CRITICO!**" : "";
+  const dmgLine = `💥 Tiro danno: **${resolved.weaponDie} = ${resolved.damageRoll}**${resolved.isCrit ? `, critico => **${resolved.damage}**` : ` => **${resolved.damage}**`} con **${weaponName}**`;
+  const hpLine = `❤️ ${target?.name}: ${targetHpAfter}/${targetMaxHp} HP`;
+  return `${header}\n${hitLine}\n✅ **Colpisce**${critNote}\n${dmgLine}\n${hpLine}`;
+}
+function isDyingCombatant(combatant) {
+  return !!combatant?.isPlayer && !!combatant?.dying && !combatant?.dead;
+}
+function canTakeCombatTurn(combatant) {
+  if(!combatant) return false;
+  if(combatant.isPlayer) return !combatant.dead && ((combatant.hp || 0) > 0 || combatant.dying);
+  return (combatant.hp || 0) > 0;
+}
+function hasActionablePlayerCombatants(combatants) {
+  return (combatants || []).some(c => c?.isPlayer && !c?.dead && (((c?.hp || 0) > 0) || c?.dying));
+}
+function getNextCombatTurn(combatants, currentTurn, currentRound) {
+  let nextTurn = currentTurn + 1;
+  let nextRound = currentRound;
+  if(nextTurn >= combatants.length) { nextTurn = 0; nextRound++; }
+  let safety = 0;
+  while(safety++ < combatants.length && !canTakeCombatTurn(combatants[nextTurn])) {
+    nextTurn++;
+    if(nextTurn >= combatants.length) { nextTurn = 0; nextRound++; }
+  }
+  return { nextTurn, nextRound };
+}
+function applyCombatDamageState(combatant, damage) {
+  const nextHp = Math.max(0, (combatant?.hp || 0) - damage);
+  if(nextHp > 0) return { ...combatant, hp: nextHp };
+  if(combatant?.dead) return { ...combatant, hp: 0 };
+  return {
+    ...combatant,
+    hp: 0,
+    dying: true,
+    stable: false,
+    dead: false,
+    deathSuccesses: combatant?.dying ? (combatant.deathSuccesses || 0) : 0,
+    deathFailures: combatant?.dying ? (combatant.deathFailures || 0) : 0,
+  };
+}
+function reviveCombatantState(combatant, hp) {
+  return {
+    ...combatant,
+    hp,
+    dying: false,
+    stable: false,
+    dead: false,
+    deathSuccesses: 0,
+    deathFailures: 0,
+  };
+}
+function resolveDeathSave(combatant) {
+  const rollValue = roll(20);
+  if(rollValue === 20) {
+    return {
+      rollValue,
+      result: "nat20",
+      nextCombatant: reviveCombatantState(combatant, 1),
+      log: `🕯️ **${combatant.name}** tira un **20 naturale** sulla salvezza contro la morte e ritorna a **1 HP**!`,
+    };
+  }
+  const successGain = rollValue >= 10 ? 1 : 0;
+  const failureGain = rollValue === 1 ? 2 : rollValue <= 9 ? 1 : 0;
+  const successes = (combatant.deathSuccesses || 0) + successGain;
+  const failures = (combatant.deathFailures || 0) + failureGain;
+  if(failures >= 3) {
+    return {
+      rollValue,
+      result: "dead",
+      nextCombatant: { ...combatant, hp: 0, dying: false, stable: false, dead: true, deathSuccesses: successes, deathFailures: failures },
+      log: `☠️ **${combatant.name}** fallisce la salvezza contro la morte (${successes}/3 successi, ${failures}/3 fallimenti) e **muore**.`,
+    };
+  }
+  if(successes >= 3) {
+    return {
+      rollValue,
+      result: "stable",
+      nextCombatant: { ...combatant, hp: 0, dying: false, stable: true, dead: false, deathSuccesses: successes, deathFailures: failures },
+      log: `🛌 **${combatant.name}** ottiene la terza salvezza (${successes}/3) ed è **stabile**, ma resta a 0 HP.`,
+    };
+  }
+  return {
+    rollValue,
+    result: successGain ? "success" : "failure",
+    nextCombatant: { ...combatant, hp: 0, dying: true, stable: false, dead: false, deathSuccesses: successes, deathFailures: failures },
+    log: `🕯️ **${combatant.name}** tira una salvezza contro la morte: **d20 ${rollValue}** — ${successGain ? "successo" : "fallimento"} (${successes}/3 successi, ${failures}/3 fallimenti).`,
+  };
+}
 function itemStatSummary(item) {
   if(!item) return [];
   const stats = [];
@@ -1072,6 +1215,92 @@ function itemTypeLabel(type) {
     accessory: "Accessorio",
     potion: "Pozione",
   })[type] || type || "Oggetto";
+}
+function svgDataUrl(svg) {
+  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+}
+function makeArchetypeImage({ icon, title, accent="#fbbf24", accent2="#7c3aed", bg1="#172033", bg2="#0b1120", border="#334155", subtitle="" }) {
+  return svgDataUrl(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320">
+      <defs>
+        <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${bg1}"/>
+          <stop offset="100%" stop-color="${bg2}"/>
+        </linearGradient>
+        <linearGradient id="shine" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${accent}" stop-opacity="0.35"/>
+          <stop offset="100%" stop-color="${accent2}" stop-opacity="0.12"/>
+        </linearGradient>
+      </defs>
+      <rect width="320" height="320" rx="36" fill="url(#bg)"/>
+      <rect x="12" y="12" width="296" height="296" rx="28" fill="none" stroke="${border}" stroke-width="4"/>
+      <circle cx="160" cy="134" r="88" fill="url(#shine)"/>
+      <text x="160" y="162" text-anchor="middle" font-size="104">${icon}</text>
+      <text x="160" y="248" text-anchor="middle" fill="#f8fafc" font-size="24" font-family="Georgia,serif">${title}</text>
+      <text x="160" y="275" text-anchor="middle" fill="#94a3b8" font-size="15" font-family="Georgia,serif">${subtitle}</text>
+    </svg>
+  `);
+}
+function itemImageTheme(item) {
+  return {
+    weapon:{ icon:"⚔️", title:"Arma", accent:"#ef4444", accent2:"#f59e0b", bg1:"#261019", bg2:"#09090b", border:"#7f1d1d" },
+    armor:{ icon:"🛡️", title:"Armatura", accent:"#60a5fa", accent2:"#e2e8f0", bg1:"#102033", bg2:"#08111d", border:"#1d4ed8" },
+    shield:{ icon:"🛡️", title:"Scudo", accent:"#22c55e", accent2:"#0ea5e9", bg1:"#0f221d", bg2:"#08110f", border:"#166534" },
+    potion:{ icon:"🧪", title:"Pozione", accent:"#a855f7", accent2:"#f472b6", bg1:"#231236", bg2:"#120b1f", border:"#6d28d9" },
+    accessory:{ icon:"💍", title:"Accessorio", accent:"#fbbf24", accent2:"#fb7185", bg1:"#2a1d0a", bg2:"#140f09", border:"#b45309" },
+  }[item?.type] || { icon:item?.emoji || "⭐", title:"Oggetto", accent:"#fbbf24", accent2:"#7c3aed", bg1:"#172033", bg2:"#0b1120", border:"#334155" };
+}
+function getItemImage(item) {
+  if(!item) return "";
+  if(item.image) return item.image;
+  if(item.image_url) return item.image_url;
+  const theme = itemImageTheme(item);
+  return makeArchetypeImage({ ...theme, icon:item.emoji || theme.icon, title:itemTypeLabel(item.type), subtitle:itemRarityLabel(item.rarity) });
+}
+function getPlayerPortrait(player) {
+  if(!player) return "";
+  if(player.portrait) return player.portrait;
+  if(player.image) return player.image;
+  const cls = CLASSES[player.class || "warrior"] || {};
+  const race = RACES[player.race || "human"] || {};
+  const classTheme = {
+    warrior:{ accent:"#ef4444", accent2:"#f59e0b", bg1:"#2a1313", bg2:"#10090a", border:"#7f1d1d" },
+    mage:{ accent:"#60a5fa", accent2:"#a855f7", bg1:"#111b35", bg2:"#080b16", border:"#3730a3" },
+    priest:{ accent:"#fbbf24", accent2:"#f8fafc", bg1:"#2a2112", bg2:"#110d08", border:"#a16207" },
+    ranger:{ accent:"#22c55e", accent2:"#34d399", bg1:"#13241a", bg2:"#09110c", border:"#166534" },
+  }[player.class || "warrior"] || { accent:"#c084fc", accent2:"#60a5fa", bg1:"#171c2a", bg2:"#0b1020", border:"#334155" };
+  return makeArchetypeImage({
+    icon: cls.emoji || "🧙",
+    title: cls.name || "Eroe",
+    subtitle: race.name || "Avventuriero",
+    ...classTheme,
+  });
+}
+function getMonsterImage(monster) {
+  if(!monster) return "";
+  if(monster.image) return monster.image;
+  if(monster.image_url) return monster.image_url;
+  const key = `${monster.id || ""} ${monster.name || ""} ${monster.desc || ""}`.toLowerCase();
+  const theme =
+    /drago|dragon/.test(key) ? { icon:"🐉", title:"Drago", accent:"#ef4444", accent2:"#f59e0b", bg1:"#2b1010", bg2:"#120808", border:"#991b1b" } :
+    /lich|scheletro|skeleton|spettro|vampir|undead|catacomb/.test(key) ? { icon:"💀", title:"Non-morto", accent:"#c4b5fd", accent2:"#60a5fa", bg1:"#19142c", bg2:"#090b16", border:"#5b21b6" } :
+    /demone|demon/.test(key) ? { icon:"😈", title:"Demone", accent:"#fb7185", accent2:"#ef4444", bg1:"#2a0d18", bg2:"#13070c", border:"#9f1239" } :
+    /golem|guardiano|guardian|titano|construct|runic/.test(key) ? { icon:"🗿", title:"Costrutto", accent:"#94a3b8", accent2:"#60a5fa", bg1:"#17202b", bg2:"#0a0f16", border:"#475569" } :
+    /ragno|spider|serpente|hydra|lupo|wolf|ratto|boar|cervo|beast|slime|melma/.test(key) ? { icon:monster.emoji || "🐾", title:"Bestia", accent:"#22c55e", accent2:"#84cc16", bg1:"#142218", bg2:"#09110c", border:"#166534" } :
+    /mago|strega|cultista|oracle|witch/.test(key) ? { icon:monster.emoji || "🪄", title:"Incantatore", accent:"#a855f7", accent2:"#60a5fa", bg1:"#1e1634", bg2:"#0b0b16", border:"#6d28d9" } :
+    /goblin|orco|orc|gnoll|bandit|cobold|mercenario|knight|armigero/.test(key) ? { icon:monster.emoji || "🪓", title:"Predone", accent:"#f59e0b", accent2:"#ef4444", bg1:"#25160d", bg2:"#0f0908", border:"#92400e" } :
+    monster.isBoss ? { icon:monster.emoji || "👑", title:"Boss", accent:"#fbbf24", accent2:"#fb7185", bg1:"#271915", bg2:"#110b09", border:"#b45309" } :
+    { icon:monster.emoji || "👾", title:"Creatura", accent:"#60a5fa", accent2:"#22c55e", bg1:"#172033", bg2:"#0b1120", border:"#334155" };
+  return makeArchetypeImage({ ...theme, subtitle:monster.isBoss ? "Boss" : `${monster.hp || 0} HP` });
+}
+function ArtThumb({ src, alt, size=56, radius=12 }) {
+  return (
+    <img
+      src={src}
+      alt={alt}
+      style={{ width:size, height:size, minWidth:size, borderRadius:radius, objectFit:"cover", display:"block", background:"rgba(15,23,42,0.72)", border:"1px solid rgba(148,163,184,0.16)", boxShadow:"0 10px 24px rgba(0,0,0,0.22)" }}
+    />
+  );
 }
 function itemRarityLabel(rarity) {
   return ({
@@ -1108,13 +1337,16 @@ async function dbSendMessage(msg) {
 }
 
 async function dbSavePlayer(p) {
-  await supabase.from("players").upsert({
+  const { data, error } = await supabase.from("players").upsert({
     id: p.id, name: p.name, party_code: p.partyCode,
+    account_id: p.accountId || null,
     class: p?.class || 'warrior', race: p?.race || 'human',
     hp: p?.hp || 0, max_hp: p?.maxHp || 0, atk: p?.atk || 0, def: p?.def || 0,
     mag: p?.mag || 0, init: p?.init || 1, xp: p?.xp || 0, level: p?.level || 1, gold: p?.gold || 0,
+    dead: !!p?.dead,
     updated_at: new Date().toISOString(),
-  });
+  }).select("id,account_id,dead").single();
+  return { data, error };
 }
 
 async function dbGetPlayers(partyCode) {
@@ -1123,9 +1355,21 @@ async function dbGetPlayers(partyCode) {
   const { data } = await query;
   return (data || []).map(r => ({
     id: r?.id, name: r?.name, partyCode: r?.party_code,
+    accountId: r?.account_id || null,
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
-    mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0,
+    mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
+  }));
+}
+async function dbGetAccountCharacters(accountId) {
+  if(!accountId) return [];
+  const { data } = await supabase.from("players").select("*").eq("account_id", accountId).order("updated_at", { ascending:false });
+  return (data || []).map(r => ({
+    id: r?.id, name: r?.name, partyCode: r?.party_code,
+    accountId: r?.account_id || null,
+    class: r?.class || 'warrior', race: r?.race || 'human',
+    hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
+    mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
   }));
 }
 
@@ -1149,7 +1393,8 @@ async function dbSavePartyState(partyCode, state) {
 }
 
 async function dbGetPartyState(partyCode) {
-  const { data } = await supabase.from("party_state").select("*").eq("party_code", partyCode).single();
+  const { data, error } = await supabase.from("party_state").select("*").eq("party_code", partyCode).maybeSingle();
+  if (error) throw error;
   if (!data) return { currentId: null, step: 0, active: false, completed: [], combat: null };
   return {
     currentId: data.quest_id,
@@ -1208,6 +1453,10 @@ async function dbGetPlayerInventory(playerId, items = DEFAULT_ITEMS) {
 }
 async function dbRemovePlayerItem(rowId) {
   await supabase.from("player_items").delete().eq("id", rowId);
+}
+async function dbDeleteCharacter(characterId) {
+  await supabase.from("player_items").delete().eq("player_id", characterId);
+  await supabase.from("players").delete().eq("id", characterId);
 }
 
 async function dbDeleteMessages(partyCode) {
@@ -1288,24 +1537,66 @@ export default function App() {
     return ()=>subscription.unsubscribe();
   },[]);
 
-  async function goGame(id) {
-    const validId = (id||"").toString().trim();
+  async function goGame(characterOrId) {
+    const selectedCharacter = characterOrId && typeof characterOrId === "object" ? characterOrId : null;
+    const validId = (selectedCharacter?.id ?? characterOrId ?? "").toString().trim();
+    debugCharacterFlow("go_game_start", {
+      inputType: selectedCharacter ? "character" : "id",
+      selectedId: validId || null,
+      selectedCharacter,
+    });
     if(!validId) {
       alert("ID personaggio non valido. Effettua il login o crea un personaggio.");
       setScreen("landing");
       return;
     }
-    setMyId(validId);
-    localStorage.setItem("eoz_myId", validId);
-
-    // Assicuriamoci che i dati del personaggio siano stati caricati da Firebase prima di passare alla schermata di gioco.
     try {
-      const { data, error } = await supabase.from("players").select("id").eq("id", validId).single();
-      if(error || !data) throw error || new Error("Personaggio non trovato");
+      let data = selectedCharacter
+        ? {
+            id: validId,
+            dead: !!selectedCharacter.dead,
+            account_id: selectedCharacter.accountId ?? selectedCharacter.account_id ?? null,
+          }
+        : null;
+      if(!data) {
+        const { data: fetchedCharacter, error } = await supabase.from("players").select("id,dead,account_id").eq("id", validId).maybeSingle();
+        debugCharacterFlow("go_game_fetch_result", {
+          requestedId: validId,
+          found: !!fetchedCharacter,
+          fetchedCharacter,
+          error: error?.message || null,
+        });
+        if(error) throw error;
+        if(!fetchedCharacter) throw new Error("Personaggio non trovato");
+        data = fetchedCharacter;
+      }
+      debugCharacterFlow("go_game_validation_input", data);
+      if(authUser?.id && !data.account_id) {
+        debugCharacterFlow("go_game_missing_account_bind", { requestedId: validId, accountId: authUser.id });
+        const { error: bindError } = await supabase
+          .from("players")
+          .update({ account_id: authUser.id, updated_at: new Date().toISOString() })
+          .eq("id", validId);
+        debugCharacterFlow("go_game_bind_result", { requestedId: validId, error: bindError?.message || null });
+        if(bindError) throw bindError;
+      } else if(authUser?.id && data.account_id !== authUser.id) {
+        debugCharacterFlow("go_game_validation_failed", { reason: "account_mismatch", requestedId: validId, expected: authUser.id, actual: data.account_id });
+        throw new Error("Personaggio non appartenente a questo account");
+      }
+      if(data.dead) {
+        debugCharacterFlow("go_game_validation_failed", { reason: "dead_character", requestedId: validId });
+        throw new Error("Questo personaggio è morto e non può essere giocato");
+      }
+      debugCharacterFlow("selected_player_id_set", { playerId: validId });
+      setMyId(validId);
+      localStorage.setItem("eoz_myId", validId);
       setScreen("game");
     } catch(e) {
+      debugCharacterFlow("go_game_failure", { requestedId: validId, error: e?.message || String(e) });
       console.error("Errore caricamento personaggio:", e);
-      alert("Impossibile caricare il personaggio. Torna al menu e riprova.");
+      if((localStorage.getItem("eoz_myId") || "").trim() === validId) localStorage.removeItem("eoz_myId");
+      setMyId(null);
+      alert(`Caricamento personaggio fallito.\n\nPlayer ID: ${validId}\nMotivo: ${e?.message || "errore sconosciuto"}`);
       setScreen("landing");
     }
   }
@@ -1351,9 +1642,9 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
       const {data,error:e} = await supabase.auth.signInWithPassword({email,password});
       if(e) { setError("Email o password errati."); setLoading(false); return; }
       setAuthUser(data.user);
-      const {data:players} = await supabase.from("players").select("id").eq("id", data.user.id);
-      if(players&&players.length>0) { setMyId(data.user.id); localStorage.setItem("eoz_myId",data.user.id); setScreen("game"); }
-      else setScreen("landing");
+      const savedId = (localStorage.getItem("eoz_myId") || "").trim();
+      if(savedId) setMyId(savedId);
+      setScreen("landing");
     } else {
       const {error:e} = await supabase.auth.signUp({email,password});
       if(e) { setError(e.message); setLoading(false); return; }
@@ -1455,29 +1746,40 @@ function MasterPanelAuth({ setScreen }) {
 ---------------------------------------------- */
 function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   const meta = getMeta();
+  const [characters, setCharacters] = useState([]);
+  const [loadingChars, setLoadingChars] = useState(true);
+
+  async function loadCharacters() {
+    if(!authUser?.id) { setCharacters([]); setLoadingChars(false); return; }
+    setLoadingChars(true);
+    try {
+      const nextCharacters = await dbGetAccountCharacters(authUser.id);
+      debugCharacterFlow("character_list_refresh_result", {
+        accountId: authUser.id,
+        count: nextCharacters.length,
+        ids: nextCharacters.map(ch => ch.id),
+      });
+      setCharacters(nextCharacters);
+    } finally {
+      setLoadingChars(false);
+    }
+  }
+
+  useEffect(()=>{ loadCharacters(); }, [authUser?.id]);
+
   async function logout() {
     await supabase.auth.signOut();
     setAuthUser(null);
     localStorage.removeItem("eoz_myId");
   }
 
-  async function handleTornaAvventura() {
-    try {
-      const saved = localStorage.getItem("eoz_myId");
-      if(!saved) {
-        alert("Nessun personaggio salvato trovato!");
-        return;
-      }
-      const id = saved.trim();
-      if(!id) {
-        alert("Dati personaggio non validi!");
-        return;
-      }
-      await goGame(id);
-    } catch(e) {
-      console.error("Errore caricamento:", e);
-      alert("Errore nel caricare il personaggio: " + (e?.message || e));
-    }
+  async function handleDeleteCharacter(character) {
+    if(!character?.id) return;
+    if(!window.confirm(`Eliminare definitivamente ${character.name}?`)) return;
+    await dbDeleteCharacter(character.id);
+    localStorage.removeItem(equipmentKey(character.id));
+    if((localStorage.getItem("eoz_myId") || "").trim() === character.id) localStorage.removeItem("eoz_myId");
+    await loadCharacters();
   }
 
   return (
@@ -1489,13 +1791,63 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
       <h1 style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(2.2rem,8vw,5rem)", margin:"0.2rem 0", background:"linear-gradient(135deg,#fbbf24,#f59e0b,#b45309)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", letterSpacing:"0.12em", animation:"goldenGlow 4s ease-in-out infinite" }}>
         {meta.worldName}
       </h1>
-      <p style={{ fontFamily:"'Cinzel',serif", fontSize:"clamp(0.65rem,2vw,0.85rem)", color:"#7c3aed", letterSpacing:"0.3em", textTransform:"uppercase", margin:"0.2rem 0 2.5rem" }}>{meta.worldSub}</p>
-      <div style={{ display:"flex", flexDirection:"column", gap:12, width:"100%", maxWidth:320 }}>
-        <BigBtn onClick={()=>setScreen("create")} gold icon="🛠️">Crea il tuo Eroe</BigBtn>
-        {myId && <BigBtn onClick={handleTornaAvventura} icon="🏹">Torna all'Avventura</BigBtn>}
-        <BigBtn onClick={logout} dark icon="🚪">Esci</BigBtn>
-        {canAccessMasterPanel(authUser) && <BigBtn onClick={()=>setScreen("master")} dark icon="🛡️">Pannello Master</BigBtn>}
+      <p style={{ fontFamily:"'Cinzel',serif", fontSize:"clamp(0.65rem,2vw,0.85rem)", color:"#7c3aed", letterSpacing:"0.3em", textTransform:"uppercase", margin:"0.2rem 0 1.6rem" }}>{meta.worldSub}</p>
+
+      <div style={{ width:"100%", maxWidth:940, background:"rgba(0,0,0,0.42)", border:"1px solid #374151", borderRadius:14, padding:"1.4rem", backdropFilter:"blur(8px)" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginBottom:"1rem", flexWrap:"wrap" }}>
+          <div style={{ textAlign:"left" }}>
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#f8e7b9", fontSize:"1.25rem" }}>Selezione Eroe</div>
+            <div style={{ color:"#9ca3af", fontSize:"0.82rem" }}>Scegli quale eroe far varcare il portale.</div>
+          </div>
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+            <BigBtn onClick={()=>setScreen("create")} gold icon="🛠️">Nuovo Eroe</BigBtn>
+            <BigBtn onClick={logout} dark icon="🚪">Esci</BigBtn>
+            {canAccessMasterPanel(authUser) && <BigBtn onClick={()=>setScreen("master")} dark icon="🛡️">Pannello Master</BigBtn>}
+          </div>
+        </div>
+
+        {loadingChars && <div style={{ color:"#9ca3af", padding:"2rem 0" }}>Caricamento personaggi...</div>}
+        {!loadingChars && !characters.length && (
+          <div style={{ color:"#9ca3af", padding:"2.5rem 1rem", border:"1px dashed #374151", borderRadius:10 }}>
+            Nessun eroe su questo account. Crea la tua prima scheda.
+          </div>
+        )}
+        {!loadingChars && !!characters.length && (
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:12, textAlign:"left" }}>
+            {characters.map(ch=>{
+              const cls = CLASSES[ch.class || "warrior"] || CLASSES.warrior;
+              const race = RACES[ch.race || "human"] || RACES.human;
+              const dead = !!ch.dead;
+              const status = dead ? "Morto" : (ch.hp || 0) > 0 ? "Pronto" : "Ferito";
+              return (
+                <div key={ch.id} style={{ background:dead?"rgba(38,10,10,0.66)":"rgba(15,23,42,0.72)", border:`1px solid ${dead?"#7f1d1d":"#334155"}`, borderRadius:12, padding:"1rem", boxShadow:"0 14px 34px rgba(0,0,0,0.22)" }}>
+                  <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:10 }}>
+                    <ArtThumb src={getPlayerPortrait(ch)} alt={ch.name} size={72} radius={18} />
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontFamily:"'Cinzel',serif", color:dead?"#fca5a5":"#f8fafc", fontWeight:700, fontSize:"1rem", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{ch.name}</div>
+                      <div style={{ color:"#9ca3af", fontSize:"0.74rem" }}>{race.emoji} {race.name} • {cls.emoji} {cls.name}</div>
+                      <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:6 }}>
+                        <span style={{ padding:"2px 8px", borderRadius:999, background:dead?"rgba(127,29,29,0.45)":"rgba(51,65,85,0.62)", color:dead?"#fecaca":"#cbd5e1", fontSize:"0.68rem" }}>{status}</span>
+                        <span style={{ padding:"2px 8px", borderRadius:999, background:"rgba(91,33,182,0.35)", color:"#ddd6fe", fontSize:"0.68rem" }}>Lv.{ch.level || 1}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style={{ display:"flex", justifyContent:"space-between", gap:10, fontSize:"0.74rem", color:"#94a3b8", marginBottom:10 }}>
+                    <span>❤️ {ch.hp}/{ch.maxHp}</span>
+                    <span>💰 {ch.gold || 0} oro</span>
+                    <span>👥 {ch.partyCode || "-"}</span>
+                  </div>
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                    {!dead && <BigBtn onClick={()=>goGame(ch)} gold icon="⚔️">Gioca</BigBtn>}
+                    {dead && <SmallBtn red onClick={()=>handleDeleteCharacter(ch)}>Elimina</SmallBtn>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
+
       {authUser && <p style={{ marginTop:"1rem", color:"#374151", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
       <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE • FANTASY • MULTIPLAYER ONLINE</p>
     </div>
@@ -1518,21 +1870,50 @@ function CreateChar({ setScreen, goGame, authUser }) {
   async function create() {
     if(!name.trim() || loading) return;
     setLoading(true);
-    const id = authUser ? authUser.id : "p_"+Math.random().toString(36).slice(2,9);
-    const partyCode = code.trim().toUpperCase() || Math.random().toString(36).slice(2,6).toUpperCase();
-    const maxHp = c.hp + r.hpB;
-    const player = {
-      id, name:name.trim(), class:cls, race:race, partyCode,
-      hp:maxHp, maxHp, atk:c.atk+r.atkB, def:c.def+r.defB,
-      mag:c.mag+r.magB, init:c.init+r.initB,
-      xp:0, level:1, gold:0,
-    };
-    await dbSavePlayer(player);
-    const meta = getMeta();
-    await dbSendMessage({ party_code:partyCode, author:"Sistema", type:"system",
-      content:`⚔️ **${player.name} il ${c.name}** � entrato nel mondo di **${meta.worldName}**! ${c.emoji}` });
-    setLoading(false);
-    goGame(id);
+    try {
+      debugCharacterFlow("create_start", { accountId: authUser?.id || null, name: name.trim(), class: cls, race });
+      const id = `pc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
+      const partyCode = code.trim().toUpperCase() || Math.random().toString(36).slice(2,6).toUpperCase();
+      const maxHp = c.hp + r.hpB;
+      const player = {
+        id, name:name.trim(), class:cls, race:race, partyCode,
+        accountId: authUser?.id || null,
+        hp:maxHp, maxHp, atk:c.atk+r.atkB, def:c.def+r.defB,
+        mag:c.mag+r.magB, init:c.init+r.initB,
+        xp:0, level:1, gold:0, dead:false,
+      };
+      debugCharacterFlow("create_player_generated", player);
+      debugCharacterFlow("save_attempt", { id: player.id, accountId: player.accountId, partyCode: player.partyCode });
+      const { error: saveError, data: savedPlayer } = await dbSavePlayer(player);
+      debugCharacterFlow("save_result", {
+        requestedId: player.id,
+        savedId: savedPlayer?.id || null,
+        accountId: savedPlayer?.account_id || null,
+        dead: savedPlayer?.dead ?? null,
+        error: saveError?.message || null,
+      });
+      if(saveError || !savedPlayer?.id) throw saveError || new Error("Salvataggio personaggio fallito");
+      const charactersAfterSave = authUser?.id ? await dbGetAccountCharacters(authUser.id) : [];
+      debugCharacterFlow("character_list_after_save", {
+        accountId: authUser?.id || null,
+        count: charactersAfterSave.length,
+        ids: charactersAfterSave.map(ch => ch.id),
+      });
+      const meta = getMeta();
+      await dbSendMessage({ party_code:partyCode, author:"Sistema", type:"system",
+        content:`⚔️ **${player.name} il ${c.name}** � entrato nel mondo di **${meta.worldName}**! ${c.emoji}` });
+      await goGame({
+        id: savedPlayer.id,
+        dead: !!savedPlayer.dead,
+        accountId: savedPlayer.account_id || authUser?.id || null,
+      });
+    } catch(e) {
+      debugCharacterFlow("create_failure", { error: e?.message || String(e) });
+      console.error("Errore creazione personaggio:", e);
+      alert(`Creazione personaggio fallita.\n\nMotivo: ${e?.message || "errore sconosciuto"}`);
+    } finally {
+      setLoading(false);
+    }
   }
 
   const steps = ["Nome","Classe","Razza","Party"];
@@ -1915,8 +2296,8 @@ function MasterPanel({ setScreen }) {
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))", gap:8 }}>
             {monsters.map(m=>(
               <div key={m.id} style={{ background:"rgba(255,255,255,0.02)", border:`1px solid ${m.isBoss?"#92400e":"#1f2937"}`, borderRadius:6, padding:"0.8rem" }}>
-                <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
-                  <span style={{ fontSize:"2rem" }}>{m.emoji}</span>
+                <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:6 }}>
+                  <ArtThumb src={getMonsterImage(m)} alt={m.name} size={68} radius={16} />
                   <div>
                     <div style={{ fontFamily:"'Cinzel',serif", color:m.isBoss?"#fbbf24":"#e2d9c5", fontWeight:700 }}>{m.name}{m.isBoss?" ⭐":""}</div>
                     <div style={{ color:"#4b5563", fontSize:"0.68rem" }}>{m.desc}</div>
@@ -1997,8 +2378,8 @@ function PlayersView() {
           const baseMag = (cls.mag||0) + (race.magB||0);
           return (
             <div key={p?.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
-              <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
-                <span style={{ fontSize:"1.5rem" }}>{cls.emoji}</span>
+              <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:6 }}>
+                <ArtThumb src={getPlayerPortrait({ class:p?.class, race:p?.race, portrait:p?.portrait, image:p?.image })} alt={p?.name || "Giocatore"} size={64} radius={16} />
                 <div style={{ flex:1 }}>
                   <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{p?.name}</div>
                   <div style={{ color:"#4b5563", fontSize:"0.68rem" }}>{race.emoji} {race.name} � {cls.name} � Lv.{p?.level||1}</div>
@@ -2330,8 +2711,8 @@ function ShopView({ me, items, loading, error, inventoryCounts, onBuy }) {
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
         {visibleItems.map(it=>(
           <div key={it.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
-            <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
-              <span style={{ fontSize:"1.5rem" }}>{it.emoji||"⭐"}</span>
+            <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:6 }}>
+              <ArtThumb src={getItemImage(it)} alt={it.name} size={60} />
               <div style={{ flex:1 }}>
                 <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{it.name}</div>
                 <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{itemTypeLabel(it.type)} • {itemRarityLabel(it.rarity)}</div>
@@ -2353,7 +2734,7 @@ function ShopView({ me, items, loading, error, inventoryCounts, onBuy }) {
   );
 }
 
-function InventoryView({ loading, groups, equipment, selectedItem, onSelectItem, onCloseItem, onEquip, onSell }) {
+function InventoryView({ loading, groups, equipment, selectedItem, onSelectItem, onCloseItem, onEquip, onSell, onUse, canUseConsumables }) {
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
       <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🎒 Inventario</h3>
@@ -2380,8 +2761,8 @@ function InventoryView({ loading, groups, equipment, selectedItem, onSelectItem,
                 boxShadow:selected ? "0 0 0 1px rgba(124,58,237,0.35) inset" : "none",
               }}
             >
-              <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
-                <span style={{ fontSize:"1.6rem" }}>{group.item.emoji||"⭐"}</span>
+              <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:6 }}>
+                <ArtThumb src={getItemImage(group.item)} alt={group.item.name} size={62} />
                 <div style={{ flex:1 }}>
                   <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{group.item.name}</div>
                   <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{itemTypeLabel(group.item.type)} • {itemRarityLabel(group.item.rarity)}</div>
@@ -2408,7 +2789,7 @@ function InventoryView({ loading, groups, equipment, selectedItem, onSelectItem,
         <div style={{ position:"fixed", inset:0, background:"rgba(2,6,23,0.78)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem", zIndex:50 }} onClick={onCloseItem}>
           <div onClick={e=>e.stopPropagation()} style={{ width:"min(560px,100%)", background:"linear-gradient(180deg, rgba(17,24,39,0.98), rgba(10,10,18,0.98))", border:"1px solid #312e81", borderRadius:10, boxShadow:"0 24px 80px rgba(0,0,0,0.45)", padding:"1rem" }}>
             <div style={{ display:"flex", gap:12, alignItems:"flex-start", marginBottom:12 }}>
-              <div style={{ fontSize:"2.4rem", lineHeight:1 }}>{selectedItem.item.emoji || "⭐"}</div>
+              <ArtThumb src={getItemImage(selectedItem.item)} alt={selectedItem.item.name} size={92} radius={16} />
               <div style={{ flex:1 }}>
                 <div style={{ fontFamily:"'Cinzel',serif", color:"#f8e7b9", fontSize:"1.15rem", fontWeight:700 }}>{selectedItem.item.name}</div>
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:6, fontSize:"0.75rem" }}>
@@ -2441,6 +2822,11 @@ function InventoryView({ loading, groups, equipment, selectedItem, onSelectItem,
                   disabled={equipment?.[itemSlot(selectedItem.item)] === selectedItem.item.id}
                 >
                   Equipaggia
+                </BigBtn>
+              )}
+              {selectedItem.item.type === "potion" && canUseConsumables && (
+                <BigBtn onClick={()=>onUse(selectedItem.entries[0])} gold icon="🧪">
+                  Usa
                 </BigBtn>
               )}
               <SmallBtn onClick={()=>onSell(selectedItem)}>Vendi</SmallBtn>
@@ -2503,6 +2889,65 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip }) {
   );
 }
 
+function SpellbookView({ spellsByLevel, preparedSpellIds, preparedCount, maxPrepared, onTogglePrepared }) {
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginBottom:"1rem", flexWrap:"wrap" }}>
+        <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0 }}>✨ Magie</h3>
+        <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
+          <span style={{ color:"#94a3b8", fontSize:"0.8rem" }}>Scegli quali incantesimi preparare per oggi. I trucchetti restano sempre disponibili.</span>
+          <span style={{ fontSize:"0.78rem", color:"#ddd6fe", background:"rgba(124,58,237,0.2)", border:"1px solid #7c3aed", borderRadius:999, padding:"4px 10px" }}>
+            Preparati: {preparedCount}/{maxPrepared}
+          </span>
+        </div>
+      </div>
+      <div style={{ display:"grid", gap:"1rem" }}>
+        {Object.keys(spellsByLevel).map(levelKey => {
+          const level = Number(levelKey);
+          const spells = spellsByLevel[level] || [];
+          if(!spells.length) return null;
+          return (
+            <Card key={level} title={level===0 ? "✨ Trucchetti" : `🔮 Livello ${level}`}>
+              <div style={{ display:"grid", gap:10 }}>
+                {spells.map(spell => {
+                  const prepared = level === 0 || preparedSpellIds.includes(spell.id);
+                  return (
+                    <div key={spell.id} style={{ background:"rgba(15,23,42,0.72)", border:`1px solid ${prepared ? "#7c3aed" : "#334155"}`, borderRadius:10, padding:"0.95rem 1rem" }}>
+                      <div style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"flex-start", marginBottom:6, flexWrap:"wrap" }}>
+                        <div>
+                          <div style={{ color:"#f8fafc", fontWeight:700, fontSize:"0.96rem" }}>{spell.emoji || "✨"} {spell.name}</div>
+                          <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:4 }}>
+                            {spellEffectSummary(spell).map(detail => (
+                              <span key={detail} style={{ fontSize:"0.72rem", color:"#cbd5e1", background:"rgba(255,255,255,0.04)", border:"1px solid #334155", borderRadius:999, padding:"3px 8px" }}>
+                                {detail}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                        {level === 0 ? (
+                          <span style={{ fontSize:"0.74rem", color:"#6ee7b7", fontWeight:700 }}>Sempre pronto</span>
+                        ) : (
+                          <button
+                            onClick={()=>onTogglePrepared(spell.id)}
+                            style={{ padding:"0.45rem 0.8rem", background:prepared?"rgba(124,58,237,0.24)":"rgba(255,255,255,0.04)", border:`1px solid ${prepared ? "#7c3aed" : "#334155"}`, borderRadius:8, color:prepared?"#ddd6fe":"#cbd5e1", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.74rem" }}
+                          >
+                            {prepared ? "Preparato" : "Prepara"}
+                          </button>
+                        )}
+                      </div>
+                      <div style={{ color:"#cbd5e1", fontSize:"0.84rem", lineHeight:1.6 }}>{spell.desc}</div>
+                    </div>
+                  );
+                })}
+              </div>
+            </Card>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 /* ----------------------------------------------
    GAME SCREEN
 ---------------------------------------------- */
@@ -2524,13 +2969,41 @@ function GameScreen({ myId, setScreen }) {
   const [catalogItems, setCatalogItems] = useState(DEFAULT_ITEMS);
   const [inventory, setInventory] = useState([]);
   const [equipment, setEquipment] = useState({ weapon:null, armor:null, shield:null, accessory:null });
+  const [preparedSpellIds, setPreparedSpellIds] = useState([]);
   const [inventoryLoading, setInventoryLoading] = useState(true);
   const [selectedInventoryItemId, setSelectedInventoryItemId] = useState(null);
+  const [deathScene, setDeathScene] = useState(null);
   const msgEnd = useRef(null);
   const inputRef = useRef(null);
   const subRef = useRef(null);
   const itemMapRef = useRef(DEFAULT_ITEM_MAP);
   const startCombatStepRef = useRef(null);
+
+  async function showDiceVisual({ sides, value, label, rollingMs = 450, resultMs = 850 }) {
+    setDiceResult({ stage:"rolling", sides, value:null, label });
+    setDiceAnim(true);
+    await new Promise(resolve => setTimeout(resolve, rollingMs));
+    setDiceResult({ stage:"result", sides, value, label });
+    setDiceAnim(false);
+    await new Promise(resolve => setTimeout(resolve, resultMs));
+    setDiceResult(null);
+  }
+  async function triggerSoloDeath(finalName) {
+    setDeathScene({ name: finalName || me?.name || "Eroe caduto" });
+    try {
+      const fallenPlayer = { ...me, hp:0, dead:true };
+      await dbSavePlayer(fallenPlayer);
+      setMeRaw(fallenPlayer);
+      if(code) {
+        await dbSavePartyState(code, { ...qs, combat:null });
+        setQs(prev => ({ ...prev, combat:null }));
+      }
+    } catch(e) {
+      console.error("Errore durante la morte definitiva:", e);
+    }
+    localStorage.removeItem("eoz_myId");
+    setTimeout(()=>setScreen("landing"), 3200);
+  }
 
   const code = me?.partyCode;
   itemMapRef.current = new Map(catalogItems.map(item => [item.id, item]));
@@ -2591,13 +3064,23 @@ function GameScreen({ myId, setScreen }) {
 
   useEffect(()=>{
     async function init() {
+      debugCharacterFlow("game_load_start", { myId });
       if(!myId) {
+        debugCharacterFlow("game_load_failure", { reason: "missing_myId" });
         setScreen("landing");
         return;
       }
       try {
-        const { data } = await supabase.from("players").select("*").eq("id", myId).single();
+        const { data, error } = await supabase.from("players").select("*").eq("id", myId).single();
+        debugCharacterFlow("game_load_fetch_result", {
+          requestedId: myId,
+          found: !!data,
+          error: error?.message || null,
+          player: data ? { id:data.id, party_code:data.party_code, class:data.class, dead:data.dead } : null,
+        });
+        if(error) throw error;
         if(!data) {
+          debugCharacterFlow("game_load_failure", { reason: "player_not_found_after_screen_enter", requestedId: myId });
           setScreen("landing");
           return;
         }
@@ -2615,7 +3098,9 @@ function GameScreen({ myId, setScreen }) {
             () => refreshAll(p.partyCode))
           .subscribe();
       } catch(e) {
+        debugCharacterFlow("game_load_failure", { requestedId: myId, error: e?.message || String(e) });
         console.error("Errore inizializzazione game:", e);
+        alert(`GameScreen load fallito.\n\nPlayer ID: ${myId}\nMotivo: ${e?.message || "errore sconosciuto"}`);
         setScreen("landing");
       }
     }
@@ -2644,28 +3129,37 @@ function GameScreen({ myId, setScreen }) {
       if (!actor || actor.isPlayer || actor.hp <= 0) return;
       const latestPlayers = await dbGetPlayers(code);
       const alivePlayers = latestPlayers.filter(p => (p?.hp || 0) > 0);
-      if (!alivePlayers.length) return;
+      if (!alivePlayers.length) {
+        if(!hasActionablePlayerCombatants(latestCombatants)) {
+          await resolveCombatNoActionablePlayers(latestQs, latestCombatants);
+          return;
+        }
+        const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
+        const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound };
+        await dbSavePartyState(code, { ...latestQs, combat: newCombat });
+        setQs(prev => ({ ...prev, combat: newCombat }));
+        return;
+      }
       const pt = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-      const attackRoll = roll(20);
-      const attackTotal = attackRoll + (actor.init || 0);
-      const targetCa = pt.def || 10;
-      const hit = attackRoll === 20 || attackTotal >= targetCa;
       const weaponDie = getCombatDamageDie(actor);
-      const damageRoll = hit ? rollDice(weaponDie) : 0;
-      const edmg = hit ? Math.max(1, damageRoll + Math.max(0, actor.atk || 0)) : 0;
+      const resolved = resolveWeaponAttack(actor, pt, weaponDie);
+      const edmg = resolved.damage;
       const updPt = { ...pt, hp: Math.max(0, pt.hp - edmg) };
+      const playerCombatantIdx = latestCombatants.findIndex(c => c.id === pt.id);
+      if(playerCombatantIdx >= 0) {
+        latestCombatants[playerCombatantIdx] = applyCombatDamageState({
+          ...latestCombatants[playerCombatantIdx],
+          maxHp: updPt.maxHp,
+        }, edmg);
+      }
       await dbSavePlayer(updPt);
       if (updPt.id === myId) setMeRaw(updPt);
-      const log = hit
-        ? `${actor.emoji || "👾"} **${actor.name}** tira **${attackRoll} + DEX ${actor.init || 0} = ${attackTotal}** contro CA **${targetCa}** e colpisce **${pt.name}** con **${weaponDie} + ${actor.atk || 0} = ${edmg} danni**!`
-        : `${actor.emoji || "👾"} **${actor.name}** tira **${attackRoll} + DEX ${actor.init || 0} = ${attackTotal}** contro CA **${targetCa}** ma manca **${pt.name}**.`;
-      let nextTurn = latestCombat.turn + 1;
-      let nextRound = latestCombat.round;
-      if (nextTurn >= latestCombatants.length) { nextTurn = 0; nextRound++; }
-      let safety = 0;
-      while (latestCombatants[nextTurn]?.hp <= 0 && safety++ < latestCombatants.length) {
-        nextTurn++; if (nextTurn >= latestCombatants.length) { nextTurn = 0; nextRound++; }
+      await showDiceVisual({ sides:20, value:resolved.hitRoll, label:"Tiro per colpire" });
+      if(resolved.hit) {
+        await showDiceVisual({ sides:getPrimaryDieSides(resolved.weaponDie, 6), value:resolved.damageRoll, label:`Danno ${resolved.weaponDie}` });
       }
+      const log = formatWeaponAttackLog(actor, pt, resolved, "Attacco naturale", updPt.hp, pt.maxHp);
+      const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
       const allDead = latestCombatants.filter(c => !c.isPlayer).every(c => c.hp <= 0);
       const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound };
       const newQs = { ...latestQs, combat: allDead ? null : newCombat };
@@ -2677,8 +3171,6 @@ function GameScreen({ myId, setScreen }) {
     return () => clearTimeout(timer);
   }, [qs?.combat?.turn, qs?.combat?.active, myId, code]);
 
-  if(!me || !me.class) return <div style={{color:'white', fontSize:'1.5rem', padding:'2rem', textAlign:'center'}}>⏳ Caricamento personaggio...</div>;
-
   async function addMsg(content, type="narration", author=null) {
     await dbSendMessage({ party_code:code, author:author||me?.name, content, type });
   }
@@ -2686,6 +3178,31 @@ function GameScreen({ myId, setScreen }) {
   async function saveQState(newQs) {
     await dbSavePartyState(code, newQs);
     setQs(newQs);
+  }
+  async function resolveCombatNoActionablePlayers(latestState, combatants) {
+    const soloCombatant = (combatants || []).find(c => c?.isPlayer && c.id === myId);
+    if(partyPlayers.length <= 1 && soloCombatant?.stable && !soloCombatant?.dead) {
+      const recoveredPlayer = { ...me, hp:1 };
+      await dbSavePlayer(recoveredPlayer);
+      setMeRaw(recoveredPlayer);
+      await dbSavePartyState(code, { ...latestState, combat:null });
+      setQs(prev => ({ ...prev, combat:null }));
+      await dbSendMessage({
+        party_code: code,
+        author: "Sistema",
+        type: "victory",
+        content: `🕯️ **${soloCombatant.name}** si stabilizza e riesce a strisciare fuori dalla battaglia. Il combattimento termina, e l'eroe torna a **1 HP**.`,
+      });
+      return;
+    }
+    await dbSavePartyState(code, { ...latestState, combat:null });
+    setQs(prev => ({ ...prev, combat:null }));
+    await dbSendMessage({
+      party_code: code,
+      author: "Sistema",
+      type: "combat",
+      content: "⚔️ **Sconfitta.** Nessun eroe è più in grado di combattere.",
+    });
   }
 
   async function persistPlayerWithEquipment(nextPlayer, nextEquipment) {
@@ -2766,13 +3283,29 @@ function GameScreen({ myId, setScreen }) {
 
   async function usePotion(entry) {
     if(!entry?.rowId || !me) return;
+    if(entry.item?.type !== "potion") return;
+    if((me.hp || 0) <= 0 || myCombatant?.dying || myCombatant?.dead || myCombatant?.stable) {
+      window.alert("Non puoi usare pozioni su te stesso mentre sei a terra o fuori combattimento.");
+      return;
+    }
     const amount = Math.max(1, entry.item.heal_amount || 0);
+    if(amount <= 0) return;
+    if(me.hp >= me.maxHp) {
+      window.alert("Sei già al massimo della vita.");
+      return;
+    }
     const healed = Math.min(me.maxHp, me.hp + amount);
     const delta = healed - me.hp;
     await dbRemovePlayerItem(entry.rowId);
     const updatedPlayer = { ...me, hp: healed };
     await dbSavePlayer(updatedPlayer);
     setMeRaw(updatedPlayer);
+    if(qs?.combat?.active) {
+      const combatants = [...qs.combat.combatants];
+      const idx = combatants.findIndex(c => c.id === me.id);
+      if(idx >= 0) combatants[idx] = reviveCombatantState(combatants[idx], healed);
+      await saveQState({ ...qs, combat: { ...qs.combat, combatants } });
+    }
     await refreshInventory(updatedPlayer);
     await addMsg(`🧪 **${me.name}** usa **${entry.item.name}** e recupera **${delta} HP**.`, "info", "Sistema");
   }
@@ -2787,41 +3320,50 @@ function GameScreen({ myId, setScreen }) {
     if(!attacker?.isPlayer || attacker.id!==myId) {
       await addMsg(`⚔️ Non � il tuo turno! Tocca a **${combatants[turn]?.name}**`, "system","Sistema"); return;
     }
+    if(attacker.dead || attacker.stable) {
+      const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
+      await saveQState({ ...qs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound } });
+      return;
+    }
+    if(isDyingCombatant(attacker)) {
+      const deathSave = resolveDeathSave(attacker);
+      const idx = combatants.findIndex(c => c.id === attacker.id);
+      combatants[idx] = deathSave.nextCombatant;
+      await showDiceVisual({ sides:20, value:deathSave.rollValue, label:"Salvezza contro la morte" });
+      const updatedPlayer = { ...me, hp: deathSave.nextCombatant.hp };
+      await dbSavePlayer(updatedPlayer);
+      setMeRaw(updatedPlayer);
+      await addMsg(deathSave.log, "combat", "Battaglia");
+      if(deathSave.result === "dead" && partyPlayers.length <= 1) {
+        await addMsg(`📜 **La scheda di ${attacker.name} viene strappata dal destino.**`, "victory", "Master");
+        await triggerSoloDeath(attacker.name);
+        return;
+      }
+      if(!hasActionablePlayerCombatants(combatants)) {
+        await resolveCombatNoActionablePlayers({ ...qs, combat }, combatants);
+        return;
+      }
+      const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
+      await saveQState({ ...qs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound } });
+      return;
+    }
     const targets = combatants.filter(c=>!c.isPlayer&&c.hp>0);
     if(!targets.length) { await endCombat(); return; }
     const target = targets[0];
-    const hitRoll = roll(20);
-    const isCrit = hitRoll===20;
-    const attackTotal = hitRoll + (attacker.init || 0);
-    const targetCa = target.def || 10;
-    const hit = isCrit || attackTotal >= targetCa;
     const weapon = attacker.id===myId ? getEquippedWeapon(equipment, itemMap) : { name:"Arma", weapon_die:getCombatDamageDie(attacker) };
-    const damageRoll = hit ? rollDice(weapon.weapon_die || "1d6") : 0;
-    let dmg = 0;
-    if(hit) { dmg = Math.max(1, damageRoll + Math.max(0, attacker.atk || 0)); if(isCrit) dmg += damageRoll; }
+    const resolved = resolveWeaponAttack(attacker, target, weapon.weapon_die || "1d6");
+    const dmg = resolved.damage;
     const tidx = combatants.findIndex(c=>c.id===target.id);
     combatants[tidx] = {...target, hp:Math.max(0,target.hp-dmg)};
 
-    // Show a dice roll overlay
-    setDiceResult({ stage:"rolling" });
-    setDiceAnim(true);
-    setTimeout(()=>{ setDiceResult({ stage:"result", value: hitRoll }); }, 800);
-    setTimeout(()=>{ setDiceResult(null); }, 1500);
-    setTimeout(()=>setDiceAnim(false),500);
-
-    let log = `${attacker.emoji||"⭐"} **${attacker.name}** attacca ${target.emoji} **${target.name}**\n`;
-    log += `🎲 d20 + DEX: **${hitRoll} + ${attacker.init || 0} = ${attackTotal}** vs CA **${targetCa}**${isCrit?" — **CRITICO!**":""}\n`;
-    if(hit) log += `⚔️ ${weapon.name}: **${weapon.weapon_die || "1d6"} + ${attacker.atk || 0} = ${dmg}**${isCrit?" (dado arma raddoppiato)":""}\n❤️ ${target.name}: ${combatants[tidx].hp}/${target.maxHp} HP`;
-    else log += `⚔️ Mancato!`;
-
-    let nextTurn = combat.turn + 1;
-    let nextRound = combat.round;
-    if(nextTurn>=combatants.length){ nextTurn=0; nextRound++; }
-    // Skip dead combatants
-    let safety = 0;
-    while(combatants[nextTurn]?.hp<=0 && safety++<combatants.length){
-      nextTurn++; if(nextTurn>=combatants.length){nextTurn=0;nextRound++;}
+    await showDiceVisual({ sides:20, value:resolved.hitRoll, label:"Tiro per colpire" });
+    if(resolved.hit) {
+      await showDiceVisual({ sides:getPrimaryDieSides(resolved.weaponDie, 6), value:resolved.damageRoll, label:`Danno ${resolved.weaponDie}` });
     }
+
+    const log = formatWeaponAttackLog(attacker, target, resolved, weapon.name, combatants[tidx].hp, target.maxHp);
+
+    const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
 
     const allDead = combatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
     const newCombat = {...combat, combatants, turn:nextTurn, round:nextRound};
@@ -2859,18 +3401,21 @@ function GameScreen({ myId, setScreen }) {
 
     if(spell.type === "damage") {
       const base = rollDice(spell.dmg);
+      await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), value:base, label:`Danno ${spell.dmg}` });
       const bonus = Math.floor((attacker.mag||0)/2);
       const dmg = Math.max(1, base + bonus - Math.floor(target.def/2));
       const tidx = newCombatants.findIndex(c=>c.id===target.id);
       newCombatants[tidx] = {...target, hp:Math.max(0,target.hp-dmg)};
-      log += `💥 Danno: **${dmg}**\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`;
+      log += `💥 Tiro danno: **${spell.dmg} = ${base}**\n✨ Bonus magia: **+${bonus}**\n🛡️ Riduzione bersaglio: **-${Math.floor(target.def/2)}**\n🔥 Danno finale: **${dmg}**\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`;
     } else if(spell.type === "heal") {
-      const heal = Math.max(1, rollDice(spell.dmg) + Math.floor((attacker.mag||0)/2));
+      const baseHeal = rollDice(spell.dmg);
+      await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), value:baseHeal, label:`Cura ${spell.dmg}` });
+      const heal = Math.max(1, baseHeal + Math.floor((attacker.mag||0)/2));
       const healed = Math.min(attacker.maxHp, attacker.hp + heal);
       const delta = healed - attacker.hp;
       const pid = newCombatants.findIndex(c=>c.id===attacker.id);
-      newCombatants[pid] = {...attacker, hp:healed};
-      log += `✨ ${attacker.name} recupera **${delta}** HP (${healed}/${attacker.maxHp}).`;
+      newCombatants[pid] = reviveCombatantState(attacker, healed);
+      log += `💚 Tiro cura: **${spell.dmg} = ${baseHeal}**\n✨ Bonus magia: **+${Math.floor((attacker.mag||0)/2)}**\n🌿 Cura finale: **${heal}**\n❤️ ${attacker.name}: ${healed}/${attacker.maxHp} HP`;
       const updated = {...me, hp:healed};
       await dbSavePlayer(updated);
       setMeRaw(updated);
@@ -2881,9 +3426,7 @@ function GameScreen({ myId, setScreen }) {
     const nextSlots = { ...(combat.spellSlots||{}), [myId]: { ...(slots||{}) } };
     if(cost > 0) nextSlots[myId][cost] = Math.max(0, (nextSlots[myId][cost]||0) - 1);
 
-    let nextTurn = combat.turn + 1;
-    let nextRound = combat.round;
-    if(nextTurn>=newCombatants.length){ nextTurn=0; nextRound++; }
+    let { nextTurn, nextRound } = getNextCombatTurn(newCombatants, combat.turn, combat.round);
 
     while(true) {
       const nextActor = newCombatants[nextTurn%newCombatants.length];
@@ -2891,26 +3434,42 @@ function GameScreen({ myId, setScreen }) {
       if(nextActor.isPlayer) break;
       if(nextActor.hp<=0) { nextTurn++; if(nextTurn>=newCombatants.length){nextTurn=0; nextRound++;} continue; }
 
-      const alivePlayers = partyPlayers.filter(p=> (p?.hp||0) > 0 );
+      const alivePlayers = newCombatants
+        .filter(c => c?.isPlayer && (c?.hp || 0) > 0 && !c?.dead)
+        .map(c => {
+          const base = partyPlayers.find(p => p.id === c.id) || {};
+          return { ...base, id:c.id, name:c.name, hp:c.hp, maxHp:c.maxHp };
+        });
       if(!alivePlayers.length) break;
       const pt = alivePlayers[roll(alivePlayers.length)-1];
       if(pt) {
-        const attackRoll = roll(20);
-        const attackTotal = attackRoll + (nextActor.init || 0);
-        const targetCa = pt.def || 10;
-        const hit = attackRoll === 20 || attackTotal >= targetCa;
         const weaponDie = getCombatDamageDie(nextActor);
-        const damageRoll = hit ? rollDice(weaponDie) : 0;
-        const edmg = hit ? Math.max(1, damageRoll + Math.max(0, nextActor.atk || 0)) : 0;
+        const resolved = resolveWeaponAttack(nextActor, pt, weaponDie);
+        const edmg = resolved.damage;
         const updPt = {...pt, hp:Math.max(0,pt.hp-edmg)};
+        const playerCombatantIdx = newCombatants.findIndex(c => c.id === pt.id);
+        if(playerCombatantIdx >= 0) {
+          newCombatants[playerCombatantIdx] = applyCombatDamageState({
+            ...newCombatants[playerCombatantIdx],
+            maxHp: updPt.maxHp,
+          }, edmg);
+        }
         await dbSavePlayer(updPt);
         if(pt.id===myId) setMeRaw(updPt);
-        log += hit
-          ? `\n\n${nextActor.emoji} **${nextActor.name}** contrattacca: **${attackRoll} + ${nextActor.init || 0} = ${attackTotal}** contro CA **${targetCa}**, poi **${weaponDie} + ${nextActor.atk || 0} = ${edmg} danni** su **${pt.name}**!`
-          : `\n\n${nextActor.emoji} **${nextActor.name}** contrattacca ma manca **${pt.name}** con **${attackRoll} + ${nextActor.init || 0} = ${attackTotal}** contro CA **${targetCa}**.`;
+        await showDiceVisual({ sides:20, value:resolved.hitRoll, label:"Tiro per colpire" });
+        if(resolved.hit) {
+          await showDiceVisual({ sides:getPrimaryDieSides(resolved.weaponDie, 6), value:resolved.damageRoll, label:`Danno ${resolved.weaponDie}` });
+        }
+        log += `\n\n${formatWeaponAttackLog(nextActor, pt, resolved, "Attacco naturale", updPt.hp, pt.maxHp)}`;
       }
-      nextTurn++;
-      if(nextTurn>=newCombatants.length){nextTurn=0; nextRound++;}
+      ({ nextTurn, nextRound } = getNextCombatTurn(newCombatants, nextTurn, nextRound));
+    }
+
+    if(!hasActionablePlayerCombatants(newCombatants)) {
+      setSpellMenu(false);
+      await addMsg(log, "combat", "Battaglia");
+      await resolveCombatNoActionablePlayers({ ...qs, combat }, newCombatants);
+      return;
     }
 
     const allDead = newCombatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
@@ -3001,6 +3560,11 @@ ${stepText(step)}`, "quest","Master");
       init:p?.init||1,
       weaponDie:p?.id===myId ? getEquippedWeapon(equipment, itemMapRef.current).weapon_die : getCombatDamageDie(p),
       isPlayer:true,
+      dying:false,
+      stable:false,
+      dead:false,
+      deathSuccesses:0,
+      deathFailures:0,
     }));
     const allCombatants = [...players,...monsters].map(c=>({...c, rollInit:(c.init||1)+roll(20)}));
     allCombatants.sort((a,b)=>b.rollInit-a.rollInit);
@@ -3119,19 +3683,41 @@ ${stepText(step)}`, "quest","Master");
     chat:     {bg:"rgba(15,23,42,0.86)",border:"#334155",color:"#f8fafc"},
   };
 
-  if(!me) return <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", color:"#f3f4f6", fontFamily:"'Cinzel',serif", fontSize:"1.2rem" }}>Caricamento...</div>;
+  const spellbookCaster = MAGIC_CLASSES.includes(me?.class);
+  const spellbookAvailableSpells = spellbookCaster ? availableSpellsFor(me?.class, me?.level) : [];
+
+  useEffect(() => {
+    if(!myId || !spellbookCaster) {
+      setPreparedSpellIds([]);
+      return;
+    }
+    const stored = getStoredPreparedSpells(myId, spellbookAvailableSpells);
+    const validIds = new Set(spellbookAvailableSpells.map(spell => spell.id));
+    const nextPrepared = stored.filter(id => validIds.has(id));
+    const normalized = nextPrepared.length ? nextPrepared : spellbookAvailableSpells.map(spell => spell.id);
+    setPreparedSpellIds(normalized);
+    saveStoredPreparedSpells(myId, normalized);
+  }, [myId, spellbookCaster, me?.class, me?.level]);
+
+  if(!me || !me.class) return <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", color:"#f3f4f6", fontFamily:"'Cinzel',serif", fontSize:"1.2rem" }}>Caricamento personaggio...</div>;
 
   const combat = qs?.combat;
-  const myTurn = combat?.active && combat.combatants?.[combat.turn%combat.combatants.length]?.id===myId;
+  const activeCombatant = combat?.active ? combat.combatants?.[combat.turn%combat.combatants.length] : null;
+  const myCombatant = combat?.combatants?.find(c => c.id === myId) || null;
+  const myTurn = combat?.active && activeCombatant?.id===myId;
+  const myDeathTurn = myTurn && isDyingCombatant(activeCombatant);
   const isCaster = MAGIC_CLASSES.includes(me?.class);
   const spellSlots = combat?.spellSlots?.[myId] || getSpellSlots(me?.level);
   const availableSpells = isCaster ? availableSpellsFor(me?.class, me?.level) : [];
+  const maxPreparedSpells = maxPreparedSpellsForLevel(me?.level || 1);
+  const preparedNormalSpellCount = availableSpells.filter(spell => spell.slots > 0 && preparedSpellIds.includes(spell.id)).length;
+  const preparedSpells = availableSpells.filter(spell => spell.slots === 0 || preparedSpellIds.includes(spell.id));
   const spellLevels = Array.from(new Set([
-    ...(availableSpells.some(spell => Number(spell.slot) === 0) ? [0] : []),
+    ...(preparedSpells.some(spell => Number(spell.slots) === 0) ? [0] : []),
     ...Object.keys(spellSlots).filter(l=>spellSlots[l]>0).map(Number),
   ])).sort((a,b)=>a-b);
   const spellsByLevel = spellLevels.reduce((acc, lvl) => {
-    acc[lvl] = availableSpells.filter(s => Number(s.slot) === lvl);
+    acc[lvl] = preparedSpells.filter(s => Number(s.slots) === lvl);
     return acc;
   }, {});
   const currentQ = qs?.active ? getQuests().find(x=>x.id===qs.currentId) : null;
@@ -3142,20 +3728,49 @@ ${stepText(step)}`, "quest","Master");
   const selectedInventoryItem = inventoryGroups.find(group => group.item.id === selectedInventoryItemId) || null;
   const visibleChatMessages = messages.filter(msg => ["chat","narration","quest","victory","combat"].includes(msg.type));
   const equippedWeapon = getEquippedWeapon(equipment, itemMap);
+  const combatMode = tab==="combat" && combat?.active;
   const equippedItems = {
     weapon: itemMap.get(equipment.weapon) || null,
     armor: itemMap.get(equipment.armor) || null,
     shield: itemMap.get(equipment.shield) || null,
   };
 
+  function togglePreparedSpell(spellId) {
+    if(!myId) return;
+    setPreparedSpellIds(prev => {
+      const spell = availableSpells.find(entry => entry.id === spellId);
+      if(!spell || spell.slots === 0) return prev;
+      const isPrepared = prev.includes(spellId);
+      const currentPreparedCount = availableSpells.filter(entry => entry.slots > 0 && prev.includes(entry.id)).length;
+      if(!isPrepared && currentPreparedCount >= maxPreparedSpells) return prev;
+      const next = isPrepared ? prev.filter(id => id !== spellId) : [...prev, spellId];
+      saveStoredPreparedSpells(myId, next);
+      return next;
+    });
+  }
+
   return (
     <div style={{ display:"flex", height:"100vh", overflow:"hidden", position:"relative", zIndex:1 }}>
       <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg, rgba(2,6,23,0.76) 0%, rgba(2,6,23,0.7) 45%, rgba(2,6,23,0.8) 100%)", pointerEvents:"none" }} />
+      {deathScene && (
+        <div style={{ position:"fixed", inset:0, zIndex:10000, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(2,6,23,0.88)", padding:"1.5rem" }}>
+          <div style={{ width:"min(560px,100%)", textAlign:"center", background:"linear-gradient(180deg, rgba(24,10,10,0.96), rgba(8,8,12,0.98))", border:"1px solid #7f1d1d", borderRadius:12, boxShadow:"0 24px 80px rgba(0,0,0,0.5)", padding:"2rem 1.5rem" }}>
+            <div style={{ fontSize:"4rem", marginBottom:"0.8rem" }}>🩸</div>
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fca5a5", fontSize:"1.8rem", marginBottom:"0.8rem" }}>Scheda Strappata</div>
+            <div style={{ color:"#fecaca", fontSize:"1rem", lineHeight:1.7 }}>
+              <strong>{deathScene.name}</strong> cade nell'oscurità. Le pagine della sua storia si lacerano, e il destino reclama il suo tributo.
+            </div>
+            <div style={{ color:"#9ca3af", fontSize:"0.85rem", marginTop:"1rem" }}>
+              Il personaggio è perduto. Ritorno alla creazione di una nuova scheda...
+            </div>
+          </div>
+        </div>
+      )}
       {diceResult && (
         <div style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.85)", display:"flex", alignItems:"center", justifyContent:"center" }}>
           <div style={{ textAlign:"center", color:"#fff" }}>
             <div style={{ position:"relative" }}>
-              {diceResult.stage!=="rolling" && diceResult.value===20 && (
+              {diceResult.stage!=="rolling" && diceResult.sides===20 && diceResult.value===20 && (
                 <div style={{ position:"absolute", inset:0, pointerEvents:"none" }}>
                   {Array.from({length:8}).map((_,i)=>(
                     <span key={i} style={{
@@ -3173,34 +3788,104 @@ ${stepText(step)}`, "quest","Master");
                 </div>
               )}
               <span className={diceResult.stage==="rolling" && diceAnim?"dice-spin":""} style={{ width:"10rem", height:"10rem", display:"inline-block" }}>
-                {(()=>{ const result = diceResult.stage==="rolling" ? "?" : diceResult.value;
-                  const rv = diceResult.value;
-                  const color = rv>=20?"#fef08a":rv<=1?"#ef4444":"#fbbf24";
-                  const glow = rv>=20?"drop-shadow(0 0 22px rgba(255,255,120,0.95))":rv<=1?"drop-shadow(0 0 18px rgba(239,68,68,0.95))":"drop-shadow(0 0 16px rgba(251,191,36,0.9))";
+                {(()=>{
+                  const result = diceResult.stage==="rolling" ? "?" : diceResult.value;
+                  const rv = Number(diceResult.value || 0);
+                  const sides = Number(diceResult.sides || 20);
+                  const critLike = sides === 20 && rv >= 20;
+                  const failLike = sides === 20 && rv <= 1;
+                  const maxLike = sides !== 20 && rv >= sides;
+                  const color = critLike || maxLike ? "#fef08a" : failLike ? "#ef4444" : "#fbbf24";
+                  const glow = critLike || maxLike
+                    ? "drop-shadow(0 0 22px rgba(255,255,120,0.95))"
+                    : failLike
+                      ? "drop-shadow(0 0 18px rgba(239,68,68,0.95))"
+                      : "drop-shadow(0 0 16px rgba(251,191,36,0.9))";
+                  const stroke = diceResult.stage==="rolling" ? "#fbbf24" : color;
+                  const commonText = <text x="50" y="54" textAnchor="middle" dominantBaseline="middle" fontSize="18" fontWeight="900" fill={stroke} fontFamily="Georgia,serif">{result}</text>;
+
+                  if(sides === 4) {
+                    return (
+                      <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:diceResult.stage==="rolling"?"drop-shadow(0 0 16px rgba(251,191,36,0.9))":glow}}>
+                        <polygon points="50,10 84,78 16,78" fill="rgba(15,23,42,0.94)" stroke={stroke} strokeWidth="2.8" strokeLinejoin="round"/>
+                        <line x1="50" y1="10" x2="50" y2="78" stroke={stroke} strokeWidth="1.8" opacity="0.9"/>
+                        <line x1="16" y1="78" x2="50" y2="46" stroke={stroke} strokeWidth="1.6" opacity="0.82"/>
+                        <line x1="84" y1="78" x2="50" y2="46" stroke={stroke} strokeWidth="1.6" opacity="0.82"/>
+                        {commonText}
+                      </svg>
+                    );
+                  }
+                  if(sides === 6) {
+                    return (
+                      <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:diceResult.stage==="rolling"?"drop-shadow(0 0 16px rgba(251,191,36,0.9))":glow}}>
+                        <polygon points="28,18 72,18 72,82 28,82" fill="rgba(15,23,42,0.94)" stroke={stroke} strokeWidth="2.8" strokeLinejoin="round"/>
+                        <line x1="28" y1="18" x2="72" y2="18" stroke={stroke} strokeWidth="1.8" opacity="0.85"/>
+                        <line x1="28" y1="82" x2="72" y2="82" stroke={stroke} strokeWidth="1.8" opacity="0.85"/>
+                        {commonText}
+                      </svg>
+                    );
+                  }
+                  if(sides === 8) {
+                    return (
+                      <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:diceResult.stage==="rolling"?"drop-shadow(0 0 16px rgba(251,191,36,0.9))":glow}}>
+                        <polygon points="50,8 78,30 78,70 50,92 22,70 22,30" fill="rgba(15,23,42,0.94)" stroke={stroke} strokeWidth="2.8" strokeLinejoin="round"/>
+                        <line x1="50" y1="8" x2="50" y2="92" stroke={stroke} strokeWidth="1.7" opacity="0.88"/>
+                        <line x1="22" y1="30" x2="78" y2="30" stroke={stroke} strokeWidth="1.6" opacity="0.82"/>
+                        <line x1="22" y1="70" x2="78" y2="70" stroke={stroke} strokeWidth="1.6" opacity="0.82"/>
+                        {commonText}
+                      </svg>
+                    );
+                  }
+                  if(sides === 10) {
+                    return (
+                      <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:diceResult.stage==="rolling"?"drop-shadow(0 0 16px rgba(251,191,36,0.9))":glow}}>
+                        <polygon points="50,8 74,22 82,46 66,88 34,88 18,46 26,22" fill="rgba(15,23,42,0.94)" stroke={stroke} strokeWidth="2.8" strokeLinejoin="round"/>
+                        <line x1="26" y1="22" x2="74" y2="22" stroke={stroke} strokeWidth="1.6" opacity="0.82"/>
+                        <line x1="18" y1="46" x2="82" y2="46" stroke={stroke} strokeWidth="1.6" opacity="0.82"/>
+                        <line x1="50" y1="8" x2="50" y2="88" stroke={stroke} strokeWidth="1.7" opacity="0.9"/>
+                        {commonText}
+                      </svg>
+                    );
+                  }
+                  if(sides === 12) {
+                    return (
+                      <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:diceResult.stage==="rolling"?"drop-shadow(0 0 16px rgba(251,191,36,0.9))":glow}}>
+                        <polygon points="50,8 72,16 86,34 82,60 64,84 36,84 18,60 14,34 28,16" fill="rgba(15,23,42,0.94)" stroke={stroke} strokeWidth="2.6" strokeLinejoin="round"/>
+                        <line x1="28" y1="16" x2="72" y2="16" stroke={stroke} strokeWidth="1.5" opacity="0.8"/>
+                        <line x1="14" y1="34" x2="86" y2="34" stroke={stroke} strokeWidth="1.5" opacity="0.8"/>
+                        <line x1="18" y1="60" x2="82" y2="60" stroke={stroke} strokeWidth="1.5" opacity="0.8"/>
+                        {commonText}
+                      </svg>
+                    );
+                  }
                   return (
                     <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:diceResult.stage==="rolling"?"drop-shadow(0 0 16px rgba(251,191,36,0.9))":glow}}>
-                      <path d="M50 4 L84 24 L84 56 L50 96 L16 56 L16 24 Z" fill="none" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round"/>
-                      <line x1="16" y1="24" x2="84" y2="24" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
-                      <line x1="30" y1="40" x2="70" y2="40" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
-                      <line x1="50" y1="4"  x2="30" y2="40" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
-                      <line x1="50" y1="4"  x2="70" y2="40" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
-                      <line x1="16" y1="24" x2="30" y2="40" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
-                      <line x1="84" y1="24" x2="70" y2="40" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
-                      <line x1="30" y1="40" x2="50" y2="66" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
-                      <line x1="70" y1="40" x2="50" y2="66" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
-                      <line x1="16" y1="56" x2="30" y2="40" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
-                      <line x1="84" y1="56" x2="70" y2="40" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
-                      <line x1="16" y1="56" x2="50" y2="66" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
-                      <line x1="84" y1="56" x2="50" y2="66" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
-                      <line x1="50" y1="66" x2="50" y2="96" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
-                      <text x="50" y="57" textAnchor="middle" fontSize="16" fontWeight="900" fill={diceResult.stage==="rolling"?"#fbbf24":color} fontFamily="Georgia,serif">{result}</text>
+                      <polygon points="50,6 70,16 84,34 80,61 64,84 36,84 20,61 16,34 30,16" fill="rgba(15,23,42,0.96)" stroke={stroke} strokeWidth="2.8" strokeLinejoin="round"/>
+                      <polygon points="50,6 63,23 50,34 37,23" fill="rgba(255,255,255,0.08)" stroke={stroke} strokeWidth="1.35" strokeLinejoin="round"/>
+                      <polygon points="30,16 37,23 50,34 31,40 16,34" fill="rgba(255,255,255,0.03)" stroke={stroke} strokeWidth="1.35" strokeLinejoin="round"/>
+                      <polygon points="70,16 84,34 69,40 50,34 63,23" fill="rgba(255,255,255,0.03)" stroke={stroke} strokeWidth="1.35" strokeLinejoin="round"/>
+                      <polygon points="31,40 50,34 69,40 50,54" fill="rgba(255,255,255,0.06)" stroke={stroke} strokeWidth="1.35" strokeLinejoin="round"/>
+                      <polygon points="20,61 31,40 50,54 36,84" fill="rgba(255,255,255,0.026)" stroke={stroke} strokeWidth="1.35" strokeLinejoin="round"/>
+                      <polygon points="80,61 69,40 50,54 64,84" fill="rgba(255,255,255,0.026)" stroke={stroke} strokeWidth="1.35" strokeLinejoin="round"/>
+                      <line x1="30" y1="16" x2="70" y2="16" stroke={stroke} strokeWidth="1.55" opacity="0.86"/>
+                      <line x1="37" y1="23" x2="63" y2="23" stroke={stroke} strokeWidth="1.35" opacity="0.8"/>
+                      <line x1="16" y1="34" x2="84" y2="34" stroke={stroke} strokeWidth="1.25" opacity="0.78"/>
+                      <line x1="31" y1="40" x2="69" y2="40" stroke={stroke} strokeWidth="1.25" opacity="0.82"/>
+                      <line x1="50" y1="6" x2="50" y2="54" stroke={stroke} strokeWidth="1.6" opacity="0.9"/>
+                      <line x1="50" y1="54" x2="50" y2="84" stroke={stroke} strokeWidth="1.35" opacity="0.8"/>
+                      {commonText}
                     </svg>
                   );
                 })()}
               </span>
               {diceResult.stage!=="rolling" && (
-                <div style={{ fontSize:"1.2rem", marginTop:"0.5rem", color: diceResult.value===20?"#fbbf24": diceResult.value===1?"#f87171":"#fff", fontFamily:"'Cinzel',serif" }}>
-                  {diceResult.value===20 ? "CRITICO!" : diceResult.value===1 ? "FALLIMENTO CRITICO!" : ""}
+                <div style={{ marginTop:"0.55rem", textAlign:"center" }}>
+                  <div style={{ fontSize:"1.15rem", color: diceResult.sides===20 && diceResult.value===20?"#fbbf24": diceResult.sides===20 && diceResult.value===1?"#f87171":"#fff", fontFamily:"'Cinzel',serif" }}>
+                    {diceResult.sides===20 && diceResult.value===20 ? "CRITICO!" : diceResult.sides===20 && diceResult.value===1 ? "FALLIMENTO CRITICO!" : diceResult.label || ""}
+                  </div>
+                  <div style={{ fontSize:"0.9rem", color:"#cbd5e1", marginTop:4 }}>
+                    {diceResult.label ? `${diceResult.label}: ` : ""}<strong>{diceResult.value}</strong>
+                  </div>
                 </div>
               )}
             </div>
@@ -3208,11 +3893,11 @@ ${stepText(step)}`, "quest","Master");
         </div>
       )}
       {/* SIDEBAR */}
-      <aside style={{ width:200, flexShrink:0, background:"rgba(4,8,18,0.94)", borderRight:"1px solid rgba(148,163,184,0.14)", display:"flex", flexDirection:"column", gap:8, padding:"0.7rem", overflowY:"auto", position:"relative", zIndex:1, backdropFilter:"blur(6px)" }}>
+      <aside style={{ width:combatMode?176:200, flexShrink:0, background:combatMode?"rgba(3,7,18,0.97)":"rgba(4,8,18,0.94)", borderRight:"1px solid rgba(148,163,184,0.14)", display:"flex", flexDirection:"column", gap:8, padding:combatMode?"0.85rem 0.7rem":"0.7rem", overflowY:"auto", position:"relative", zIndex:1, backdropFilter:"blur(6px)", boxShadow:combatMode?"inset -1px 0 0 rgba(239,68,68,0.12)":"none" }}>
         <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.75rem", color:"#4c1d95", letterSpacing:"0.1em", paddingBottom:8, borderBottom:"1px solid #0f172a" }}>⚔️ {getMeta().worldName}</div>
         <div style={{ background:"rgba(109,40,217,0.1)", border:"1px solid #3b0764", borderRadius:5, padding:"0.6rem" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:5 }}>
-            <span style={{ fontSize:"1.3rem" }}>{CLASSES[me?.class]?.emoji}</span>
+          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
+            <ArtThumb src={getPlayerPortrait(me)} alt={me?.name || "Eroe"} size={56} radius={14} />
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontFamily:"'Cinzel',serif", color:"#f9fafb", fontSize:"0.82rem", fontWeight:700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{me?.name}</div>
               <div style={{ color:"#4b5563", fontSize:"0.62rem" }}>{RACES[me?.race]?.name} {CLASSES[me?.class]?.name}</div>
@@ -3272,17 +3957,41 @@ ${stepText(step)}`, "quest","Master");
         {combat?.active && (
           <div style={{ background:myTurn?"rgba(239,68,68,0.15)":"rgba(239,68,68,0.06)", border:`1px solid ${myTurn?"#ef4444":"#7f1d1d"}`, borderRadius:4, padding:"0.5rem" }}>
             <div style={{ fontSize:"0.62rem", color:myTurn?"#ef4444":"#7f1d1d", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:3 }}>⚔️ Round {combat.round}</div>
-            <div style={{ color:myTurn?"#fca5a5":"#6b7280", fontSize:"0.75rem", fontWeight:700 }}>{myTurn?"⚔️ TUO TURNO!":"Attendi..."}</div>
+            <div style={{ color:myTurn?"#fca5a5":"#6b7280", fontSize:"0.75rem", fontWeight:700 }}>{myDeathTurn?"🕯️ SALVEZZA CONTRO LA MORTE":myTurn?"⚔️ TUO TURNO!":"Attendi..."}</div>
+            {myCombatant?.dying && (
+              <div style={{ marginTop:4, fontSize:"0.65rem", color:"#fecaca" }}>
+                Successi {myCombatant.deathSuccesses || 0}/3 • Fallimenti {myCombatant.deathFailures || 0}/3
+              </div>
+            )}
           </div>
         )}
 
-        <button onClick={()=>setScreen("landing")} style={{ marginTop:"auto", padding:"0.35rem", background:"transparent", border:"1px solid #0f172a", borderRadius:3, color:"#1f2937", cursor:"pointer", fontSize:"0.62rem", fontFamily:"inherit" }}>? Menu</button>
+        <button
+          onClick={()=>setScreen("landing")}
+          style={{
+            marginTop:"auto",
+            padding:"0.8rem 0.95rem",
+            background:"linear-gradient(135deg, rgba(30,41,59,0.96), rgba(15,23,42,0.98))",
+            border:"1px solid rgba(251,191,36,0.42)",
+            borderRadius:8,
+            color:"#f8e7b9",
+            cursor:"pointer",
+            fontSize:"0.84rem",
+            fontFamily:"'Cinzel',serif",
+            fontWeight:700,
+            letterSpacing:"0.05em",
+            textAlign:"center",
+            boxShadow:"0 10px 24px rgba(0,0,0,0.24)",
+          }}
+        >
+          ← Esci al Menu
+        </button>
       </aside>
 
       {/* MAIN */}
-      <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", background:"rgba(2,6,23,0.58)", position:"relative", zIndex:1, backdropFilter:"blur(4px)" }}>
-        <div style={{ display:"flex", gap:0, borderBottom:`1px solid ${PANEL_BORDER}`, background:"rgba(3,7,18,0.88)", flexShrink:0 }}>
-          {[["chat","💬 Chat"],["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>(
+      <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", background:combatMode?"rgba(2,6,23,0.76)":"rgba(2,6,23,0.58)", position:"relative", zIndex:1, backdropFilter:"blur(4px)" }}>
+        <div style={{ display:"flex", gap:0, borderBottom:`1px solid ${PANEL_BORDER}`, background:combatMode?"rgba(8,10,20,0.94)":"rgba(3,7,18,0.88)", flexShrink:0 }}>
+          {[["chat","💬 Chat"],["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>(
             <button key={k} onClick={()=>setTab(k)} style={{ padding:"0.6rem 1.2rem", background:tab===k?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k?"2px solid #7c3aed":"2px solid transparent", color:tab===k?"#c4b5fd":"#4b5563", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", letterSpacing:"0.05em" }}>
               {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}
             </button>
@@ -3318,6 +4027,8 @@ ${stepText(step)}`, "quest","Master");
             onCloseItem={handleInventoryClose}
             onEquip={equipItem}
             onSell={handleInventorySell}
+            onUse={usePotion}
+            canUseConsumables={(me?.hp || 0) > 0 && !myCombatant?.dying && !myCombatant?.dead && !myCombatant?.stable}
           />
         )}
         {tab==="equipment" && (
@@ -3327,6 +4038,25 @@ ${stepText(step)}`, "quest","Master");
             equippedWeapon={equippedWeapon}
             onUnequip={unequipItem}
           />
+        )}
+        {tab==="spells" && isCaster && (
+          <SpellbookView
+            spellsByLevel={Object.entries(availableSpells.reduce((acc, spell) => {
+              const lvl = Number(spell.slots || 0);
+              if(!acc[lvl]) acc[lvl] = [];
+              acc[lvl].push(spell);
+              return acc;
+            }, {})).sort((a,b)=>Number(a[0]) - Number(b[0])).reduce((acc, [lvl, spells]) => ({ ...acc, [lvl]: spells }), {})}
+            preparedSpellIds={preparedSpellIds}
+            preparedCount={preparedNormalSpellCount}
+            maxPrepared={maxPreparedSpells}
+            onTogglePrepared={togglePreparedSpell}
+          />
+        )}
+        {tab==="spells" && !isCaster && (
+          <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", color:"#64748b", fontFamily:"'Cinzel',serif" }}>
+            Questo eroe non usa magia.
+          </div>
         )}
         {tab==="shop" && (
           <ShopView
@@ -3438,7 +4168,7 @@ ${stepText(step)}`, "quest","Master");
         )}
 
         {tab==="combat" && (
-          <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
+          <div style={{ flex:1, overflowY:"auto", padding:combatMode?"1.35rem":"1rem", background:"linear-gradient(180deg, rgba(20,10,10,0.18) 0%, rgba(3,7,18,0.24) 100%)" }}>
             {!combat?.active ? (
               <div style={{ textAlign:"center", padding:"3rem", color:"#374151" }}>
                 <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>🔒</div>
@@ -3446,89 +4176,128 @@ ${stepText(step)}`, "quest","Master");
                 <p style={{ fontSize:"0.8rem" }}>Accetta una missione e usa il tab Missioni per iniziare il combattimento.</p>
               </div>
             ) : (
-              <div>
-                <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:"1rem" }}>
-                  <h3 style={{ fontFamily:"'Cinzel',serif", color:"#ef4444", margin:0 }}>⚔️ Battaglia — Round {combat.round}</h3>
-                  {myTurn&&<span style={{ padding:"3px 10px", background:"rgba(239,68,68,0.3)", border:"1px solid #ef4444", borderRadius:4, color:"#fca5a5", fontSize:"0.78rem" }}>⚔️ TUO TURNO</span>}
+              <div style={{ maxWidth:1460, margin:"0 auto" }}>
+                <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:"1rem", padding:"1rem 1.1rem", background:"linear-gradient(135deg, rgba(40,12,12,0.92), rgba(12,16,28,0.94))", border:"1px solid rgba(239,68,68,0.3)", borderRadius:12, boxShadow:"0 18px 40px rgba(0,0,0,0.24)" }}>
+                  <div>
+                    <h3 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fca5a5", margin:"0 0 0.35rem", fontSize:"1.5rem", letterSpacing:"0.04em" }}>⚔️ Battaglia</h3>
+                    <div style={{ color:"#cbd5e1", fontSize:"0.9rem" }}>Round {combat.round} • {combat.combatants.length} partecipanti • il destino si decide ora</div>
+                  </div>
+                  {myTurn&&<span style={{ padding:"0.45rem 0.95rem", background:"rgba(239,68,68,0.24)", border:"1px solid #ef4444", borderRadius:999, color:"#fee2e2", fontSize:"0.84rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>{myDeathTurn?"🕯️ SALVEZZA":"⚔️ TUO TURNO"}</span>}
                 </div>
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(190px,1fr))", gap:8, marginBottom:"1rem" }}>
+
+                <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1.7fr) minmax(320px,0.95fr)", gap:"1rem", alignItems:"start" }}>
+                  <div>
+                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))", gap:12, marginBottom:"1rem" }}>
                   {combat.combatants.map((c,i)=>{
                     const isActive = i===combat.turn%combat.combatants.length;
                     return (
-                      <div key={c.id||i} style={{ background:isActive?"rgba(239,68,68,0.1)":"rgba(255,255,255,0.02)", border:`2px solid ${isActive?"#ef4444":c.isPlayer?"#3b0764":"#7f1d1d"}`, borderRadius:6, padding:"0.7rem", opacity:c.hp<=0?0.4:1 }}>
-                        <div style={{ display:"flex", gap:6, alignItems:"center", marginBottom:5 }}>
-                          <span style={{ fontSize:"1.4rem" }}>{c.emoji||"⭐"}</span>
+                      <div key={c.id||i} style={{ background:isActive?"linear-gradient(135deg, rgba(127,29,29,0.34), rgba(15,23,42,0.9))":"rgba(15,23,42,0.82)", border:`2px solid ${isActive?"#ef4444":c.isPlayer?"#6d28d9":"#7f1d1d"}`, borderRadius:12, padding:"0.95rem", opacity:c.hp<=0?0.45:1, boxShadow:isActive?"0 16px 36px rgba(127,29,29,0.24)":"0 12px 30px rgba(0,0,0,0.16)" }}>
+                        <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:8 }}>
+                          <ArtThumb src={c.isPlayer ? getPlayerPortrait(c) : getMonsterImage(c)} alt={c.name} size={70} radius={16} />
                           <div style={{ flex:1 }}>
-                            <div style={{ fontFamily:"'Cinzel',serif", color:c.isPlayer?"#c4b5fd":"#fca5a5", fontSize:"0.8rem", fontWeight:700 }}>{c.name}{c.isBoss?" ⭐":""}</div>
-                            <div style={{ fontSize:"0.62rem", color:"#4b5563" }}>Init: {c.rollInit}</div>
+                            <div style={{ fontFamily:"'Cinzel',serif", color:c.isPlayer?"#ddd6fe":"#fecaca", fontSize:"0.98rem", fontWeight:700, marginBottom:2 }}>{c.name}{c.isBoss?" ⭐":""}</div>
+                            <div style={{ fontSize:"0.75rem", color:"#94a3b8" }}>Iniziativa: {c.rollInit}</div>
                           </div>
-                          {isActive&&<span style={{ fontSize:"0.6rem", padding:"1px 4px", background:"#7f1d1d", borderRadius:3, color:"#fca5a5" }}>?</span>}
+                          {isActive&&<span style={{ fontSize:"0.7rem", padding:"0.22rem 0.45rem", background:"#7f1d1d", borderRadius:999, color:"#fca5a5", fontFamily:"'Cinzel',serif" }}>ATTIVO</span>}
                         </div>
+                        {(c.dying || c.stable || c.dead) && (
+                          <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:8, fontSize:"0.68rem" }}>
+                            {c.dying && <span style={{ padding:"2px 6px", borderRadius:999, background:"rgba(127,29,29,0.35)", border:"1px solid #ef4444", color:"#fecaca" }}>🕯️ Morente</span>}
+                            {c.stable && <span style={{ padding:"2px 6px", borderRadius:999, background:"rgba(30,41,59,0.5)", border:"1px solid #64748b", color:"#cbd5e1" }}>😵 Stabile</span>}
+                            {c.dead && <span style={{ padding:"2px 6px", borderRadius:999, background:"rgba(24,24,27,0.7)", border:"1px solid #71717a", color:"#e4e4e7" }}>☠️ Morto</span>}
+                            {(c.dying || c.stable) && <span style={{ color:"#fecaca" }}>{c.deathSuccesses || 0}/3 ✓ • {c.deathFailures || 0}/3 ✗</span>}
+                          </div>
+                        )}
                         <HpBar cur={c.hp} max={c.maxHp} red={!c.isPlayer} />
-                        <div style={{ fontSize:"0.65rem", color:"#4b5563", marginTop:2, textAlign:"right" }}>{c.hp}/{c.maxHp} HP</div>
+                        <div style={{ display:"flex", justifyContent:"space-between", marginTop:6, fontSize:"0.74rem" }}>
+                          <span style={{ color:c.isPlayer?"#c4b5fd":"#fca5a5" }}>{c.isPlayer?"Alleato":"Nemico"}</span>
+                          <span style={{ color:"#e2e8f0", fontWeight:700 }}>{c.hp}/{c.maxHp} HP</span>
+                        </div>
                       </div>
                     );
                   })}
-                </div>
-                {myTurn && (
-                  <div style={{ textAlign:"center", padding:"1.5rem", background:"rgba(239,68,68,0.08)", border:"1px solid #7f1d1d", borderRadius:6 }}>
-                    <p style={{ color:"#fca5a5", fontFamily:"'Cinzel',serif", marginBottom:"1rem" }}>� il tuo turno!</p>
-                    {spellMenu ? (
-                      <div style={{ display:"grid", gap:8, justifyItems:"center" }}>
-                        <div style={{ fontSize:"0.85rem", color:"#fbbf24", fontWeight:700 }}>Scegli un incantesimo</div>
-                        {spellLevels.map(lvl=>{
-                          const spells = spellsByLevel[lvl] || [];
-                          if(!spells.length) return null;
-                          return (
-                            <div key={lvl} style={{ width:"100%" }}>
-                              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", margin:"0.7rem 0 0.3rem", fontSize:"0.85rem", color:"#a5b4fc", fontWeight:600 }}>
-                                <span>{lvl===0 ? "Trucchetti" : `Livello ${lvl}`}</span>
-                                <span style={{ fontSize:"0.75rem", color:"#9ca3af" }}>{lvl===0 ? "gratis" : `${spellSlots[lvl]} slot`}</span>
-                              </div>
-                              {spells.map(spell=> (
-                                <button key={spell.id} onClick={()=>castSpell(spell)} style={{ width:"100%", maxWidth:320, padding:"0.9rem 1rem", background:"rgba(99,102,241,0.15)", border:"1px solid #3b0764", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontFamily:"inherit", textAlign:"left" }}>
-                                  <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-                                    <span style={{ fontWeight:700 }}>{spell.emoji||"✨"} {spell.name}</span>
-                                    <span style={{ fontSize:"0.75rem", color:"#9ca3af" }}>Slot {spell.slots||0}</span>
-                                  </div>
-                                  <div style={{ fontSize:"0.7rem", color:"#9ca3af", marginTop:2 }}>{spell.desc}</div>
-                                </button>
-                              ))}
+                    </div>
+                  </div>
+
+                  <div style={{ display:"grid", gap:"1rem", position:"sticky", top:0 }}>
+                    <div style={{ textAlign:"center", padding:"1.35rem 1.1rem", background:"linear-gradient(180deg, rgba(24,10,10,0.92), rgba(15,23,42,0.94))", border:"1px solid rgba(239,68,68,0.26)", borderRadius:12, boxShadow:"0 18px 40px rgba(0,0,0,0.22)" }}>
+                      {myTurn ? (
+                        <>
+                          <p style={{ color:"#fecaca", fontFamily:"'Cinzel Decorative',serif", marginBottom:"1rem", fontSize:"1.08rem", letterSpacing:"0.04em" }}>{myDeathTurn ? "🕯️ Sei a terra: tira la tua salvezza contro la morte." : "⚔️ Il campo si apre davanti a te."}</p>
+                          {myDeathTurn ? (
+                            <div style={{ display:"grid", gap:10, justifyItems:"center" }}>
+                              <div style={{ color:"#fecaca", fontSize:"0.95rem" }}>Successi: {activeCombatant?.deathSuccesses || 0}/3 • Fallimenti: {activeCombatant?.deathFailures || 0}/3</div>
+                              <button onClick={doAttack} style={{ width:"100%", maxWidth:340, padding:"1rem 1.4rem", background:"linear-gradient(135deg,#7f1d1d,#b91c1c)", border:"2px solid #ef4444", borderRadius:10, color:"#fee2e2", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.06rem", cursor:"pointer", letterSpacing:"0.08em", boxShadow:"0 14px 28px rgba(127,29,29,0.24)" }}>
+                                <span className={diceAnim?"dice-spin":""} style={{ display:"inline-block", marginRight:8 }}>🎲</span>
+                                TIRO SALVEZZA
+                              </button>
                             </div>
-                          );
-                        })}
-                        <SmallBtn onClick={()=>setSpellMenu(false)}>← Indietro</SmallBtn>
-                      </div>
-                    ) : (
-                      <>
-                        <div style={{ display:"flex", justifyContent:"center", gap:10, flexWrap:"wrap" }}>
-                          <button onClick={doAttack} style={{ padding:"1rem 2.2rem", background:"linear-gradient(135deg,#7f1d1d,#dc2626)", border:"2px solid #ef4444", borderRadius:6, color:"#fee2e2", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.1rem", cursor:"pointer", letterSpacing:"0.08em" }}>
-                            <span className={diceAnim?"dice-spin":""} style={{ display:"inline-block", marginRight:8 }}>🎲</span>
-                            ATTACCA!
-                          </button>
-                          {isCaster && (
-                            <button onClick={()=>setSpellMenu(true)} disabled={!availableSpells.length} style={{ padding:"1rem 2.2rem", background:availableSpells.length?"linear-gradient(135deg,#551a8b,#7c3aed)":"rgba(75,43,105,0.35)", border:"2px solid #7c3aed", borderRadius:6, color:"#e0d7ff", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.1rem", cursor:availableSpells.length?"pointer":"not-allowed", letterSpacing:"0.08em" }}>
-                              🔮 Magia {totalSlots(spellSlots)>0?`(${totalSlots(spellSlots)})`:"(solo trucchetti)"}
-                            </button>
+                          ) : spellMenu ? (
+                            <div style={{ display:"grid", gap:8, justifyItems:"center" }}>
+                              <div style={{ fontSize:"0.92rem", color:"#fbbf24", fontWeight:700 }}>Scegli un incantesimo</div>
+                              {spellLevels.map(lvl=>{
+                                const spells = spellsByLevel[lvl] || [];
+                                if(!spells.length) return null;
+                                return (
+                                  <div key={lvl} style={{ width:"100%" }}>
+                                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", margin:"0.7rem 0 0.35rem", fontSize:"0.88rem", color:"#c4b5fd", fontWeight:600 }}>
+                                      <span>{lvl===0 ? "Trucchetti" : `Livello ${lvl}`}</span>
+                                      <span style={{ fontSize:"0.78rem", color:"#cbd5e1" }}>{lvl===0 ? "gratis" : `${spellSlots[lvl]} slot`}</span>
+                                    </div>
+                                    {spells.map(spell=> (
+                                      <button key={spell.id} onClick={()=>castSpell(spell)} style={{ width:"100%", padding:"0.95rem 1rem", background:"rgba(99,102,241,0.15)", border:"1px solid #4338ca", borderRadius:10, color:"#e0d7ff", cursor:"pointer", fontFamily:"inherit", textAlign:"left", marginBottom:8 }}>
+                                        <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
+                                          <span style={{ fontWeight:700, fontSize:"0.9rem" }}>{spell.emoji||"✨"} {spell.name}</span>
+                                          <span style={{ fontSize:"0.74rem", color:"#cbd5e1" }}>{spell.slots===0 ? "Gratis" : `Slot ${spell.slots||0}`}</span>
+                                        </div>
+                                        <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:5 }}>
+                                          {spellEffectSummary(spell).map(detail => (
+                                            <span key={detail} style={{ fontSize:"0.7rem", color:"#cbd5e1", background:"rgba(255,255,255,0.05)", border:"1px solid #334155", borderRadius:999, padding:"2px 7px" }}>
+                                              {detail}
+                                            </span>
+                                          ))}
+                                        </div>
+                                        <div style={{ fontSize:"0.76rem", color:"#cbd5e1", marginTop:4, lineHeight:1.45 }}>{spell.desc}</div>
+                                      </button>
+                                    ))}
+                                  </div>
+                                );
+                              })}
+                              <SmallBtn onClick={()=>setSpellMenu(false)}>← Indietro</SmallBtn>
+                            </div>
+                          ) : (
+                            <>
+                              <div style={{ display:"grid", gap:10 }}>
+                                <button onClick={doAttack} style={{ width:"100%", padding:"1rem 1.4rem", background:"linear-gradient(135deg,#7f1d1d,#dc2626)", border:"2px solid #ef4444", borderRadius:10, color:"#fee2e2", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.1rem", cursor:"pointer", letterSpacing:"0.08em", boxShadow:"0 14px 28px rgba(127,29,29,0.24)" }}>
+                                  <span className={diceAnim?"dice-spin":""} style={{ display:"inline-block", marginRight:8 }}>🎲</span>
+                                  ATTACCA
+                                </button>
+                                {isCaster && (
+                                  <button onClick={()=>setSpellMenu(true)} disabled={!availableSpells.length} style={{ width:"100%", padding:"1rem 1.4rem", background:availableSpells.length?"linear-gradient(135deg,#551a8b,#7c3aed)":"rgba(75,43,105,0.35)", border:"2px solid #7c3aed", borderRadius:10, color:"#e0d7ff", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.04rem", cursor:availableSpells.length?"pointer":"not-allowed", letterSpacing:"0.08em" }}>
+                                    🔮 Magia {totalSlots(spellSlots)>0?`(${totalSlots(spellSlots)})`:"(solo trucchetti)"}
+                                  </button>
+                                )}
+                              </div>
+                              <p style={{ color:"#cbd5e1", fontSize:"0.8rem", marginTop:"0.85rem", lineHeight:1.55 }}>Prima tiri per colpire. Se l'attacco supera la CA del bersaglio, il sistema mostra e applica il dado danno dell'arma o dell'incantesimo.</p>
+                            </>
                           )}
+                        </>
+                      ) : (
+                        <div style={{ color:"#cbd5e1", fontSize:"0.96rem", lineHeight:1.6 }}>
+                          In attesa di <strong style={{ color:"#f8fafc" }}>{combat.combatants[combat.turn%combat.combatants.length]?.name}</strong>...
                         </div>
-                        <p style={{ color:"#4b5563", fontSize:"0.72rem", marginTop:"0.5rem" }}>d20 + DEX vs CA, poi dado arma + bonus ATK</p>
-                      </>
-                    )}
-                  </div>
-                )}
-                {!myTurn && (
-                  <div style={{ textAlign:"center", padding:"1rem", color:"#4b5563" }}>
-                    In attesa di <strong style={{ color:"#e2d9c5" }}>{combat.combatants[combat.turn%combat.combatants.length]?.name}</strong>...
-                  </div>
-                )}
-                <div style={{ marginTop:"1rem" }}>
-                  <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.7rem", color:"#4b5563", marginBottom:6, letterSpacing:"0.08em" }}>LOG DI BATTAGLIA</div>
-                  <div style={{ maxHeight:200, overflowY:"auto" }}>
+                      )}
+                    </div>
+
+                    <div style={{ background:"rgba(8,14,28,0.9)", border:"1px solid rgba(148,163,184,0.16)", borderRadius:12, padding:"1rem", boxShadow:"0 16px 34px rgba(0,0,0,0.18)" }}>
+                      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.78rem", color:"#cbd5e1", marginBottom:8, letterSpacing:"0.08em" }}>LOG DI BATTAGLIA</div>
+                      <div style={{ maxHeight:360, overflowY:"auto" }}>
                     {messages.filter(m=>m.type==="combat").slice(-10).map(m=>(
-                      <div key={m.id} style={{ padding:"0.4rem 0.7rem", background:"rgba(239,68,68,0.05)", border:"1px solid #7f1d1d", borderRadius:3, marginBottom:4, fontSize:"0.78rem", color:"#fca5a5" }}
+                      <div key={m.id} style={{ padding:"0.75rem 0.85rem", background:"rgba(127,29,29,0.16)", border:"1px solid #7f1d1d", borderRadius:8, marginBottom:8, fontSize:"0.84rem", color:"#fecaca", lineHeight:1.6 }}
                         dangerouslySetInnerHTML={{ __html:fmt(m.content) }} />
                     ))}
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
