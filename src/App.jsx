@@ -1258,20 +1258,26 @@ function PlayersView() {
 
 function PartiesView() {
   const [parties, setParties] = useState([]);
+  const [partyPlayers, setPartyPlayers] = useState({});
   const [working, setWorking] = useState({});
+  const [banTarget, setBanTarget] = useState({});
   const [error, setError] = useState(null);
 
   useEffect(()=>{
     let active = true;
     const load = async () => {
-      const { data, error } = await supabase.from("players").select("party_code");
-      if(error) {
-        setError(error.message || "Impossibile caricare i party");
-        return;
-      }
+      const { data, error } = await supabase.from("players").select("id,name,party_code,class");
+      if(error) { setError(error.message || "Impossibile caricare i party"); return; }
       if(!active) return;
       const codes = Array.from(new Set((data||[]).map(r=>r.party_code).filter(Boolean)));
       setParties(codes);
+      const grouped = {};
+      for(const p of (data||[])) {
+        if(!p.party_code) continue;
+        if(!grouped[p.party_code]) grouped[p.party_code] = [];
+        grouped[p.party_code].push(p);
+      }
+      setPartyPlayers(grouped);
     };
     load();
     const interval = setInterval(load, 5000);
@@ -1283,34 +1289,74 @@ function PartiesView() {
     try {
       if(action === "combat") await resetPartyCombat(partyCode);
       if(action === "campaign") await resetPartyCampaign(partyCode);
-      if(action === "delete") {
-        await deleteParty(partyCode);
-        setParties(prev=>prev.filter(c=>c!==partyCode));
-      }
-    } finally {
-      setWorking(w=>({ ...w, [partyCode]: null }));
-    }
+      if(action === "delete") { await deleteParty(partyCode); setParties(prev=>prev.filter(c=>c!==partyCode)); }
+    } finally { setWorking(w=>({ ...w, [partyCode]: null })); }
   };
+
+  const handleResetStoria = async (partyCode) => {
+    if(!window.confirm(`Reset storia completo per party ${partyCode}?\nVerranno cancellati messaggi e stato missione.`)) return;
+    setWorking(w=>({...w,[partyCode]:"storia"}));
+    try {
+      const state = await dbGetPartyState(partyCode);
+      await dbSavePartyState(partyCode, {...state, combat:null, currentId:null, step:0, active:false, completed:[]});
+      await dbDeleteMessages(partyCode);
+    } finally { setWorking(w=>({...w,[partyCode]:null})); }
+  };
+
+  const handleTerminaCombattimento = async (partyCode) => {
+    if(!window.confirm(`Terminare il combattimento in corso per party ${partyCode}?`)) return;
+    setWorking(w=>({...w,[partyCode]:"combat"}));
+    try { await resetPartyCombat(partyCode); }
+    finally { setWorking(w=>({...w,[partyCode]:null})); }
+  };
+
+  const handleBanna = async (partyCode) => {
+    const pid = banTarget[partyCode];
+    if(!pid) { alert("Seleziona un giocatore da bannare."); return; }
+    const player = (partyPlayers[partyCode]||[]).find(p=>p.id===pid);
+    if(!window.confirm(`Bannare ${player?.name}? Il giocatore verrà rimosso dal party. Azione irreversibile.`)) return;
+    setWorking(w=>({...w,[partyCode]:"ban"}));
+    try {
+      await supabase.from("players").delete().eq("id", pid);
+      setPartyPlayers(prev=>({...prev,[partyCode]:(prev[partyCode]||[]).filter(p=>p.id!==pid)}));
+      setBanTarget(prev=>({...prev,[partyCode]:""}));
+    } finally { setWorking(w=>({...w,[partyCode]:null})); }
+  };
+
+  const dangerBtn = { background:"#dc2626", color:"white", fontWeight:"bold", padding:"8px 16px", borderRadius:"6px", margin:"4px", border:"none", cursor:"pointer", fontSize:"0.82rem" };
 
   return (
     <div>
       <p style={{ color:"#6b7280", fontSize:"0.85rem", marginBottom:"1rem" }}>{parties.length} party trovati � aggiornamento automatico</p>
       {error && <div style={{ color:"#fca5a5", marginBottom:"1rem" }}>{error}</div>}
       {!parties.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun party ancora.</div>}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:10 }}>
         {parties.map(code=>(
           <div key={code} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
             <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, marginBottom:6 }}>Party: {code}</div>
             <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
               <SmallBtn disabled={!!working[code]} onClick={()=>handleAction(code, "combat")}>💀 Reset Combattimento</SmallBtn>
-              <SmallBtn disabled={!!working[code]} onClick={()=>{
-                if(window.confirm("Resetta tutte le chat del party e lo stato di combattimento?")) handleAction(code, "campaign");
-              }}>🔄 Reset Campagna</SmallBtn>
-              <SmallBtn red disabled={!!working[code]} onClick={()=>{
-                if(window.confirm("Eliminare completamente questo party (messaggi, giocatori, stato)?")) handleAction(code, "delete");
-              }}>🗑️ Elimina Party</SmallBtn>
+              <SmallBtn disabled={!!working[code]} onClick={()=>{ if(window.confirm("Resetta chat e stato combattimento?")) handleAction(code, "campaign"); }}>🔄 Reset Campagna</SmallBtn>
+              <SmallBtn red disabled={!!working[code]} onClick={()=>{ if(window.confirm("Eliminare completamente questo party?")) handleAction(code, "delete"); }}>🗑️ Elimina Party</SmallBtn>
             </div>
-            {working[code] && <div style={{ marginTop:8, color:"#a78bfa", fontSize:"0.78rem" }}>In corso: {working[code]}</div>}
+            {working[code] && <div style={{ marginTop:8, color:"#a78bfa", fontSize:"0.78rem" }}>In corso: {working[code]}...</div>}
+            <div style={{ marginTop:12, background:"#1a0000", border:"1px solid #dc2626", borderRadius:6, padding:"0.8rem" }}>
+              <div style={{ color:"#dc2626", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", fontWeight:700, marginBottom:8, letterSpacing:"0.05em" }}>⚠️ Azioni Pericolose</div>
+              <div style={{ display:"flex", flexWrap:"wrap" }}>
+                <button disabled={!!working[code]} onClick={()=>handleResetStoria(code)} style={dangerBtn}>🔥 Reset Storia Completo</button>
+                <button disabled={!!working[code]} onClick={()=>handleTerminaCombattimento(code)} style={dangerBtn}>💀 Termina Combattimento</button>
+              </div>
+              <div style={{ display:"flex", gap:6, alignItems:"center", marginTop:4 }}>
+                <select value={banTarget[code]||""} onChange={e=>setBanTarget(prev=>({...prev,[code]:e.target.value}))}
+                  style={{ flex:1, background:"#0a0000", border:"1px solid #7f1d1d", color:"#e2d9c5", padding:"6px 8px", borderRadius:4, fontSize:"0.82rem" }}>
+                  <option value="">Seleziona giocatore...</option>
+                  {(partyPlayers[code]||[]).map(p=>(
+                    <option key={p.id} value={p.id}>{p.name} ({CLASSES[p.class]?.name||p.class})</option>
+                  ))}
+                </select>
+                <button disabled={!!working[code]} onClick={()=>handleBanna(code)} style={dangerBtn}>🚫 Banna</button>
+              </div>
+            </div>
           </div>
         ))}
       </div>
