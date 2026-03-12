@@ -480,41 +480,41 @@ const DEFAULT_MONSTERS = [
 
 function buildDefaultItems() {
   return [
-    { id:"weapon_rustbit_shortsword", name:"Rustbit Shortsword", emoji:"🗡️", type:"weapon", slot:"weapon", rarity:"common", price:24, description:"A chipped roadside blade still trusted by caravan guards.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
-    { id:"weapon_ashwood_club", name:"Ashwood Club", emoji:"🪵", type:"weapon", slot:"weapon", rarity:"common", price:16, description:"A hardened branch of ash used by brawlers and militiamen.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
-    { id:"weapon_stonevale_spear", name:"Stonevale Spear", emoji:"🔱", type:"weapon", slot:"weapon", rarity:"common", price:22, description:"A plain iron-tipped spear from the valley militias.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
-    { id:"weapon_briar_string_bow", name:"Briar String Bow", emoji:"🏹", type:"weapon", slot:"weapon", rarity:"common", price:28, description:"A hunter's bow strung with treated thorn-fiber.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
-    { id:"weapon_moonfork_dagger", name:"Moonfork Dagger", emoji:"🗡️", type:"weapon", slot:"weapon", rarity:"common", price:18, description:"A narrow blade made for ambushes and close alleys.", damageDice:"1d4", weapon_die:"1d4", bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
-    { id:"weapon_glowember_wand", name:"Glowember Wand", emoji:"🪄", type:"weapon", slot:"weapon", rarity:"common", price:32, description:"A starter focus carved from emberwood for apprentice casters.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:0, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
-    { id:"weapon_watchmans_axe", name:"Watchman's Axe", emoji:"🪓", type:"weapon", slot:"weapon", rarity:"uncommon", price:52, description:"A dependable border axe forged for night patrols.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:-1, heal_amount:0, available:true },
-    { id:"weapon_frosttrail_mace", name:"Frosttrail Mace", emoji:"🔨", type:"weapon", slot:"weapon", rarity:"uncommon", price:56, description:"A cold-forged mace that caves in shields and bone.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:-1, heal_amount:0, available:true },
-    { id:"weapon_silverfen_rapier", name:"Silverfen Rapier", emoji:"⚔️", type:"weapon", slot:"weapon", rarity:"uncommon", price:60, description:"A duelist's blade from the mirror courts of Silverfen.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
-    { id:"weapon_hollowpeak_staff", name:"Hollowpeak Staff", emoji:"🪄", type:"weapon", slot:"weapon", rarity:"uncommon", price:58, description:"A rune-burnished staff from the slopes below Hollowpeak.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:0, bonus_def:0, bonus_mag:2, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
-    { id:"weapon_riverwake_crossbow", name:"Riverwake Crossbow", emoji:"🏹", type:"weapon", slot:"weapon", rarity:"uncommon", price:64, description:"A compact crossbow suited for scouts and ferry guards.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
-    { id:"weapon_dawnfire_longsword", name:"Dawnfire Longsword", emoji:"⚔️", type:"weapon", slot:"weapon", rarity:"rare", price:110, description:"Its polished steel catches dawnlight like sacred flame.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:3, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
-    { id:"weapon_blackroot_halberd", name:"Blackroot Halberd", emoji:"🪓", type:"weapon", slot:"weapon", rarity:"rare", price:118, description:"A brutal polearm used in monster hunts near the Blackroot treeline.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:3, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:-1, heal_amount:0, available:true },
-    { id:"weapon_starhush_grimoire", name:"Starhush Grimoire", emoji:"📘", type:"weapon", slot:"weapon", rarity:"rare", price:126, description:"A whispering spellbook wrapped in midnight leather.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:0, bonus_def:0, bonus_mag:3, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
-    { id:"weapon_golden_stag_blade", name:"Golden Stag Blade", emoji:"🗡️", type:"weapon", slot:"weapon", rarity:"epic", price:220, description:"A royal hunting blade still worthy of song and blood.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:4, bonus_def:1, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
+    { id:"weapon_rustbit_shortsword", name:"Spada Corta Sbeccata", emoji:"🗡️", type:"weapon", slot:"weapon", rarity:"common", price:24, description:"Una lama da strada scheggiata, ancora fidata dalle guardie delle carovane.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_ashwood_club", name:"Randello di Frassino", emoji:"🪵", type:"weapon", slot:"weapon", rarity:"common", price:16, description:"Un robusto ramo temprato, caro a rissaioli e miliziani.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
+    { id:"weapon_stonevale_spear", name:"Lancia di Pietravalle", emoji:"🔱", type:"weapon", slot:"weapon", rarity:"common", price:22, description:"Una semplice lancia ferrata delle milizie della valle.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_briar_string_bow", name:"Arco di Rovi Tesi", emoji:"🏹", type:"weapon", slot:"weapon", rarity:"common", price:28, description:"Arco da caccia incordato con fibre di rovo trattate.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
+    { id:"weapon_moonfork_dagger", name:"Pugnale Lunaforca", emoji:"🗡️", type:"weapon", slot:"weapon", rarity:"common", price:18, description:"Una lama sottile fatta per imboscate e vicoli stretti.", damageDice:"1d4", weapon_die:"1d4", bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
+    { id:"weapon_glowember_wand", name:"Bacchetta Brillabrace", emoji:"🪄", type:"weapon", slot:"weapon", rarity:"common", price:32, description:"Un focus iniziale d'ebano ardente per giovani incantatori.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:0, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
+    { id:"weapon_watchmans_axe", name:"Ascia del Guardiano", emoji:"🪓", type:"weapon", slot:"weapon", rarity:"uncommon", price:52, description:"Un'ascia affidabile forgiata per le pattuglie di confine.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:-1, heal_amount:0, available:true },
+    { id:"weapon_frosttrail_mace", name:"Mazza del Sentiero Gelido", emoji:"🔨", type:"weapon", slot:"weapon", rarity:"uncommon", price:56, description:"Una mazza temprata al freddo, letale contro ossa e scudi.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:-1, heal_amount:0, available:true },
+    { id:"weapon_silverfen_rapier", name:"Rapier di Silverfen", emoji:"⚔️", type:"weapon", slot:"weapon", rarity:"uncommon", price:60, description:"La lama dei duellanti delle corti specchiate di Silverfen.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
+    { id:"weapon_hollowpeak_staff", name:"Bastone di Hollowpeak", emoji:"🪄", type:"weapon", slot:"weapon", rarity:"uncommon", price:58, description:"Un bastone runico levigato sui pendii di Hollowpeak.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:0, bonus_def:0, bonus_mag:2, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
+    { id:"weapon_riverwake_crossbow", name:"Balestra di Riverwake", emoji:"🏹", type:"weapon", slot:"weapon", rarity:"uncommon", price:64, description:"Una balestra compatta amata da esploratori e guardie dei traghetti.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_dawnfire_longsword", name:"Spada Lunga Ardalba", emoji:"⚔️", type:"weapon", slot:"weapon", rarity:"rare", price:110, description:"L'acciaio lucido cattura la luce del mattino come una fiamma sacra.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:3, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_blackroot_halberd", name:"Alabarda di Blackroot", emoji:"🪓", type:"weapon", slot:"weapon", rarity:"rare", price:118, description:"Una feroce arma in asta usata nelle cacce ai mostri di Blackroot.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:3, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:-1, heal_amount:0, available:true },
+    { id:"weapon_starhush_grimoire", name:"Grimorio Sussurrastelle", emoji:"📘", type:"weapon", slot:"weapon", rarity:"rare", price:126, description:"Un libro di magia sussurrante avvolto in cuoio di mezzanotte.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:0, bonus_def:0, bonus_mag:3, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
+    { id:"weapon_golden_stag_blade", name:"Lama del Cervo Dorato", emoji:"🗡️", type:"weapon", slot:"weapon", rarity:"epic", price:220, description:"Una lama reale da caccia, ancora degna di sangue e leggenda.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:4, bonus_def:1, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
 
-    { id:"armor_patchwork_gambeson", name:"Patchwork Gambeson", emoji:"🧥", type:"armor", slot:"armor", rarity:"common", price:20, description:"Layered cloth and wool stitched from reused travel gear.", armorBonus:1, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:6, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
-    { id:"armor_mosshide_leather", name:"Mosshide Leather", emoji:"🥋", type:"armor", slot:"armor", rarity:"common", price:26, description:"Oiled leather armor built for wet forests and quiet movement.", armorBonus:1, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:8, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
-    { id:"armor_ironring_vest", name:"Ironring Vest", emoji:"⛓️", type:"armor", slot:"armor", rarity:"common", price:34, description:"A sleeveless chain vest favored by road wardens.", armorBonus:2, bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:10, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
-    { id:"armor_stormpatch_coat", name:"Stormpatch Coat", emoji:"🧥", type:"armor", slot:"armor", rarity:"uncommon", price:48, description:"A reinforced weathercoat with hidden plates beneath the lining.", armorBonus:2, bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:12, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
-    { id:"armor_bastion_chainmail", name:"Bastion Chainmail", emoji:"⛓️", type:"armor", slot:"armor", rarity:"uncommon", price:60, description:"A sturdy chain shirt from the old Bastion Quarter forges.", armorBonus:3, bonus_atk:0, bonus_def:3, bonus_mag:0, bonus_hp:14, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
-    { id:"armor_sunkeep_scale", name:"Sunkeep Scale Armor", emoji:"🐲", type:"armor", slot:"armor", rarity:"rare", price:104, description:"Bronzed scale mail reflecting the warm light of Sunkeep walls.", armorBonus:4, bonus_atk:0, bonus_def:4, bonus_mag:0, bonus_hp:18, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
-    { id:"armor_granite_guard_plate", name:"Granite Guard Plate", emoji:"🛡️", type:"armor", slot:"armor", rarity:"epic", price:210, description:"Heavy plate once issued to wardens of the mountain gates.", armorBonus:5, bonus_atk:0, bonus_def:5, bonus_mag:0, bonus_hp:24, bonus_init:-2, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_patchwork_gambeson", name:"Gambeson di Toppe", emoji:"🧥", type:"armor", slot:"armor", rarity:"common", price:20, description:"Strati di stoffa e lana cuciti da vecchi indumenti da viaggio.", armorBonus:1, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:6, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_mosshide_leather", name:"Cuoio Muschiato", emoji:"🥋", type:"armor", slot:"armor", rarity:"common", price:26, description:"Armatura di cuoio oliato, perfetta per foreste umide e passi silenziosi.", armorBonus:1, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:8, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_ironring_vest", name:"Giaco ad Anelli di Ferro", emoji:"⛓️", type:"armor", slot:"armor", rarity:"common", price:34, description:"Una cotta smanicata apprezzata dalle guardie delle strade.", armorBonus:2, bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:10, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_stormpatch_coat", name:"Cappotto Tempestoppa", emoji:"🧥", type:"armor", slot:"armor", rarity:"uncommon", price:48, description:"Un cappotto rinforzato con placche nascoste sotto la fodera.", armorBonus:2, bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:12, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_bastion_chainmail", name:"Maglia di Bastion", emoji:"⛓️", type:"armor", slot:"armor", rarity:"uncommon", price:60, description:"Una solida cotta di maglia nata nelle forge del vecchio Bastion.", armorBonus:3, bonus_atk:0, bonus_def:3, bonus_mag:0, bonus_hp:14, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_sunkeep_scale", name:"Corazza a Scaglie di Sunkeep", emoji:"🐲", type:"armor", slot:"armor", rarity:"rare", price:104, description:"Scaglie bronzee che riflettono il caldo bagliore delle mura di Sunkeep.", armorBonus:4, bonus_atk:0, bonus_def:4, bonus_mag:0, bonus_hp:18, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_granite_guard_plate", name:"Piastre della Guardia di Granito", emoji:"🛡️", type:"armor", slot:"armor", rarity:"epic", price:210, description:"Pesante armatura a piastre un tempo data ai custodi delle porte montane.", armorBonus:5, bonus_atk:0, bonus_def:5, bonus_mag:0, bonus_hp:24, bonus_init:-2, weapon_die:null, heal_amount:0, available:true },
 
-    { id:"potion_redleaf_tonic", name:"Redleaf Tonic", emoji:"🧪", type:"potion", slot:null, rarity:"common", price:14, description:"A basic redleaf draught for closing cuts and steadying the pulse.", effect:"heal", value:10, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:10, available:true },
-    { id:"potion_lesser_mending", name:"Lesser Mending Phial", emoji:"🧪", type:"potion", slot:null, rarity:"common", price:18, description:"A small phial that knits bruises and shallow wounds.", effect:"heal", value:14, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:14, available:true },
-    { id:"potion_hunters_focus", name:"Hunter's Focus Draught", emoji:"🍃", type:"potion", slot:null, rarity:"common", price:20, description:"Sharpens sight and breath before a dangerous pull of the string.", effect:"init", value:2, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, weapon_die:null, heal_amount:0, available:true },
-    { id:"potion_guardians_balm", name:"Guardian's Balm", emoji:"🧴", type:"potion", slot:null, rarity:"uncommon", price:30, description:"A chalky blue mixture that hardens the body against impact.", effect:"def", value:2, bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
-    { id:"potion_sparkshine_elixir", name:"Sparkshine Elixir", emoji:"✨", type:"potion", slot:null, rarity:"uncommon", price:34, description:"A bright alchemical tonic that wakes dormant arcane channels.", effect:"mag", value:2, bonus_atk:0, bonus_def:0, bonus_mag:2, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
-    { id:"potion_major_healing", name:"Major Healing Vial", emoji:"🧪", type:"potion", slot:null, rarity:"rare", price:52, description:"Reserved for battlefield emergencies and near-fatal wounds.", effect:"heal", value:26, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:26, available:true },
+    { id:"potion_redleaf_tonic", name:"Tonico di Fogliarossa", emoji:"🧪", type:"potion", slot:null, rarity:"common", price:14, description:"Un semplice infuso di Fogliarossa per chiudere tagli e calmare il respiro.", effect:"heal", value:10, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:10, available:true },
+    { id:"potion_lesser_mending", name:"Ampolla di Ristoro Minore", emoji:"🧪", type:"potion", slot:null, rarity:"common", price:18, description:"Una piccola ampolla che lenisce lividi e ferite superficiali.", effect:"heal", value:14, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:14, available:true },
+    { id:"potion_hunters_focus", name:"Infuso del Cacciatore", emoji:"🍃", type:"potion", slot:null, rarity:"common", price:20, description:"Affina vista e respiro prima di un tiro difficile.", effect:"init", value:2, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, weapon_die:null, heal_amount:0, available:true },
+    { id:"potion_guardians_balm", name:"Balsamo del Guardiano", emoji:"🧴", type:"potion", slot:null, rarity:"uncommon", price:30, description:"Un unguento azzurrastro che indurisce il corpo contro gli impatti.", effect:"def", value:2, bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"potion_sparkshine_elixir", name:"Elisir Scintillaluce", emoji:"✨", type:"potion", slot:null, rarity:"uncommon", price:34, description:"Un tonico alchemico brillante che risveglia i canali arcani.", effect:"mag", value:2, bonus_atk:0, bonus_def:0, bonus_mag:2, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"potion_major_healing", name:"Fiala di Grande Cura", emoji:"🧪", type:"potion", slot:null, rarity:"rare", price:52, description:"Riservata alle emergenze sul campo e alle ferite quasi mortali.", effect:"heal", value:26, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:26, available:true },
 
-    { id:"accessory_copperward_ring", name:"Copperward Ring", emoji:"💍", type:"accessory", slot:null, rarity:"common", price:24, description:"A plain warded ring etched with an old protective spiral.", statBonus:{ def:1 }, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
-    { id:"accessory_lantern_charm", name:"Lantern Charm", emoji:"🕯️", type:"accessory", slot:null, rarity:"common", price:22, description:"A brass trinket said to keep wanderers alert on moonless roads.", statBonus:{ init:1 }, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
-    { id:"accessory_ember_thread_sash", name:"Ember Thread Sash", emoji:"🎗️", type:"accessory", slot:null, rarity:"uncommon", price:42, description:"A woven sash carrying a faint warmth from fireloom fibers.", statBonus:{ atk:1, mag:1 }, bonus_atk:1, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
-    { id:"accessory_sagebone_talisman", name:"Sagebone Talisman", emoji:"📿", type:"accessory", slot:null, rarity:"rare", price:78, description:"A pale bone charm carved by a forgotten hermit-mage.", statBonus:{ mag:2 }, bonus_atk:0, bonus_def:0, bonus_mag:2, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true }
+    { id:"accessory_copperward_ring", name:"Anello di Guardia in Rame", emoji:"💍", type:"accessory", slot:null, rarity:"common", price:24, description:"Un semplice anello inciso con un'antica spirale protettiva.", statBonus:{ def:1 }, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_lantern_charm", name:"Ciondolo della Lanterna", emoji:"🕯️", type:"accessory", slot:null, rarity:"common", price:22, description:"Un talismano d'ottone che aiuta i viandanti a restare vigili nel buio.", statBonus:{ init:1 }, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_ember_thread_sash", name:"Fascia di Filo di Brace", emoji:"🎗️", type:"accessory", slot:null, rarity:"uncommon", price:42, description:"Una fascia intrecciata con filamenti tiepidi delle tessiture del fuoco.", statBonus:{ atk:1, mag:1 }, bonus_atk:1, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_sagebone_talisman", name:"Talismano d'Osso Saggio", emoji:"📿", type:"accessory", slot:null, rarity:"rare", price:78, description:"Un pallido amuleto d'osso inciso da un eremita dimenticato.", statBonus:{ mag:2 }, bonus_atk:0, bonus_def:0, bonus_mag:2, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true }
   ];
 }
 const DEFAULT_ITEMS = buildDefaultItems();
@@ -682,6 +682,25 @@ function itemStatSummary(item) {
   if(item.bonus_init) stats.push(`🦶 ${item.bonus_init>=0?"+":""}${item.bonus_init}`);
   if(item.heal_amount) stats.push(`🧪 Cura ${item.heal_amount}`);
   return stats;
+}
+function itemTypeLabel(type) {
+  return ({
+    weapon: "Arma",
+    armor: "Armatura",
+    shield: "Scudo",
+    accessory: "Accessorio",
+    potion: "Pozione",
+  })[type] || type || "Oggetto";
+}
+function itemRarityLabel(rarity) {
+  return ({
+    common: "Comune",
+    uncommon: "Non comune",
+    rare: "Raro",
+    epic: "Epico",
+    legendary: "Leggendario",
+    base: "Base",
+  })[String(rarity || "").toLowerCase()] || rarity || "Catalogo";
 }
 function resolveLootItem(spec, items) {
   if(!spec) return null;
@@ -1768,20 +1787,54 @@ function MarketView() {
 }
 
 function ShopView({ me, items, loading, error, inventoryCounts, onBuy }) {
+  const [category, setCategory] = useState("all");
+  const categoryOptions = [
+    { id:"all", label:"Tutto" },
+    { id:"weapon", label:"Armi" },
+    { id:"armor", label:"Armature" },
+    { id:"shield", label:"Scudi" },
+    { id:"potion", label:"Pozioni" },
+    { id:"accessory", label:"Accessori" },
+  ];
+  const visibleItems = category === "all"
+    ? items
+    : items.filter(item => item.type === category);
+
   return (
     <div>
       <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🛒 Negozio</h3>
+      <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:"1rem" }}>
+        {categoryOptions.map(option => (
+          <button
+            key={option.id}
+            onClick={()=>setCategory(option.id)}
+            style={{
+              padding:"0.45rem 0.85rem",
+              background:category===option.id ? "rgba(109,40,217,0.28)" : "rgba(255,255,255,0.03)",
+              border:`1px solid ${category===option.id ? "#7c3aed" : "#1f2937"}`,
+              borderRadius:999,
+              color:category===option.id ? "#ddd6fe" : "#6b7280",
+              cursor:"pointer",
+              fontFamily:"'Cinzel',serif",
+              fontSize:"0.75rem",
+              letterSpacing:"0.04em",
+            }}
+          >
+            {option.label}
+          </button>
+        ))}
+      </div>
       {loading && <div style={{ color:"#6b7280" }}>Caricamento...</div>}
       {error && <div style={{ color:"#fca5a5" }}>{error}</div>}
-      {!loading && !items.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun oggetto disponibile.</div>}
+      {!loading && !visibleItems.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun oggetto disponibile in questa categoria.</div>}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
-        {items.map(it=>(
+        {visibleItems.map(it=>(
           <div key={it.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
             <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
               <span style={{ fontSize:"1.5rem" }}>{it.emoji||"⭐"}</span>
               <div style={{ flex:1 }}>
                 <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{it.name}</div>
-                <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{it.type} • {it.rarity || "Catalogo"}</div>
+                <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{itemTypeLabel(it.type)} • {itemRarityLabel(it.rarity)}</div>
               </div>
               <span style={{ fontSize:"0.85rem", color:"#c4b5fd" }}>💰 {it.price}</span>
             </div>
@@ -1800,7 +1853,7 @@ function ShopView({ me, items, loading, error, inventoryCounts, onBuy }) {
   );
 }
 
-function InventoryView({ loading, groups }) {
+function InventoryView({ loading, groups, equipment, selectedItem, onSelectItem, onCloseItem, onEquip, onSell }) {
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
       <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🎒 Inventario</h3>
@@ -1808,15 +1861,35 @@ function InventoryView({ loading, groups }) {
       {!loading && !groups.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Inventario vuoto. Saccheggia o compra qualcosa.</div>}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))", gap:10 }}>
         {groups.map(group=>{
+          const slot = itemSlot(group.item);
+          const equipped = !!slot && equipment?.[slot] === group.item.id;
+          const selected = selectedItem?.item?.id === group.item.id;
           return (
-            <div key={group.item.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
+            <button
+              key={group.item.id}
+              onClick={()=>onSelectItem(group)}
+              style={{
+                textAlign:"left",
+                background:"rgba(255,255,255,0.02)",
+                border:`1px solid ${selected ? "#7c3aed" : equipped ? "#b45309" : "#1f2937"}`,
+                borderRadius:6,
+                padding:"0.8rem",
+                cursor:"pointer",
+                color:"inherit",
+                font:"inherit",
+                boxShadow:selected ? "0 0 0 1px rgba(124,58,237,0.35) inset" : "none",
+              }}
+            >
               <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
                 <span style={{ fontSize:"1.6rem" }}>{group.item.emoji||"⭐"}</span>
                 <div style={{ flex:1 }}>
                   <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{group.item.name}</div>
-                  <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{group.item.type} • {group.item.rarity || "common"}</div>
+                  <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{itemTypeLabel(group.item.type)} • {itemRarityLabel(group.item.rarity)}</div>
                 </div>
-                <span style={{ fontSize:"0.78rem", color:"#c4b5fd", fontWeight:700 }}>x{group.quantity}</span>
+                <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
+                  <span style={{ fontSize:"0.78rem", color:"#c4b5fd", fontWeight:700 }}>x{group.quantity}</span>
+                  {equipped && <span style={{ fontSize:"0.66rem", color:"#fbbf24" }}>Equip.</span>}
+                </div>
               </div>
               <div style={{ fontSize:"0.75rem", color:"#4b5563", marginBottom:6 }}>{group.item.description}</div>
               <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#6b7280", marginBottom:10 }}>
@@ -1825,11 +1898,57 @@ function InventoryView({ loading, groups }) {
               <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#9ca3af" }}>
                 <span>Quantità: {group.quantity}</span>
                 <span>Valore: {group.item.price || 0} oro</span>
+                <span style={{ color:"#6b7280" }}>Clicca per ispezionare</span>
               </div>
-            </div>
+            </button>
           );
         })}
       </div>
+      {!!selectedItem && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(2,6,23,0.78)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem", zIndex:50 }} onClick={onCloseItem}>
+          <div onClick={e=>e.stopPropagation()} style={{ width:"min(560px,100%)", background:"linear-gradient(180deg, rgba(17,24,39,0.98), rgba(10,10,18,0.98))", border:"1px solid #312e81", borderRadius:10, boxShadow:"0 24px 80px rgba(0,0,0,0.45)", padding:"1rem" }}>
+            <div style={{ display:"flex", gap:12, alignItems:"flex-start", marginBottom:12 }}>
+              <div style={{ fontSize:"2.4rem", lineHeight:1 }}>{selectedItem.item.emoji || "⭐"}</div>
+              <div style={{ flex:1 }}>
+                <div style={{ fontFamily:"'Cinzel',serif", color:"#f8e7b9", fontSize:"1.15rem", fontWeight:700 }}>{selectedItem.item.name}</div>
+                <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:6, fontSize:"0.75rem" }}>
+                  <span style={{ color:"#9ca3af" }}>{itemTypeLabel(selectedItem.item.type)}</span>
+                  <span style={{ color:"#c4b5fd" }}>{itemRarityLabel(selectedItem.item.rarity)}</span>
+                  <span style={{ color:"#6ee7b7" }}>Quantità: {selectedItem.quantity}</span>
+                  {!!itemSlot(selectedItem.item) && equipment?.[itemSlot(selectedItem.item)] === selectedItem.item.id && <span style={{ color:"#fbbf24" }}>Equipaggiato</span>}
+                </div>
+              </div>
+            </div>
+            <div style={{ color:"#cbd5e1", fontSize:"0.92rem", lineHeight:1.6, marginBottom:12 }}>
+              {selectedItem.item.description}
+            </div>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:12 }}>
+              {itemStatSummary(selectedItem.item).map(stat => (
+                <span key={stat} style={{ fontSize:"0.76rem", color:"#d1d5db", background:"rgba(255,255,255,0.04)", border:"1px solid #1f2937", borderRadius:999, padding:"4px 8px" }}>
+                  {stat}
+                </span>
+              ))}
+            </div>
+            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, color:"#9ca3af", fontSize:"0.82rem" }}>
+              <span>💰 Valore: {selectedItem.item.price || 0} oro</span>
+              <span>Copie possedute: {selectedItem.quantity}</span>
+            </div>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap", justifyContent:"flex-end" }}>
+              {isEquippableItem(selectedItem.item) && (
+                <BigBtn
+                  onClick={()=>onEquip(selectedItem.entries[0])}
+                  gold
+                  disabled={equipment?.[itemSlot(selectedItem.item)] === selectedItem.item.id}
+                >
+                  Equipaggia
+                </BigBtn>
+              )}
+              <SmallBtn onClick={()=>onSell(selectedItem)}>Vendi</SmallBtn>
+              <SmallBtn onClick={onCloseItem}>Chiudi</SmallBtn>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -1865,7 +1984,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip }) {
                     <span style={{ fontSize:"1.6rem" }}>{item.emoji}</span>
                     <div>
                       <div style={{ color:"#e2d9c5", fontWeight:700 }}>{item.name}</div>
-                      <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{item.rarity || item.type}</div>
+                      <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{itemRarityLabel(item.rarity)} • {itemTypeLabel(item.type)}</div>
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#6b7280", marginBottom:10 }}>
@@ -1904,8 +2023,9 @@ function GameScreen({ myId, setScreen }) {
   const [lootedStepKey, setLootedStepKey] = useState(null);
   const [catalogItems, setCatalogItems] = useState(DEFAULT_ITEMS);
   const [inventory, setInventory] = useState([]);
-  const [equipment, setEquipment] = useState({ weapon:null, armor:null, shield:null });
+  const [equipment, setEquipment] = useState({ weapon:null, armor:null, shield:null, accessory:null });
   const [inventoryLoading, setInventoryLoading] = useState(true);
+  const [selectedInventoryItemId, setSelectedInventoryItemId] = useState(null);
   const msgEnd = useRef(null);
   const inputRef = useRef(null);
   const subRef = useRef(null);
@@ -2107,6 +2227,41 @@ function GameScreen({ myId, setScreen }) {
     const synced = await persistPlayerWithEquipment(me, nextEquipment);
     await refreshInventory(synced);
     await addMsg(`🎽 **${me.name}** rimuove **${currentItem.name}**.`, "info", "Sistema");
+  }
+
+  function handleInventorySelect(group) {
+    setSelectedInventoryItemId(group?.item?.id || null);
+  }
+
+  function handleInventoryClose() {
+    setSelectedInventoryItemId(null);
+  }
+
+  async function handleInventorySell(group) {
+    if(!group?.item || !group?.entries?.length || !me) return;
+    const sellPrice = Math.max(1, Math.floor((group.item.price || 0) / 2));
+    if(!window.confirm(`Vendere ${group.item.name} per ${sellPrice} oro?`)) return;
+
+    const entryToSell = group.entries[0];
+    const slot = itemSlot(group.item);
+    const isEquipped = !!slot && equipment?.[slot] === group.item.id;
+    const nextEquipment = isEquipped && group.quantity <= 1
+      ? { ...equipment, [slot]: null }
+      : equipment;
+    const updatedPlayer = { ...me, gold: (me.gold || 0) + sellPrice };
+
+    await dbRemovePlayerItem(entryToSell.rowId);
+
+    let syncedPlayer = updatedPlayer;
+    if(nextEquipment !== equipment) {
+      syncedPlayer = await persistPlayerWithEquipment(updatedPlayer, nextEquipment);
+    } else {
+      await dbSavePlayer(updatedPlayer);
+      setMeRaw(updatedPlayer);
+    }
+
+    await refreshInventory(syncedPlayer);
+    await addMsg(`💰 **${me.name}** vende **${group.item.name}** per ${sellPrice} oro.`, "info", "Sistema");
   }
 
   async function usePotion(entry) {
@@ -2484,6 +2639,7 @@ ${stepText(step)}`, "quest","Master");
   const lootDone = lootedStepKey === currentStepKey;
   const inventoryCounts = countInventoryItems(inventory);
   const inventoryGroups = groupInventoryEntries(inventory);
+  const selectedInventoryItem = inventoryGroups.find(group => group.item.id === selectedInventoryItemId) || null;
   const equippedWeapon = getEquippedWeapon(equipment, itemMap);
   const equippedItems = {
     weapon: itemMap.get(equipment.weapon) || null,
@@ -2650,6 +2806,12 @@ ${stepText(step)}`, "quest","Master");
           <InventoryView
             loading={inventoryLoading}
             groups={inventoryGroups}
+            equipment={equipment}
+            selectedItem={selectedInventoryItem}
+            onSelectItem={handleInventorySelect}
+            onCloseItem={handleInventoryClose}
+            onEquip={equipItem}
+            onSell={handleInventorySell}
           />
         )}
         {tab==="equipment" && (
