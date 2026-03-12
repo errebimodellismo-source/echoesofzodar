@@ -16,6 +16,7 @@ import { supabase } from "./supabase";
     @keyframes diceRoll { 0%{transform:rotate(0deg) scale(1)} 50%{transform:rotate(180deg) scale(1.3)} 100%{transform:rotate(360deg) scale(1)} }
     @keyframes sparkle { 0%{opacity:1;transform:translateY(0) scale(0.8)} 100%{opacity:0;transform:translateY(-120px) scale(1.4)} }
     @keyframes pulseRed { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} 50%{box-shadow:0 0 0 6px rgba(239,68,68,.3)} }
+    @keyframes narrativeBar { from { width: 0% } to { width: 100% } }
     .msg-in   { animation: fadeUp 0.25s ease; }
     .dice-spin{ animation: diceRoll 0.5s ease; }
     ::-webkit-scrollbar{width:5px}
@@ -401,23 +402,42 @@ function saveMeta(m)     { lsSet("eoz_meta", m); }
 function DEFAULT_QUESTS() {
   return [{
     id:"dq1", title:"La Miniera Maledetta", active:true,
-    desc:"Creature delle tenebre hanno infestato la vecchia miniera di Stonehaven. I minatori non tornano pi�.",
-    flavor:"�L'oscurit� ha preso vita nei tunnel...� � Sindaco Aldric",
+    desc:"Creature delle tenebre hanno infestato la vecchia miniera di Stonehaven. I minatori non tornano più.",
+    flavor:"«L'oscurità ha preso vita nei tunnel...» — Sindaco Aldric",
     difficulty:"Facile", xpReward:150, goldReward:60,
     steps:[
-      "Il party parte all'alba verso la miniera abbandonata a nord della citt�. L'aria odora di zolfo.",
       {
-        text: "All'ingresso trovate ossa frantumate e artigli sul legno marcio. Qualcosa di grosso vive qui dentro.",
-        choices: {
-          good: { text: "Accendete torce e procedete furtivi.", xp: 15, gold: 8 },
-          neutral: { text: "Avanzate con cautela, senza fretta.", xp: 10, gold: 5 },
-          bad: { text: "Urlate per intimidire (e attirare attenzioni)...", xp: 5, gold: 2 },
-        }
+        type:"narrative",
+        text:"Il party parte all'alba verso la miniera abbandonata a nord della città. L'aria odora di zolfo e il suolo è cosparso di ossa. L'ingresso si apre davanti a voi come una bocca spalancata nel buio."
       },
-      "Nelle gallerie buie � i **Goblin delle Rocce** attaccano! Digita **combatti** per iniziare la battaglia.",
-      "Una voce profonda echeggia nelle profondit�: *�Chi osa disturbare il mio sonno eterno...�*",
-      "Al terzo livello: il **Troll delle Caverne** vi sbarra la strada. Boss battle!",
-      "Vittoria! Il troll cade tra un ruggito e il silenzio. I minatori sono liberi!",
+      {
+        type:"choice",
+        text:"All'ingresso trovate ossa frantumate e artigli sul legno marcio. Qualcosa di grosso vive qui dentro.",
+        choices:[
+          { label:"🕯️ Accendete torce e procedete furtivi", xp:15, gold:8, next:2 },
+          { label:"⚡ Avanzate con cautela, senza fretta", xp:10, gold:5, next:2 },
+          { label:"📢 Urlate per intimidire (attirando attenzioni)", xp:5, gold:2, next:2 }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nelle gallerie buie i **Goblin delle Rocce** attaccano! La battaglia inizia!",
+        monsters:[{id:"e1",name:"Goblin delle Rocce",emoji:"🗿",hp:22,maxHp:22,atk:6,def:2,xp:18,isBoss:false}]
+      },
+      {
+        type:"narrative",
+        text:"I goblin cadono uno dopo l'altro. Una voce profonda echeggia nelle profondità: *«Chi osa disturbare il mio sonno eterno...»* Il suolo trema sotto i vostri piedi."
+      },
+      {
+        type:"combat",
+        text:"Al terzo livello il **Troll delle Caverne** vi sbarra la strada. Boss battle!",
+        monsters:[{id:"e3",name:"Troll delle Caverne",emoji:"🧌",hp:95,maxHp:95,atk:16,def:7,xp:80,isBoss:true}]
+      },
+      {
+        type:"loot",
+        text:"Vittoria! Il troll cade tra un ruggito e il silenzio. I minatori sono liberi! Nelle profondità della caverna scintilla qualcosa...",
+        loot:{ gold:[10,30], items:["Pozione di Cura","Spada Arrugginita","Amuleto di Pietra"] }
+      }
     ],
     enemies:[
       {id:"e1",name:"Goblin delle Rocce",emoji:"🗿",hp:22,maxHp:22,atk:6,def:2,xp:18,isBoss:false},
@@ -1689,6 +1709,35 @@ function GameScreen({ myId, setScreen }) {
     return () => clearTimeout(timer);
   }, [qs?.combat?.turn, qs?.combat?.active, myId, code]);
 
+  // Narrative step: auto-advance after 3 seconds
+  useEffect(()=>{
+    if(!qs?.active || !qs?.currentId) return;
+    const q = getQuests().find(x=>x.id===qs.currentId);
+    if(!q) return;
+    const stepData = q.steps[qs.step];
+    if(!isNarrativeStep(stepData)) return;
+    // Only the "first" player in the party triggers auto-advance to avoid duplicates
+    if(partyPlayers.length > 0 && partyPlayers[0]?.id !== myId) return;
+    const timer = setTimeout(async () => {
+      const latestQs = await dbGetPartyState(code);
+      if(latestQs?.step !== qs.step || !latestQs?.active) return; // already advanced
+      const quests = getQuests();
+      const latestQ = quests.find(x=>x.id===latestQs.currentId);
+      if(!latestQ) return;
+      const nextStep = latestQs.step + 1;
+      if(nextStep >= latestQ.steps.length) {
+        // Will be handled by completeQuest separately
+      } else {
+        const newQs = {...latestQs, step:nextStep};
+        await dbSavePartyState(code, newQs);
+        setQs(prev => ({...prev, step:nextStep}));
+        await postQuestStepMessage(latestQ, nextStep);
+        if(isCombatStep(latestQ.steps[nextStep])) await startCombatStep(latestQ.steps[nextStep]);
+      }
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, [qs?.step, qs?.active, qs?.currentId, myId, code]);
+
   if(!me || !me.class) return <div style={{color:'white', fontSize:'1.5rem', padding:'2rem', textAlign:'center'}}>⏳ Caricamento personaggio...</div>;
 
   async function addMsg(content, type="narration", author=null) {
@@ -1848,20 +1897,57 @@ function GameScreen({ myId, setScreen }) {
 
   async function endCombat() {
     setSpellMenu(false);
-    const newQs = {...qs, combat:null};
-    await saveQState(newQs);
-    await addMsg("🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", "victory","Sistema");
+    const latestQs = await dbGetPartyState(code);
+    const newQs = {...latestQs, combat:null};
+    await dbSavePartyState(code, newQs);
+    setQs(prev => ({...prev, combat:null}));
+    await dbSendMessage({party_code:code, author:"Sistema", content:"🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", type:"victory"});
+    // Auto-advance quest if current step is combat
+    if(latestQs?.active && latestQs?.currentId) {
+      const quests = getQuests();
+      const q = quests.find(x=>x.id===latestQs.currentId);
+      if(q && isCombatStep(q.steps[latestQs.step])) {
+        const nextStep = latestQs.step + 1;
+        if(nextStep >= q.steps.length) {
+          await completeQuest(q);
+        } else {
+          const advQs = {...latestQs, combat:null, step:nextStep};
+          await dbSavePartyState(code, advQs);
+          setQs(prev => ({...prev, combat:null, step:nextStep}));
+          await postQuestStepMessage(q, nextStep);
+        }
+      }
+    }
   }
 
   // -- QUEST --
   async function acceptQuest(q) {
     const newQs = {...qs, currentId:q.id, step:0, active:true};
     await saveQState(newQs);
-    await addMsg(`⚔️ **MISSIONE: ${q.title}**\n\n${q.desc}\n\n*${q.flavor}*\n\n⭐ Ricompensa: **${q.xpReward} XP** � **${q.goldReward} oro**\n\nDigita **avanza** per iniziare!`, "quest","Master");
+    await addMsg(`📜 **MISSIONE: ${q.title}**
+
+${q.desc}
+
+*${q.flavor}*
+
+⭐ Ricompensa: **${q.xpReward} XP** — **${q.goldReward} oro**`, "quest","Master");
+    await postQuestStepMessage(q, 0);
+    if(isCombatStep(q.steps[0])) {
+      await startCombatStep(q.steps[0]);
+    }
   }
 
   function isChoiceStep(step) {
-    return step && typeof step === "object" && step.choices && typeof step.choices === "object";
+    return step?.type === "choice";
+  }
+  function isCombatStep(step) {
+    return step?.type === "combat";
+  }
+  function isLootStep(step) {
+    return step?.type === "loot";
+  }
+  function isNarrativeStep(step) {
+    return !step?.type || step?.type === "narrative" || typeof step === "string";
   }
 
   function stepText(step) {
@@ -1869,14 +1955,12 @@ function GameScreen({ myId, setScreen }) {
     return typeof step === "string" ? step : step.text || "";
   }
 
-  function getStepChoices(step) {
-    if(!isChoiceStep(step)) return null;
-    return step.choices;
-  }
-
   async function postQuestStepMessage(q, stepIndex) {
     const step = q.steps[stepIndex];
-    await addMsg(`⚔️ **${q.title} � Scena ${stepIndex+1}/${q.steps.length}**\n\n${stepText(step)}`, "quest","Master");
+    const icon = isCombatStep(step)?"⚔️":isLootStep(step)?"💰":isChoiceStep(step)?"🎯":"📜";
+    await addMsg(`${icon} **${q.title} — Scena ${stepIndex+1}/${q.steps.length}**
+
+${stepText(step)}`, "quest","Master");
   }
 
   async function completeQuest(q) {
@@ -1893,39 +1977,49 @@ function GameScreen({ myId, setScreen }) {
     await addMsg(`⚔️ **MISSIONE COMPLETATA: ${q.title}!**\n\n⭐ +${xpE} XP a testa � 💰 +${goldE} oro a testa`, "victory","Master");
   }
 
+  async function startCombatStep(stepData) {
+    const monsters = (stepData.monsters||[]).map(e=>({...e, hp:e.maxHp||e.hp, maxHp:e.maxHp||e.hp}));
+    const players = partyPlayers.map(p=>({ id:p?.id, name:p?.name, emoji:CLASSES[p?.class||'warrior']?.emoji||"⚔️", hp:p?.hp||0, maxHp:p?.maxHp||0, atk:p?.atk||0, def:p?.def||0, mag:p?.mag||0, init:p?.init||1, isPlayer:true }));
+    const allCombatants = [...players,...monsters].map(c=>({...c, rollInit:(c.init||1)+roll(20)}));
+    allCombatants.sort((a,b)=>b.rollInit-a.rollInit);
+    const spellSlots = Object.fromEntries(players.map(p=>[p.id, getSpellSlots(p.level||1)]));
+    const newCombat = { active:true, combatants:allCombatants, turn:0, round:1, spellSlots };
+    const newQs = {...qs, combat:newCombat};
+    await saveQState(newQs);
+    await addMsg(`⚔️ **BATTAGLIA INIZIATA!** Round 1\n\n**Ordine di Iniziativa:**\n${allCombatants.map((c,i)=>`${i+1}. ${c.emoji||"⭐"} ${c.name} (${c.rollInit})`).join("\n")}`, "combat", "Sistema");
+    setTab("combat");
+  }
+
   async function advanceQuest() {
     const quests = getQuests();
     const q = quests.find(x=>x.id===qs?.currentId);
     if(!q||!qs?.active){ await addMsg("ℹ️ Nessuna missione attiva.","system","Sistema"); return; }
     const step = qs.step;
-    await postQuestStepMessage(q, step);
-
     const stepData = q.steps[step];
-    if(isChoiceStep(stepData)) {
-      await addMsg("Scegli un'opzione per proseguire.", "system", "Sistema");
-      return;
-    }
-
-    if(step+1>=q.steps.length) {
+    if(isChoiceStep(stepData) || isCombatStep(stepData) || isLootStep(stepData)) return; // handled by UI
+    // narrative: advance to next
+    const nextStep = step + 1;
+    if(nextStep >= q.steps.length) {
       await completeQuest(q);
     } else {
-      const newQs={...qs,step:step+1};
+      const newQs = {...qs, step:nextStep};
       await saveQState(newQs);
+      await postQuestStepMessage(q, nextStep);
+      if(isCombatStep(q.steps[nextStep])) await startCombatStep(q.steps[nextStep]);
     }
   }
 
-  async function chooseQuestOption(choiceKey) {
+  async function chooseQuestOption(choiceIndex) {
     const quests = getQuests();
     const q = quests.find(x=>x.id===qs?.currentId);
     if(!q||!qs?.active) return;
     const step = qs.step;
     const stepData = q.steps[step];
-    const choices = getStepChoices(stepData);
-    if(!choices) return;
-    const choice = choices[choiceKey];
+    if(!isChoiceStep(stepData)) return;
+    const choice = stepData.choices[choiceIndex];
     if(!choice) return;
 
-    await addMsg(`⚔️ **Scelta:** ${choice.text || choiceKey}`, "quest", "Master");
+    await addMsg(`🎯 **Scelta:** ${choice.label}`, "quest", "Master");
 
     const xpE = Math.max(0, Number(choice.xp)||0);
     const goldE = Math.max(0, Number(choice.gold)||0);
@@ -1936,14 +2030,44 @@ function GameScreen({ myId, setScreen }) {
         await dbSavePlayer(up);
         if(up.id===myId) setMeRaw(up);
       }
-      await addMsg(`⭐ +${xpE} XP a testa � 💰 +${goldE} oro a testa`, "victory", "Master");
+      await addMsg(`⭐ +${xpE} XP a testa — 💰 +${goldE} oro a testa`, "victory", "Master");
     }
 
-    const nextStep = choice.nextStep != null ? Number(choice.nextStep) : step+1;
-    if(nextStep >= (q.steps?.length||0)) {
+    const nextStep = choice.next != null ? Number(choice.next) : step+1;
+    if(nextStep >= q.steps.length) {
       await completeQuest(q);
     } else {
-      const newQs={...qs,step:nextStep};
+      const newQs={...qs, step:nextStep};
+      await saveQState(newQs);
+      await postQuestStepMessage(q, nextStep);
+      if(isCombatStep(q.steps[nextStep])) await startCombatStep(q.steps[nextStep]);
+    }
+  }
+
+  async function handleLoot(stepData) {
+    const q = getQuests().find(x=>x.id===qs?.currentId);
+    if(!q||!qs?.active) return;
+    const loot = stepData?.loot || {};
+    const goldMin = loot.gold?.[0]||0, goldMax = loot.gold?.[1]||0;
+    const goldFound = goldMin + Math.floor(Math.random()*(goldMax-goldMin+1));
+    const items = loot.items||[];
+    const itemFound = items.length ? items[Math.floor(Math.random()*items.length)] : null;
+    let lootMsg = `💰 **Bottino trovato!**`;
+    if(goldFound>0) lootMsg += `
+🪙 +${goldFound} oro a testa`;
+    if(itemFound) lootMsg += `
+🎁 Hai trovato: **${itemFound}**!`;
+    for(const p of partyPlayers) {
+      let up={...p, gold:p.gold+goldFound};
+      await dbSavePlayer(up);
+      if(up.id===myId) setMeRaw(up);
+    }
+    await addMsg(lootMsg, "victory", "Master");
+    const nextStep = qs.step + 1;
+    if(nextStep >= q.steps.length) {
+      await completeQuest(q);
+    } else {
+      const newQs={...qs, step:nextStep};
       await saveQState(newQs);
       await postQuestStepMessage(q, nextStep);
     }
@@ -2150,35 +2274,67 @@ function GameScreen({ myId, setScreen }) {
               <div style={{ background:"rgba(245,158,11,0.08)", border:"1px solid #b45309", borderRadius:6, padding:"1rem", marginBottom:"1rem" }}>
                 <div style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontWeight:700, marginBottom:4 }}>📜 IN CORSO: {currentQ.title}</div>
                 <div style={{ height:5, background:"#0f172a", borderRadius:3, overflow:"hidden", marginBottom:8 }}>
-                  <div style={{ height:"100%", background:"linear-gradient(90deg,#b45309,#fbbf24)", width:`${qs.step/currentQ.steps.length*100}%` }} />
+                  <div style={{ height:"100%", background:"linear-gradient(90deg,#b45309,#fbbf24)", width:`${(qs.step+1)/currentQ.steps.length*100}%`, transition:"width 0.5s" }} />
                 </div>
-                <p style={{ color:"#fde68a", fontSize:"0.85rem", marginBottom:10 }}>Scena {qs.step} di {currentQ.steps.length}</p>
-                <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
-                  {(() => {
-                    const stepData = currentQ?.steps?.[qs.step];
-                    const choices = stepData && typeof stepData === "object" && stepData.choices ? stepData.choices : null;
-                    if(choices) {
-                      return (
-                        <>
-                          <SmallBtn onClick={()=>chooseQuestOption("good")}>? {choices.good?.text||"Buona"}</SmallBtn>
-                          <SmallBtn onClick={()=>chooseQuestOption("neutral")}>? {choices.neutral?.text||"Media"}</SmallBtn>
-                          <SmallBtn red onClick={()=>chooseQuestOption("bad")}>? {choices.bad?.text||"Sbagliata"}</SmallBtn>
-                        </>
-                      );
-                    }
+                <p style={{ color:"#fde68a", fontSize:"0.85rem", marginBottom:10 }}>Scena {qs.step+1} di {currentQ.steps.length}</p>
+                {(() => {
+                  const stepData = currentQ?.steps?.[qs.step];
+                  if(!stepData) return null;
+                  if(isChoiceStep(stepData)) {
                     return (
-                      <>
-                        <BigBtn onClick={advanceQuest} gold icon="⭐">Avanza</BigBtn>
-                        {currentQ.enemies?.length>0&&!combat?.active&&(
-                          <BigBtn onClick={()=>startCombat(currentQ)} icon="⭐">Inizia Combattimento</BigBtn>
-                        )}
-                      </>
+                      <div>
+                        <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:12, lineHeight:1.5 }}>{stepData.text}</p>
+                        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                          {stepData.choices?.map((c,i)=>(
+                            <button key={i} onClick={()=>chooseQuestOption(i)}
+                              style={{ padding:"0.8rem 1.2rem", background:"rgba(109,40,217,0.2)", border:"1px solid #6d28d9", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontFamily:"inherit", fontSize:"0.88rem", textAlign:"left", transition:"background 0.15s" }}
+                              onMouseEnter={e=>e.currentTarget.style.background="rgba(109,40,217,0.4)"}
+                              onMouseLeave={e=>e.currentTarget.style.background="rgba(109,40,217,0.2)"}>
+                              {c.label}
+                              <span style={{ float:"right", fontSize:"0.72rem", color:"#a78bfa" }}>
+                                {c.xp>0?`+${c.xp}XP`:""}{c.gold>0?` +${c.gold}🪙`:""}
+                              </span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     );
-                  })()}
+                  }
+                  if(isCombatStep(stepData)) {
+                    return (
+                      <div style={{ textAlign:"center", padding:"1rem" }}>
+                        <p style={{ color:"#fca5a5", fontSize:"0.88rem", marginBottom:12 }}>{stepData.text}</p>
+                        {combat?.active
+                          ? <p style={{ color:"#ef4444", fontFamily:"'Cinzel',serif" }}>⚔️ Battaglia in corso — vai al tab Battaglia!</p>
+                          : <BigBtn onClick={()=>startCombatStep(stepData)} icon="⚔️">Avvia Battaglia</BigBtn>
+                        }
+                      </div>
+                    );
+                  }
+                  if(isLootStep(stepData)) {
+                    return (
+                      <div style={{ textAlign:"center", padding:"1rem" }}>
+                        <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:12 }}>{stepData.text}</p>
+                        <BigBtn onClick={()=>handleLoot(stepData)} gold icon="🔍">Cerca tra le rovine</BigBtn>
+                      </div>
+                    );
+                  }
+                  // narrative
+                  return (
+                    <div>
+                      <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:12, lineHeight:1.5 }}>{stepText(stepData)}</p>
+                      <div style={{ height:3, background:"#0f172a", borderRadius:2, overflow:"hidden", marginBottom:8 }}>
+                        <div style={{ height:"100%", background:"linear-gradient(90deg,#fbbf24,#f59e0b)", animation:"narrativeBar 3s linear forwards" }} />
+                      </div>
+                      <p style={{ color:"#78350f", fontSize:"0.72rem" }}>Avanzamento automatico in 3 secondi...</p>
+                    </div>
+                  );
+                })()}
+                <div style={{ marginTop:12 }}>
                   <SmallBtn red onClick={async ()=>{
                     if(!window.confirm("Abbandonare la missione in corso? I progressi andranno persi.")) return;
                     await saveQState({...qs, active:false, step:0, combat:null});
-                  }}>? Abbandona Missione</SmallBtn>
+                  }}>❌ Abbandona Missione</SmallBtn>
                 </div>
               </div>
             )}
