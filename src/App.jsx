@@ -2010,30 +2010,30 @@ function GameScreen({ myId, setScreen }) {
                 </div>
               )}
               <span className={diceResult.stage==="rolling" && diceAnim?"dice-spin":""} style={{ width:"10rem", height:"10rem", display:"inline-block" }}>
-                <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:"drop-shadow(0 4px 16px rgba(255,200,0,0.7))"}}>
-                  <defs>
-                    <linearGradient id="g1" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#fde68a"/>
-                      <stop offset="100%" stopColor="#b45309"/>
-                    </linearGradient>
-                    <linearGradient id="g2" x1="0%" y1="0%" x2="100%" y2="100%">
-                      <stop offset="0%" stopColor="#f59e0b"/>
-                      <stop offset="100%" stopColor="#7c2d12"/>
-                    </linearGradient>
-                    <linearGradient id="g3" x1="100%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#fbbf24"/>
-                      <stop offset="100%" stopColor="#451a03"/>
-                    </linearGradient>
-                  </defs>
-                  <polygon points="50,5 15,35 30,85" fill="url(#g3)" stroke="#fbbf24" strokeWidth="1.5" strokeLinejoin="round"/>
-                  <polygon points="50,5 85,35 70,85" fill="url(#g2)" stroke="#fbbf24" strokeWidth="1.5" strokeLinejoin="round"/>
-                  <polygon points="50,5 15,35 85,35" fill="url(#g1)" stroke="#fbbf24" strokeWidth="1.5" strokeLinejoin="round"/>
-                  <polygon points="15,35 30,85 70,85 85,35" fill="url(#g2)" stroke="#fbbf24" strokeWidth="1.5" strokeLinejoin="round"/>
-                  <line x1="50" y1="5" x2="50" y2="85" stroke="#fbbf24" strokeWidth="0.8" opacity="0.5"/>
-                  <text x="50" y="64" textAnchor="middle" fontSize="22" fontWeight="900" fill="white" fontFamily="Georgia,serif" stroke="#92400e" strokeWidth="1">
-                    {diceResult.stage==="rolling" ? "?" : diceResult.value}
-                  </text>
-                </svg>
+                {(()=>{ const result = diceResult.stage==="rolling" ? "?" : diceResult.value;
+                  const rv = diceResult.value;
+                  const color = rv>=20?"#fef08a":rv<=1?"#ef4444":"#fbbf24";
+                  const glow = rv>=20?"drop-shadow(0 0 22px rgba(255,255,120,0.95))":rv<=1?"drop-shadow(0 0 18px rgba(239,68,68,0.95))":"drop-shadow(0 0 16px rgba(251,191,36,0.9))";
+                  return (
+                    <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:diceResult.stage==="rolling"?"drop-shadow(0 0 16px rgba(251,191,36,0.9))":glow}}>
+                      <path d="M50 4 L84 24 L84 56 L50 96 L16 56 L16 24 Z" fill="none" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.8" strokeLinejoin="round" strokeLinecap="round"/>
+                      <line x1="16" y1="24" x2="84" y2="24" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
+                      <line x1="30" y1="40" x2="70" y2="40" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
+                      <line x1="50" y1="4"  x2="30" y2="40" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
+                      <line x1="50" y1="4"  x2="70" y2="40" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
+                      <line x1="16" y1="24" x2="30" y2="40" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
+                      <line x1="84" y1="24" x2="70" y2="40" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
+                      <line x1="30" y1="40" x2="50" y2="66" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
+                      <line x1="70" y1="40" x2="50" y2="66" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
+                      <line x1="16" y1="56" x2="30" y2="40" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
+                      <line x1="84" y1="56" x2="70" y2="40" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
+                      <line x1="16" y1="56" x2="50" y2="66" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
+                      <line x1="84" y1="56" x2="50" y2="66" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
+                      <line x1="50" y1="66" x2="50" y2="96" stroke={diceResult.stage==="rolling"?"#fbbf24":color} strokeWidth="2.2"/>
+                      <text x="50" y="57" textAnchor="middle" fontSize="16" fontWeight="900" fill={diceResult.stage==="rolling"?"#fbbf24":color} fontFamily="Georgia,serif">{result}</text>
+                    </svg>
+                  );
+                })()}
               </span>
               {diceResult.stage!=="rolling" && (
                 <div style={{ fontSize:"1.2rem", marginTop:"0.5rem", color: diceResult.value===20?"#fbbf24": diceResult.value===1?"#f87171":"#fff", fontFamily:"'Cinzel',serif" }}>
