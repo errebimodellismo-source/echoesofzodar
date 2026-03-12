@@ -1646,7 +1646,9 @@ function GameScreen({ myId, setScreen }) {
 
       const allDead = latestCombatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
       const newCombat = {...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound};
-      await dbSavePartyState(code, {...latestQs, combat: allDead ? null : newCombat});
+      const newQs = {...latestQs, combat: allDead ? null : newCombat};
+      await dbSavePartyState(code, newQs);
+      setQs(prev => ({...prev, combat: allDead ? null : newCombat}));
       await dbSendMessage({ party_code: code, author: "Battaglia", content: log, type: "combat" });
       if(allDead) await dbSendMessage({ party_code: code, author: "Sistema", content: "🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", type: "victory" });
     }, 1500);
