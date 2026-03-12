@@ -63,11 +63,37 @@ const RACES = {
 };
 const DIFF_COLOR = { "Facile":"#22c55e","Medio":"#fbbf24","Difficile":"#f97316","Molto Difficile":"#ef4444","Leggendario":"#a855f7" };
 const BACKGROUND_URL = "https://oaqjsuaqbzkvoljbmmjx.supabase.co/storage/v1/object/public/assets/ChatGPT_Image_10_mar_2026__02_57_11.png";
+const MASTER_EMAILS = (import.meta.env.VITE_MASTER_EMAILS || "")
+  .split(",")
+  .map(email => email.trim().toLowerCase())
+  .filter(Boolean);
 
 function xpForLevel(l){ return Math.floor(100*Math.pow(1.5,l-1)); }
 function d(n){ return Math.floor(Math.random()*n)+1; }
 function roll(sides,num=1){ let t=0; for(let i=0;i<num;i++) t+=d(sides); return t; }
-function fmt(t=""){ return t.replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>").replace(/\*(.+?)\*/g,"<em>$1</em>").replace(/\n/g,"<br/>"); }
+function randomIntInclusive(min, max) {
+  const low = Math.ceil(Math.min(min, max));
+  const high = Math.floor(Math.max(min, max));
+  return low + Math.floor(Math.random() * (high - low + 1));
+}
+function pickRandom(items=[]) {
+  return items.length ? items[randomIntInclusive(0, items.length - 1)] : null;
+}
+function escapeHtml(t="") {
+  return String(t).replace(/[&<>"']/g, char => (
+    { "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[char]
+  ));
+}
+function fmt(t=""){
+  return escapeHtml(t)
+    .replace(/\*\*(.+?)\*\*/g,"<strong>$1</strong>")
+    .replace(/\*(.+?)\*/g,"<em>$1</em>")
+    .replace(/\n/g,"<br/>");
+}
+function canAccessMasterPanel(user) {
+  const email = user?.email?.trim().toLowerCase();
+  return !!email && MASTER_EMAILS.includes(email);
+}
 
 const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','paladin','ranger'];
 
@@ -344,7 +370,7 @@ const SPELLS = {
 
 function parseDice(dice) {
   if(!dice) return 0;
-  const m = String(dice).match(/^(\-?\d+)d(\d+)([+-]\d+)?$/);
+  const m = String(dice).match(/^(-?\d+)d(\d+)([+-]\d+)?$/);
   if(!m) return Number(dice) || 0;
   const count = Number(m[1]);
   const sides = Number(m[2]);
@@ -388,7 +414,7 @@ function formatSpellSlots(slots) {
 function lsGet(key, def) { try { const r=localStorage.getItem(key); return r?JSON.parse(r):def; } catch { return def; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch { /* ignore */ } }
 
-function getQuests()   { return lsGet("eoz_quests",   DEFAULT_QUESTS()); }
+function getQuests()   { return lsGet("eoz_quests", DEFAULT_QUESTS()).map(normalizeQuest); }
 function getMonsters() { return lsGet("eoz_monsters",  DEFAULT_MONSTERS); }
 function getMeta()     { return lsGet("eoz_meta",      { worldName:"Echoes of Zodar", worldSub:"Dove l'Equilibrio Regna Supremo", logo:null }); }
 function saveQuests(q)   { lsSet("eoz_quests", q); }
@@ -451,6 +477,223 @@ const DEFAULT_MONSTERS = [
   {id:"m4",name:"Vampiro",      emoji:"🧛",hp:90,atk:18,def:8,xp:80,desc:"Signore della notte",isBoss:true},
   {id:"m5",name:"Scheletro",    emoji:"💀",hp:25,atk:7,def:3,xp:18,desc:"Non-morto eterno"},
 ];
+
+function buildDefaultItems() {
+  return [
+    { id:"weapon_rustbit_shortsword", name:"Rustbit Shortsword", emoji:"🗡️", type:"weapon", slot:"weapon", rarity:"common", price:24, description:"A chipped roadside blade still trusted by caravan guards.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_ashwood_club", name:"Ashwood Club", emoji:"🪵", type:"weapon", slot:"weapon", rarity:"common", price:16, description:"A hardened branch of ash used by brawlers and militiamen.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
+    { id:"weapon_stonevale_spear", name:"Stonevale Spear", emoji:"🔱", type:"weapon", slot:"weapon", rarity:"common", price:22, description:"A plain iron-tipped spear from the valley militias.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_briar_string_bow", name:"Briar String Bow", emoji:"🏹", type:"weapon", slot:"weapon", rarity:"common", price:28, description:"A hunter's bow strung with treated thorn-fiber.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
+    { id:"weapon_moonfork_dagger", name:"Moonfork Dagger", emoji:"🗡️", type:"weapon", slot:"weapon", rarity:"common", price:18, description:"A narrow blade made for ambushes and close alleys.", damageDice:"1d4", weapon_die:"1d4", bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
+    { id:"weapon_glowember_wand", name:"Glowember Wand", emoji:"🪄", type:"weapon", slot:"weapon", rarity:"common", price:32, description:"A starter focus carved from emberwood for apprentice casters.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:0, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
+    { id:"weapon_watchmans_axe", name:"Watchman's Axe", emoji:"🪓", type:"weapon", slot:"weapon", rarity:"uncommon", price:52, description:"A dependable border axe forged for night patrols.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:-1, heal_amount:0, available:true },
+    { id:"weapon_frosttrail_mace", name:"Frosttrail Mace", emoji:"🔨", type:"weapon", slot:"weapon", rarity:"uncommon", price:56, description:"A cold-forged mace that caves in shields and bone.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:-1, heal_amount:0, available:true },
+    { id:"weapon_silverfen_rapier", name:"Silverfen Rapier", emoji:"⚔️", type:"weapon", slot:"weapon", rarity:"uncommon", price:60, description:"A duelist's blade from the mirror courts of Silverfen.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
+    { id:"weapon_hollowpeak_staff", name:"Hollowpeak Staff", emoji:"🪄", type:"weapon", slot:"weapon", rarity:"uncommon", price:58, description:"A rune-burnished staff from the slopes below Hollowpeak.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:0, bonus_def:0, bonus_mag:2, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
+    { id:"weapon_riverwake_crossbow", name:"Riverwake Crossbow", emoji:"🏹", type:"weapon", slot:"weapon", rarity:"uncommon", price:64, description:"A compact crossbow suited for scouts and ferry guards.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_dawnfire_longsword", name:"Dawnfire Longsword", emoji:"⚔️", type:"weapon", slot:"weapon", rarity:"rare", price:110, description:"Its polished steel catches dawnlight like sacred flame.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:3, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_blackroot_halberd", name:"Blackroot Halberd", emoji:"🪓", type:"weapon", slot:"weapon", rarity:"rare", price:118, description:"A brutal polearm used in monster hunts near the Blackroot treeline.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:3, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:-1, heal_amount:0, available:true },
+    { id:"weapon_starhush_grimoire", name:"Starhush Grimoire", emoji:"📘", type:"weapon", slot:"weapon", rarity:"rare", price:126, description:"A whispering spellbook wrapped in midnight leather.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:0, bonus_def:0, bonus_mag:3, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
+    { id:"weapon_golden_stag_blade", name:"Golden Stag Blade", emoji:"🗡️", type:"weapon", slot:"weapon", rarity:"epic", price:220, description:"A royal hunting blade still worthy of song and blood.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:4, bonus_def:1, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
+
+    { id:"armor_patchwork_gambeson", name:"Patchwork Gambeson", emoji:"🧥", type:"armor", slot:"armor", rarity:"common", price:20, description:"Layered cloth and wool stitched from reused travel gear.", armorBonus:1, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:6, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_mosshide_leather", name:"Mosshide Leather", emoji:"🥋", type:"armor", slot:"armor", rarity:"common", price:26, description:"Oiled leather armor built for wet forests and quiet movement.", armorBonus:1, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:8, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_ironring_vest", name:"Ironring Vest", emoji:"⛓️", type:"armor", slot:"armor", rarity:"common", price:34, description:"A sleeveless chain vest favored by road wardens.", armorBonus:2, bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:10, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_stormpatch_coat", name:"Stormpatch Coat", emoji:"🧥", type:"armor", slot:"armor", rarity:"uncommon", price:48, description:"A reinforced weathercoat with hidden plates beneath the lining.", armorBonus:2, bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:12, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_bastion_chainmail", name:"Bastion Chainmail", emoji:"⛓️", type:"armor", slot:"armor", rarity:"uncommon", price:60, description:"A sturdy chain shirt from the old Bastion Quarter forges.", armorBonus:3, bonus_atk:0, bonus_def:3, bonus_mag:0, bonus_hp:14, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_sunkeep_scale", name:"Sunkeep Scale Armor", emoji:"🐲", type:"armor", slot:"armor", rarity:"rare", price:104, description:"Bronzed scale mail reflecting the warm light of Sunkeep walls.", armorBonus:4, bonus_atk:0, bonus_def:4, bonus_mag:0, bonus_hp:18, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_granite_guard_plate", name:"Granite Guard Plate", emoji:"🛡️", type:"armor", slot:"armor", rarity:"epic", price:210, description:"Heavy plate once issued to wardens of the mountain gates.", armorBonus:5, bonus_atk:0, bonus_def:5, bonus_mag:0, bonus_hp:24, bonus_init:-2, weapon_die:null, heal_amount:0, available:true },
+
+    { id:"potion_redleaf_tonic", name:"Redleaf Tonic", emoji:"🧪", type:"potion", slot:null, rarity:"common", price:14, description:"A basic redleaf draught for closing cuts and steadying the pulse.", effect:"heal", value:10, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:10, available:true },
+    { id:"potion_lesser_mending", name:"Lesser Mending Phial", emoji:"🧪", type:"potion", slot:null, rarity:"common", price:18, description:"A small phial that knits bruises and shallow wounds.", effect:"heal", value:14, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:14, available:true },
+    { id:"potion_hunters_focus", name:"Hunter's Focus Draught", emoji:"🍃", type:"potion", slot:null, rarity:"common", price:20, description:"Sharpens sight and breath before a dangerous pull of the string.", effect:"init", value:2, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, weapon_die:null, heal_amount:0, available:true },
+    { id:"potion_guardians_balm", name:"Guardian's Balm", emoji:"🧴", type:"potion", slot:null, rarity:"uncommon", price:30, description:"A chalky blue mixture that hardens the body against impact.", effect:"def", value:2, bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"potion_sparkshine_elixir", name:"Sparkshine Elixir", emoji:"✨", type:"potion", slot:null, rarity:"uncommon", price:34, description:"A bright alchemical tonic that wakes dormant arcane channels.", effect:"mag", value:2, bonus_atk:0, bonus_def:0, bonus_mag:2, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"potion_major_healing", name:"Major Healing Vial", emoji:"🧪", type:"potion", slot:null, rarity:"rare", price:52, description:"Reserved for battlefield emergencies and near-fatal wounds.", effect:"heal", value:26, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:26, available:true },
+
+    { id:"accessory_copperward_ring", name:"Copperward Ring", emoji:"💍", type:"accessory", slot:null, rarity:"common", price:24, description:"A plain warded ring etched with an old protective spiral.", statBonus:{ def:1 }, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_lantern_charm", name:"Lantern Charm", emoji:"🕯️", type:"accessory", slot:null, rarity:"common", price:22, description:"A brass trinket said to keep wanderers alert on moonless roads.", statBonus:{ init:1 }, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_ember_thread_sash", name:"Ember Thread Sash", emoji:"🎗️", type:"accessory", slot:null, rarity:"uncommon", price:42, description:"A woven sash carrying a faint warmth from fireloom fibers.", statBonus:{ atk:1, mag:1 }, bonus_atk:1, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_sagebone_talisman", name:"Sagebone Talisman", emoji:"📿", type:"accessory", slot:null, rarity:"rare", price:78, description:"A pale bone charm carved by a forgotten hermit-mage.", statBonus:{ mag:2 }, bonus_atk:0, bonus_def:0, bonus_mag:2, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true }
+  ];
+}
+const DEFAULT_ITEMS = buildDefaultItems();
+const DEFAULT_ITEM_MAP = new Map(DEFAULT_ITEMS.map(item => [item.id, item]));
+const DEFAULT_WEAPON = {
+  id: "weapon_unarmed",
+  name: "Pugni del Viandante",
+  emoji: "👊",
+  type: "weapon",
+  slot: "weapon",
+  rarity: "Base",
+  description: "Quando sei disarmato, conti solo su tecnica e coraggio.",
+  bonus_atk: 0,
+  bonus_def: 0,
+  bonus_mag: 0,
+  bonus_hp: 0,
+  bonus_init: 0,
+  weapon_die: "1d4",
+  heal_amount: 0,
+  price: 0,
+  available: false,
+};
+
+function mergeCatalogItems(items=[]) {
+  const merged = new Map(DEFAULT_ITEMS.map(item => [item.id, item]));
+  for(const item of items) {
+    const base = merged.get(item.id) || {};
+    merged.set(item.id, { ...base, ...item, slot:item.slot || base.slot || null, weapon_die:item.weapon_die || base.weapon_die || null, heal_amount:item.heal_amount || base.heal_amount || 0, bonus_init:item.bonus_init ?? base.bonus_init ?? 0 });
+  }
+  return Array.from(merged.values()).sort((a,b)=>a.name.localeCompare(b.name, "it"));
+}
+function itemSlot(item) {
+  return item?.slot || (item?.type==="weapon" ? "weapon" : item?.type==="armor" ? "armor" : item?.type==="shield" ? "shield" : null);
+}
+function isEquippableItem(item) {
+  return !!itemSlot(item);
+}
+function equipmentKey(playerId) {
+  return `eoz_equipment_${playerId}`;
+}
+function getStoredEquipment(playerId) {
+  return lsGet(equipmentKey(playerId), { weapon:null, armor:null, shield:null });
+}
+function saveStoredEquipment(playerId, equipment) {
+  lsSet(equipmentKey(playerId), equipment);
+}
+function getBaseStats(player) {
+  const cls = CLASSES[player?.class || "warrior"] || CLASSES.warrior;
+  const race = RACES[player?.race || "human"] || RACES.human;
+  const level = Math.max(1, Number(player?.level) || 1);
+  return {
+    atk: cls.atk + race.atkB + (level - 1) * 2,
+    def: cls.def + race.defB + (level - 1),
+    mag: cls.mag + race.magB + (level - 1),
+    init: cls.init + race.initB,
+    maxHp: cls.hp + race.hpB + (level - 1) * 10,
+  };
+}
+function getEquipmentBonuses(equipment, itemMap) {
+  const ids = [equipment?.weapon, equipment?.armor, equipment?.shield].filter(Boolean);
+  return ids.reduce((totals, itemId) => {
+    const item = itemMap.get(itemId);
+    if(!item) return totals;
+    totals.atk += item.bonus_atk || 0;
+    totals.def += item.bonus_def || 0;
+    totals.mag += item.bonus_mag || 0;
+    totals.hp += item.bonus_hp || 0;
+    totals.init += item.bonus_init || 0;
+    return totals;
+  }, { atk:0, def:0, mag:0, hp:0, init:0 });
+}
+function applyEquipmentToPlayer(player, equipment, itemMap) {
+  if(!player) return player;
+  const base = getBaseStats(player);
+  const bonus = getEquipmentBonuses(equipment, itemMap);
+  const maxHp = Math.max(1, base.maxHp + bonus.hp);
+  return {
+    ...player,
+    atk: base.atk + bonus.atk,
+    def: base.def + bonus.def,
+    mag: base.mag + bonus.mag,
+    init: base.init + bonus.init,
+    maxHp,
+    hp: Math.min(maxHp, Math.max(0, Number(player.hp) || maxHp)),
+  };
+}
+function normalizeQuestChoices(choices) {
+  if(Array.isArray(choices)) return choices;
+  if(!choices || typeof choices !== "object") return [];
+  return Object.entries(choices).map(([key, value]) => ({
+    label: value?.label || key,
+    ...value,
+  }));
+}
+function normalizeQuestStep(step) {
+  if(typeof step === "string") return { type:"narrative", text:step };
+  if(!step || typeof step !== "object") return { type:"narrative", text:"" };
+  if(step.type === "combat" || step.monsters || step.enemies) return { ...step, type:"combat", monsters:step.monsters || step.enemies || [] };
+  if(step.type === "loot" || step.loot) return { ...step, type:"loot", loot:step.loot || {} };
+  if(step.type === "choice" || step.choices) return { ...step, type:"choice", choices:normalizeQuestChoices(step.choices) };
+  return { ...step, type:"narrative", text:step.text || "" };
+}
+function normalizeQuest(quest) {
+  return { ...quest, steps:(quest.steps || []).map(normalizeQuestStep) };
+}
+function buildInventoryEntries(rows, items = DEFAULT_ITEMS) {
+  const itemMap = new Map((items || []).map(item => [item.id, item]));
+  return (rows || []).map((row, index) => {
+    const itemId = row?.item_id || row?.itemId;
+    const item = itemMap.get(itemId);
+    if(!item) return null;
+    return {
+      rowId: row.id || `${itemId}_${row.created_at || index}`,
+      itemId,
+      playerId: row.player_id || null,
+      createdAt: row.created_at || null,
+      item,
+    };
+  }).filter(Boolean);
+}
+function groupInventoryEntries(entries) {
+  return Array.from((entries || []).reduce((map, entry) => {
+    const current = map.get(entry.itemId);
+    if(current) {
+      current.quantity += 1;
+      current.rowIds.push(entry.rowId);
+      current.entries.push(entry);
+      return map;
+    }
+    map.set(entry.itemId, {
+      itemId: entry.itemId,
+      item: entry.item,
+      quantity: 1,
+      rowIds: [entry.rowId],
+      entries: [entry],
+    });
+    return map;
+  }, new Map()).values());
+}
+function countInventoryItems(entries) {
+  return (entries || []).reduce((counts, entry) => {
+    counts[entry.itemId] = (counts[entry.itemId] || 0) + 1;
+    return counts;
+  }, {});
+}
+function getEquippedWeapon(equipment, itemMap) {
+  return (equipment?.weapon && itemMap.get(equipment.weapon)) || DEFAULT_WEAPON;
+}
+function getCombatDamageDie(actor) {
+  if(actor?.weaponDie) return actor.weaponDie;
+  if(actor?.isPlayer) return DEFAULT_WEAPON.weapon_die;
+  if((actor?.atk || 0) >= 18) return "2d8";
+  if((actor?.atk || 0) >= 12) return "1d10";
+  if((actor?.atk || 0) >= 8) return "1d8";
+  return "1d6";
+}
+function itemStatSummary(item) {
+  if(!item) return [];
+  const stats = [];
+  if(item.weapon_die) stats.push(`🎲 ${item.weapon_die}`);
+  if(item.bonus_atk) stats.push(`⚔️ +${item.bonus_atk}`);
+  if(item.bonus_def) stats.push(`🛡️ +${item.bonus_def}`);
+  if(item.bonus_mag) stats.push(`✨ +${item.bonus_mag}`);
+  if(item.bonus_hp) stats.push(`❤️ +${item.bonus_hp}`);
+  if(item.bonus_init) stats.push(`🦶 ${item.bonus_init>=0?"+":""}${item.bonus_init}`);
+  if(item.heal_amount) stats.push(`🧪 Cura ${item.heal_amount}`);
+  return stats;
+}
+function resolveLootItem(spec, items) {
+  if(!spec) return null;
+  if(typeof spec === "object" && spec.id) return items.find(item => item.id === spec.id) || null;
+  const search = String(spec).trim().toLowerCase();
+  return items.find(item =>
+    item.id.toLowerCase() === search ||
+    item.name.toLowerCase() === search ||
+    item.name.toLowerCase().includes(search) ||
+    search.includes(item.name.toLowerCase())
+  ) || null;
+}
 
 /* ----------------------------------------------
    SUPABASE HELPERS
@@ -517,7 +760,7 @@ async function dbGetPartyState(partyCode) {
 // Items / Shop
 async function dbGetItems() {
   const { data } = await supabase.from("items").select("*").order("name", { ascending: true });
-  return data || [];
+  return mergeCatalogItems(data || []);
 }
 
 async function dbSaveItem(item) {
@@ -541,8 +784,27 @@ async function dbDeleteItem(itemId) {
   await supabase.from("items").delete().eq("id", itemId);
 }
 
-async function dbAddPlayerItem(playerId, itemId) {
-  await supabase.from("player_items").insert({ player_id: playerId, item_id: itemId });
+async function dbAddPlayerItem(playerId, itemId, quantity=1) {
+  const amount = Math.max(1, Number(quantity) || 1);
+  const payload = Array.from({ length: amount }, () => ({ player_id: playerId, item_id: itemId }));
+  await supabase.from("player_items").insert(payload);
+}
+async function dbGetPlayerItems(playerId) {
+  const { data } = await supabase.from("player_items").select("*").eq("player_id", playerId).order("created_at", { ascending: true });
+  return data || [];
+}
+async function dbGetPlayerInventory(playerId, items = DEFAULT_ITEMS) {
+  const rows = await dbGetPlayerItems(playerId);
+  const entries = buildInventoryEntries(rows, items);
+  return {
+    rows,
+    entries,
+    counts: countInventoryItems(entries),
+    groups: groupInventoryEntries(entries),
+  };
+}
+async function dbRemovePlayerItem(rowId) {
+  await supabase.from("player_items").delete().eq("id", rowId);
 }
 
 async function dbDeleteMessages(partyCode) {
@@ -572,11 +834,6 @@ async function deleteParty(partyCode) {
   await dbDeletePlayers(partyCode);
   await dbDeletePartyState(partyCode);
 }
-
-/* ----------------------------------------------
-   MASTER PASSWORD
----------------------------------------------- */
-const MASTER_PASSWORD = "ByBy101112!";
 
 /* ----------------------------------------------
    ERROR BOUNDARY
@@ -654,7 +911,7 @@ export default function App() {
 
   return (
     <div style={{ minHeight:"100vh", background:"#06060e", fontFamily:"'Crimson Pro',Georgia,serif", color:"#e2d9c5", position:"relative" }}>
-      {screen==="master" && <MasterPanelAuth setScreen={setScreen} />}
+      {screen==="master" && <MasterPanelAuth setScreen={setScreen} authUser={authUser} />}
       {screen!=="master" && !authUser && <AuthScreen setAuthUser={setAuthUser} setScreen={setScreen} setMyId={setMyId} />}
       {screen!=="master" && authUser && screen==="landing" && <Landing setScreen={setScreen} goGame={goGame} myId={myId} authUser={authUser} setAuthUser={setAuthUser} />}
       {screen!=="master" && authUser && screen==="create"  && <CreateChar setScreen={setScreen} goGame={goGame} authUser={authUser} />}
@@ -724,9 +981,6 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
         <BigBtn onClick={handleAuth} gold disabled={loading} icon={mode==="login"?"🔑":"📝"}>
           {loading?"Attendere..." : mode==="login"?"Entra nel Mondo":"Crea Account"}
         </BigBtn>
-        <div style={{ marginTop:"1.5rem", textAlign:"center" }}>
-          <button onClick={()=>setScreen("master")} style={{ background:"none", border:"none", color:"#1f2937", cursor:"pointer", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em" }}>🛡️ Accesso Master</button>
-        </div>
       </div>
       </div>
     </div>
@@ -736,27 +990,21 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
 /* ----------------------------------------------
    MASTER PANEL AUTH WRAPPER
 ---------------------------------------------- */
-function MasterPanelAuth({ setScreen }) {
-  const [pwd, setPwd] = useState("");
-  const [ok, setOk] = useState(false);
-  const [err, setErr] = useState(false);
+function MasterPanelAuth({ setScreen, authUser }) {
+  const configured = MASTER_EMAILS.length > 0;
+  const allowed = canAccessMasterPanel(authUser);
 
-  if(ok) return <MasterPanel setScreen={setScreen} />;
+  if(configured && allowed) return <MasterPanel setScreen={setScreen} />;
 
   return (
     <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100vh", padding:"2rem", background:"#06060e" }}>
       <div style={{ width:"100%", maxWidth:360, background:"rgba(255,255,255,0.02)", border:"1px solid #374151", borderRadius:8, padding:"2rem", textAlign:"center" }}>
         <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>🔒</div>
         <h2 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.2rem", marginBottom:"0.5rem" }}>Pannello Master</h2>
-        <p style={{ color:"#4b5563", fontSize:"0.78rem", marginBottom:"1.5rem" }}>Accesso riservato al Master</p>
-        <label style={labelStyle}>Password</label>
-        <input style={{...inputStyle,marginBottom:12,textAlign:"center",letterSpacing:"0.2em"}} type="password" value={pwd}
-          onChange={e=>{ setPwd(e.target.value); setErr(false); }}
-          placeholder="��������"
-          onKeyDown={e=>e.key==="Enter"&&(pwd===MASTER_PASSWORD?setOk(true):setErr(true))} />
-        {err && <div style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:12 }}>? Password errata!</div>}
+        {!authUser && <p style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:"1.5rem" }}>Effettua prima il login con un account autorizzato.</p>}
+        {authUser && !configured && <p style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:"1.5rem" }}>Configura `VITE_MASTER_EMAILS` nel file `.env` per abilitare il pannello Master.</p>}
+        {authUser && configured && !allowed && <p style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:"1.5rem" }}>L'account {authUser.email} non è autorizzato ad aprire il pannello Master.</p>}
         <div style={{ display:"flex", gap:8, justifyContent:"center" }}>
-          <BigBtn onClick={()=>pwd===MASTER_PASSWORD?setOk(true):setErr(true)} gold icon="🗝️">Entra</BigBtn>
           <SmallBtn onClick={()=>setScreen("landing")}>? Indietro</SmallBtn>
         </div>
       </div>
@@ -808,6 +1056,7 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
         <BigBtn onClick={()=>setScreen("create")} gold icon="🛠️">Crea il tuo Eroe</BigBtn>
         {myId && <BigBtn onClick={handleTornaAvventura} icon="🏹">Torna all'Avventura</BigBtn>}
         <BigBtn onClick={logout} dark icon="🚪">Esci</BigBtn>
+        {canAccessMasterPanel(authUser) && <BigBtn onClick={()=>setScreen("master")} dark icon="🛡️">Pannello Master</BigBtn>}
       </div>
       {authUser && <p style={{ marginTop:"1rem", color:"#374151", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
       <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE • FANTASY • MULTIPLAYER ONLINE</p>
@@ -1387,39 +1636,30 @@ function UsersView() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(()=>{
+    let active = true;
     const load = async () => {
-      try {
-        const { data, error } = await supabase.auth.admin.listUsers();
-        if(error) throw error;
-        setUsers(data?.users || []);
-      } catch(e) {
-        // Fallback: show registered players if we can't list auth users
-        const { data, error: playersErr } = await supabase.from("players").select("id,name,party_code");
-        if(playersErr) {
-          setError(e.message || "Impossibile caricare gli iscritti");
-        } else {
-          setUsers((data||[]).map(p=>({ id:p.id, email:p.name, party_code:p.party_code })));
-          setError("Nessun accesso all'admin auth; elenco giocatori registrati.");
-        }
-      } finally {
-        setLoading(false);
+      setLoading(true);
+      const { data, error: playersErr } = await supabase.from("players").select("id,name,party_code");
+      if(!active) return;
+      if(playersErr) {
+        setError(playersErr.message || "Impossibile caricare gli iscritti");
+        setUsers([]);
+      } else {
+        setError(null);
+        setUsers((data||[]).map(p=>({ id:p.id, email:p.name, party_code:p.party_code })));
       }
+      setLoading(false);
     };
     load();
+    const interval = setInterval(load, 5000);
+    return ()=>{ active = false; clearInterval(interval); };
   },[]);
 
   return (
     <div>
-      <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, marginBottom:"1rem", flexWrap:"wrap" }}>
-        <div>
-          <div style={{ fontFamily:"'Cinzel',serif", fontWeight:700, color:"#e2d9c5" }}>Master password</div>
-          <div style={{ fontFamily:"monospace", color:"#c4b5fd" }}>{showPassword?MASTER_PASSWORD:"����������"}</div>
-        </div>
-        <SmallBtn onClick={()=>setShowPassword(v=>!v)}>{showPassword?"👁️ Nascondi":"👁️ Mostra"}</SmallBtn>
-      </div>
+      <div style={{ color:"#6b7280", fontSize:"0.85rem", marginBottom:"1rem" }}>Elenco dei profili giocatore registrati nel database pubblico.</div>
       {error && <div style={{ color:"#fca5a5", marginBottom:"1rem" }}>{error}</div>}
       {loading && <div style={{ color:"#6b7280" }}>Caricamento...</div>}
       {!loading && !users.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun iscritto trovato.</div>}
@@ -1527,45 +1767,7 @@ function MarketView() {
   );
 }
 
-function ShopView({ me, setMeRaw, addMsg }) {
-  const [items, setItems] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(()=>{
-    const load = async () => {
-      setLoading(true);
-      try {
-        const all = await dbGetItems();
-        setItems(all.filter(i=>i.available));
-      } catch(e) {
-        setError(e.message||"Errore durante il caricamento del negozio");
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
-  },[]);
-
-  const buyItem = async (item) => {
-    if(!me) return;
-    if(me.gold < (item.price||0)) { window.alert("Non hai abbastanza oro."); return; }
-    if(!window.confirm(`Acquistare ${item.name} per ${item.price} oro?`)) return;
-    const updated = {
-      ...me,
-      gold: me.gold - (item.price||0),
-      atk: me.atk + (item.bonus_atk||0),
-      def: me.def + (item.bonus_def||0),
-      mag: me.mag + (item.bonus_mag||0),
-      maxHp: me.maxHp + (item.bonus_hp||0),
-      hp: me.hp + (item.bonus_hp||0),
-    };
-    await dbSavePlayer(updated);
-    await dbAddPlayerItem(me.id, item.id);
-    setMeRaw(updated);
-    await addMsg(`⚔️ **${me.name}** ha comprato **${item.name}** per ${item.price} oro!`, "info", "Sistema");
-  };
-
+function ShopView({ me, items, loading, error, inventoryCounts, onBuy }) {
   return (
     <div>
       <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🛒 Negozio</h3>
@@ -1579,17 +1781,104 @@ function ShopView({ me, setMeRaw, addMsg }) {
               <span style={{ fontSize:"1.5rem" }}>{it.emoji||"⭐"}</span>
               <div style={{ flex:1 }}>
                 <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{it.name}</div>
-                <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{it.type}</div>
+                <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{it.type} • {it.rarity || "Catalogo"}</div>
               </div>
               <span style={{ fontSize:"0.85rem", color:"#c4b5fd" }}>💰 {it.price}</span>
             </div>
             <div style={{ fontSize:"0.75rem", color:"#4b5563", marginBottom:6 }}>{it.description}</div>
-            <div style={{ display:"flex", gap:8, fontSize:"0.72rem", color:"#6b7280" }}>
-              <span>⚔️+{it.bonus_atk||0}</span><span>🛡️+{it.bonus_def||0}</span><span>✨+{it.bonus_mag||0}</span><span>❤️+{it.bonus_hp||0}</span>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#6b7280", marginBottom:8 }}>
+              {itemStatSummary(it).map(stat => <span key={stat}>{stat}</span>)}
             </div>
-            <BigBtn onClick={()=>buyItem(it)} gold icon="⭐">Compra</BigBtn>
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:10 }}>
+              <BigBtn onClick={()=>onBuy(it)} gold icon="⭐" disabled={!me || me.gold < (it.price||0)}>Compra</BigBtn>
+              {!!inventoryCounts?.[it.id] && <span style={{ fontSize:"0.72rem", color:"#6ee7b7" }}>Ne possiedi {inventoryCounts[it.id]}</span>}
+            </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function InventoryView({ loading, groups }) {
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
+      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🎒 Inventario</h3>
+      {loading && <div style={{ color:"#6b7280" }}>Caricamento...</div>}
+      {!loading && !groups.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Inventario vuoto. Saccheggia o compra qualcosa.</div>}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))", gap:10 }}>
+        {groups.map(group=>{
+          return (
+            <div key={group.item.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
+              <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
+                <span style={{ fontSize:"1.6rem" }}>{group.item.emoji||"⭐"}</span>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{group.item.name}</div>
+                  <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{group.item.type} • {group.item.rarity || "common"}</div>
+                </div>
+                <span style={{ fontSize:"0.78rem", color:"#c4b5fd", fontWeight:700 }}>x{group.quantity}</span>
+              </div>
+              <div style={{ fontSize:"0.75rem", color:"#4b5563", marginBottom:6 }}>{group.item.description}</div>
+              <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#6b7280", marginBottom:10 }}>
+                {itemStatSummary(group.item).map(stat => <span key={stat}>{stat}</span>)}
+              </div>
+              <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#9ca3af" }}>
+                <span>Quantità: {group.quantity}</span>
+                <span>Valore: {group.item.price || 0} oro</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip }) {
+  const slots = [
+    { key:"weapon", label:"Arma", fallback:"Nessuna arma equipaggiata" },
+    { key:"armor", label:"Armatura", fallback:"Nessuna armatura equipaggiata" },
+    { key:"shield", label:"Scudo", fallback:"Nessuno scudo equipaggiato" },
+  ];
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
+      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🎽 Equipaggiamento</h3>
+      <Card title="Statistiche Attive">
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))", gap:8, color:"#e2d9c5" }}>
+          <div>⚔️ ATK: {me.atk}</div>
+          <div>🛡️ CA: {me.def}</div>
+          <div>✨ MAG: {me.mag}</div>
+          <div>🦶 DEX: {me.init}</div>
+          <div>❤️ HP Max: {me.maxHp}</div>
+          <div>🎲 Arma: {equippedWeapon.weapon_die}</div>
+        </div>
+      </Card>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:10 }}>
+        {slots.map(slot=>{
+          const item = equippedItems[slot.key];
+          return (
+            <div key={slot.key} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
+              <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:8 }}>{slot.label}</div>
+              {item ? (
+                <>
+                  <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
+                    <span style={{ fontSize:"1.6rem" }}>{item.emoji}</span>
+                    <div>
+                      <div style={{ color:"#e2d9c5", fontWeight:700 }}>{item.name}</div>
+                      <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{item.rarity || item.type}</div>
+                    </div>
+                  </div>
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#6b7280", marginBottom:10 }}>
+                    {itemStatSummary(item).map(stat => <span key={stat}>{stat}</span>)}
+                  </div>
+                  <SmallBtn red onClick={()=>onUnequip(slot.key)}>Rimuovi</SmallBtn>
+                </>
+              ) : (
+                <div style={{ color:"#4b5563", fontSize:"0.82rem" }}>{slot.fallback}</div>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -1612,12 +1901,20 @@ function GameScreen({ myId, setScreen }) {
   const [diceResult, setDiceResult] = useState(null);
   const [spellMenu, setSpellMenu] = useState(false);
   const [tab, setTab] = useState("chat");
-  const [lootDone, setLootDone] = useState(false);
+  const [lootedStepKey, setLootedStepKey] = useState(null);
+  const [catalogItems, setCatalogItems] = useState(DEFAULT_ITEMS);
+  const [inventory, setInventory] = useState([]);
+  const [equipment, setEquipment] = useState({ weapon:null, armor:null, shield:null });
+  const [inventoryLoading, setInventoryLoading] = useState(true);
   const msgEnd = useRef(null);
   const inputRef = useRef(null);
   const subRef = useRef(null);
+  const itemMapRef = useRef(DEFAULT_ITEM_MAP);
+  const startCombatStepRef = useRef(null);
 
   const code = me?.partyCode;
+  itemMapRef.current = new Map(catalogItems.map(item => [item.id, item]));
+  const itemMap = itemMapRef.current;
 
   const refreshAll = useCallback(async (partyCode) => {
     if(!partyCode) return;
@@ -1637,6 +1934,41 @@ function GameScreen({ myId, setScreen }) {
     }
   }, [myId]);
 
+  const refreshInventory = useCallback(async (playerOverride=null) => {
+    if(!myId) return;
+    setInventoryLoading(true);
+    try {
+      const items = await dbGetItems();
+      const { entries } = await dbGetPlayerInventory(myId, items);
+      const nextEquipment = getStoredEquipment(myId);
+      const ownedIds = new Set(entries.map(entry => entry.itemId));
+      const sanitizedEquipment = {
+        weapon: ownedIds.has(nextEquipment.weapon) ? nextEquipment.weapon : null,
+        armor: ownedIds.has(nextEquipment.armor) ? nextEquipment.armor : null,
+        shield: ownedIds.has(nextEquipment.shield) ? nextEquipment.shield : null,
+      };
+      saveStoredEquipment(myId, sanitizedEquipment);
+      setCatalogItems(items);
+      setInventory(entries);
+      setEquipment(sanitizedEquipment);
+
+      const sourcePlayer = playerOverride;
+      if(sourcePlayer) {
+        const synced = applyEquipmentToPlayer(sourcePlayer, sanitizedEquipment, new Map(items.map(item => [item.id, item])));
+        const hpChanged = (sourcePlayer.hp || 0) > synced.maxHp;
+        const statsChanged = ["atk","def","mag","init","maxHp"].some(key => (sourcePlayer[key] || 0) !== (synced[key] || 0));
+        if(hpChanged || statsChanged) {
+          await dbSavePlayer(synced);
+          if(sourcePlayer.id === myId) setMeRaw(synced);
+        }
+      }
+    } catch(e) {
+      console.error("Errore caricamento inventario:", e);
+    } finally {
+      setInventoryLoading(false);
+    }
+  }, [myId]);
+
   useEffect(()=>{
     async function init() {
       if(!myId) {
@@ -1652,6 +1984,7 @@ function GameScreen({ myId, setScreen }) {
         const p = { id:data.id, name:data.name, partyCode:data.party_code, class:data.class, race:data.race, hp:data.hp, maxHp:data.max_hp, atk:data.atk, def:data.def, mag:data.mag, init:data.init, xp:data.xp, level:data.level, gold:data.gold };
         setMeRaw(p);
         await refreshAll(p.partyCode);
+        await refreshInventory(p);
         // Realtime subscription
         subRef.current = supabase.channel("party_"+p.partyCode)
           .on("postgres_changes", { event:"INSERT", schema:"public", table:"messages", filter:`party_code=eq.${p.partyCode}` },
@@ -1668,9 +2001,16 @@ function GameScreen({ myId, setScreen }) {
     }
     init();
     return ()=>{ if(subRef.current) supabase.removeChannel(subRef.current); };
-  },[myId, refreshAll]);
+  },[myId, refreshAll, refreshInventory, setScreen]);
 
   useEffect(()=>{ msgEnd.current?.scrollIntoView({behavior:"smooth"}); },[messages]);
+
+  useEffect(() => {
+    const stepData = qs?.active ? normalizeQuestStep(getQuests().find(q=>q.id===qs.currentId)?.steps?.[qs.step]) : null;
+    if(!stepData || !isCombatStep(stepData)) return;
+    if(qs?.combat?.active || qs?.combat?.won) return;
+    startCombatStepRef.current?.(stepData);
+  }, [qs?.active, qs?.currentId, qs?.step, qs?.combat?.active, qs?.combat?.won]);
 
   // Auto-attack when it's a monster's turn
   useEffect(() => {
@@ -1686,11 +2026,19 @@ function GameScreen({ myId, setScreen }) {
       const alivePlayers = latestPlayers.filter(p => (p?.hp || 0) > 0);
       if (!alivePlayers.length) return;
       const pt = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-      const edmg = Math.max(1, actor.atk + roll(4) - Math.floor(pt.def / 3));
+      const attackRoll = roll(20);
+      const attackTotal = attackRoll + (actor.init || 0);
+      const targetCa = pt.def || 10;
+      const hit = attackRoll === 20 || attackTotal >= targetCa;
+      const weaponDie = getCombatDamageDie(actor);
+      const damageRoll = hit ? rollDice(weaponDie) : 0;
+      const edmg = hit ? Math.max(1, damageRoll + Math.max(0, actor.atk || 0)) : 0;
       const updPt = { ...pt, hp: Math.max(0, pt.hp - edmg) };
       await dbSavePlayer(updPt);
       if (updPt.id === myId) setMeRaw(updPt);
-      const log = `${actor.emoji || "👾"} **${actor.name}** attacca **${pt.name}** per **${edmg} danni**!`;
+      const log = hit
+        ? `${actor.emoji || "👾"} **${actor.name}** tira **${attackRoll} + DEX ${actor.init || 0} = ${attackTotal}** contro CA **${targetCa}** e colpisce **${pt.name}** con **${weaponDie} + ${actor.atk || 0} = ${edmg} danni**!`
+        : `${actor.emoji || "👾"} **${actor.name}** tira **${attackRoll} + DEX ${actor.init || 0} = ${attackTotal}** contro CA **${targetCa}** ma manca **${pt.name}**.`;
       let nextTurn = latestCombat.turn + 1;
       let nextRound = latestCombat.round;
       if (nextTurn >= latestCombatants.length) { nextTurn = 0; nextRound++; }
@@ -1709,9 +2057,6 @@ function GameScreen({ myId, setScreen }) {
     return () => clearTimeout(timer);
   }, [qs?.combat?.turn, qs?.combat?.active, myId, code]);
 
-  // Reset lootDone when step changes
-  useEffect(()=>{ setLootDone(false); }, [qs?.step]);
-
   if(!me || !me.class) return <div style={{color:'white', fontSize:'1.5rem', padding:'2rem', textAlign:'center'}}>⏳ Caricamento personaggio...</div>;
 
   async function addMsg(content, type="narration", author=null) {
@@ -1723,20 +2068,61 @@ function GameScreen({ myId, setScreen }) {
     setQs(newQs);
   }
 
-  // -- COMBATTIMENTO --
-  async function startCombat(quest) {
-    const enemies = quest.enemies.map(e=>({...e, hp:e.maxHp||e.hp, maxHp:e.maxHp||e.hp}));
-    const players = partyPlayers.map(p=>({ id:p?.id, name:p?.name, emoji:CLASSES[p?.class||'warrior']?.emoji||"⚔️", hp:p?.hp||0, maxHp:p?.maxHp||0, atk:p?.atk||0, def:p?.def||0, mag:p?.mag||0, init:p?.init||1, isPlayer:true }));
-    const allCombatants = [...players,...enemies].map(c=>({...c, rollInit:(c.init||1)+roll(20)}));
-    allCombatants.sort((a,b)=>b.rollInit-a.rollInit);
-    const spellSlots = Object.fromEntries(players.map(p=>[p.id, getSpellSlots(p.level||1)]));
-    const newCombat = { active:true, combatants:allCombatants, turn:0, round:1, spellSlots };
-    const newQs = {...qs, combat:newCombat};
-    await saveQState(newQs);
-    await addMsg(`⚔️ **BATTAGLIA INIZIATA!** Round 1\n\n**Ordine di Iniziativa:**\n${allCombatants.map((c,i)=>`${i+1}. ${c.emoji||"⭐"} ${c.name} (${c.rollInit})`).join("\n")}`, "combat", "Sistema");
-    setTab("combat");
+  async function persistPlayerWithEquipment(nextPlayer, nextEquipment) {
+    const synced = applyEquipmentToPlayer(nextPlayer, nextEquipment, itemMap);
+    await dbSavePlayer(synced);
+    setMeRaw(synced);
+    setEquipment(nextEquipment);
+    saveStoredEquipment(myId, nextEquipment);
+    return synced;
   }
 
+  async function buyItem(item) {
+    if(!me) return;
+    if(me.gold < (item.price||0)) { window.alert("Non hai abbastanza oro."); return; }
+    if(!window.confirm(`Acquistare ${item.name} per ${item.price} oro?`)) return;
+    await dbAddPlayerItem(me.id, item.id);
+    const updatedPlayer = { ...me, gold: me.gold - (item.price || 0) };
+    const synced = applyEquipmentToPlayer(updatedPlayer, equipment, itemMap);
+    await dbSavePlayer(synced);
+    setMeRaw(synced);
+    await refreshInventory(synced);
+    await addMsg(`🎒 **${me.name}** acquista **${item.name}** per ${item.price} oro.`, "info", "Sistema");
+  }
+
+  async function equipItem(entry) {
+    const slot = itemSlot(entry?.item);
+    if(!slot || !me) return;
+    const nextEquipment = { ...equipment, [slot]: entry.itemId };
+    const synced = await persistPlayerWithEquipment(me, nextEquipment);
+    await refreshInventory(synced);
+    await addMsg(`🎽 **${me.name}** equipaggia **${entry.item.name}**.`, "info", "Sistema");
+  }
+
+  async function unequipItem(slot) {
+    if(!me) return;
+    const currentItem = itemMap.get(equipment?.[slot]);
+    if(!currentItem) return;
+    const nextEquipment = { ...equipment, [slot]: null };
+    const synced = await persistPlayerWithEquipment(me, nextEquipment);
+    await refreshInventory(synced);
+    await addMsg(`🎽 **${me.name}** rimuove **${currentItem.name}**.`, "info", "Sistema");
+  }
+
+  async function usePotion(entry) {
+    if(!entry?.rowId || !me) return;
+    const amount = Math.max(1, entry.item.heal_amount || 0);
+    const healed = Math.min(me.maxHp, me.hp + amount);
+    const delta = healed - me.hp;
+    await dbRemovePlayerItem(entry.rowId);
+    const updatedPlayer = { ...me, hp: healed };
+    await dbSavePlayer(updatedPlayer);
+    setMeRaw(updatedPlayer);
+    await refreshInventory(updatedPlayer);
+    await addMsg(`🧪 **${me.name}** usa **${entry.item.name}** e recupera **${delta} HP**.`, "info", "Sistema");
+  }
+
+  // -- COMBATTIMENTO --
   async function doAttack() {
     const combat = qs.combat;
     if(!combat?.active) return;
@@ -1751,9 +2137,13 @@ function GameScreen({ myId, setScreen }) {
     const target = targets[0];
     const hitRoll = roll(20);
     const isCrit = hitRoll===20;
-    const hit = hitRoll > target.def;
+    const attackTotal = hitRoll + (attacker.init || 0);
+    const targetCa = target.def || 10;
+    const hit = isCrit || attackTotal >= targetCa;
+    const weapon = attacker.id===myId ? getEquippedWeapon(equipment, itemMap) : { name:"Arma", weapon_die:getCombatDamageDie(attacker) };
+    const damageRoll = hit ? rollDice(weapon.weapon_die || "1d6") : 0;
     let dmg = 0;
-    if(hit) { dmg = Math.max(1, attacker.atk + roll(6) - Math.floor(target.def/2)); if(isCrit) dmg*=2; }
+    if(hit) { dmg = Math.max(1, damageRoll + Math.max(0, attacker.atk || 0)); if(isCrit) dmg += damageRoll; }
     const tidx = combatants.findIndex(c=>c.id===target.id);
     combatants[tidx] = {...target, hp:Math.max(0,target.hp-dmg)};
 
@@ -1765,9 +2155,9 @@ function GameScreen({ myId, setScreen }) {
     setTimeout(()=>setDiceAnim(false),500);
 
     let log = `${attacker.emoji||"⭐"} **${attacker.name}** attacca ${target.emoji} **${target.name}**\n`;
-    log += `🎲 Tiro: ${hitRoll}${isCrit?" � **CRITICO!**":""}\n`;
-    if(hit) log += `⚔️ Danno: **${dmg}**${isCrit?" (×2 critico!)":""}\n❤️ ${target.name}: ${combatants[tidx].hp}/${target.maxHp} HP`;
-    else log += `⚔️? Mancato!`;
+    log += `🎲 d20 + DEX: **${hitRoll} + ${attacker.init || 0} = ${attackTotal}** vs CA **${targetCa}**${isCrit?" — **CRITICO!**":""}\n`;
+    if(hit) log += `⚔️ ${weapon.name}: **${weapon.weapon_die || "1d6"} + ${attacker.atk || 0} = ${dmg}**${isCrit?" (dado arma raddoppiato)":""}\n❤️ ${target.name}: ${combatants[tidx].hp}/${target.maxHp} HP`;
+    else log += `⚔️ Mancato!`;
 
     let nextTurn = combat.turn + 1;
     let nextRound = combat.round;
@@ -1850,11 +2240,19 @@ function GameScreen({ myId, setScreen }) {
       if(!alivePlayers.length) break;
       const pt = alivePlayers[roll(alivePlayers.length)-1];
       if(pt) {
-        const edmg = Math.max(1, nextActor.atk + roll(4) - Math.floor(pt.def/3));
+        const attackRoll = roll(20);
+        const attackTotal = attackRoll + (nextActor.init || 0);
+        const targetCa = pt.def || 10;
+        const hit = attackRoll === 20 || attackTotal >= targetCa;
+        const weaponDie = getCombatDamageDie(nextActor);
+        const damageRoll = hit ? rollDice(weaponDie) : 0;
+        const edmg = hit ? Math.max(1, damageRoll + Math.max(0, nextActor.atk || 0)) : 0;
         const updPt = {...pt, hp:Math.max(0,pt.hp-edmg)};
         await dbSavePlayer(updPt);
         if(pt.id===myId) setMeRaw(updPt);
-        log += `\n\n${nextActor.emoji} **${nextActor.name}** contrattacca **${pt.name}** per **${edmg} danni**!`;
+        log += hit
+          ? `\n\n${nextActor.emoji} **${nextActor.name}** contrattacca: **${attackRoll} + ${nextActor.init || 0} = ${attackTotal}** contro CA **${targetCa}**, poi **${weaponDie} + ${nextActor.atk || 0} = ${edmg} danni** su **${pt.name}**!`
+          : `\n\n${nextActor.emoji} **${nextActor.name}** contrattacca ma manca **${pt.name}** con **${attackRoll} + ${nextActor.init || 0} = ${attackTotal}** contro CA **${targetCa}**.`;
       }
       nextTurn++;
       if(nextTurn>=newCombatants.length){nextTurn=0; nextRound++;}
@@ -1896,9 +2294,6 @@ ${q.desc}
 
 ⭐ Ricompensa: **${q.xpReward} XP** — **${q.goldReward} oro**`, "quest","Master");
     await postQuestStepMessage(q, 0);
-    if(isCombatStep(q.steps[0])) {
-      await startCombatStep(q.steps[0]);
-    }
   }
 
   function isChoiceStep(step) {
@@ -1938,8 +2333,20 @@ ${stepText(step)}`, "quest","Master");
   }
 
   async function startCombatStep(stepData) {
-    const monsters = (stepData.monsters||[]).map(e=>({...e, hp:e.maxHp||e.hp, maxHp:e.maxHp||e.hp}));
-    const players = partyPlayers.map(p=>({ id:p?.id, name:p?.name, emoji:CLASSES[p?.class||'warrior']?.emoji||"⚔️", hp:p?.hp||0, maxHp:p?.maxHp||0, atk:p?.atk||0, def:p?.def||0, mag:p?.mag||0, init:p?.init||1, isPlayer:true }));
+    const monsters = (stepData.monsters||[]).map(e=>({ ...e, hp:e.maxHp||e.hp, maxHp:e.maxHp||e.hp, weaponDie:e.weaponDie || getCombatDamageDie(e) }));
+    const players = partyPlayers.map(p=>({
+      id:p?.id,
+      name:p?.name,
+      emoji:CLASSES[p?.class||'warrior']?.emoji||"⚔️",
+      hp:p?.hp||0,
+      maxHp:p?.maxHp||0,
+      atk:p?.atk||0,
+      def:p?.def||0,
+      mag:p?.mag||0,
+      init:p?.init||1,
+      weaponDie:p?.id===myId ? getEquippedWeapon(equipment, itemMapRef.current).weapon_die : getCombatDamageDie(p),
+      isPlayer:true,
+    }));
     const allCombatants = [...players,...monsters].map(c=>({...c, rollInit:(c.init||1)+roll(20)}));
     allCombatants.sort((a,b)=>b.rollInit-a.rollInit);
     const spellSlots = Object.fromEntries(players.map(p=>[p.id, getSpellSlots(p.level||1)]));
@@ -1949,6 +2356,7 @@ ${stepText(step)}`, "quest","Master");
     await addMsg(`⚔️ **BATTAGLIA INIZIATA!** Round 1\n\n**Ordine di Iniziativa:**\n${allCombatants.map((c,i)=>`${i+1}. ${c.emoji||"⭐"} ${c.name} (${c.rollInit})`).join("\n")}`, "combat", "Sistema");
     setTab("combat");
   }
+  startCombatStepRef.current = startCombatStep;
 
   async function advanceQuest() {
     const quests = getQuests();
@@ -1966,7 +2374,6 @@ ${stepText(step)}`, "quest","Master");
       const newQs = {...qs, combat:null, step:nextStep};
       await saveQState(newQs);
       await postQuestStepMessage(q, nextStep);
-      if(isCombatStep(q.steps[nextStep])) await startCombatStep(q.steps[nextStep]);
     }
   }
 
@@ -2006,7 +2413,6 @@ ${stepText(step)}`, "quest","Master");
       const newQs={...qs, step:nextStep};
       await saveQState(newQs);
       await postQuestStepMessage(q, nextStep);
-      if(isCombatStep(q.steps[nextStep])) await startCombatStep(q.steps[nextStep]);
     }
   }
 
@@ -2015,20 +2421,24 @@ ${stepText(step)}`, "quest","Master");
     if(!q||!qs?.active) return;
     const loot = stepData?.loot || {};
     const goldMin = loot.gold?.[0]||0, goldMax = loot.gold?.[1]||0;
-    const goldFound = goldMin + Math.floor(Math.random()*(goldMax-goldMin+1));
-    const items = loot.items||[];
-    const itemFound = items.length ? items[Math.floor(Math.random()*items.length)] : null;
+    const goldFound = randomIntInclusive(goldMin, goldMax);
+    const items = (loot.items||[]).map(spec => resolveLootItem(spec, catalogItems)).filter(Boolean);
+    const itemFound = pickRandom(items);
     let lootMsg = `💰 **Bottino trovato!**`;
     if(goldFound>0) lootMsg += `\n🪙 +${goldFound} oro a testa`;
-    if(itemFound) lootMsg += `\n🎁 Hai trovato: **${itemFound}**!`;
+    if(itemFound) lootMsg += `\n🎁 Hai trovato: **${itemFound.name}**! È finito nel tuo inventario.`;
     lootMsg += `\n\nCliccate **Avanti →** per proseguire.`;
     for(const p of partyPlayers) {
       let up={...p, gold:p.gold+goldFound};
       await dbSavePlayer(up);
       if(up.id===myId) setMeRaw(up);
     }
+    if(itemFound && me?.id) {
+      await dbAddPlayerItem(me.id, itemFound.id);
+      await refreshInventory({ ...me, gold: (me.gold || 0) + goldFound });
+    }
     await addMsg(lootMsg, "victory", "Master");
-    setLootDone(true);
+    setLootedStepKey(currentStepKey);
   }
 
   async function handleInput() {
@@ -2061,12 +2471,25 @@ ${stepText(step)}`, "quest","Master");
   const isCaster = MAGIC_CLASSES.includes(me?.class);
   const spellSlots = combat?.spellSlots?.[myId] || getSpellSlots(me?.level);
   const availableSpells = isCaster ? availableSpellsFor(me?.class, me?.level) : [];
-  const spellLevels = Object.keys(spellSlots).filter(l=>spellSlots[l]>0).map(Number).sort((a,b)=>a-b);
+  const spellLevels = Array.from(new Set([
+    ...(availableSpells.some(spell => Number(spell.slot) === 0) ? [0] : []),
+    ...Object.keys(spellSlots).filter(l=>spellSlots[l]>0).map(Number),
+  ])).sort((a,b)=>a-b);
   const spellsByLevel = spellLevels.reduce((acc, lvl) => {
     acc[lvl] = availableSpells.filter(s => Number(s.slot) === lvl);
     return acc;
   }, {});
   const currentQ = qs?.active ? getQuests().find(x=>x.id===qs.currentId) : null;
+  const currentStepKey = `${qs?.currentId || ""}:${qs?.step ?? -1}`;
+  const lootDone = lootedStepKey === currentStepKey;
+  const inventoryCounts = countInventoryItems(inventory);
+  const inventoryGroups = groupInventoryEntries(inventory);
+  const equippedWeapon = getEquippedWeapon(equipment, itemMap);
+  const equippedItems = {
+    weapon: itemMap.get(equipment.weapon) || null,
+    armor: itemMap.get(equipment.armor) || null,
+    shield: itemMap.get(equipment.shield) || null,
+  };
 
   return (
     <div style={{ display:"flex", height:"100vh", overflow:"hidden", position:"relative", zIndex:1 }}>
@@ -2197,7 +2620,7 @@ ${stepText(step)}`, "quest","Master");
       {/* MAIN */}
       <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
         <div style={{ display:"flex", gap:0, borderBottom:"1px solid #0f172a", background:"rgba(4,4,12,0.98)", flexShrink:0 }}>
-          {[["chat","💬 Chat"],["quest","📜 Missioni"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>(
+          {[["chat","💬 Chat"],["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>(
             <button key={k} onClick={()=>setTab(k)} style={{ padding:"0.6rem 1.2rem", background:tab===k?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k?"2px solid #7c3aed":"2px solid transparent", color:tab===k?"#c4b5fd":"#4b5563", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", letterSpacing:"0.05em" }}>
               {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}
             </button>
@@ -2223,7 +2646,30 @@ ${stepText(step)}`, "quest","Master");
             <button onClick={handleInput} style={{ padding:"0.65rem 1.2rem", background:"#3b0764", border:"none", borderRadius:4, color:"#a78bfa", cursor:"pointer", fontSize:"1rem" }}>?</button>
           </div>
         </>}
-        {tab==="shop" && <ShopView me={me} setMeRaw={setMeRaw} addMsg={addMsg} />} 
+        {tab==="inventory" && (
+          <InventoryView
+            loading={inventoryLoading}
+            groups={inventoryGroups}
+          />
+        )}
+        {tab==="equipment" && (
+          <EquipmentView
+            me={me}
+            equippedItems={equippedItems}
+            equippedWeapon={equippedWeapon}
+            onUnequip={unequipItem}
+          />
+        )}
+        {tab==="shop" && (
+          <ShopView
+            me={me}
+            items={catalogItems.filter(i=>i.available)}
+            loading={inventoryLoading}
+            error={null}
+            inventoryCounts={inventoryCounts}
+            onBuy={buyItem}
+          />
+        )} 
 
         {tab==="quest" && (
           <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
@@ -2265,8 +2711,8 @@ ${stepText(step)}`, "quest","Master");
                               <BigBtn onClick={advanceQuest} gold>Avanti →</BigBtn>
                             </div>
                           : qs.combat?.active
-                            ? <p style={{ color:"#ef4444", fontFamily:"'Cinzel',serif" }}>⚔️ Battaglia in corso — vai al tab Battaglia!</p>
-                            : <BigBtn onClick={()=>startCombatStep(stepData)} icon="⚔️">Avvia Battaglia</BigBtn>
+                            ? <p style={{ color:"#ef4444", fontFamily:"'Cinzel',serif" }}>⚔️ Battaglia avviata automaticamente — sei già nel flusso di combattimento.</p>
+                            : <p style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif" }}>Preparazione del combattimento...</p>
                         }
                       </div>
                     );
@@ -2368,8 +2814,8 @@ ${stepText(step)}`, "quest","Master");
                           return (
                             <div key={lvl} style={{ width:"100%" }}>
                               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", margin:"0.7rem 0 0.3rem", fontSize:"0.85rem", color:"#a5b4fc", fontWeight:600 }}>
-                                <span>Livello {lvl}</span>
-                                <span style={{ fontSize:"0.75rem", color:"#9ca3af" }}>{spellSlots[lvl]} slot</span>
+                                <span>{lvl===0 ? "Trucchetti" : `Livello ${lvl}`}</span>
+                                <span style={{ fontSize:"0.75rem", color:"#9ca3af" }}>{lvl===0 ? "gratis" : `${spellSlots[lvl]} slot`}</span>
                               </div>
                               {spells.map(spell=> (
                                 <button key={spell.id} onClick={()=>castSpell(spell)} style={{ width:"100%", maxWidth:320, padding:"0.9rem 1rem", background:"rgba(99,102,241,0.15)", border:"1px solid #3b0764", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontFamily:"inherit", textAlign:"left" }}>
@@ -2393,12 +2839,12 @@ ${stepText(step)}`, "quest","Master");
                             ATTACCA!
                           </button>
                           {isCaster && (
-                            <button onClick={()=>setSpellMenu(true)} disabled={totalSlots(spellSlots)<=0} style={{ padding:"1rem 2.2rem", background:totalSlots(spellSlots)>0?"linear-gradient(135deg,#551a8b,#7c3aed)":"rgba(75,43,105,0.35)", border:"2px solid #7c3aed", borderRadius:6, color:"#e0d7ff", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.1rem", cursor:totalSlots(spellSlots)>0?"pointer":"not-allowed", letterSpacing:"0.08em" }}>
-                              🔮 Magia {totalSlots(spellSlots)>0?`(${totalSlots(spellSlots)})`:"(esauriti)"}
+                            <button onClick={()=>setSpellMenu(true)} disabled={!availableSpells.length} style={{ padding:"1rem 2.2rem", background:availableSpells.length?"linear-gradient(135deg,#551a8b,#7c3aed)":"rgba(75,43,105,0.35)", border:"2px solid #7c3aed", borderRadius:6, color:"#e0d7ff", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.1rem", cursor:availableSpells.length?"pointer":"not-allowed", letterSpacing:"0.08em" }}>
+                              🔮 Magia {totalSlots(spellSlots)>0?`(${totalSlots(spellSlots)})`:"(solo trucchetti)"}
                             </button>
                           )}
                         </div>
-                        <p style={{ color:"#4b5563", fontSize:"0.72rem", marginTop:"0.5rem" }}>d20 + ATK vs DEF nemico</p>
+                        <p style={{ color:"#4b5563", fontSize:"0.72rem", marginTop:"0.5rem" }}>d20 + DEX vs CA, poi dado arma + bonus ATK</p>
                       </>
                     )}
                   </div>
@@ -2444,12 +2890,13 @@ function BigBtn({ children, onClick, gold, dark, icon, disabled }) {
   if(dark) return <button onClick={onClick} disabled={disabled} style={{...base,background:"rgba(255,255,255,0.05)",color:"#9ca3af",border:"1px solid #1f2937"}}>{icon&&<span>{icon}</span>}{children}</button>;
   return <button onClick={onClick} disabled={disabled} style={{...base,background:"rgba(109,40,217,0.3)",color:"#c4b5fd",border:"1px solid #6d28d9"}}>{icon&&<span>{icon}</span>}{children}</button>;
 }
-function SmallBtn({ children, onClick, red }) {
-  return <button onClick={onClick} style={{ padding:"0.3rem 0.7rem", background:red?"rgba(239,68,68,0.12)":"rgba(255,255,255,0.04)", border:`1px solid ${red?"#ef4444":"#1f2937"}`, borderRadius:4, color:red?"#fca5a5":"#6b7280", cursor:"pointer", fontSize:"0.78rem", fontFamily:"inherit" }}>{children}</button>;
+function SmallBtn({ children, onClick, red, disabled }) {
+  return <button disabled={disabled} onClick={onClick} style={{ padding:"0.3rem 0.7rem", background:red?"rgba(239,68,68,0.12)":"rgba(255,255,255,0.04)", border:`1px solid ${red?"#ef4444":"#1f2937"}`, borderRadius:4, color:red?"#fca5a5":"#6b7280", cursor:disabled?"not-allowed":"pointer", opacity:disabled?0.5:1, fontSize:"0.78rem", fontFamily:"inherit" }}>{children}</button>;
 }
 function Card({ title, children }) {
   return (
     <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #0f172a", borderRadius:6, padding:"1rem", marginBottom:"0.8rem" }}>
+      {title && <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize:"0.9rem", marginBottom:"0.8rem" }}>{title}</div>}
       {children}
     </div>
   );
