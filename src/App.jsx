@@ -61,12 +61,29 @@ const RACES = {
   halforc:   { name:"Mezzorco",  emoji:"👹", hpB:15, atkB:5, defB:1, magB:0, initB:1, desc:"Forza bruta e resistenza feroce" },
   tiefling:  { name:"Tiefling",  emoji:"👿", hpB:0,  atkB:0, defB:1, magB:5, initB:1, desc:"Sangue infernale, resistenza al fuoco" },
 };
-const DIFF_COLOR = { "Facile":"#22c55e","Medio":"#fbbf24","Difficile":"#f97316","Molto Difficile":"#ef4444","Leggendario":"#a855f7" };
-const BACKGROUND_URL = "https://oaqjsuaqbzkvoljbmmjx.supabase.co/storage/v1/object/public/assets/ChatGPT_Image_10_mar_2026__02_57_11.png";
+const DIFF_COLOR = { facile:"#22c55e", difficile:"#f97316", speciale:"#a855f7" };
+function normalizeMissionDifficulty(value) {
+  const key = String(value || "").trim().toLowerCase();
+  if(key === "facile") return "facile";
+  if(key === "speciale" || key === "molto difficile" || key === "leggendario") return "speciale";
+  return "difficile";
+}
+function missionDifficultyLabel(value) {
+  return ({
+    facile: "Facile",
+    difficile: "Difficile",
+    speciale: "Speciale",
+  })[normalizeMissionDifficulty(value)];
+}
+const BACKGROUND_URL = "https://fv5-4.files.fm/thumb_show.php?i=qdtav95gc2&view&v=1&PHPSESSID=964a794e4d1fe9b3c7e7e8a4950eb15086c6dfc9";
+const MASTER_PASSWORD = "ByBy101112!";
 const MASTER_EMAILS = (import.meta.env.VITE_MASTER_EMAILS || "")
   .split(",")
   .map(email => email.trim().toLowerCase())
   .filter(Boolean);
+const PANEL_BG = "rgba(7,10,20,0.82)";
+const PANEL_BG_SOFT = "rgba(7,10,20,0.72)";
+const PANEL_BORDER = "rgba(148,163,184,0.16)";
 
 function xpForLevel(l){ return Math.floor(100*Math.pow(1.5,l-1)); }
 function d(n){ return Math.floor(Math.random()*n)+1; }
@@ -468,14 +485,278 @@ function DEFAULT_QUESTS() {
       {id:"e1",name:"Goblin delle Rocce",emoji:"🗿",hp:22,maxHp:22,atk:6,def:2,xp:18,isBoss:false},
       {id:"e3",name:"Troll delle Caverne",emoji:"🧌",hp:95,maxHp:95,atk:16,def:7,xp:80,isBoss:true},
     ],
+  },{
+    id:"dq2", title:"I Lupi della Brughiera", active:true,
+    desc:"I pastori di Brughiera Grigia chiedono aiuto: un branco innaturale sta assaltando greggi e viandanti al calare della nebbia.",
+    flavor:"«Non ululano alla luna. Ululano a qualcosa sotto la terra.» — Elva, pastora della brughiera",
+    difficulty:"facile", xpReward:130, goldReward:55,
+    steps:[
+      {
+        type:"narrative",
+        text:"La brughiera si apre davanti a voi in onde d'erica e pietra. Tracce profonde segnano il fango, troppo grandi per lupi comuni."
+      },
+      {
+        type:"choice",
+        text:"Vicino a un ovile distrutto trovate orme, sangue e ciuffi di pelo nero come pece.",
+        choices:[
+          { label:"🔎 Seguite le tracce con calma", xp:12, gold:6, next:2, correct:true },
+          { label:"🔥 Appiccate fuochi per spaventare il branco", xp:0, gold:0, next:2, correct:false },
+          { label:"📯 Restate in campo aperto e attendete l'assalto", xp:0, gold:0, next:2, correct:false }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Dal banco di nebbia balzano fuori due **Lupi Selvatici** e un **Lupo Ombra**!",
+        monsters:[
+          {id:"e_wolf_1",name:"Lupo Selvatico",emoji:"🐺",hp:24,maxHp:24,atk:6,def:2,xp:16,isBoss:false},
+          {id:"e_wolf_2",name:"Lupo Selvatico",emoji:"🐺",hp:24,maxHp:24,atk:6,def:2,xp:16,isBoss:false},
+          {id:"e_shadowwolf",name:"Lupo Ombra",emoji:"🌑",hp:48,maxHp:48,atk:14,def:4,xp:43,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Il branco si disperde tra la nebbia. Sotto un menhir spezzato trovate monete, una vecchia faretra e un talismano da caccia.",
+        loot:{ gold:[14,26], items:["Arco di Rovi Tesi","Ciondolo della Lanterna"] }
+      }
+    ],
+    enemies:[
+      {id:"e_wolf_1",name:"Lupo Selvatico",emoji:"🐺",hp:24,maxHp:24,atk:6,def:2,xp:16,isBoss:false},
+      {id:"e_wolf_2",name:"Lupo Selvatico",emoji:"🐺",hp:24,maxHp:24,atk:6,def:2,xp:16,isBoss:false},
+      {id:"e_shadowwolf",name:"Lupo Ombra",emoji:"🌑",hp:48,maxHp:48,atk:14,def:4,xp:43,isBoss:false}
+    ],
+  },{
+    id:"dq3", title:"La Cripta del Sagrestano", active:true,
+    desc:"Sotto la vecchia cappella del quartiere nord, qualcosa continua a muoversi dopo il tramonto. I fedeli non osano più entrarvi.",
+    flavor:"«Le campane tacciono, ma laggiù sotto qualcuno continua a pregare.» — Fratello Iram",
+    difficulty:"facile", xpReward:145, goldReward:65,
+    steps:[
+      {
+        type:"narrative",
+        text:"Scendete nella cripta attraverso gradini umidi e consumati. L'aria è densa di cera spenta e terra smossa."
+      },
+      {
+        type:"choice",
+        text:"Davanti al sepolcro centrale scorgete un sigillo spezzato e simboli graffiati nella pietra.",
+        choices:[
+          { label:"🙏 Ricomponete il sigillo con rispetto", xp:15, gold:8, next:2, correct:true },
+          { label:"🗡️ Aprite subito il sarcofago", xp:0, gold:0, next:2, correct:false },
+          { label:"💨 Fate crollare l'ingresso e correte via", xp:0, gold:0, next:2, correct:false }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Le nicchie si spalancano: uno **Scheletro Errante** e uno **Spettro Debole** emergono dalla penombra!",
+        monsters:[
+          {id:"e_skel_crypt",name:"Scheletro Errante",emoji:"💀",hp:25,maxHp:25,atk:7,def:3,xp:18,isBoss:false},
+          {id:"e_wisp_crypt",name:"Spettro Debole",emoji:"👻",hp:21,maxHp:21,atk:9,def:2,xp:23,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"La cripta torna silenziosa. Tra reliquiari e ossa sante recuperate una piccola offerta dimenticata.",
+        loot:{ gold:[18,32], items:["Tonico di Fogliarossa","Anello di Guardia in Rame"] }
+      }
+    ],
+    enemies:[
+      {id:"e_skel_crypt",name:"Scheletro Errante",emoji:"💀",hp:25,maxHp:25,atk:7,def:3,xp:18,isBoss:false},
+      {id:"e_wisp_crypt",name:"Spettro Debole",emoji:"👻",hp:21,maxHp:21,atk:9,def:2,xp:23,isBoss:false}
+    ],
+  },{
+    id:"dq4", title:"Il Ponte di Ponteferro", active:true,
+    desc:"I mercanti diretti a nord sono bloccati: un troll esige tributi impossibili e divora chi si rifiuta di pagare.",
+    flavor:"«Quel mostro conosce il prezzo del ferro, dell'oro e della paura.» — Maresciallo Teren",
+    difficulty:"difficile", xpReward:260, goldReward:120,
+    steps:[
+      {
+        type:"narrative",
+        text:"Il ponte di pietra domina il fiume in piena. Carri rovesciati e casse spaccate raccontano di molti tentativi falliti."
+      },
+      {
+        type:"choice",
+        text:"Vedete il troll in lontananza, seduto tra catene e relitti, mentre annusa l'aria del fiume.",
+        choices:[
+          { label:"🪤 Preparate un'esca e cercate di isolarlo", xp:18, gold:12, next:2, correct:true },
+          { label:"📢 Sfidatelo subito al centro del ponte", xp:0, gold:0, next:2, correct:false },
+          { label:"🌊 Tentate di passare a nuoto sotto il ponte", xp:0, gold:0, next:2, correct:false }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Il **Troll di Ponteferro** si alza con un ruggito, affiancato da due **Banditi di Strada** al suo soldo!",
+        monsters:[
+          {id:"e_trollbridge",name:"Troll di Ponteferro",emoji:"👺",hp:110,maxHp:110,atk:18,def:8,xp:82,isBoss:true},
+          {id:"e_bandit_bridge_1",name:"Bandito di Strada",emoji:"🗡️",hp:28,maxHp:28,atk:8,def:3,xp:20,isBoss:false},
+          {id:"e_bandit_bridge_2",name:"Bandito di Strada",emoji:"🗡️",hp:28,maxHp:28,atk:8,def:3,xp:20,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Il ponte è vostro. Nei forzieri confiscati ritrovate merci recuperabili, denaro e un'arma ben custodita.",
+        loot:{ gold:[30,55], items:["Ascia del Guardiano","Disco Scudopietra"] }
+      }
+    ],
+    enemies:[
+      {id:"e_trollbridge",name:"Troll di Ponteferro",emoji:"👺",hp:110,maxHp:110,atk:18,def:8,xp:82,isBoss:true},
+      {id:"e_bandit_bridge_1",name:"Bandito di Strada",emoji:"🗡️",hp:28,maxHp:28,atk:8,def:3,xp:20,isBoss:false},
+      {id:"e_bandit_bridge_2",name:"Bandito di Strada",emoji:"🗡️",hp:28,maxHp:28,atk:8,def:3,xp:20,isBoss:false}
+    ],
+  },{
+    id:"dq5", title:"Le Fiamme di Hollowpeak", active:true,
+    desc:"Dal monastero in rovina di Hollowpeak si levano bagliori rossi ogni notte. Gli abitanti temono un rito ormai sfuggito di mano.",
+    flavor:"«La montagna non brucia da sola. Qualcuno le ha insegnato a pregare nel fuoco.» — Sorella Maelin",
+    difficulty:"difficile", xpReward:310, goldReward:145,
+    steps:[
+      {
+        type:"narrative",
+        text:"Salite tra rocce nere e ceneri calde. Sui muri del monastero antichi motti di fede sono stati riscritti con fuliggine e sangue."
+      },
+      {
+        type:"choice",
+        text:"Nel chiostro centrale il calore è quasi insopportabile. Il rito non è ancora completo.",
+        choices:[
+          { label:"🧂 Spezzate prima i glifi esterni", xp:20, gold:10, next:2, correct:true },
+          { label:"⚔️ Correte direttamente verso il santuario", xp:0, gold:0, next:2, correct:false },
+          { label:"📚 Cercate pergamene mentre il rito continua", xp:0, gold:0, next:2, correct:false }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Tra i bracieri si scagliano su di voi un **Mago Ribelle** e un **Elementale del Fuoco**!",
+        monsters:[
+          {id:"e_rebelmage_peak",name:"Mago Ribelle",emoji:"🪄",hp:38,maxHp:38,atk:14,def:3,xp:44,isBoss:false},
+          {id:"e_fireelem_peak",name:"Elementale del Fuoco",emoji:"🔥",hp:88,maxHp:88,atk:19,def:7,xp:84,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Il santuario si raffredda. Tra ceneri vive e pietra fusa recuperate un focus arcano e una scorta di monete votive.",
+        loot:{ gold:[40,70], items:["Bastone di Hollowpeak","Elisir Scintillaluce"] }
+      }
+    ],
+    enemies:[
+      {id:"e_rebelmage_peak",name:"Mago Ribelle",emoji:"🪄",hp:38,maxHp:38,atk:14,def:3,xp:44,isBoss:false},
+      {id:"e_fireelem_peak",name:"Elementale del Fuoco",emoji:"🔥",hp:88,maxHp:88,atk:19,def:7,xp:84,isBoss:true}
+    ],
+  },{
+    id:"dq6", title:"Il Giardino delle Pietre Vive", active:true,
+    desc:"Nel cortile sepolto di un osservatorio perduto, statue e rune si stanno risvegliando a ogni nuova luna.",
+    flavor:"«Le stelle non sono cadute. Sono state chiamate qui, e qualcosa ha risposto.» — Astrologa Sereth",
+    difficulty:"speciale", xpReward:360, goldReward:170,
+    steps:[
+      {
+        type:"narrative",
+        text:"L'osservatorio emerge dal bosco come un tempio dimenticato. Colonne spezzate, specchi di bronzo e pietre incise vibrano di energia sottile."
+      },
+      {
+        type:"choice",
+        text:"Al centro del giardino un cerchio runico pulsa sotto un cielo senza nuvole.",
+        choices:[
+          { label:"✨ Riallineate le rune secondo le costellazioni", xp:24, gold:14, next:2, correct:true },
+          { label:"🛠️ Spezzate i pilastri portanti", xp:0, gold:0, next:2, correct:false },
+          { label:"🕯️ Attendete il completarsi del fenomeno", xp:0, gold:0, next:2, correct:false }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Le pietre si aprono: un **Guardiano Runico** e un **Golem d'Argilla** prendono forma davanti a voi!",
+        monsters:[
+          {id:"e_runic_guard",name:"Guardiano Runico",emoji:"🔷",hp:96,maxHp:96,atk:17,def:10,xp:86,isBoss:true},
+          {id:"e_clay_garden",name:"Golem d'Argilla",emoji:"🗿",hp:72,maxHp:72,atk:11,def:8,xp:48,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Il cerchio si spegne e il giardino tace. Sotto il piedistallo maggiore trovate un oggetto celeste e antiche monete d'argento nero.",
+        loot:{ gold:[55,90], items:["Grimorio Sussurrastelle","Sigillo dello Scriba del Fulmine"] }
+      }
+    ],
+    enemies:[
+      {id:"e_runic_guard",name:"Guardiano Runico",emoji:"🔷",hp:96,maxHp:96,atk:17,def:10,xp:86,isBoss:true},
+      {id:"e_clay_garden",name:"Golem d'Argilla",emoji:"🗿",hp:72,maxHp:72,atk:11,def:8,xp:48,isBoss:false}
+    ],
+  },{
+    id:"dq7", title:"La Notte della Cometa Spezzata", active:true, category:"event",
+    desc:"Una cometa infranta ha risvegliato il Santuario del Cielo Caduto. Mostri antichi marciano verso la città e l'intero reame trattiene il respiro.",
+    flavor:"«Se il santuario si apre del tutto, il cielo cadrà una seconda volta.» — Gran Maestro Vaelor",
+    difficulty:"speciale", xpReward:620, goldReward:320,
+    steps:[
+      {
+        type:"narrative",
+        text:"La notte è rossa e il vento porta cenere brillante. Attraversate campi deserti, statue decapitate e rovine illuminate da frammenti di cometa."
+      },
+      {
+        type:"choice",
+        text:"Ai piedi del santuario trovate tre obelischi crepati che alimentano il portale celeste.",
+        choices:[
+          { label:"🌠 Disattivate gli obelischi uno dopo l'altro", xp:30, gold:18, next:2, correct:true },
+          { label:"⚔️ Sfondate il portale prima che si stabilizzi", xp:0, gold:0, next:2, correct:false },
+          { label:"📖 Studiate troppo a lungo i segni della cometa", xp:0, gold:0, next:2, correct:false }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Dal santuario discendono il **Titano di Ferro**, il **Lich delle Catacombe** e il **Drago Rosso**. La battaglia finale ha inizio!",
+        monsters:[
+          {id:"e_titan_comet",name:"Titano di Ferro",emoji:"🤖",hp:190,maxHp:190,atk:26,def:14,xp:155,isBoss:true},
+          {id:"e_lich_comet",name:"Lich delle Catacombe",emoji:"☠️",hp:160,maxHp:160,atk:24,def:11,xp:138,isBoss:true},
+          {id:"e_dragon_comet",name:"Drago Rosso",emoji:"🐉",hp:220,maxHp:220,atk:30,def:15,xp:200,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"La cometa si spegne sopra il santuario e l'alba trova ancora il party in piedi. Tra reliquie spezzate e metallo stellare giace un tesoro degno di leggenda.",
+        loot:{ gold:[120,200], items:["Lama del Cervo Dorato","Elisir dell'Ultima Alba","Cuore del Pozzo Stellare"] }
+      }
+    ],
+    enemies:[
+      {id:"e_titan_comet",name:"Titano di Ferro",emoji:"🤖",hp:190,maxHp:190,atk:26,def:14,xp:155,isBoss:true},
+      {id:"e_lich_comet",name:"Lich delle Catacombe",emoji:"☠️",hp:160,maxHp:160,atk:24,def:11,xp:138,isBoss:true},
+      {id:"e_dragon_comet",name:"Drago Rosso",emoji:"🐉",hp:220,maxHp:220,atk:30,def:15,xp:200,isBoss:true}
+    ],
   }];
 }
 const DEFAULT_MONSTERS = [
-  {id:"m1",name:"Goblin",       emoji:"🧌",hp:20,atk:5,def:2,xp:15,desc:"Piccolo e subdolo"},
-  {id:"m2",name:"Orco Guerriero",emoji:"🪓",hp:60,atk:12,def:5,xp:40,desc:"Brutale e resistente"},
-  {id:"m3",name:"Drago Rosso",  emoji:"🐉",hp:200,atk:30,def:15,xp:200,desc:"Terrore del continente",isBoss:true},
-  {id:"m4",name:"Vampiro",      emoji:"🧛",hp:90,atk:18,def:8,xp:80,desc:"Signore della notte",isBoss:true},
-  {id:"m5",name:"Scheletro",    emoji:"💀",hp:25,atk:7,def:3,xp:18,desc:"Non-morto eterno"},
+  {id:"m1",name:"Goblin delle Rovine",emoji:"🧌",hp:20,atk:5,def:2,xp:15,desc:"Piccolo razziatore delle strade spezzate."},
+  {id:"m2",name:"Lupo Selvatico",emoji:"🐺",hp:24,atk:6,def:2,xp:16,desc:"Predatore affamato che caccia ai margini del villaggio."},
+  {id:"m3",name:"Scheletro Errante",emoji:"💀",hp:25,atk:7,def:3,xp:18,desc:"Un non-morto instabile richiamato da antiche tombe."},
+  {id:"m4",name:"Ratto di Fogne",emoji:"🐀",hp:18,atk:5,def:1,xp:12,desc:"Grande, sporco e pronto a mordere in branco."},
+  {id:"m5",name:"Bandito di Strada",emoji:"🗡️",hp:28,atk:8,def:3,xp:20,desc:"Predone armato di lama corta e cattive intenzioni."},
+  {id:"m6",name:"Ragno dei Sottoboschi",emoji:"🕷️",hp:22,atk:7,def:2,xp:17,desc:"Creatura rapida che tesse trappole tra radici e rocce."},
+  {id:"m7",name:"Melma di Cantina",emoji:"🟢",hp:30,atk:6,def:4,xp:19,desc:"Ammasso acido nato dall'umidita e dalla negligenza."},
+  {id:"m8",name:"Cultista Novizio",emoji:"🕯️",hp:26,atk:8,def:2,xp:21,desc:"Adepto inesperto di un culto sotterraneo."},
+  {id:"m9",name:"Coboldo Minatore",emoji:"⛏️",hp:24,atk:7,def:3,xp:18,desc:"Scavatore furtivo che difende tunnel rubati."},
+  {id:"m10",name:"Cinghiale Furioso",emoji:"🐗",hp:34,atk:9,def:3,xp:22,desc:"Bestia testarda che travolge chi invade il suo territorio."},
+  {id:"m11",name:"Spettro Debole",emoji:"👻",hp:21,atk:9,def:2,xp:23,desc:"Un'ombra fredda che prosciuga il coraggio dei vivi."},
+  {id:"m12",name:"Mercenario Rinnegato",emoji:"🪓",hp:36,atk:10,def:4,xp:24,desc:"Veterano caduto in disgrazia e venduto al miglior offerente."},
+
+  {id:"m13",name:"Orco Guerriero",emoji:"🪓",hp:60,atk:12,def:5,xp:40,desc:"Brutale combattente di frontiera che vive per la guerra."},
+  {id:"m14",name:"Gnoll Predatore",emoji:"🐾",hp:54,atk:13,def:4,xp:42,desc:"Iena umanoide che fiuta debolezza e sangue."},
+  {id:"m15",name:"Arciere Goblin Nero",emoji:"🏹",hp:40,atk:12,def:4,xp:36,desc:"Tiratore crudele nascosto tra rovine e impalcature."},
+  {id:"m16",name:"Mago Ribelle",emoji:"🪄",hp:38,atk:14,def:3,xp:44,desc:"Incantatore fuggiasco che piega il fuoco alla vendetta."},
+  {id:"m17",name:"Golem d'Argilla",emoji:"🗿",hp:72,atk:11,def:8,xp:48,desc:"Guardiano plasmato per restare saldo fino alla distruzione."},
+  {id:"m18",name:"Cavaliere Scheletrico",emoji:"⚔️",hp:58,atk:13,def:6,xp:46,desc:"Antico guerriero morto ancora fedele al suo giuramento."},
+  {id:"m19",name:"Strega di Palude",emoji:"🧙",hp:42,atk:15,def:4,xp:47,desc:"Mistica corrotta che intreccia malie e fanghiglia."},
+  {id:"m20",name:"Ogre delle Colline",emoji:"👹",hp:80,atk:15,def:5,xp:52,desc:"Gigante rozzo che abbatte porte e uomini con la stessa facilita."},
+  {id:"m21",name:"Lupo Ombra",emoji:"🌑",hp:48,atk:14,def:4,xp:43,desc:"Predatore innaturale che emerge da nebbie scure."},
+  {id:"m22",name:"Serpente delle Rovine",emoji:"🐍",hp:46,atk:13,def:4,xp:39,desc:"Rettile antico che difende cripte e tesori sepolti."},
+  {id:"m23",name:"Accolito del Sangue",emoji:"🩸",hp:44,atk:14,def:5,xp:45,desc:"Fanatico temprato da riti violenti e promesse oscure."},
+  {id:"m24",name:"Armigero Corrotto",emoji:"🛡️",hp:68,atk:12,def:7,xp:50,desc:"Soldato caduto che serve una causa ormai marcia."},
+
+  {id:"m25",name:"Troll di Ponteferro",emoji:"👺",hp:110,atk:18,def:8,xp:82,desc:"Mostro rigenerante che pretende tributi in carne e oro."},
+  {id:"m26",name:"Vampiro",emoji:"🧛",hp:90,atk:18,def:8,xp:80,desc:"Nobile predatore della notte che sorride prima di colpire."},
+  {id:"m27",name:"Elementale del Fuoco",emoji:"🔥",hp:88,atk:19,def:7,xp:84,desc:"Spirito ardente evocato da altari e forge blasfeme."},
+  {id:"m28",name:"Guardiano Runico",emoji:"🔷",hp:96,atk:17,def:10,xp:86,desc:"Sentinella antica alimentata da rune ancora vive."},
+  {id:"m29",name:"Cacciatrice Drow",emoji:"🕸️",hp:70,atk:20,def:6,xp:79,desc:"Assassina del sottosuolo rapida e spietata."},
+  {id:"m30",name:"Cavaliere del Vespro",emoji:"🌒",hp:104,atk:18,def:9,xp:88,desc:"Campione maledetto avvolto nella luce morente del tramonto."},
+  {id:"m31",name:"Idra Giovane",emoji:"🐍",hp:118,atk:20,def:8,xp:92,desc:"Mostro a piu teste che attacca da ogni angolo."},
+  {id:"m32",name:"Demone Incatenato",emoji:"⛓️",hp:112,atk:21,def:9,xp:95,desc:"Creatura infernale trattenuta da sigilli ormai indeboliti."},
+
+  {id:"m33",name:"Signore dei Lupi Bianchi",emoji:"🐺",hp:140,atk:22,def:10,xp:120,desc:"Alfa leggendario che guida il branco nelle nevi eterne.",isBoss:true},
+  {id:"m34",name:"Regina Ragno",emoji:"🕷️",hp:150,atk:23,def:9,xp:128,desc:"Matriarca velenosa che domina cripte e ragnatele.",isBoss:true},
+  {id:"m35",name:"Lich delle Catacombe",emoji:"☠️",hp:160,atk:24,def:11,xp:138,desc:"Necromante immortale custodito da ossa e segreti.",isBoss:true},
+  {id:"m36",name:"Titano di Ferro",emoji:"🤖",hp:190,atk:26,def:14,xp:155,desc:"Macchina da guerra antica che schiaccia intere linee.",isBoss:true},
+  {id:"m37",name:"Re dei Demoni Minori",emoji:"😈",hp:175,atk:27,def:12,xp:148,desc:"Sovrano crudele di una corte infernale minore.",isBoss:true},
+  {id:"m38",name:"Drago Rosso",emoji:"🐉",hp:220,atk:30,def:15,xp:200,desc:"Terrore del continente e flagello dei cieli.",isBoss:true},
 ];
 
 function buildDefaultItems() {
@@ -511,10 +792,110 @@ function buildDefaultItems() {
     { id:"potion_sparkshine_elixir", name:"Elisir Scintillaluce", emoji:"✨", type:"potion", slot:null, rarity:"uncommon", price:34, description:"Un tonico alchemico brillante che risveglia i canali arcani.", effect:"mag", value:2, bonus_atk:0, bonus_def:0, bonus_mag:2, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
     { id:"potion_major_healing", name:"Fiala di Grande Cura", emoji:"🧪", type:"potion", slot:null, rarity:"rare", price:52, description:"Riservata alle emergenze sul campo e alle ferite quasi mortali.", effect:"heal", value:26, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:26, available:true },
 
-    { id:"accessory_copperward_ring", name:"Anello di Guardia in Rame", emoji:"💍", type:"accessory", slot:null, rarity:"common", price:24, description:"Un semplice anello inciso con un'antica spirale protettiva.", statBonus:{ def:1 }, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
-    { id:"accessory_lantern_charm", name:"Ciondolo della Lanterna", emoji:"🕯️", type:"accessory", slot:null, rarity:"common", price:22, description:"Un talismano d'ottone che aiuta i viandanti a restare vigili nel buio.", statBonus:{ init:1 }, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
-    { id:"accessory_ember_thread_sash", name:"Fascia di Filo di Brace", emoji:"🎗️", type:"accessory", slot:null, rarity:"uncommon", price:42, description:"Una fascia intrecciata con filamenti tiepidi delle tessiture del fuoco.", statBonus:{ atk:1, mag:1 }, bonus_atk:1, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
-    { id:"accessory_sagebone_talisman", name:"Talismano d'Osso Saggio", emoji:"📿", type:"accessory", slot:null, rarity:"rare", price:78, description:"Un pallido amuleto d'osso inciso da un eremita dimenticato.", statBonus:{ mag:2 }, bonus_atk:0, bonus_def:0, bonus_mag:2, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true }
+    { id:"accessory_copperward_ring", name:"Anello di Guardia in Rame", emoji:"💍", type:"accessory", slot:"accessory", rarity:"common", price:24, description:"Un semplice anello inciso con un'antica spirale protettiva.", statBonus:{ def:1 }, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_lantern_charm", name:"Ciondolo della Lanterna", emoji:"🕯️", type:"accessory", slot:"accessory", rarity:"common", price:22, description:"Un talismano d'ottone che aiuta i viandanti a restare vigili nel buio.", statBonus:{ init:1 }, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_ember_thread_sash", name:"Fascia di Filo di Brace", emoji:"🎗️", type:"accessory", slot:"accessory", rarity:"uncommon", price:42, description:"Una fascia intrecciata con filamenti tiepidi delle tessiture del fuoco.", statBonus:{ atk:1, mag:1 }, bonus_atk:1, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_sagebone_talisman", name:"Talismano d'Osso Saggio", emoji:"📿", type:"accessory", slot:"accessory", rarity:"rare", price:78, description:"Un pallido amuleto d'osso inciso da un eremita dimenticato.", statBonus:{ mag:2 }, bonus_atk:0, bonus_def:0, bonus_mag:2, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"weapon_bronzefang_falchion", name:"Falcione Zannabronzo", emoji:"⚔️", type:"weapon", slot:"weapon", rarity:"common", price:26, description:"Una lama ricurva amata dai mercenari di frontiera.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_wayfarer_hatchet", name:"Accetta del Viandante", emoji:"🪓", type:"weapon", slot:"weapon", rarity:"common", price:20, description:"Compatta, robusta e sempre pronta per il sentiero.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
+    { id:"weapon_thornwind_sling", name:"Fionda Vento di Spine", emoji:"🏹", type:"weapon", slot:"weapon", rarity:"common", price:18, description:"Piccola arma da distanza per mani rapide e mira paziente.", damageDice:"1d4", weapon_die:"1d4", bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
+    { id:"weapon_millstone_hammer", name:"Martello da Macina", emoji:"🔨", type:"weapon", slot:"weapon", rarity:"common", price:24, description:"Un attrezzo convertito in arma da chi lavora e combatte.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:-1, heal_amount:0, available:true },
+    { id:"weapon_nightreed_rod", name:"Verga di Canneoscura", emoji:"🪄", type:"weapon", slot:"weapon", rarity:"common", price:30, description:"Un focus palustre per apprendisti della magia d'ombra.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:0, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_redharbor_cutlass", name:"Sciabola di Porto Rosso", emoji:"⚔️", type:"weapon", slot:"weapon", rarity:"uncommon", price:54, description:"Una lama da abbordaggio veloce e crudele.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_stagrun_glaive", name:"Glaive Corsa del Cervo", emoji:"🔱", type:"weapon", slot:"weapon", rarity:"uncommon", price:58, description:"Arma in asta elegante per guerrieri mobili.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_quicksilver_knife", name:"Coltello Argento Vivo", emoji:"🗡️", type:"weapon", slot:"weapon", rarity:"uncommon", price:50, description:"Leggero e rapidissimo, nato per colpire prima.", damageDice:"1d6", weapon_die:"1d6", bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:3, heal_amount:0, available:true },
+    { id:"weapon_cinderhymn_luteblade", name:"Lutoblama di Cinerea", emoji:"🎸", type:"weapon", slot:"weapon", rarity:"uncommon", price:62, description:"Uno strumento-armato che vibra di magia e acciaio.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:1, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_graveshade_orb", name:"Sfera di Tombaombra", emoji:"🔮", type:"weapon", slot:"weapon", rarity:"uncommon", price:64, description:"Un globo opaco che concentra malie fredde e precise.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:0, bonus_def:0, bonus_mag:2, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
+    { id:"weapon_oathforge_blade", name:"Lama della Forgia del Giuramento", emoji:"⚔️", type:"weapon", slot:"weapon", rarity:"rare", price:112, description:"Forgiata per cavalieri che giurano di non arretrare.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:3, bonus_def:1, bonus_mag:0, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
+    { id:"weapon_skylash_whip", name:"Frusta Sferzacielo", emoji:"🪢", type:"weapon", slot:"weapon", rarity:"rare", price:106, description:"Una frusta runica che colpisce dove l'aria è più sottile.", damageDice:"1d8", weapon_die:"1d8", bonus_atk:2, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
+    { id:"weapon_wolfsmoke_greataxe", name:"Grande Ascia Fumolupo", emoji:"🪓", type:"weapon", slot:"weapon", rarity:"rare", price:118, description:"Pesante, rabbiosa e perfetta per spezzare linee.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:3, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:-1, heal_amount:0, available:true },
+    { id:"weapon_glassriver_staff", name:"Bastone del Fiume di Vetro", emoji:"🪄", type:"weapon", slot:"weapon", rarity:"rare", price:122, description:"Bastone cristallino che rende limpida la volontà arcana.", damageDice:"1d10", weapon_die:"1d10", bonus_atk:0, bonus_def:0, bonus_mag:3, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_bloodsun_claymore", name:"Claymore Sole di Sangue", emoji:"⚔️", type:"weapon", slot:"weapon", rarity:"epic", price:214, description:"Una lama a due mani che arde di luce cremisi.", damageDice:"1d12", weapon_die:"1d12", bonus_atk:4, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
+    { id:"weapon_verdant_moon_scythe", name:"Falce di Luna Verde", emoji:"🌙", type:"weapon", slot:"weapon", rarity:"epic", price:226, description:"Falce druidica che danza tra morte e rinascita.", damageDice:"1d12", weapon_die:"1d12", bonus_atk:3, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"weapon_thunderwell_bow", name:"Arco del Pozzo del Tuono", emoji:"🏹", type:"weapon", slot:"weapon", rarity:"epic", price:232, description:"Le sue corde cantano come un temporale lontano.", damageDice:"1d12", weapon_die:"1d12", bonus_atk:4, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
+    { id:"weapon_hallowed_comet_tome", name:"Tomo della Cometa Sacra", emoji:"📘", type:"weapon", slot:"weapon", rarity:"epic", price:238, description:"Un grimorio luminoso per maghi che guidano e proteggono.", damageDice:"1d12", weapon_die:"1d12", bonus_atk:0, bonus_def:1, bonus_mag:4, bonus_hp:0, bonus_init:0, heal_amount:0, available:true },
+    { id:"weapon_kingbreaker_relicblade", name:"Reliquia Spezzare", emoji:"🗡️", type:"weapon", slot:"weapon", rarity:"legendary", price:390, description:"Una reliquia regale nata per abbattere tiranni e demoni.", damageDice:"2d8", weapon_die:"2d8", bonus_atk:5, bonus_def:1, bonus_mag:0, bonus_hp:0, bonus_init:2, heal_amount:0, available:true },
+    { id:"weapon_eclipsed_seraph_spear", name:"Lancia del Serafino Eclissato", emoji:"🔱", type:"weapon", slot:"weapon", rarity:"legendary", price:410, description:"Una lancia sacra d'ombra e luce per paladini e veggenti.", damageDice:"2d8", weapon_die:"2d8", bonus_atk:4, bonus_def:1, bonus_mag:2, bonus_hp:0, bonus_init:1, heal_amount:0, available:true },
+    { id:"armor_hedgerow_jerkin", name:"Giaco di Siepe", emoji:"🧥", type:"armor", slot:"armor", rarity:"common", price:22, description:"Pelle e stoffa cucite per chi vive ai margini dei campi.", armorBonus:1, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:7, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_charcoat_vest", name:"Panciotto Carbonero", emoji:"🧥", type:"armor", slot:"armor", rarity:"common", price:24, description:"Un giubbetto annerito dal fumo ma duro come la corteccia.", armorBonus:1, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:8, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_foxstep_leathers", name:"Cuoio Passovolpe", emoji:"🥋", type:"armor", slot:"armor", rarity:"common", price:28, description:"Leggero e silenzioso, perfetto per esploratori agili.", armorBonus:1, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:8, bonus_init:2, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_masons_mail", name:"Maglia del Muratore", emoji:"⛓️", type:"armor", slot:"armor", rarity:"common", price:32, description:"Cotta grezza ma fedele, nata nelle cave fortificate.", armorBonus:2, bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:10, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_briarguard_coat", name:"Cappotto dei Guardarovi", emoji:"🧥", type:"armor", slot:"armor", rarity:"common", price:30, description:"Tessuto cerato per pattuglie boschive e notti umide.", armorBonus:1, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:9, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_falconer_harness", name:"Imbrago del Falconiere", emoji:"🥋", type:"armor", slot:"armor", rarity:"uncommon", price:46, description:"Corazza leggera fatta per tiratori e cacciatori mobili.", armorBonus:2, bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:11, bonus_init:2, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_emberplate_cuirass", name:"Corazza Braciapiastra", emoji:"🛡️", type:"armor", slot:"armor", rarity:"uncommon", price:58, description:"Piastre annerite da forge che non si spengono mai.", armorBonus:3, bonus_atk:0, bonus_def:3, bonus_mag:0, bonus_hp:14, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_mistveil_robes", name:"Vesti di Velo di Nebbia", emoji:"🪶", type:"armor", slot:"armor", rarity:"uncommon", price:54, description:"Robe sottili che favoriscono magia e schivata.", armorBonus:2, bonus_atk:0, bonus_def:1, bonus_mag:2, bonus_hp:10, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_ironbloom_brigandine", name:"Brigantina Fiordiferro", emoji:"⛓️", type:"armor", slot:"armor", rarity:"uncommon", price:62, description:"Lamine celate sotto il cuoio per tank di frontiera.", armorBonus:3, bonus_atk:0, bonus_def:3, bonus_mag:0, bonus_hp:15, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_wardenhide_shell", name:"Scorza di Guardiacuoio", emoji:"🥋", type:"armor", slot:"armor", rarity:"uncommon", price:60, description:"Pelli trattate con resine che deviano colpi e graffi.", armorBonus:3, bonus_atk:0, bonus_def:3, bonus_mag:0, bonus_hp:13, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_skywatch_halfplate", name:"Mezza Piastra dei Guardacieli", emoji:"🛡️", type:"armor", slot:"armor", rarity:"rare", price:102, description:"Armatura d'osservazione per sentinelle delle torri alte.", armorBonus:4, bonus_atk:0, bonus_def:4, bonus_mag:0, bonus_hp:18, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_spellthorn_raiment", name:"Paramento di Rovisferza", emoji:"🪄", type:"armor", slot:"armor", rarity:"rare", price:108, description:"Abito rituale che protegge senza soffocare il mana.", armorBonus:3, bonus_atk:0, bonus_def:2, bonus_mag:3, bonus_hp:12, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_grimhall_plate", name:"Piastra di Grimhall", emoji:"🛡️", type:"armor", slot:"armor", rarity:"rare", price:118, description:"Piastre profonde come un portone di fortezza.", armorBonus:4, bonus_atk:0, bonus_def:4, bonus_mag:0, bonus_hp:20, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_whisperleaf_shroud", name:"Sudario di Fogliasussurro", emoji:"🌿", type:"armor", slot:"armor", rarity:"rare", price:110, description:"Tessuti silvestri per supporti rapidi e arcieri scaltri.", armorBonus:3, bonus_atk:0, bonus_def:2, bonus_mag:1, bonus_hp:14, bonus_init:2, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_solar_bastion_harness", name:"Bardatura del Bastione Solare", emoji:"☀️", type:"armor", slot:"armor", rarity:"epic", price:206, description:"Armatura cerimoniale che riflette la luce come metallo vivo.", armorBonus:5, bonus_atk:0, bonus_def:5, bonus_mag:1, bonus_hp:24, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_deepvault_bulwark", name:"Corazza del Forziere Profondo", emoji:"🛡️", type:"armor", slot:"armor", rarity:"epic", price:218, description:"Corazza pesante per guardiani che non cedono mai terreno.", armorBonus:5, bonus_atk:0, bonus_def:5, bonus_mag:0, bonus_hp:28, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_moonquartz_mantle", name:"Manto di Quarzo Lunare", emoji:"🌙", type:"armor", slot:"armor", rarity:"epic", price:224, description:"Una veste gemmata che protegge i grandi incantatori.", armorBonus:4, bonus_atk:0, bonus_def:3, bonus_mag:4, bonus_hp:16, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_ravenmarch_warcoat", name:"Cappamaglia di Marciacorvo", emoji:"🧥", type:"armor", slot:"armor", rarity:"epic", price:212, description:"Fatta per comandanti che vogliono restare mobili in battaglia.", armorBonus:4, bonus_atk:1, bonus_def:4, bonus_mag:0, bonus_hp:22, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_auric_dragonplate", name:"Piastra del Drago Aureo", emoji:"🐉", type:"armor", slot:"armor", rarity:"legendary", price:398, description:"Scaglie dorate e rune di reame per veri campioni.", armorBonus:6, bonus_atk:0, bonus_def:6, bonus_mag:2, bonus_hp:32, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"armor_crownwarden_aegisplate", name:"Piastra degli Scudieri della Corona", emoji:"👑", type:"armor", slot:"armor", rarity:"legendary", price:420, description:"La corazza di chi porta il peso di un intero regno.", armorBonus:6, bonus_atk:1, bonus_def:6, bonus_mag:1, bonus_hp:34, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_oakbound_buckler", name:"Brocchiero di Quercianodo", emoji:"🛡️", type:"shield", slot:"shield", rarity:"common", price:18, description:"Piccolo scudo per schermagliatori attenti.", bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:4, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_riverguard_round", name:"Rotella della Guardia Fluviale", emoji:"🛡️", type:"shield", slot:"shield", rarity:"common", price:20, description:"Un tondo di legno ferrato per pattuglie di ponte.", bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:5, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_ashgrove_targe", name:"Targa di Frassineto", emoji:"🛡️", type:"shield", slot:"shield", rarity:"common", price:22, description:"Leggero, saldo e semplice da usare.", bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:5, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_forgepan_guard", name:"Guardiapadella di Forgia", emoji:"🛡️", type:"shield", slot:"shield", rarity:"common", price:24, description:"Rozzo ma sorprendentemente affidabile tra i colpi stretti.", bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:4, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_crowfeather_kite", name:"Scudo Aquilone Piumacorvo", emoji:"🛡️", type:"shield", slot:"shield", rarity:"common", price:26, description:"Sagoma allungata per difendere senza perdere mobilità.", bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:6, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_stoneshield_disk", name:"Disco Scudopietra", emoji:"🛡️", type:"shield", slot:"shield", rarity:"uncommon", price:42, description:"Un disco spesso che assorbe l'impatto meglio del ferro.", bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:8, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_embercrest_guard", name:"Paria del Cembro Ardente", emoji:"🛡️", type:"shield", slot:"shield", rarity:"uncommon", price:46, description:"Scudo brunito con crestature che spezzano i fendenti.", bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:9, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_huntermoon_bulwark", name:"Riparo della Luna Cacciatrice", emoji:"🛡️", type:"shield", slot:"shield", rarity:"uncommon", price:48, description:"Preferito da ranger che vogliono restare rapidi.", bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:7, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_bastion_spikewall", name:"Muraspina del Bastione", emoji:"🛡️", type:"shield", slot:"shield", rarity:"uncommon", price:52, description:"Massiccio e ruvido, fatto per inchiodare il fronte.", bonus_atk:1, bonus_def:3, bonus_mag:0, bonus_hp:10, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_mirrorwake_ward", name:"Schermo di Ondaspecchio", emoji:"🛡️", type:"shield", slot:"shield", rarity:"uncommon", price:56, description:"La superficie chiara confonde occhi e magie deboli.", bonus_atk:0, bonus_def:2, bonus_mag:1, bonus_hp:8, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_gloamwatch_pavis", name:"Pavese di Guardia del Vespro", emoji:"🛡️", type:"shield", slot:"shield", rarity:"rare", price:92, description:"Largo riparo per difensori di mura e convogli.", bonus_atk:0, bonus_def:3, bonus_mag:0, bonus_hp:14, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_saintglass_ward", name:"Schermo di Vetro Santo", emoji:"🛡️", type:"shield", slot:"shield", rarity:"rare", price:98, description:"Benedetto per proteggere maghi e guaritori in prima linea.", bonus_atk:0, bonus_def:3, bonus_mag:1, bonus_hp:12, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_blackthistle_guard", name:"Guardaspine Nera", emoji:"🛡️", type:"shield", slot:"shield", rarity:"rare", price:104, description:"Un bastione severo, ideale per tank ostinati.", bonus_atk:0, bonus_def:4, bonus_mag:0, bonus_hp:14, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_skybastion_rondel", name:"Rondella del Bastione Celeste", emoji:"🛡️", type:"shield", slot:"shield", rarity:"rare", price:108, description:"Resistente ma insolitamente agile nel polso.", bonus_atk:0, bonus_def:3, bonus_mag:0, bonus_hp:11, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_oracle_shell", name:"Conchiglia dell'Oracolo", emoji:"🔮", type:"shield", slot:"shield", rarity:"epic", price:188, description:"Uno schermo rituale che devia colpi e presagi neri.", bonus_atk:0, bonus_def:4, bonus_mag:2, bonus_hp:16, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_dawnbell_wall", name:"Muro della Campana dell'Alba", emoji:"🛡️", type:"shield", slot:"shield", rarity:"epic", price:194, description:"Scudo sacro che regge urti come un portale chiuso.", bonus_atk:0, bonus_def:4, bonus_mag:1, bonus_hp:18, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_granite_heart_barrier", name:"Barriera Cuore di Granito", emoji:"🛡️", type:"shield", slot:"shield", rarity:"epic", price:202, description:"Una lastra viva per chi avanza senza paura.", bonus_atk:0, bonus_def:5, bonus_mag:0, bonus_hp:20, bonus_init:-1, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_crescent_vigil", name:"Vigilia Crescente", emoji:"🌙", type:"shield", slot:"shield", rarity:"epic", price:198, description:"Equilibrato tra protezione, magia e prontezza.", bonus_atk:0, bonus_def:4, bonus_mag:1, bonus_hp:16, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_worldroot_aegis", name:"Egida della Radice del Mondo", emoji:"🌳", type:"shield", slot:"shield", rarity:"legendary", price:356, description:"Legno primordiale che non conosce frattura.", bonus_atk:0, bonus_def:5, bonus_mag:1, bonus_hp:24, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"shield_lionthrone_guard", name:"Scudo del Trono del Leone", emoji:"👑", type:"shield", slot:"shield", rarity:"legendary", price:372, description:"Il grande scudo dei protettori del sangue reale.", bonus_atk:1, bonus_def:6, bonus_mag:0, bonus_hp:24, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"potion_morningdew_vial", name:"Fiala di Rugiada Mattutina", emoji:"🧪", type:"potion", slot:null, rarity:"common", price:16, description:"Una cura semplice e fresca per ripartire in fretta.", effect:"heal", value:12, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:12, available:true },
+    { id:"potion_ironroot_brew", name:"Decotto di Radiceferro", emoji:"🧴", type:"potion", slot:null, rarity:"common", price:18, description:"Una mistura densa che rimette in sesto i più duri.", effect:"heal", value:16, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:16, available:true },
+    { id:"potion_sunpetal_tonic", name:"Tonico di Petalosole", emoji:"🌼", type:"potion", slot:null, rarity:"common", price:20, description:"Lenisce corpo e spirito con un calore delicato.", effect:"heal", value:18, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:18, available:true },
+    { id:"potion_scouts_breath", name:"Respiro dell'Esploratore", emoji:"🍃", type:"potion", slot:null, rarity:"common", price:22, description:"Un infuso rapido per chi vive di slancio e riflessi.", effect:"heal", value:14, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, weapon_die:null, heal_amount:14, available:true },
+    { id:"potion_hearthblood_phial", name:"Ampolla Sangue del Focolare", emoji:"🔥", type:"potion", slot:null, rarity:"common", price:24, description:"Riscalda il petto e rimargina i colpi più recenti.", effect:"heal", value:20, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:20, available:true },
+    { id:"potion_battlechant_draft", name:"Infuso del Canto di Guerra", emoji:"🎵", type:"potion", slot:null, rarity:"uncommon", price:30, description:"Una bevanda tonica usata prima delle cariche più dure.", effect:"heal", value:22, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:22, available:true },
+    { id:"potion_bluefen_restore", name:"Ristoro di Palude Blu", emoji:"🧪", type:"potion", slot:null, rarity:"uncommon", price:32, description:"Un rimedio palustre che recupera sorprendentemente bene.", effect:"heal", value:24, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:24, available:true },
+    { id:"potion_wardens_honey", name:"Miele del Custode", emoji:"🍯", type:"potion", slot:null, rarity:"uncommon", price:34, description:"Denso e prezioso, protegge anche mentre cura.", effect:"heal", value:24, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:24, available:true },
+    { id:"potion_arcane_respite", name:"Sollievo Arcano", emoji:"✨", type:"potion", slot:null, rarity:"uncommon", price:36, description:"Un sorso brillante che rasserena mente e carne.", effect:"heal", value:22, bonus_atk:0, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:22, available:true },
+    { id:"potion_hillborn_stout", name:"Stout dei Nati in Collina", emoji:"🍺", type:"potion", slot:null, rarity:"uncommon", price:38, description:"Ruvido ma efficace per chi deve restare in piedi.", effect:"heal", value:26, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:0, bonus_init:-1, weapon_die:null, heal_amount:26, available:true },
+    { id:"potion_silverleaf_serum", name:"Siero di Foglia Argentea", emoji:"🧪", type:"potion", slot:null, rarity:"rare", price:52, description:"Un distillato fine per ferite che non concedono tregua.", effect:"heal", value:30, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:30, available:true },
+    { id:"potion_guardcaptains_dose", name:"Dose del Capitano di Guardia", emoji:"🧴", type:"potion", slot:null, rarity:"rare", price:56, description:"Concepita per reggere il fronte un attimo più a lungo.", effect:"heal", value:32, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:32, available:true },
+    { id:"potion_starlit_mercy", name:"Misericordia Stellata", emoji:"⭐", type:"potion", slot:null, rarity:"rare", price:60, description:"Un elisir chiaro che richiama forza e pace insieme.", effect:"heal", value:34, bonus_atk:0, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:34, available:true },
+    { id:"potion_huntsmans_return", name:"Ritorno del Cacciatore", emoji:"🏹", type:"potion", slot:null, rarity:"rare", price:58, description:"Rimette in sesto arti e fiato dopo una fuga letale.", effect:"heal", value:30, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, weapon_die:null, heal_amount:30, available:true },
+    { id:"potion_moonprayer_elixir", name:"Elisir della Preghiera Lunare", emoji:"🌙", type:"potion", slot:null, rarity:"epic", price:112, description:"Un rimedio sacro per chi non può cadere questa notte.", effect:"heal", value:42, bonus_atk:0, bonus_def:1, bonus_mag:1, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:42, available:true },
+    { id:"potion_dragonsalve", name:"Balsamo del Drago", emoji:"🐉", type:"potion", slot:null, rarity:"epic", price:118, description:"Dà nuova forza anche ai guerrieri quasi spezzati.", effect:"heal", value:46, bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:46, available:true },
+    { id:"potion_highclerics_blessing", name:"Benedizione dell'Alto Chierico", emoji:"⛪", type:"potion", slot:null, rarity:"epic", price:124, description:"Una fiala rituale che cura e rinsalda l'animo.", effect:"heal", value:48, bonus_atk:0, bonus_def:1, bonus_mag:1, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:48, available:true },
+    { id:"potion_cometheart_cordial", name:"Cordial Cuore di Cometa", emoji:"☄️", type:"potion", slot:null, rarity:"epic", price:128, description:"Energia pura in bottiglia per gli ultimi istanti decisivi.", effect:"heal", value:50, bonus_atk:0, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:1, weapon_die:null, heal_amount:50, available:true },
+    { id:"potion_elixir_of_last_dawn", name:"Elisir dell'Ultima Alba", emoji:"☀️", type:"potion", slot:null, rarity:"legendary", price:220, description:"Dono rarissimo che strappa l'eroe al bordo della sconfitta.", effect:"heal", value:64, bonus_atk:0, bonus_def:1, bonus_mag:1, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:64, available:true },
+    { id:"potion_royal_ambrosia", name:"Ambrosia Reale", emoji:"👑", type:"potion", slot:null, rarity:"legendary", price:240, description:"Una medicina sovrana conservata per i campioni del reame.", effect:"heal", value:72, bonus_atk:1, bonus_def:1, bonus_mag:1, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:72, available:true },
+    { id:"accessory_brasswolf_clasp", name:"Fermaglio del Lupo d'Ottone", emoji:"🪙", type:"accessory", slot:"accessory", rarity:"common", price:20, description:"Un piccolo emblema per chi combatte in prima linea.", statBonus:{ atk:1 }, bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_mossknot_beads", name:"Grani di Nodo Muschiato", emoji:"📿", type:"accessory", slot:"accessory", rarity:"common", price:22, description:"Perline boschive che sostengono il corpo nel lungo viaggio.", statBonus:{ hp:4 }, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:4, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_swiftsparrow_pin", name:"Spilla del Passero Lesto", emoji:"🪶", type:"accessory", slot:"accessory", rarity:"common", price:24, description:"Una piuma lavorata per mani svelte e passi rapidi.", statBonus:{ init:1 }, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_chapel_thread", name:"Filo della Cappella", emoji:"🎗️", type:"accessory", slot:"accessory", rarity:"common", price:26, description:"Un nastro benedetto per sostenere chi protegge gli altri.", statBonus:{ def:1 }, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_cindercoin_medal", name:"Medaglia della Moneta di Brace", emoji:"🏅", type:"accessory", slot:"accessory", rarity:"common", price:28, description:"Un piccolo talismano per veterani di taverna e battaglia.", statBonus:{ atk:1, hp:2 }, bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:2, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_duelists_ribbon", name:"Nastro del Duellante", emoji:"🎗️", type:"accessory", slot:"accessory", rarity:"uncommon", price:40, description:"Leggero e fiero, premia riflessi e precisione.", statBonus:{ atk:1, init:1 }, bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_watchfire_locket", name:"Medaglione del Fuoco di Guardia", emoji:"🔥", type:"accessory", slot:"accessory", rarity:"uncommon", price:42, description:"Conserva una scintilla sempre desta nelle notti di ronda.", statBonus:{ hp:6 }, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:6, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_harvestmoon_charm", name:"Ciondolo della Luna del Raccolto", emoji:"🌙", type:"accessory", slot:"accessory", rarity:"uncommon", price:44, description:"Un portafortuna per guaritori, bardi e viandanti gentili.", statBonus:{ mag:1, hp:4 }, bonus_atk:0, bonus_def:0, bonus_mag:1, bonus_hp:4, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_ironprayer_band", name:"Fascia della Preghiera di Ferro", emoji:"💍", type:"accessory", slot:"accessory", rarity:"uncommon", price:46, description:"Offre fermezza a chi deve reggere la linea.", statBonus:{ def:1, hp:4 }, bonus_atk:0, bonus_def:1, bonus_mag:0, bonus_hp:4, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_gleamstep_anklet", name:"Cavigliera Passoluce", emoji:"✨", type:"accessory", slot:"accessory", rarity:"uncommon", price:48, description:"Brilla appena quando il corpo anticipa il pericolo.", statBonus:{ init:2 }, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_stormscribe_seal", name:"Sigillo dello Scriba del Fulmine", emoji:"⚡", type:"accessory", slot:"accessory", rarity:"rare", price:74, description:"Un marchio carico di energia per studiosi battaglieri.", statBonus:{ mag:2, init:1 }, bonus_atk:0, bonus_def:0, bonus_mag:2, bonus_hp:0, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_griffonspur_brooch", name:"Spilla Sprone del Grifone", emoji:"🦅", type:"accessory", slot:"accessory", rarity:"rare", price:78, description:"Simbolo di slancio e disciplina per guerrieri mobili.", statBonus:{ atk:2 }, bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_wintersaint_rosary", name:"Rosario del Santo d'Inverno", emoji:"📿", type:"accessory", slot:"accessory", rarity:"rare", price:82, description:"Preghiere fredde che rinforzano mente e corazza.", statBonus:{ def:1, mag:2 }, bonus_atk:0, bonus_def:1, bonus_mag:2, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_stonechorus_idol", name:"Idolo del Coro di Pietra", emoji:"🗿", type:"accessory", slot:"accessory", rarity:"rare", price:86, description:"Un piccolo idolo che dona presenza e tenacia al gruppo.", statBonus:{ def:2, hp:6 }, bonus_atk:0, bonus_def:2, bonus_mag:0, bonus_hp:6, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_sunwoven_circlet", name:"Cerchietto del Sole Intessuto", emoji:"👑", type:"accessory", slot:"accessory", rarity:"epic", price:164, description:"Corona leggera per guide luminose e maghi da supporto.", statBonus:{ mag:3, init:1 }, bonus_atk:0, bonus_def:0, bonus_mag:3, bonus_hp:0, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_battleheart_torque", name:"Torque Cuore di Battaglia", emoji:"🔗", type:"accessory", slot:"accessory", rarity:"epic", price:172, description:"Collare di guerra che rafforza coraggio e impatto.", statBonus:{ atk:2, hp:8 }, bonus_atk:2, bonus_def:0, bonus_mag:0, bonus_hp:8, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_veilwarden_orbit", name:"Orbita del Custode del Velo", emoji:"🔮", type:"accessory", slot:"accessory", rarity:"epic", price:178, description:"Un piccolo orbe flottante per maestri del controllo arcano.", statBonus:{ def:1, mag:3 }, bonus_atk:0, bonus_def:1, bonus_mag:3, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_stagcrown_token", name:"Sigillo della Corona del Cervo", emoji:"🦌", type:"accessory", slot:"accessory", rarity:"epic", price:184, description:"Un simbolo nobile che unisce agilità, fierezza e precisione.", statBonus:{ atk:1, init:2 }, bonus_atk:1, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:2, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_starwell_heart", name:"Cuore del Pozzo Stellare", emoji:"⭐", type:"accessory", slot:"accessory", rarity:"legendary", price:312, description:"Una gemma viva che amplifica la volontà dei grandi eroi.", statBonus:{ atk:1, def:1, mag:3, hp:8 }, bonus_atk:1, bonus_def:1, bonus_mag:3, bonus_hp:8, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
+    { id:"accessory_oathkeepers_sigil", name:"Sigillo del Custode del Giuramento", emoji:"🛡️", type:"accessory", slot:"accessory", rarity:"legendary", price:328, description:"Emblema supremo per campioni che guidano e proteggono.", statBonus:{ atk:1, def:2, hp:10 }, bonus_atk:1, bonus_def:2, bonus_mag:1, bonus_hp:10, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
   ];
 }
 const DEFAULT_ITEMS = buildDefaultItems();
@@ -737,7 +1118,9 @@ async function dbSavePlayer(p) {
 }
 
 async function dbGetPlayers(partyCode) {
-  const { data } = await supabase.from("players").select("*").eq("party_code", partyCode);
+  let query = supabase.from("players").select("*");
+  if(partyCode) query = query.eq("party_code", partyCode);
+  const { data } = await query;
   return (data || []).map(r => ({
     id: r?.id, name: r?.name, partyCode: r?.party_code,
     class: r?.class || 'warrior', race: r?.race || 'human',
@@ -747,8 +1130,9 @@ async function dbGetPlayers(partyCode) {
 }
 
 async function dbGetMessages(partyCode) {
-  const { data } = await supabase.from("messages").select("*")
-    .eq("party_code", partyCode).order("created_at", { ascending: true }).limit(100);
+  let query = supabase.from("messages").select("*");
+  if(partyCode) query = query.eq("party_code", partyCode);
+  const { data } = await query.order("created_at", { ascending: true }).limit(partyCode ? 100 : 200);
   return data || [];
 }
 
@@ -926,10 +1310,15 @@ export default function App() {
     }
   }
 
-  if(authLoading) return <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", background:"#06060e", color:"#4b5563", fontFamily:"'Cinzel',serif" }}>? Caricamento...</div>;
+  if(authLoading) return (
+    <div style={{ minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" }}>
+      <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)" }} />
+      <div style={{ position:"relative", zIndex:1, color:"#e2d9c5", fontFamily:"'Cinzel',serif" }}>Caricamento...</div>
+    </div>
+  );
 
   return (
-    <div style={{ minHeight:"100vh", background:"#06060e", fontFamily:"'Crimson Pro',Georgia,serif", color:"#e2d9c5", position:"relative" }}>
+    <div style={{ minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", fontFamily:"'Crimson Pro',Georgia,serif", color:"#e2d9c5", position:"relative" }}>
       {screen==="master" && <MasterPanelAuth setScreen={setScreen} authUser={authUser} />}
       {screen!=="master" && !authUser && <AuthScreen setAuthUser={setAuthUser} setScreen={setScreen} setMyId={setMyId} />}
       {screen!=="master" && authUser && screen==="landing" && <Landing setScreen={setScreen} goGame={goGame} myId={myId} authUser={authUser} setAuthUser={setAuthUser} />}
@@ -976,7 +1365,7 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
 
   return (
     <div style={{ minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", position:"relative" }}>
-      <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.45)" }} />
+      <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)" }} />
       <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", width:"100%", padding:"2rem 1rem" }}>
       <p style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontSize:"1rem", letterSpacing:"0.6em", margin:"0 0 0.5rem" }}>⚔ ZODAR ⚔</p>
       <h1 style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(2rem,7vw,4rem)", margin:"0.2rem 0 2rem", background:"linear-gradient(135deg,#fbbf24,#f59e0b,#b45309)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", letterSpacing:"0.12em" }}>
@@ -994,12 +1383,31 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
         <label style={labelStyle}>Email</label>
         <input style={{...inputStyle,marginBottom:12}} type="email" value={email} onChange={e=>setEmail(e.target.value)} placeholder="la-tua@email.com" autoComplete="email" />
         <label style={labelStyle}>Password</label>
-        <input style={{...inputStyle,marginBottom:16}} type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="��������" onKeyDown={e=>e.key==="Enter"&&handleAuth()} />
+        <input style={{...inputStyle,marginBottom:16}} type="password" value={password} onChange={e=>setPassword(e.target.value)} placeholder="Password" onKeyDown={e=>e.key==="Enter"&&handleAuth()} />
         {error && <div style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:12, padding:"0.5rem 0.7rem", background:"rgba(239,68,68,0.1)", border:"1px solid #7f1d1d", borderRadius:4 }}>{error}</div>}
         {success && <div style={{ color:"#6ee7b7", fontSize:"0.82rem", marginBottom:12, padding:"0.5rem 0.7rem", background:"rgba(52,211,153,0.1)", border:"1px solid #065f46", borderRadius:4 }}>{success}</div>}
         <BigBtn onClick={handleAuth} gold disabled={loading} icon={mode==="login"?"🔑":"📝"}>
           {loading?"Attendere..." : mode==="login"?"Entra nel Mondo":"Crea Account"}
         </BigBtn>
+        <button
+          onClick={()=>setScreen("master")}
+          style={{
+            width:"100%",
+            marginTop:"0.9rem",
+            padding:"0.75rem 1rem",
+            background:"rgba(15,23,42,0.92)",
+            border:"1px solid #fbbf24",
+            borderRadius:6,
+            color:"#f8e7b9",
+            cursor:"pointer",
+            fontFamily:"'Cinzel',serif",
+            fontSize:"0.84rem",
+            letterSpacing:"0.06em",
+            fontWeight:700,
+          }}
+        >
+          🛡️ Accesso Master
+        </button>
       </div>
       </div>
     </div>
@@ -1009,22 +1417,33 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
 /* ----------------------------------------------
    MASTER PANEL AUTH WRAPPER
 ---------------------------------------------- */
-function MasterPanelAuth({ setScreen, authUser }) {
-  const configured = MASTER_EMAILS.length > 0;
-  const allowed = canAccessMasterPanel(authUser);
+function MasterPanelAuth({ setScreen }) {
+  const [pwd, setPwd] = useState("");
+  const [ok, setOk] = useState(false);
+  const [err, setErr] = useState(false);
 
-  if(configured && allowed) return <MasterPanel setScreen={setScreen} />;
+  if(ok) return <MasterPanel setScreen={setScreen} />;
 
   return (
-    <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", minHeight:"100vh", padding:"2rem", background:"#06060e" }}>
-      <div style={{ width:"100%", maxWidth:360, background:"rgba(255,255,255,0.02)", border:"1px solid #374151", borderRadius:8, padding:"2rem", textAlign:"center" }}>
-        <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>🔒</div>
-        <h2 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.2rem", marginBottom:"0.5rem" }}>Pannello Master</h2>
-        {!authUser && <p style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:"1.5rem" }}>Effettua prima il login con un account autorizzato.</p>}
-        {authUser && !configured && <p style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:"1.5rem" }}>Configura `VITE_MASTER_EMAILS` nel file `.env` per abilitare il pannello Master.</p>}
-        {authUser && configured && !allowed && <p style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:"1.5rem" }}>L'account {authUser.email} non è autorizzato ad aprire il pannello Master.</p>}
+    <div style={{ minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", position:"relative" }}>
+      <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.36)" }} />
+      <div style={{ position:"relative", zIndex:1, width:"100%", maxWidth:360, background:"rgba(0,0,0,0.55)", border:"1px solid #374151", borderRadius:8, padding:"2rem", textAlign:"center" }}>
+        <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>🛡️</div>
+        <h2 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.2rem", marginBottom:"0.5rem" }}>🛡️ Pannello Master</h2>
+        <p style={{ color:"#9ca3af", fontSize:"0.78rem", marginBottom:"1.5rem" }}>Accesso riservato al Master</p>
+        <label style={labelStyle}>Password Master</label>
+        <input
+          style={{...inputStyle,marginBottom:12,textAlign:"center",letterSpacing:"0.2em"}}
+          type="password"
+          value={pwd}
+          onChange={e=>{ setPwd(e.target.value); setErr(false); }}
+          placeholder="Password"
+          onKeyDown={e=>e.key==="Enter"&&(pwd===MASTER_PASSWORD?setOk(true):setErr(true))}
+        />
+        {err && <div style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:12 }}>Password errata.</div>}
         <div style={{ display:"flex", gap:8, justifyContent:"center" }}>
-          <SmallBtn onClick={()=>setScreen("landing")}>? Indietro</SmallBtn>
+          <BigBtn onClick={()=>pwd===MASTER_PASSWORD?setOk(true):setErr(true)} gold icon="🗝️">Entra</BigBtn>
+          <SmallBtn onClick={()=>setScreen("landing")}>← Torna alla home</SmallBtn>
         </div>
       </div>
     </div>
@@ -1208,6 +1627,9 @@ function MasterPanel({ setScreen }) {
   const [editM, setEditM]   = useState(null);
   const [saved, setSaved]   = useState(false);
   const [newStep, setNewStep] = useState("");
+  const [dmBroadcast, setDmBroadcast] = useState("");
+  const [broadcasting, setBroadcasting] = useState(false);
+  const [masterLogs, setMasterLogs] = useState([]);
 
   function saveAll() {
     saveMeta(meta); saveQuests(quests); saveMonsters(monsters);
@@ -1218,10 +1640,14 @@ function MasterPanel({ setScreen }) {
     const r=new FileReader(); r.onload=ev=>setMeta(m=>({...m,logo:ev.target.result})); r.readAsDataURL(f);
   }
   function addQuest() {
-    const q={id:"q_"+Date.now(),title:"Nuova Missione",desc:"",flavor:"",difficulty:"Medio",xpReward:200,goldReward:100,steps:[],enemies:[],active:true};
+    const q={id:"q_"+Date.now(),title:"Nuova Missione",desc:"",flavor:"",difficulty:"facile",xpReward:200,goldReward:100,steps:[],enemies:[],active:true};
     setQuests(prev=>[...prev,q]); setEditQ({...q});
   }
-  function saveEditQ() { setQuests(prev=>prev.map(x=>x.id===editQ.id?editQ:x)); setEditQ(null); }
+  function saveEditQ() {
+    const normalizedQuest = { ...editQ, difficulty: normalizeMissionDifficulty(editQ?.difficulty) };
+    setQuests(prev=>prev.map(x=>x.id===normalizedQuest.id ? normalizedQuest : x));
+    setEditQ(null);
+  }
   function addStepToQ() {
     if(!newStep.trim()) return;
     setEditQ(q=>({...q,steps:[...q.steps,{ text:newStep.trim(), choices:{ good:{}, neutral:{}, bad:{} } }]}));
@@ -1233,19 +1659,52 @@ function MasterPanel({ setScreen }) {
     setMonsters(prev=>[...prev,m]); setEditM({...m});
   }
   function saveEditM() { setMonsters(prev=>prev.map(x=>x.id===editM.id?editM:x)); setEditM(null); }
+  async function sendDungeonMasterBroadcast() {
+    const content = dmBroadcast.trim();
+    if(!content || broadcasting) return;
+    setBroadcasting(true);
+    try {
+      const players = await dbGetPlayers();
+      const partyCodes = Array.from(new Set(players.map(player => player.partyCode).filter(Boolean)));
+      for(const partyCode of partyCodes) {
+        await dbSendMessage({ party_code:partyCode, author:"Dungeon Master", content, type:"narration" });
+      }
+      setDmBroadcast("");
+    } finally {
+      setBroadcasting(false);
+    }
+  }
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"market",l:"🏪 Market"},{k:"users",l:"👤 Iscritti"}];
+  useEffect(()=>{
+    if(tab !== "chat") return;
+    let alive = true;
+    const loadLogs = async () => {
+      const msgs = await dbGetMessages();
+      if(!alive) return;
+      setMasterLogs(
+        msgs
+          .filter(msg => ["info","system"].includes(msg.type))
+          .slice(-80)
+          .reverse()
+      );
+    };
+    loadLogs();
+    const timer = setInterval(loadLogs, 5000);
+    return ()=>{ alive = false; clearInterval(timer); };
+  }, [tab]);
+
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"👤 Iscritti"}];
   const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
 
   return (
     <div style={{ position:"relative", zIndex:1, maxWidth:860, margin:"0 auto", padding:"1rem" }}>
       <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:"1.2rem", paddingBottom:"1rem", borderBottom:"1px solid #1f2937", flexWrap:"wrap" }}>
         <div style={{ flex:1 }}>
-          <h1 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.4rem", margin:0 }}>🎲 Pannello Master</h1>
-          <p style={{ color:"#4b5563", fontSize:"0.78rem", margin:0 }}>Il tuo strumento di controllo</p>
+          <h1 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.4rem", margin:0 }}>🛡️ Pannello Master</h1>
+          <p style={{ color:"#4b5563", fontSize:"0.78rem", margin:0 }}>Gestisci missioni, creature e contenuti del mondo</p>
         </div>
         <BigBtn onClick={saveAll} gold icon={saved?"?":"⭐"}>{saved?"Salvato!":"Salva tutto"}</BigBtn>
-        <SmallBtn onClick={()=>setScreen("landing")}>? Esci</SmallBtn>
+        <SmallBtn onClick={()=>setScreen("landing")}>← Torna al menu</SmallBtn>
       </div>
       <div style={{ display:"flex", gap:6, marginBottom:"1.2rem", flexWrap:"wrap" }}>
         {TABS.map(t=>(
@@ -1279,6 +1738,40 @@ function MasterPanel({ setScreen }) {
         </div>
       )}
 
+      {tab==="chat" && (
+        <div style={{ display:"grid", gap:"1rem" }}>
+          <Card title="📣 Messaggio ai Giocatori">
+            <p style={{ color:"#9ca3af", fontSize:"0.8rem", margin:"0 0 0.9rem" }}>Invia un messaggio narrativo a tutti i party attivi. Ai giocatori apparirà come autore <strong style={{ color:"#e2d9c5" }}>Dungeon Master</strong>.</p>
+            <textarea
+              style={{...inputStyle,height:120,resize:"vertical"}}
+              value={dmBroadcast}
+              onChange={e=>setDmBroadcast(e.target.value)}
+              placeholder="Scrivi il messaggio del Dungeon Master..."
+            />
+            <div style={{ display:"flex", justifyContent:"flex-end", marginTop:"0.9rem" }}>
+              <BigBtn onClick={sendDungeonMasterBroadcast} gold icon="📨" disabled={!dmBroadcast.trim() || broadcasting}>
+                {broadcasting ? "Invio..." : "Invia a tutti"}
+              </BigBtn>
+            </div>
+          </Card>
+          <Card title="🧾 Log Tecnici">
+            <p style={{ color:"#9ca3af", fontSize:"0.8rem", margin:"0 0 0.9rem" }}>Qui finiscono i messaggi filtrati dal player chat: economia, equipaggiamento e log di sistema.</p>
+            <div style={{ display:"flex", flexDirection:"column", gap:8, maxHeight:360, overflowY:"auto" }}>
+              {!masterLogs.length && <div style={{ color:"#6b7280", fontSize:"0.8rem" }}>Nessun log tecnico recente.</div>}
+              {masterLogs.map(msg=>(
+                <div key={msg.id} style={{ background:"rgba(15,23,42,0.76)", border:"1px solid #1e293b", borderRadius:6, padding:"0.75rem 0.85rem" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", gap:8, marginBottom:4, flexWrap:"wrap" }}>
+                    <span style={{ color:"#a5b4fc", fontFamily:"'Cinzel',serif", fontSize:"0.72rem", letterSpacing:"0.05em" }}>{msg.author || "Sistema"}</span>
+                    <span style={{ color:"#64748b", fontSize:"0.68rem" }}>{msg.party_code || "PARTY"}</span>
+                  </div>
+                  <div style={{ color:"#cbd5e1", fontSize:"0.82rem", lineHeight:1.55 }} dangerouslySetInnerHTML={{ __html:fmt(msg.content) }} />
+                </div>
+              ))}
+            </div>
+          </Card>
+        </div>
+      )}
+
       {tab==="quests" && !editQ && (
         <div>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
@@ -1292,7 +1785,7 @@ function MasterPanel({ setScreen }) {
                   <div style={{ flex:1 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
                       <span style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontWeight:700, fontSize:"1rem" }}>{q.title}</span>
-                      <span style={{ padding:"1px 8px", border:`1px solid ${DIFF_COLOR[q.difficulty]||"#374151"}`, borderRadius:3, fontSize:"0.65rem", color:DIFF_COLOR[q.difficulty]||"#6b7280" }}>{q.difficulty}</span>
+                      <span style={{ padding:"1px 8px", border:`1px solid ${DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#374151"}`, borderRadius:3, fontSize:"0.65rem", color:DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#6b7280" }}>{missionDifficultyLabel(q.difficulty)}</span>
                       {!q.active && <span style={{ fontSize:"0.65rem", color:"#4b5563", border:"1px solid #1f2937", borderRadius:3, padding:"1px 5px" }}>PAUSA</span>}
                     </div>
                     <p style={{ color:"#6b7280", fontSize:"0.8rem", margin:"0 0 6px" }}>{q.desc||"Nessuna descrizione."}</p>
@@ -1324,8 +1817,10 @@ function MasterPanel({ setScreen }) {
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
               <div><label style={labelStyle}>Titolo</label><input style={inputStyle} value={editQ.title} onChange={e=>setEditQ(q=>({...q,title:e.target.value}))} /></div>
               <div><label style={labelStyle}>Difficolt�</label>
-                <select style={{...inputStyle,cursor:"pointer"}} value={editQ.difficulty} onChange={e=>setEditQ(q=>({...q,difficulty:e.target.value}))}>
-                  {Object.keys(DIFF_COLOR).map(d=><option key={d}>{d}</option>)}
+                <select style={{...inputStyle,cursor:"pointer"}} value={normalizeMissionDifficulty(editQ.difficulty)} onChange={e=>setEditQ(q=>({...q,difficulty:e.target.value}))}>
+                  <option value="facile">Facile</option>
+                  <option value="difficile">Difficile</option>
+                  <option value="speciale">Speciale</option>
                 </select>
               </div>
               <div><label style={labelStyle}>XP</label><input style={inputStyle} type="number" value={editQ.xpReward} onChange={e=>setEditQ(q=>({...q,xpReward:+e.target.value}))} /></div>
@@ -1763,7 +2258,7 @@ function MarketView() {
 
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:10 }}>
         {items.map(it=>(
-          <div key={it.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
+          <div key={it.id} style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:6, padding:"0.8rem" }}>
             <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
               <span style={{ fontSize:"1.5rem" }}>{it.emoji||"⭐"}</span>
               <div style={{ flex:1 }}>
@@ -1802,7 +2297,12 @@ function ShopView({ me, items, loading, error, inventoryCounts, onBuy }) {
 
   return (
     <div>
-      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🛒 Negozio</h3>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:"1rem", flexWrap:"wrap" }}>
+        <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0 }}>🛒 Negozio</h3>
+        <div style={{ padding:"0.4rem 0.65rem", background:"rgba(180,83,9,0.12)", border:"1px solid #78350f", borderRadius:999, color:"#fbbf24", fontSize:"0.8rem", fontWeight:700, whiteSpace:"nowrap" }}>
+          💰 Oro: {me?.gold || 0}
+        </div>
+      </div>
       <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:"1rem" }}>
         {categoryOptions.map(option => (
           <button
@@ -1870,8 +2370,8 @@ function InventoryView({ loading, groups, equipment, selectedItem, onSelectItem,
               onClick={()=>onSelectItem(group)}
               style={{
                 textAlign:"left",
-                background:"rgba(255,255,255,0.02)",
-                border:`1px solid ${selected ? "#7c3aed" : equipped ? "#b45309" : "#1f2937"}`,
+                background:PANEL_BG,
+                border:`1px solid ${selected ? "#7c3aed" : equipped ? "#b45309" : PANEL_BORDER}`,
                 borderRadius:6,
                 padding:"0.8rem",
                 cursor:"pointer",
@@ -1976,7 +2476,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip }) {
         {slots.map(slot=>{
           const item = equippedItems[slot.key];
           return (
-            <div key={slot.key} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
+            <div key={slot.key} style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:6, padding:"0.8rem" }}>
               <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:8 }}>{slot.label}</div>
               {item ? (
                 <>
@@ -2610,13 +3110,13 @@ ${stepText(step)}`, "quest","Master");
   }
 
   const MSG_COLORS={
-    narration:{bg:"rgba(255,255,255,0.02)",border:"#1f2937",color:"#e2d9c5"},
-    system:   {bg:"rgba(109,40,217,0.12)",border:"#5b21b6",color:"#c4b5fd"},
-    quest:    {bg:"rgba(245,158,11,0.08)",border:"#b45309",color:"#fde68a"},
-    victory:  {bg:"rgba(52,211,153,0.09)",border:"#065f46",color:"#6ee7b7"},
-    combat:   {bg:"rgba(239,68,68,0.07)", border:"#7f1d1d",color:"#fca5a5"},
-    info:     {bg:"rgba(99,102,241,0.08)",border:"#3730a3",color:"#a5b4fc"},
-    chat:     {bg:"rgba(255,255,255,0.025)",border:"#1f2937",color:"#f3f4f6"},
+    narration:{bg:"rgba(15,23,42,0.82)",border:"#334155",color:"#e2d9c5"},
+    system:   {bg:"rgba(76,29,149,0.3)",border:"#7c3aed",color:"#ddd6fe"},
+    quest:    {bg:"rgba(120,53,15,0.32)",border:"#d97706",color:"#fde68a"},
+    victory:  {bg:"rgba(6,95,70,0.32)",border:"#10b981",color:"#a7f3d0"},
+    combat:   {bg:"rgba(127,29,29,0.34)", border:"#ef4444",color:"#fecaca"},
+    info:     {bg:"rgba(55,48,163,0.3)",border:"#6366f1",color:"#c7d2fe"},
+    chat:     {bg:"rgba(15,23,42,0.86)",border:"#334155",color:"#f8fafc"},
   };
 
   if(!me) return <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", color:"#f3f4f6", fontFamily:"'Cinzel',serif", fontSize:"1.2rem" }}>Caricamento...</div>;
@@ -2640,6 +3140,7 @@ ${stepText(step)}`, "quest","Master");
   const inventoryCounts = countInventoryItems(inventory);
   const inventoryGroups = groupInventoryEntries(inventory);
   const selectedInventoryItem = inventoryGroups.find(group => group.item.id === selectedInventoryItemId) || null;
+  const visibleChatMessages = messages.filter(msg => ["chat","narration","quest","victory","combat"].includes(msg.type));
   const equippedWeapon = getEquippedWeapon(equipment, itemMap);
   const equippedItems = {
     weapon: itemMap.get(equipment.weapon) || null,
@@ -2649,6 +3150,7 @@ ${stepText(step)}`, "quest","Master");
 
   return (
     <div style={{ display:"flex", height:"100vh", overflow:"hidden", position:"relative", zIndex:1 }}>
+      <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg, rgba(2,6,23,0.76) 0%, rgba(2,6,23,0.7) 45%, rgba(2,6,23,0.8) 100%)", pointerEvents:"none" }} />
       {diceResult && (
         <div style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.85)", display:"flex", alignItems:"center", justifyContent:"center" }}>
           <div style={{ textAlign:"center", color:"#fff" }}>
@@ -2706,7 +3208,7 @@ ${stepText(step)}`, "quest","Master");
         </div>
       )}
       {/* SIDEBAR */}
-      <aside style={{ width:200, flexShrink:0, background:"rgba(4,4,12,0.98)", borderRight:"1px solid #0f172a", display:"flex", flexDirection:"column", gap:8, padding:"0.7rem", overflowY:"auto" }}>
+      <aside style={{ width:200, flexShrink:0, background:"rgba(4,8,18,0.94)", borderRight:"1px solid rgba(148,163,184,0.14)", display:"flex", flexDirection:"column", gap:8, padding:"0.7rem", overflowY:"auto", position:"relative", zIndex:1, backdropFilter:"blur(6px)" }}>
         <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.75rem", color:"#4c1d95", letterSpacing:"0.1em", paddingBottom:8, borderBottom:"1px solid #0f172a" }}>⚔️ {getMeta().worldName}</div>
         <div style={{ background:"rgba(109,40,217,0.1)", border:"1px solid #3b0764", borderRadius:5, padding:"0.6rem" }}>
           <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:5 }}>
@@ -2733,9 +3235,13 @@ ${stepText(step)}`, "quest","Master");
             <div style={{ height:"100%", background:"linear-gradient(90deg,#6d28d9,#a78bfa)", width:`${Math.min(100,me.xp/xpForLevel(me.level)*100)}%`, transition:"width .5s" }} />
           </div>
           <div style={{ fontSize:"0.58rem", color:"#374151", textAlign:"right", marginTop:1 }}>{me.xp}/{xpForLevel(me.level)} XP</div>
+          <div style={{ marginTop:6, padding:"0.35rem 0.45rem", background:"rgba(180,83,9,0.12)", border:"1px solid #78350f", borderRadius:4, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+            <span style={{ fontSize:"0.58rem", color:"#92400e", textTransform:"uppercase", letterSpacing:"0.08em" }}>Tesoro</span>
+            <span style={{ fontSize:"0.74rem", color:"#fbbf24", fontWeight:700 }}>💰 {me.gold || 0} oro</span>
+          </div>
         </div>
 
-        <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #0f172a", borderRadius:4, padding:"0.5rem" }}>
+        <div style={{ background:PANEL_BG_SOFT, border:`1px solid ${PANEL_BORDER}`, borderRadius:4, padding:"0.5rem" }}>
           <div style={{ fontSize:"0.58rem", color:"#374151", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>👥 Party — {code}</div>
           {partyPlayers.filter(p=>p.id!==myId).map(p=>(
             <div key={p?.id} style={{ display:"flex", gap:5, alignItems:"center", marginBottom:3 }}>
@@ -2774,8 +3280,8 @@ ${stepText(step)}`, "quest","Master");
       </aside>
 
       {/* MAIN */}
-      <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
-        <div style={{ display:"flex", gap:0, borderBottom:"1px solid #0f172a", background:"rgba(4,4,12,0.98)", flexShrink:0 }}>
+      <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", background:"rgba(2,6,23,0.58)", position:"relative", zIndex:1, backdropFilter:"blur(4px)" }}>
+        <div style={{ display:"flex", gap:0, borderBottom:`1px solid ${PANEL_BORDER}`, background:"rgba(3,7,18,0.88)", flexShrink:0 }}>
           {[["chat","💬 Chat"],["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>(
             <button key={k} onClick={()=>setTab(k)} style={{ padding:"0.6rem 1.2rem", background:tab===k?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k?"2px solid #7c3aed":"2px solid transparent", color:tab===k?"#c4b5fd":"#4b5563", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", letterSpacing:"0.05em" }}>
               {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}
@@ -2784,8 +3290,8 @@ ${stepText(step)}`, "quest","Master");
         </div>
 
         {tab==="chat" && <>
-          <div style={{ flex:1, overflowY:"auto", padding:"0.8rem", display:"flex", flexDirection:"column", gap:5 }}>
-            {messages.map(msg=>{
+          <div style={{ flex:1, overflowY:"auto", padding:"0.8rem", display:"flex", flexDirection:"column", gap:6, background:"rgba(3,7,18,0.48)" }}>
+            {visibleChatMessages.map(msg=>{
               const s=MSG_COLORS[msg.type]||MSG_COLORS.narration;
               return (
                 <div key={msg.id} className="msg-in" style={{ padding:"0.5rem 0.8rem", borderRadius:4, background:s.bg, borderLeft:`3px solid ${s.border}` }}>
@@ -2796,7 +3302,7 @@ ${stepText(step)}`, "quest","Master");
             })}
             <div ref={msgEnd} />
           </div>
-          <div style={{ display:"flex", gap:8, padding:"0.7rem", borderTop:"1px solid #0f172a", background:"rgba(4,4,12,0.98)", flexShrink:0 }}>
+          <div style={{ display:"flex", gap:8, padding:"0.7rem", borderTop:`1px solid ${PANEL_BORDER}`, background:"rgba(3,7,18,0.88)", flexShrink:0 }}>
             <input ref={inputRef} style={{ flex:1, padding:"0.65rem 0.9rem", background:"rgba(255,255,255,0.04)", border:"1px solid #1f2937", borderRadius:4, color:"#e2d9c5", fontFamily:"'Crimson Pro',Georgia,serif", fontSize:"0.92rem" }}
               placeholder='Scrivi o digita "avanza", "stato", "aiuto"...' value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleInput()} autoComplete="off" />
             <button onClick={handleInput} style={{ padding:"0.65rem 1.2rem", background:"#3b0764", border:"none", borderRadius:4, color:"#a78bfa", cursor:"pointer", fontSize:"1rem" }}>?</button>
@@ -2834,10 +3340,10 @@ ${stepText(step)}`, "quest","Master");
         )} 
 
         {tab==="quest" && (
-          <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
+          <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.5)" }}>
             <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>📜 Missioni</h3>
             {qs?.active && currentQ && (
-              <div style={{ background:"rgba(245,158,11,0.08)", border:"1px solid #b45309", borderRadius:6, padding:"1rem", marginBottom:"1rem" }}>
+              <div style={{ background:"rgba(120,53,15,0.34)", border:"1px solid #b45309", borderRadius:6, padding:"1rem", marginBottom:"1rem" }}>
                 <div style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontWeight:700, marginBottom:4 }}>📜 IN CORSO: {currentQ.title}</div>
                 <div style={{ height:5, background:"#0f172a", borderRadius:3, overflow:"hidden", marginBottom:8 }}>
                   <div style={{ height:"100%", background:"linear-gradient(90deg,#b45309,#fbbf24)", width:`${(qs.step+1)/currentQ.steps.length*100}%`, transition:"width 0.5s" }} />
@@ -2909,12 +3415,12 @@ ${stepText(step)}`, "quest","Master");
             {getQuests().filter(q=>q.active).map(q=>{
               const done=(qs?.completed||[]).includes(q.id);
               return (
-                <div key={q.id} style={{ background:"rgba(255,255,255,0.02)", border:`1px solid ${done?"#1f2937":"#374151"}`, borderRadius:6, padding:"1rem", marginBottom:8, opacity:done?0.5:1 }}>
+                <div key={q.id} style={{ background:PANEL_BG, border:`1px solid ${done?PANEL_BORDER:"#475569"}`, borderRadius:6, padding:"1rem", marginBottom:8, opacity:done?0.6:1 }}>
                   <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
                     <div style={{ flex:1 }}>
                       <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:5 }}>
                         <span style={{ fontFamily:"'Cinzel',serif", color:done?"#4b5563":"#fbbf24", fontWeight:700 }}>{q.title}</span>
-                        <span style={{ padding:"1px 7px", border:`1px solid ${DIFF_COLOR[q.difficulty]||"#374151"}`, borderRadius:3, fontSize:"0.65rem", color:DIFF_COLOR[q.difficulty]||"#6b7280" }}>{q.difficulty}</span>
+                        <span style={{ padding:"1px 7px", border:`1px solid ${DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#374151"}`, borderRadius:3, fontSize:"0.65rem", color:DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#6b7280" }}>{missionDifficultyLabel(q.difficulty)}</span>
                         {done&&<span style={{ fontSize:"0.7rem", color:"#22c55e" }}>? Completata</span>}
                       </div>
                       <p style={{ color:"#6b7280", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
@@ -3057,7 +3563,7 @@ function SmallBtn({ children, onClick, red, disabled }) {
 }
 function Card({ title, children }) {
   return (
-    <div style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #0f172a", borderRadius:6, padding:"1rem", marginBottom:"0.8rem" }}>
+    <div style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:6, padding:"1rem", marginBottom:"0.8rem", boxShadow:"0 12px 28px rgba(0,0,0,0.22)" }}>
       {title && <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize:"0.9rem", marginBottom:"0.8rem" }}>{title}</div>}
       {children}
     </div>
