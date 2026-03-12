@@ -16,8 +16,7 @@ import { supabase } from "./supabase";
     @keyframes diceRoll { 0%{transform:rotate(0deg) scale(1)} 50%{transform:rotate(180deg) scale(1.3)} 100%{transform:rotate(360deg) scale(1)} }
     @keyframes sparkle { 0%{opacity:1;transform:translateY(0) scale(0.8)} 100%{opacity:0;transform:translateY(-120px) scale(1.4)} }
     @keyframes pulseRed { 0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,0)} 50%{box-shadow:0 0 0 6px rgba(239,68,68,.3)} }
-    @keyframes narrativeBar { from { width: 0% } to { width: 100% } }
-    .msg-in   { animation: fadeUp 0.25s ease; }
+.msg-in   { animation: fadeUp 0.25s ease; }
     .dice-spin{ animation: diceRoll 0.5s ease; }
     ::-webkit-scrollbar{width:5px}
     ::-webkit-scrollbar-track{background:#080810}
@@ -414,9 +413,9 @@ function DEFAULT_QUESTS() {
         type:"choice",
         text:"All'ingresso trovate ossa frantumate e artigli sul legno marcio. Qualcosa di grosso vive qui dentro.",
         choices:[
-          { label:"🕯️ Accendete torce e procedete furtivi", xp:15, gold:8, next:2 },
-          { label:"⚡ Avanzate con cautela, senza fretta", xp:10, gold:5, next:2 },
-          { label:"📢 Urlate per intimidire (attirando attenzioni)", xp:5, gold:2, next:2 }
+          { label:"🕯️ Accendete torce e procedete furtivi", xp:15, gold:8, next:2, correct:true },
+          { label:"⚡ Avanzate con cautela, senza fretta", xp:0, gold:0, next:2, correct:false },
+          { label:"📢 Urlate per intimidire (attirando attenzioni)", xp:0, gold:0, next:2, correct:false }
         ]
       },
       {
@@ -1613,6 +1612,7 @@ function GameScreen({ myId, setScreen }) {
   const [diceResult, setDiceResult] = useState(null);
   const [spellMenu, setSpellMenu] = useState(false);
   const [tab, setTab] = useState("chat");
+  const [lootDone, setLootDone] = useState(false);
   const msgEnd = useRef(null);
   const inputRef = useRef(null);
   const subRef = useRef(null);
@@ -1709,34 +1709,8 @@ function GameScreen({ myId, setScreen }) {
     return () => clearTimeout(timer);
   }, [qs?.combat?.turn, qs?.combat?.active, myId, code]);
 
-  // Narrative step: auto-advance after 3 seconds
-  useEffect(()=>{
-    if(!qs?.active || !qs?.currentId) return;
-    const q = getQuests().find(x=>x.id===qs.currentId);
-    if(!q) return;
-    const stepData = q.steps[qs.step];
-    if(!isNarrativeStep(stepData)) return;
-    // Only the "first" player in the party triggers auto-advance to avoid duplicates
-    if(partyPlayers.length > 0 && partyPlayers[0]?.id !== myId) return;
-    const timer = setTimeout(async () => {
-      const latestQs = await dbGetPartyState(code);
-      if(latestQs?.step !== qs.step || !latestQs?.active) return; // already advanced
-      const quests = getQuests();
-      const latestQ = quests.find(x=>x.id===latestQs.currentId);
-      if(!latestQ) return;
-      const nextStep = latestQs.step + 1;
-      if(nextStep >= latestQ.steps.length) {
-        // Will be handled by completeQuest separately
-      } else {
-        const newQs = {...latestQs, step:nextStep};
-        await dbSavePartyState(code, newQs);
-        setQs(prev => ({...prev, step:nextStep}));
-        await postQuestStepMessage(latestQ, nextStep);
-        if(isCombatStep(latestQ.steps[nextStep])) await startCombatStep(latestQ.steps[nextStep]);
-      }
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, [qs?.step, qs?.active, qs?.currentId, myId, code]);
+  // Reset lootDone when step changes
+  useEffect(()=>{ setLootDone(false); }, [qs?.step]);
 
   if(!me || !me.class) return <div style={{color:'white', fontSize:'1.5rem', padding:'2rem', textAlign:'center'}}>⏳ Caricamento personaggio...</div>;
 
@@ -1898,26 +1872,16 @@ function GameScreen({ myId, setScreen }) {
   async function endCombat() {
     setSpellMenu(false);
     const latestQs = await dbGetPartyState(code);
-    const newQs = {...latestQs, combat:null};
+    // If on a quest combat step, keep combat object with won:true so UI shows "Avanti →"
+    const onQuestCombat = latestQs?.active && latestQs?.currentId && (() => {
+      const q = getQuests().find(x=>x.id===latestQs.currentId);
+      return q && isCombatStep(q.steps[latestQs.step]);
+    })();
+    const newCombat = onQuestCombat ? { active:false, won:true } : null;
+    const newQs = {...latestQs, combat:newCombat};
     await dbSavePartyState(code, newQs);
-    setQs(prev => ({...prev, combat:null}));
-    await dbSendMessage({party_code:code, author:"Sistema", content:"🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", type:"victory"});
-    // Auto-advance quest if current step is combat
-    if(latestQs?.active && latestQs?.currentId) {
-      const quests = getQuests();
-      const q = quests.find(x=>x.id===latestQs.currentId);
-      if(q && isCombatStep(q.steps[latestQs.step])) {
-        const nextStep = latestQs.step + 1;
-        if(nextStep >= q.steps.length) {
-          await completeQuest(q);
-        } else {
-          const advQs = {...latestQs, combat:null, step:nextStep};
-          await dbSavePartyState(code, advQs);
-          setQs(prev => ({...prev, combat:null, step:nextStep}));
-          await postQuestStepMessage(q, nextStep);
-        }
-      }
-    }
+    setQs(prev => ({...prev, combat:newCombat}));
+    await dbSendMessage({party_code:code, author:"Sistema", content:"🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti! Clicca **Avanti →** per continuare.", type:"victory"});
   }
 
   // -- QUEST --
@@ -1946,10 +1910,6 @@ ${q.desc}
   function isLootStep(step) {
     return step?.type === "loot";
   }
-  function isNarrativeStep(step) {
-    return !step?.type || step?.type === "narrative" || typeof step === "string";
-  }
-
   function stepText(step) {
     if(!step) return "";
     return typeof step === "string" ? step : step.text || "";
@@ -1993,16 +1953,17 @@ ${stepText(step)}`, "quest","Master");
   async function advanceQuest() {
     const quests = getQuests();
     const q = quests.find(x=>x.id===qs?.currentId);
-    if(!q||!qs?.active){ await addMsg("ℹ️ Nessuna missione attiva.","system","Sistema"); return; }
-    const step = qs.step;
-    const stepData = q.steps[step];
-    if(isChoiceStep(stepData) || isCombatStep(stepData) || isLootStep(stepData)) return; // handled by UI
-    // narrative: advance to next
-    const nextStep = step + 1;
+    if(!q||!qs?.active) return;
+    const stepData = q.steps[qs.step];
+    // Block if combat not yet won
+    if(isCombatStep(stepData) && !qs?.combat?.won) return;
+    // Block if choice (must pick an option)
+    if(isChoiceStep(stepData)) return;
+    const nextStep = qs.step + 1;
     if(nextStep >= q.steps.length) {
       await completeQuest(q);
     } else {
-      const newQs = {...qs, step:nextStep};
+      const newQs = {...qs, combat:null, step:nextStep};
       await saveQState(newQs);
       await postQuestStepMessage(q, nextStep);
       if(isCombatStep(q.steps[nextStep])) await startCombatStep(q.steps[nextStep]);
@@ -2019,18 +1980,23 @@ ${stepText(step)}`, "quest","Master");
     const choice = stepData.choices[choiceIndex];
     if(!choice) return;
 
+    const isCorrect = choice.correct === true;
     await addMsg(`🎯 **Scelta:** ${choice.label}`, "quest", "Master");
 
-    const xpE = Math.max(0, Number(choice.xp)||0);
-    const goldE = Math.max(0, Number(choice.gold)||0);
-    if(xpE||goldE) {
-      for(const p of partyPlayers) {
-        let up={...p,xp:p.xp+xpE,gold:p.gold+goldE};
-        while(up.xp>=xpForLevel(up.level)){up.xp-=xpForLevel(up.level);up.level++;up.maxHp+=10;up.hp=up.maxHp;up.atk+=2;up.def+=1;up.mag+=1;}
-        await dbSavePlayer(up);
-        if(up.id===myId) setMeRaw(up);
+    if(isCorrect) {
+      const xpE = Math.max(0, Number(choice.xp)||0);
+      const goldE = Math.max(0, Number(choice.gold)||0);
+      if(xpE||goldE) {
+        for(const p of partyPlayers) {
+          let up={...p,xp:p.xp+xpE,gold:p.gold+goldE};
+          while(up.xp>=xpForLevel(up.level)){up.xp-=xpForLevel(up.level);up.level++;up.maxHp+=10;up.hp=up.maxHp;up.atk+=2;up.def+=1;up.mag+=1;}
+          await dbSavePlayer(up);
+          if(up.id===myId) setMeRaw(up);
+        }
+        await addMsg(`✅ Scelta giusta! ⭐ +${xpE} XP a testa — 💰 +${goldE} oro a testa`, "victory", "Master");
       }
-      await addMsg(`⭐ +${xpE} XP a testa — 💰 +${goldE} oro a testa`, "victory", "Master");
+    } else {
+      await addMsg(`❌ Hai scelto male... il party non guadagna nulla e avanza comunque.`, "system", "Sistema");
     }
 
     const nextStep = choice.next != null ? Number(choice.next) : step+1;
@@ -2053,24 +2019,16 @@ ${stepText(step)}`, "quest","Master");
     const items = loot.items||[];
     const itemFound = items.length ? items[Math.floor(Math.random()*items.length)] : null;
     let lootMsg = `💰 **Bottino trovato!**`;
-    if(goldFound>0) lootMsg += `
-🪙 +${goldFound} oro a testa`;
-    if(itemFound) lootMsg += `
-🎁 Hai trovato: **${itemFound}**!`;
+    if(goldFound>0) lootMsg += `\n🪙 +${goldFound} oro a testa`;
+    if(itemFound) lootMsg += `\n🎁 Hai trovato: **${itemFound}**!`;
+    lootMsg += `\n\nCliccate **Avanti →** per proseguire.`;
     for(const p of partyPlayers) {
       let up={...p, gold:p.gold+goldFound};
       await dbSavePlayer(up);
       if(up.id===myId) setMeRaw(up);
     }
     await addMsg(lootMsg, "victory", "Master");
-    const nextStep = qs.step + 1;
-    if(nextStep >= q.steps.length) {
-      await completeQuest(q);
-    } else {
-      const newQs={...qs, step:nextStep};
-      await saveQState(newQs);
-      await postQuestStepMessage(q, nextStep);
-    }
+    setLootDone(true);
   }
 
   async function handleInput() {
@@ -2291,9 +2249,6 @@ ${stepText(step)}`, "quest","Master");
                               onMouseEnter={e=>e.currentTarget.style.background="rgba(109,40,217,0.4)"}
                               onMouseLeave={e=>e.currentTarget.style.background="rgba(109,40,217,0.2)"}>
                               {c.label}
-                              <span style={{ float:"right", fontSize:"0.72rem", color:"#a78bfa" }}>
-                                {c.xp>0?`+${c.xp}XP`:""}{c.gold>0?` +${c.gold}🪙`:""}
-                              </span>
                             </button>
                           ))}
                         </div>
@@ -2304,9 +2259,14 @@ ${stepText(step)}`, "quest","Master");
                     return (
                       <div style={{ textAlign:"center", padding:"1rem" }}>
                         <p style={{ color:"#fca5a5", fontSize:"0.88rem", marginBottom:12 }}>{stepData.text}</p>
-                        {combat?.active
-                          ? <p style={{ color:"#ef4444", fontFamily:"'Cinzel',serif" }}>⚔️ Battaglia in corso — vai al tab Battaglia!</p>
-                          : <BigBtn onClick={()=>startCombatStep(stepData)} icon="⚔️">Avvia Battaglia</BigBtn>
+                        {qs.combat?.won
+                          ? <div>
+                              <p style={{ color:"#22c55e", fontFamily:"'Cinzel',serif", marginBottom:12 }}>🏆 Vittoria! Il combattimento è finito.</p>
+                              <BigBtn onClick={advanceQuest} gold>Avanti →</BigBtn>
+                            </div>
+                          : qs.combat?.active
+                            ? <p style={{ color:"#ef4444", fontFamily:"'Cinzel',serif" }}>⚔️ Battaglia in corso — vai al tab Battaglia!</p>
+                            : <BigBtn onClick={()=>startCombatStep(stepData)} icon="⚔️">Avvia Battaglia</BigBtn>
                         }
                       </div>
                     );
@@ -2315,18 +2275,18 @@ ${stepText(step)}`, "quest","Master");
                     return (
                       <div style={{ textAlign:"center", padding:"1rem" }}>
                         <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:12 }}>{stepData.text}</p>
-                        <BigBtn onClick={()=>handleLoot(stepData)} gold icon="🔍">Cerca tra le rovine</BigBtn>
+                        {lootDone
+                          ? <BigBtn onClick={advanceQuest} gold>Avanti →</BigBtn>
+                          : <BigBtn onClick={()=>handleLoot(stepData)} gold icon="🔍">Cerca tra le rovine</BigBtn>
+                        }
                       </div>
                     );
                   }
                   // narrative
                   return (
                     <div>
-                      <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:12, lineHeight:1.5 }}>{stepText(stepData)}</p>
-                      <div style={{ height:3, background:"#0f172a", borderRadius:2, overflow:"hidden", marginBottom:8 }}>
-                        <div style={{ height:"100%", background:"linear-gradient(90deg,#fbbf24,#f59e0b)", animation:"narrativeBar 3s linear forwards" }} />
-                      </div>
-                      <p style={{ color:"#78350f", fontSize:"0.72rem" }}>Avanzamento automatico in 3 secondi...</p>
+                      <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:16, lineHeight:1.5 }}>{stepText(stepData)}</p>
+                      <BigBtn onClick={advanceQuest} gold>Avanti →</BigBtn>
                     </div>
                   );
                 })()}
