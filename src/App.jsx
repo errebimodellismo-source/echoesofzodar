@@ -450,7 +450,25 @@ function maxPreparedSpellsForLevel(level) {
 function lsGet(key, def) { try { const r=localStorage.getItem(key); return r?JSON.parse(r):def; } catch { return def; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch { /* ignore */ } }
 
-function getQuests()   { return lsGet("eoz_quests", DEFAULT_QUESTS()).map(normalizeQuest); }
+function getQuests() {
+  const defaults = DEFAULT_QUESTS().map(normalizeQuest);
+  const stored = lsGet("eoz_quests", null);
+  if(!Array.isArray(stored) || !stored.length) return defaults;
+
+  const normalizedStored = stored.map(normalizeQuest);
+
+  // Migrate the legacy one-mission seed so expanded default content becomes visible.
+  if(normalizedStored.length === 1 && normalizedStored[0]?.id === "dq1") {
+    const merged = [
+      ...normalizedStored,
+      ...defaults.filter(q => q.id !== "dq1"),
+    ];
+    saveQuests(merged);
+    return merged;
+  }
+
+  return normalizedStored;
+}
 function getMonsters() { return lsGet("eoz_monsters",  DEFAULT_MONSTERS); }
 function getMeta()     { return lsGet("eoz_meta",      { worldName:"Echoes of Zodar", worldSub:"Dove l'Equilibrio Regna Supremo", logo:null }); }
 function saveQuests(q)   { lsSet("eoz_quests", q); }
@@ -1100,7 +1118,7 @@ function resolveWeaponAttack(attacker, target, weaponDie) {
   const hit = isCrit || attackTotal >= targetCa;
   const damageRoll = hit ? rollDice(weaponDie || "1d6") : 0;
   const damage = hit ? damageRoll + (isCrit ? damageRoll : 0) : 0;
-  return { hitRoll, isCrit, attackBonus, attackTotal, targetCa, damageRoll, damage, weaponDie: weaponDie || "1d6" };
+  return { hitRoll, isCrit, attackBonus, attackTotal, targetCa, hit, damageRoll, damage, weaponDie: weaponDie || "1d6" };
 }
 function formatWeaponAttackLog(attacker, target, resolved, weaponName, targetHpAfter, targetMaxHp) {
   const header = `${attacker?.emoji || "⭐"} **${attacker?.name}** attacca ${target?.emoji || "⭐"} **${target?.name}**`;
