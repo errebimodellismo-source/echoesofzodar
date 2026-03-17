@@ -585,7 +585,7 @@ async function dbSendMessage(msg) {
 
 async function dbSavePlayer(p) {
   const { data, error } = await supabase.from("players").upsert({
-    id: p.id, name: p.name, party_code: p.partyCode, avatar_config: p.gender || 'male',
+    id: p.id, name: p.name, party_code: p.partyCode, avatar_config: { gender: p.gender || 'male' },
     account_id: p.accountId || null,
     class: p?.class || 'warrior', race: p?.race || 'human',
     hp: p?.hp || 0, max_hp: p?.maxHp || 0, atk: p?.atk || 0, def: p?.def || 0,
@@ -603,7 +603,7 @@ async function dbGetPlayers(partyCode) {
   return (data || []).map(r => ({
     id: r?.id, name: r?.name, partyCode: r?.party_code,
     accountId: r?.account_id || null,
-    gender: r?.avatar_config || 'male',
+    gender: typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male'),
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
     mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
@@ -615,7 +615,7 @@ async function dbGetAccountCharacters(accountId) {
   return (data || []).map(r => ({
     id: r?.id, name: r?.name, partyCode: r?.party_code,
     accountId: r?.account_id || null,
-    gender: r?.avatar_config || 'male',
+    gender: typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male'),
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
     mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
