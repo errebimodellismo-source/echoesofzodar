@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>Test Ritratti Diablo</title>
+  <style>
+    body {
+      background: #0f172a;
+      color: #cbd5e1;
+      font-family: 'Cinzel', serif, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #fbbf24;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+      gap: 15px;
+    }
+    .card {
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .img-container {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      overflow: hidden;
+      border: 2px solid #555;
+      background: #000;
+      margin-bottom: 10px;
+      position: relative;
+    }
+    .img-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    img.fallback-used {
+      border: 2px solid #fbbf24; 
+    }
+    img.error-used {
+      border: 2px solid #ef4444; 
+    }
+    .label {
+      font-size: 0.8rem;
+      margin: 2px 0;
+    }
+    .class-label {
+      color: #fbbf24;
+      font-weight: bold;
+    }
+    .race-label {
+      color: #a78bfa;
+    }
+    .status-missing {
+      color: #ef4444;
+      font-size: 0.7rem;
+      font-weight: bold;
+    }
+    .status-fallback {
+      color: #fbbf24;
+      font-size: 0.7rem;
+      font-weight: bold;
+    }
+    .status-ok {
+      color: #10b981;
+      font-size: 0.7rem;
+      font-weight: bold;
+    }
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    select, button {
+      padding: 8px 12px;
+      background: #1e293b;
+      color: #f8fafc;
+      border: 1px solid #3b82f6;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>🧪 Visualizzatore Test Ritratti (216 Combinazioni)</h1>
+  <div class="controls">
+    <select id="genderFilter">
+      <option value="all">Sesso: Entrambi</option>
+      <option value="male">Solo Maschi</option>
+      <option value="female">Solo Femmine</option>
+    </select>
+    <select id="statusFilter">
+      <option value="all">Stato: Mostra Tutti</option>
+      <option value="ok">Solo Specifici Presenti</option>
+      <option value="fallback">Solo Fallback Base (Classe)</option>
+      <option value="missing">Solo Totalmente Mancanti</option>
+    </select>
+  </div>
+
+  <div class="grid" id="grid"></div>
+
+  <script>
+    const CLASSES = ['barbarian', 'bard', 'cleric', 'druid', 'warrior', 'monk', 'paladin', 'ranger', 'rogue', 'sorcerer', 'warlock', 'mage'];
+    const RACES = ['human', 'dwarf', 'elf', 'halfling', 'dragonborn', 'gnome', 'halfelf', 'halforc', 'tiefling'];
+    const GENDERS = ['male', 'female'];
+
+    const grid = document.getElementById('grid');
+    const genderSelect = document.getElementById('genderFilter');
+    const statusSelect = document.getElementById('statusFilter');
+
+    let allCombinations = [];
+
+    CLASSES.forEach(c => {
+      RACES.forEach(r => {
+        GENDERS.forEach(g => {
+          allCombinations.push({ cls: c, race: r, gender: g });
+        });
+      });
+    });
+
+    console.log("Totale Combinazioni:", allCombinations.length);
+
+    function renderGrid() {
+      grid.innerHTML = '';
+      const gFilter = genderSelect.value;
+      const sFilter = statusSelect.value;
+
+      allCombinations.forEach(combo => {
+        if (gFilter !== 'all' && combo.gender !== gFilter) return;
+
+        const { cls, race, gender } = combo;
+        let specificUrl = `/assets/portraits/${cls}_${race}_${gender}.png`;
+        let fallbackUrl = `/assets/portraits/${cls}_${gender}.png`;
+        let brokenPlaceholder = 'https://fv5-2.files.fm/thumb_show.php?i=p532qftvxy&view&v=1';
+
+        const card = document.createElement('div');
+        card.className = `card`;
+        
+        const statusEl = document.createElement('div');
+        statusEl.style.marginBottom = '5px';
+
+        const labelHtml = `
+          <div class="label class-label">${cls.toUpperCase()}</div>
+          <div class="label race-label">${race.toUpperCase()}</div>
+          <div class="label">${gender === 'male' ? '♂ Maschio' : '♀ Femmina'}</div>
+        `;
+
+        const img = new Image();
+        img.src = specificUrl;
+
+        // Simulate 404 tests by checking if it triggers onerror
+        img.onerror = () => {
+          if (img.src.includes(`${cls}_${race}_${gender}.png`)) {
+            // Specific failed, try fallback class image
+            img.src = fallbackUrl;
+            img.classList.add('fallback-used');
+            statusEl.className = 'status-fallback';
+            statusEl.innerText = 'USA FALLBACK CLASSE';
+            if (sFilter === 'ok' || sFilter === 'missing') card.style.display = 'none';
+          } else if (img.src.includes(`${cls}_${gender}.png`)) {
+            // Even fallback failed, show generic dummy
+            img.src = brokenPlaceholder;
+            img.classList.remove('fallback-used');
+            img.classList.add('error-used');
+            statusEl.className = 'status-missing';
+            statusEl.innerText = 'IMMAGINE MANCANTE';
+            if (sFilter === 'ok' || sFilter === 'fallback') card.style.display = 'none';
+          }
+        };
+
+        img.onload = () => {
+          if (img.src.includes(`${cls}_${race}_${gender}.png`)) {
+             statusEl.className = 'status-ok';
+             statusEl.innerText = 'SPECIFICO OK';
+             if (sFilter === 'fallback' || sFilter === 'missing') card.style.display = 'none';
+          }
+        };
+
+        const imgContainer = document.createElement('div');
+        imgContainer.className = 'img-container';
+        imgContainer.appendChild(img);
+
+        card.appendChild(statusEl);
+        card.appendChild(imgContainer);
+        card.innerHTML += labelHtml;
+
+        grid.appendChild(card);
+      });
+    }
+
+    genderSelect.addEventListener('change', renderGrid);
+    statusSelect.addEventListener('change', renderGrid);
+    renderGrid();
+  </script>
+</body>
+</html>
