@@ -2790,7 +2790,7 @@ function GameScreen({ myId, setScreen }) {
 
   // -- QUEST --
   async function acceptQuest(q) {
-    const newQs = {...qs, currentId:q.id, step:0, active:true};
+    const newQs = { currentId:q.id, step:0, active:true, combat:null, completed:qs?.completed||[] };
     await saveQState(newQs);
     await addMsg(`📜 **MISSIONE: ${q.title}**
 
@@ -3374,6 +3374,13 @@ ${stepText(step)}`, "quest","Master");
                 {(() => {
                   const stepData = currentQ?.steps?.[qs.step];
                   if(!stepData) return null;
+                  const combatVictory = !!qs?.combat?.won;
+                  const lootOpened = lootDone;
+                  const canAdvance =
+                    isCombatStep(stepData) ? (!qs?.combat?.active && combatVictory) :
+                    isLootStep(stepData) ? lootOpened :
+                    isChoiceStep(stepData) ? false :
+                    true; // narrative
                   if(isChoiceStep(stepData)) {
                     return (
                       <div>
@@ -3398,7 +3405,7 @@ ${stepText(step)}`, "quest","Master");
                         {qs.combat?.won
                           ? <div>
                               <p style={{ color:"#22c55e", fontFamily:"'Cinzel',serif", marginBottom:12 }}>🏆 Vittoria! Il combattimento è finito.</p>
-                              <BigBtn onClick={advanceQuest} gold>Avanti →</BigBtn>
+                              {canAdvance && <BigBtn onClick={advanceQuest} gold>Avanti →</BigBtn>}
                             </div>
                           : qs.combat?.active
                             ? <p style={{ color:"#ef4444", fontFamily:"'Cinzel',serif" }}>⚔️ Battaglia avviata automaticamente — sei già nel flusso di combattimento.</p>
@@ -3411,7 +3418,7 @@ ${stepText(step)}`, "quest","Master");
                     return (
                       <div style={{ textAlign:"center", padding:"1rem" }}>
                         <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:12 }}>{stepData.text}</p>
-                        {lootDone
+                        {canAdvance
                           ? <BigBtn onClick={advanceQuest} gold>Avanti →</BigBtn>
                           : <BigBtn onClick={()=>handleLoot(stepData)} gold icon="🔍">Cerca tra le rovine</BigBtn>
                         }
@@ -3422,7 +3429,7 @@ ${stepText(step)}`, "quest","Master");
                   return (
                     <div>
                       <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:16, lineHeight:1.5 }}>{stepText(stepData)}</p>
-                      <BigBtn onClick={advanceQuest} gold>Avanti →</BigBtn>
+                      {canAdvance && <BigBtn onClick={advanceQuest} gold>Avanti →</BigBtn>}
                     </div>
                   );
                 })()}
