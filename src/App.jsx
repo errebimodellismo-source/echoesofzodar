@@ -1945,8 +1945,8 @@ function ShopView({ me, items, loading, error, inventoryCounts, onBuy }) {
     <div>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:"1rem", flexWrap:"wrap" }}>
         <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0 }}>🛒 Negozio</h3>
-        <div style={{ padding:"0.4rem 0.65rem", background:"rgba(180,83,9,0.12)", border:"1px solid #78350f", borderRadius:999, color:"#fbbf24", fontSize:"0.8rem", fontWeight:700, whiteSpace:"nowrap" }}>
-          💰 Oro: {me?.gold || 0}
+        <div style={{ padding:"0.6rem 1.4rem", background:"linear-gradient(135deg,rgba(180,83,9,0.3) 0%,rgba(180,83,9,0.1) 100%)", border:"3px solid #fbbf24", borderRadius:12, color:"#fbbf24", fontSize:"2.5rem", fontWeight:900, whiteSpace:"nowrap", textShadow:"0 2px 10px rgba(251,191,36,0.4)", lineHeight:1, display:"flex", alignItems:"center", gap:"0.8rem", boxShadow:"0 0 25px rgba(180,83,9,0.2)" }}>
+          <span style={{ fontSize:"3rem" }}>💰</span> {me?.gold || 0}
         </div>
       </div>
       <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:"1rem" }}>
