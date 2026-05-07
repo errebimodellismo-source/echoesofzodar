@@ -17,13 +17,13 @@ const DiceRoller = forwardRef(({ onRollComplete }, ref) => {
           assetPath: '/assets/dice-box/', // Will fail over to unpkg if not found
           theme: 'default',
           themeColor: '#ef4444', 
-          scale: 6,
+          scale: 20,
           spinForce: 6,
-          throwForce: 6,
-          startingHeight: 8,
+          throwForce: 4,
+          startingHeight: 15,
           settleTimeout: 5000,
           lightIntensity: 0.9,
-          gravity: 2,
+          gravity: 1,
         });
 
         await box.init();
