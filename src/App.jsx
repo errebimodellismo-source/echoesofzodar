@@ -2447,7 +2447,7 @@ function GameScreen({ myId, setScreen }) {
       setQs(prev => ({ ...prev, combat: newCombat }));
       return;
     }
-    const firstAlivePlayer = latestCombatants.find(c => c.isPlayer && c.hp > 0 && !c.dead);
+    const firstAlivePlayer = latestCombatants.find(c => c.isPlayer && !c.dead);
     if (!firstAlivePlayer || firstAlivePlayer.id !== myId) return;
     monsterTickBusyRef.current = true;
     try {
@@ -3031,7 +3031,7 @@ ${stepText(step)}`, "quest","Master");
   const equippedWeapon = getEquippedWeapon(equipment, itemMap);
   const combatMode = tab==="combat" && combat?.active;
   const isMonsterTurn = combat?.active && activeCombatant && !activeCombatant.isPlayer;
-  const isLeaderForMonsterTurn = isMonsterTurn && combat.combatants.find(c => c.isPlayer && c.hp > 0 && !c.dead)?.id === myId;
+  const isLeaderForMonsterTurn = isMonsterTurn && combat.combatants.find(c => c.isPlayer && !c.dead)?.id === myId;
   const equippedItems = {
     weapon: itemMap.get(equipment.weapon) || null,
     armor: itemMap.get(equipment.armor) || null,
