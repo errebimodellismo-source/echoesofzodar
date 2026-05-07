@@ -2246,6 +2246,7 @@ function GameScreen({ myId, setScreen }) {
   const itemMapRef = useRef(DEFAULT_ITEM_MAP);
   const startCombatStepRef = useRef(null);
   const monsterTickBusyRef = useRef(false);
+  const doMonsterTurnRef = useRef(null);
 
     const diceRef = useRef(null);
 
@@ -2428,71 +2429,82 @@ function GameScreen({ myId, setScreen }) {
   }, [qs?.active, qs?.currentId, qs?.step, qs?.combat?.active, qs?.combat?.won]);
 
   // Auto-attack when it's a monster's turn.
-  // Only the first alive player in initiative order executes this tick to prevent
-  // all clients from firing the monster attack simultaneously (race condition).
-  useEffect(() => {
-    if (!qs?.combat?.active) return;
-    const timer = setTimeout(async () => {
-      if (monsterTickBusyRef.current) return;
-      const latestQs = await dbGetPartyState(code);
-      const latestCombat = latestQs?.combat;
-      if (!latestCombat?.active) return;
-      if (latestCombat.pendingLog) return;
-      const latestCombatants = [...latestCombat.combatants];
-      const actor = latestCombatants[latestCombat.turn % latestCombatants.length];
-      if (!actor || actor.isPlayer || actor.hp <= 0) return;
-      // Designate a single client: first alive player in initiative order
-      const firstAlivePlayer = latestCombatants.find(c => c.isPlayer && c.hp > 0 && !c.dead);
-      if (!firstAlivePlayer || firstAlivePlayer.id !== myId) return;
-      monsterTickBusyRef.current = true;
-      try {
-        const latestPlayers = await dbGetPlayers(code);
-        const alivePlayers = latestPlayers.filter(p => (p?.hp || 0) > 0);
-        if (!alivePlayers.length) {
-          if(!hasActionablePlayerCombatants(latestCombatants)) {
-            await resolveCombatNoActionablePlayers(latestQs, latestCombatants);
-            return;
-          }
-          const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
-          const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound };
-          await dbSavePartyState(code, { ...latestQs, combat: newCombat });
-          setQs(prev => ({ ...prev, combat: newCombat }));
+  // Extracted monster attack logic — called by button (leader) and by fallback timer.
+  // Only the first alive player in initiative order executes to prevent race conditions.
+  async function doMonsterTurn() {
+    if (monsterTickBusyRef.current) return;
+    const latestQs = await dbGetPartyState(code);
+    const latestCombat = latestQs?.combat;
+    if (!latestCombat?.active) return;
+    if (latestCombat.pendingLog) return;
+    const latestCombatants = [...latestCombat.combatants];
+    const actor = latestCombatants[latestCombat.turn % latestCombatants.length];
+    if (!actor || actor.isPlayer || actor.hp <= 0) {
+      // Dead or skipped slot — advance turn without attacking
+      const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
+      const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound };
+      await dbSavePartyState(code, { ...latestQs, combat: newCombat });
+      setQs(prev => ({ ...prev, combat: newCombat }));
+      return;
+    }
+    const firstAlivePlayer = latestCombatants.find(c => c.isPlayer && c.hp > 0 && !c.dead);
+    if (!firstAlivePlayer || firstAlivePlayer.id !== myId) return;
+    monsterTickBusyRef.current = true;
+    try {
+      const latestPlayers = await dbGetPlayers(code);
+      const alivePlayers = latestPlayers.filter(p => (p?.hp || 0) > 0);
+      if (!alivePlayers.length) {
+        if(!hasActionablePlayerCombatants(latestCombatants)) {
+          await resolveCombatNoActionablePlayers(latestQs, latestCombatants);
           return;
         }
-        const pt = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-        const weaponDie = getCombatDamageDie(actor);
-        const resolved = await performAsyncAttack(actor, pt, weaponDie);
-        const edmg = resolved.damage;
-        const updPt = { ...pt, hp: Math.max(0, pt.hp - edmg) };
-        const playerCombatantIdx = latestCombatants.findIndex(c => c.id === pt.id);
-        if(playerCombatantIdx >= 0) {
-          latestCombatants[playerCombatantIdx] = applyCombatDamageState({
-            ...latestCombatants[playerCombatantIdx],
-            maxHp: updPt.maxHp,
-          }, edmg);
-        }
-        await dbSavePlayer(updPt);
-        if (updPt.id === myId) setMeRaw(updPt);
-        const log = formatWeaponAttackLog(actor, pt, resolved, "Attacco naturale", updPt.hp, pt.maxHp);
         const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
-        const allDead = latestCombatants.filter(c => !c.isPlayer).every(c => c.hp <= 0);
-        if (allDead) {
-          const endQs = { ...latestQs, combat: { ...latestCombat, combatants: latestCombatants } };
-          await dbSavePartyState(code, endQs);
-          setQs(prev => ({ ...prev, combat: endQs.combat }));
-          await dbSendMessage({ party_code: code, author: "Sistema", content: "🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", type: "victory" });
-        } else {
-          const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound, pendingLog: log };
-          await dbSavePartyState(code, { ...latestQs, combat: newCombat });
-          setQs(prev => ({ ...prev, combat: newCombat }));
-          await dbSendMessage({ party_code: code, author: "Battaglia", content: log, type: "combat" });
-        }
-      } finally {
-        monsterTickBusyRef.current = false;
+        const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound };
+        await dbSavePartyState(code, { ...latestQs, combat: newCombat });
+        setQs(prev => ({ ...prev, combat: newCombat }));
+        return;
       }
-    }, 1500);
+      const pt = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+      const weaponDie = getCombatDamageDie(actor);
+      const resolved = await performAsyncAttack(actor, pt, weaponDie);
+      const edmg = resolved.damage;
+      const updPt = { ...pt, hp: Math.max(0, pt.hp - edmg) };
+      const playerCombatantIdx = latestCombatants.findIndex(c => c.id === pt.id);
+      if(playerCombatantIdx >= 0) {
+        latestCombatants[playerCombatantIdx] = applyCombatDamageState({
+          ...latestCombatants[playerCombatantIdx],
+          maxHp: updPt.maxHp,
+        }, edmg);
+      }
+      await dbSavePlayer(updPt);
+      if (updPt.id === myId) setMeRaw(updPt);
+      const log = formatWeaponAttackLog(actor, pt, resolved, "Attacco naturale", updPt.hp, pt.maxHp);
+      const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
+      const allDead = latestCombatants.filter(c => !c.isPlayer).every(c => c.hp <= 0);
+      if (allDead) {
+        const endQs = { ...latestQs, combat: { ...latestCombat, combatants: latestCombatants } };
+        await dbSavePartyState(code, endQs);
+        setQs(prev => ({ ...prev, combat: endQs.combat }));
+        await dbSendMessage({ party_code: code, author: "Sistema", content: "🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", type: "victory" });
+      } else {
+        const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound, pendingLog: log };
+        await dbSavePartyState(code, { ...latestQs, combat: newCombat });
+        setQs(prev => ({ ...prev, combat: newCombat }));
+        await dbSendMessage({ party_code: code, author: "Battaglia", content: log, type: "combat" });
+      }
+    } finally {
+      monsterTickBusyRef.current = false;
+    }
+  }
+  doMonsterTurnRef.current = doMonsterTurn;
+
+  // Fallback timer — fires if player doesn't press the button within 8s.
+  // Also re-triggers when pendingLog clears (fixes the freeze-after-dismiss bug).
+  useEffect(() => {
+    if (!qs?.combat?.active) return;
+    const timer = setTimeout(() => { doMonsterTurnRef.current?.(); }, 8000);
     return () => clearTimeout(timer);
-  }, [qs?.combat?.turn, qs?.combat?.active, myId, code]);
+  }, [qs?.combat?.turn, qs?.combat?.active, !!qs?.combat?.pendingLog, myId, code]);
 
   async function addMsg(content, type="narration", author=null) {
     await dbSendMessage({ party_code:code, author:author||me?.name, content, type });
@@ -3018,6 +3030,8 @@ ${stepText(step)}`, "quest","Master");
   const visibleChatMessages = messages.filter(msg => msg.type === "chat");
   const equippedWeapon = getEquippedWeapon(equipment, itemMap);
   const combatMode = tab==="combat" && combat?.active;
+  const isMonsterTurn = combat?.active && activeCombatant && !activeCombatant.isPlayer;
+  const isLeaderForMonsterTurn = isMonsterTurn && combat.combatants.find(c => c.isPlayer && c.hp > 0 && !c.dead)?.id === myId;
   const equippedItems = {
     weapon: itemMap.get(equipment.weapon) || null,
     armor: itemMap.get(equipment.armor) || null,
@@ -3478,9 +3492,18 @@ ${stepText(step)}`, "quest","Master");
                             </>
                           )}
                         </>
+                      ) : isLeaderForMonsterTurn ? (
+                        <div style={{ display:"flex", flexDirection:"column", gap:"0.75rem", alignItems:"center" }}>
+                          <p style={{ color:"#fca5a5", fontFamily:"'Cinzel Decorative',serif", fontSize:"1rem", letterSpacing:"0.04em", margin:0 }}>
+                            ⚔️ Turno di <strong>{activeCombatant?.name}</strong>
+                          </p>
+                          <button onClick={() => doMonsterTurnRef.current?.()} style={{ width:"100%", maxWidth:340, padding:"1rem 1.4rem", background:"linear-gradient(135deg,#431407,#9a3412)", border:"2px solid #ea580c", borderRadius:10, color:"#ffedd5", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.06rem", cursor:"pointer", letterSpacing:"0.08em", boxShadow:"0 14px 28px rgba(127,29,29,0.24)" }}>
+                            Avanti → (il nemico attacca)
+                          </button>
+                        </div>
                       ) : (
-                        <div style={{ color:"#cbd5e1", fontSize:"0.96rem", lineHeight:1.6 }}>
-                          In attesa di <strong style={{ color:"#f8fafc" }}>{combat.combatants[combat.turn%combat.combatants.length]?.name}</strong>...
+                        <div style={{ color:"#6b7280", fontSize:"0.9rem", lineHeight:1.6, textAlign:"center" }}>
+                          Turno di <strong style={{ color:"#f8fafc" }}>{activeCombatant?.name}</strong>...
                         </div>
                       )}
                     </div>
