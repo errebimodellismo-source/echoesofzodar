@@ -2243,6 +2243,7 @@ function GameScreen({ myId, setScreen }) {
   const subRef = useRef(null);
   const itemMapRef = useRef(DEFAULT_ITEM_MAP);
   const startCombatStepRef = useRef(null);
+  const monsterTickBusyRef = useRef(false);
 
     const diceRef = useRef(null);
 
@@ -2424,52 +2425,63 @@ function GameScreen({ myId, setScreen }) {
     startCombatStepRef.current?.(stepData);
   }, [qs?.active, qs?.currentId, qs?.step, qs?.combat?.active, qs?.combat?.won]);
 
-  // Auto-attack when it's a monster's turn
+  // Auto-attack when it's a monster's turn.
+  // Only the first alive player in initiative order executes this tick to prevent
+  // all clients from firing the monster attack simultaneously (race condition).
   useEffect(() => {
     if (!qs?.combat?.active) return;
     const timer = setTimeout(async () => {
+      if (monsterTickBusyRef.current) return;
       const latestQs = await dbGetPartyState(code);
       const latestCombat = latestQs?.combat;
       if (!latestCombat?.active) return;
       const latestCombatants = [...latestCombat.combatants];
       const actor = latestCombatants[latestCombat.turn % latestCombatants.length];
       if (!actor || actor.isPlayer || actor.hp <= 0) return;
-      const latestPlayers = await dbGetPlayers(code);
-      const alivePlayers = latestPlayers.filter(p => (p?.hp || 0) > 0);
-      if (!alivePlayers.length) {
-        if(!hasActionablePlayerCombatants(latestCombatants)) {
-          await resolveCombatNoActionablePlayers(latestQs, latestCombatants);
+      // Designate a single client: first alive player in initiative order
+      const firstAlivePlayer = latestCombatants.find(c => c.isPlayer && c.hp > 0 && !c.dead);
+      if (!firstAlivePlayer || firstAlivePlayer.id !== myId) return;
+      monsterTickBusyRef.current = true;
+      try {
+        const latestPlayers = await dbGetPlayers(code);
+        const alivePlayers = latestPlayers.filter(p => (p?.hp || 0) > 0);
+        if (!alivePlayers.length) {
+          if(!hasActionablePlayerCombatants(latestCombatants)) {
+            await resolveCombatNoActionablePlayers(latestQs, latestCombatants);
+            return;
+          }
+          const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
+          const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound };
+          await dbSavePartyState(code, { ...latestQs, combat: newCombat });
+          setQs(prev => ({ ...prev, combat: newCombat }));
           return;
         }
+        const pt = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+        const weaponDie = getCombatDamageDie(actor);
+        const resolved = await performAsyncAttack(actor, pt, weaponDie);
+        const edmg = resolved.damage;
+        const updPt = { ...pt, hp: Math.max(0, pt.hp - edmg) };
+        const playerCombatantIdx = latestCombatants.findIndex(c => c.id === pt.id);
+        if(playerCombatantIdx >= 0) {
+          latestCombatants[playerCombatantIdx] = applyCombatDamageState({
+            ...latestCombatants[playerCombatantIdx],
+            maxHp: updPt.maxHp,
+          }, edmg);
+        }
+        await dbSavePlayer(updPt);
+        if (updPt.id === myId) setMeRaw(updPt);
+        const log = formatWeaponAttackLog(actor, pt, resolved, "Attacco naturale", updPt.hp, pt.maxHp);
         const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
+        const allDead = latestCombatants.filter(c => !c.isPlayer).every(c => c.hp <= 0);
         const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound };
-        await dbSavePartyState(code, { ...latestQs, combat: newCombat });
-        setQs(prev => ({ ...prev, combat: newCombat }));
-        return;
+        const newQs = { ...latestQs, combat: allDead ? null : newCombat };
+        await dbSavePartyState(code, newQs);
+        setQs(prev => ({ ...prev, combat: allDead ? null : newCombat }));
+        await dbSendMessage({ party_code: code, author: "Battaglia", content: log, type: "combat" });
+        if (allDead) await dbSendMessage({ party_code: code, author: "Sistema", content: "🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", type: "victory" });
+      } finally {
+        monsterTickBusyRef.current = false;
       }
-      const pt = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-      const weaponDie = getCombatDamageDie(actor);
-      const resolved = await performAsyncAttack(actor, pt, weaponDie);
-      const edmg = resolved.damage;
-      const updPt = { ...pt, hp: Math.max(0, pt.hp - edmg) };
-      const playerCombatantIdx = latestCombatants.findIndex(c => c.id === pt.id);
-      if(playerCombatantIdx >= 0) {
-        latestCombatants[playerCombatantIdx] = applyCombatDamageState({
-          ...latestCombatants[playerCombatantIdx],
-          maxHp: updPt.maxHp,
-        }, edmg);
-      }
-      await dbSavePlayer(updPt);
-      if (updPt.id === myId) setMeRaw(updPt);
-      const log = formatWeaponAttackLog(actor, pt, resolved, "Attacco naturale", updPt.hp, pt.maxHp);
-      const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
-      const allDead = latestCombatants.filter(c => !c.isPlayer).every(c => c.hp <= 0);
-      const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound };
-      const newQs = { ...latestQs, combat: allDead ? null : newCombat };
-      await dbSavePartyState(code, newQs);
-      setQs(prev => ({ ...prev, combat: allDead ? null : newCombat }));
-      await dbSendMessage({ party_code: code, author: "Battaglia", content: log, type: "combat" });
-      if (allDead) await dbSendMessage({ party_code: code, author: "Sistema", content: "🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", type: "victory" });
     }, 1500);
     return () => clearTimeout(timer);
   }, [qs?.combat?.turn, qs?.combat?.active, myId, code]);
