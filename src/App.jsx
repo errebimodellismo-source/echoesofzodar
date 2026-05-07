@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "./supabase";
 import { CLASSES, RACES } from "./data/characterData";
 import { SPELL_SLOTS, SPELLS } from "./data/spellsData";
@@ -1000,6 +1000,95 @@ function MasterPanelAuth({ setScreen }) {
 /* ----------------------------------------------
    LANDING
 ---------------------------------------------- */
+function FireEmbers() {
+  const particles = useMemo(() => {
+    const embers = Array.from({ length: 60 }, (_, i) => ({
+      id: `e${i}`,
+      left: Math.random() * 100,
+      size: Math.random() * 2.5 + 1,
+      duration: Math.random() * 6 + 4,
+      delay: -(Math.random() * 14),
+      drift: (Math.random() - 0.5) * 120,
+      color: ["#ff6b00","#ef4444","#fbbf24","#f97316","#dc2626","#fb923c","#fde68a"][Math.floor(Math.random()*7)],
+      opacity: Math.random() * 0.65 + 0.3,
+    }));
+    const ash = Array.from({ length: 18 }, (_, i) => ({
+      id: `a${i}`,
+      left: Math.random() * 100,
+      size: Math.random() * 4 + 3,
+      duration: Math.random() * 9 + 9,
+      delay: -(Math.random() * 18),
+      drift: (Math.random() - 0.5) * 180,
+      color: `rgba(255,${140 + Math.floor(Math.random()*80)},${Math.floor(Math.random()*50)},${(Math.random()*0.25+0.1).toFixed(2)})`,
+      opacity: Math.random() * 0.22 + 0.08,
+    }));
+    return [...embers, ...ash];
+  }, []);
+
+  return (
+    <>
+      <style>{`
+        @keyframes riseEmber {
+          0%   { transform: translateY(0) translateX(0) scale(1); opacity: var(--op); }
+          70%  { opacity: calc(var(--op) * 0.5); }
+          100% { transform: translateY(-108vh) translateX(var(--dx)) scale(0.08); opacity: 0; }
+        }
+        @keyframes fireGlow {
+          0%, 100% { opacity: 0.22; }
+          50%       { opacity: 0.40; }
+        }
+        @keyframes fireGlowSide {
+          0%, 100% { opacity: 0.14; }
+          50%       { opacity: 0.28; }
+        }
+        @keyframes vignettePulse {
+          0%, 100% { opacity: 0.72; }
+          50%       { opacity: 0.82; }
+        }
+      `}</style>
+
+      {/* Vignette angoli */}
+      <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:0,
+        background:"radial-gradient(ellipse at 50% 50%, transparent 40%, rgba(0,0,0,0.72) 100%)",
+        animation:"vignettePulse 6s ease-in-out infinite" }} />
+
+      {/* Bagliore fuoco basso-centro */}
+      <div style={{ position:"fixed", bottom:0, left:0, right:0, height:"35vh", pointerEvents:"none", zIndex:0,
+        background:"radial-gradient(ellipse at 50% 100%, rgba(180,45,0,0.42) 0%, rgba(120,20,0,0.18) 45%, transparent 72%)",
+        animation:"fireGlow 2.8s ease-in-out infinite" }} />
+
+      {/* Bagliore laterale sinistro */}
+      <div style={{ position:"fixed", bottom:0, left:0, height:"50vh", width:"28vw", pointerEvents:"none", zIndex:0,
+        background:"radial-gradient(ellipse at 0% 100%, rgba(200,55,0,0.26) 0%, transparent 68%)",
+        animation:"fireGlowSide 3.5s 0.8s ease-in-out infinite" }} />
+
+      {/* Bagliore laterale destro */}
+      <div style={{ position:"fixed", bottom:0, right:0, height:"50vh", width:"28vw", pointerEvents:"none", zIndex:0,
+        background:"radial-gradient(ellipse at 100% 100%, rgba(200,55,0,0.26) 0%, transparent 68%)",
+        animation:"fireGlowSide 3.5s 1.9s ease-in-out infinite" }} />
+
+      {/* Particelle */}
+      <div style={{ position:"fixed", inset:0, pointerEvents:"none", zIndex:1, overflow:"hidden" }}>
+        {particles.map(p => (
+          <div key={p.id} style={{
+            position:"absolute",
+            bottom:"-6px",
+            left:`${p.left}%`,
+            width:`${p.size}px`,
+            height:`${p.size}px`,
+            borderRadius:"50%",
+            background: p.color,
+            boxShadow:`0 0 ${p.size*2}px ${p.color}, 0 0 ${p.size*5}px ${p.color}`,
+            "--op": p.opacity,
+            "--dx": `${p.drift}px`,
+            animation:`riseEmber ${p.duration}s ${p.delay}s linear infinite`,
+          }} />
+        ))}
+      </div>
+    </>
+  );
+}
+
 function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   const meta = getMeta();
   const [characters, setCharacters] = useState([]);
@@ -1041,7 +1130,9 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   }
 
   return (
-    <div onClick={() => audioManager.playBGM("intro")} style={{ minHeight:"100vh", width:"100vw", background:"radial-gradient(at 15% 50%, rgba(109,40,217,0.3) 0%, rgba(0,0,0,0) 55%), radial-gradient(at 85% 30%, rgba(109,40,217,0.2) 0%, rgba(0,0,0,0) 50%), #06060e", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"2rem 1rem" }}>
+    <div onClick={() => audioManager.playBGM("intro")} style={{ minHeight:"100vh", width:"100vw", background:"radial-gradient(at 15% 50%, rgba(109,40,217,0.3) 0%, rgba(0,0,0,0) 55%), radial-gradient(at 85% 30%, rgba(109,40,217,0.2) 0%, rgba(0,0,0,0) 50%), #06060e", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"2rem 1rem", position:"relative" }}>
+      <FireEmbers />
+      <div style={{ position:"relative", zIndex:2, display:"flex", flexDirection:"column", alignItems:"center", width:"100%" }}>
       {meta.logo
         ? <img src={meta.logo} alt="logo" style={{ maxWidth:260, maxHeight:160, objectFit:"contain", marginBottom:"1rem", filter:"drop-shadow(0 0 24px rgba(251,191,36,.5))" }} />
         : <p style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontSize:"1rem", letterSpacing:"0.6em", margin:"0 0 0.5rem" }}>⚔ ZODAR ⚔</p>
@@ -1108,6 +1199,7 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
 
       {authUser && <p style={{ marginTop:"1rem", color:"#64748b", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
       <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE • FANTASY • MULTIPLAYER ONLINE</p>
+      </div>{/* /zIndex wrapper */}
     </div>
   );
 }
