@@ -1106,7 +1106,7 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
         )}
       </div>
 
-      {authUser && <p style={{ marginTop:"1rem", color:"#374151", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
+      {authUser && <p style={{ marginTop:"1rem", color:"#64748b", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
       <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE • FANTASY • MULTIPLAYER ONLINE</p>
     </div>
   );
@@ -1349,7 +1349,7 @@ function MasterPanel({ setScreen }) {
       <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:"1.2rem", paddingBottom:"1rem", borderBottom:"1px solid #1f2937", flexWrap:"wrap" }}>
         <div style={{ flex:1 }}>
           <h1 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.4rem", margin:0 }}>🛡️ Pannello Master</h1>
-          <p style={{ color:"#4b5563", fontSize:"0.78rem", margin:0 }}>Gestisci missioni, creature e contenuti del mondo</p>
+          <p style={{ color:"#94a3b8", fontSize:"0.78rem", margin:0 }}>Gestisci missioni, creature e contenuti del mondo</p>
         </div>
         <BigBtn onClick={saveAll} gold icon={saved?"?":"⭐"}>{saved?"Salvato!":"Salva tutto"}</BigBtn>
         <SmallBtn onClick={()=>setScreen("landing")}>← Torna al menu</SmallBtn>
@@ -1405,7 +1405,7 @@ function MasterPanel({ setScreen }) {
           <Card title="🧾 Log Tecnici">
             <p style={{ color:"#9ca3af", fontSize:"0.8rem", margin:"0 0 0.9rem" }}>Qui finiscono i messaggi filtrati dal player chat: economia, equipaggiamento e log di sistema.</p>
             <div style={{ display:"flex", flexDirection:"column", gap:8, maxHeight:360, overflowY:"auto" }}>
-              {!masterLogs.length && <div style={{ color:"#6b7280", fontSize:"0.8rem" }}>Nessun log tecnico recente.</div>}
+              {!masterLogs.length && <div style={{ color:"#94a3b8", fontSize:"0.8rem" }}>Nessun log tecnico recente.</div>}
               {masterLogs.map(msg=>(
                 <div key={msg.id} style={{ background:"rgba(15,23,42,0.76)", border:"1px solid #1e293b", borderRadius:6, padding:"0.75rem 0.85rem" }}>
                   <div style={{ display:"flex", justifyContent:"space-between", gap:8, marginBottom:4, flexWrap:"wrap" }}>
@@ -1423,7 +1423,7 @@ function MasterPanel({ setScreen }) {
       {tab==="quests" && !editQ && (
         <div>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
-            <span style={{ color:"#6b7280", fontSize:"0.85rem" }}>{quests.length} missioni</span>
+            <span style={{ color:"#94a3b8", fontSize:"0.85rem" }}>{quests.length} missioni</span>
             <BigBtn onClick={addQuest} gold icon="?">+ Nuova Missione</BigBtn>
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
@@ -1434,10 +1434,10 @@ function MasterPanel({ setScreen }) {
                     <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
                       <span style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontWeight:700, fontSize:"1rem" }}>{q.title}</span>
                       <span style={{ padding:"1px 8px", border:`1px solid ${DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#374151"}`, borderRadius:3, fontSize:"0.65rem", color:DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#6b7280" }}>{missionDifficultyLabel(q.difficulty)}</span>
-                      {!q.active && <span style={{ fontSize:"0.65rem", color:"#4b5563", border:"1px solid #1f2937", borderRadius:3, padding:"1px 5px" }}>PAUSA</span>}
+                      {!q.active && <span style={{ fontSize:"0.65rem", color:"#94a3b8", border:"1px solid #1f2937", borderRadius:3, padding:"1px 5px" }}>PAUSA</span>}
                     </div>
-                    <p style={{ color:"#6b7280", fontSize:"0.8rem", margin:"0 0 6px" }}>{q.desc||"Nessuna descrizione."}</p>
-                    <div style={{ display:"flex", gap:14, fontSize:"0.72rem", color:"#4b5563" }}>
+                    <p style={{ color:"#94a3b8", fontSize:"0.8rem", margin:"0 0 6px" }}>{q.desc||"Nessuna descrizione."}</p>
+                    <div style={{ display:"flex", gap:14, fontSize:"0.72rem", color:"#94a3b8" }}>
                       <span>⭐ {q.xpReward} XP</span><span>💰 {q.goldReward} oro</span>
                       <span>🎭 {q.steps.length} scene</span><span>👾 {q.enemies.length} nemici</span>
                     </div>
@@ -1480,7 +1480,7 @@ function MasterPanel({ setScreen }) {
             <textarea style={{...inputStyle,height:52,resize:"vertical"}} value={editQ.flavor} onChange={e=>setEditQ(q=>({...q,flavor:e.target.value}))} placeholder="�Una frase epica...�" />
           </Card>
           <Card title="🎭 Scene della Missione">
-            <p style={{ color:"#4b5563", fontSize:"0.75rem", marginBottom:10 }}>Ogni scena viene narrata quando i giocatori digitano <strong style={{color:"#a78bfa"}}>avanza</strong>. Puoi usare **grassetto** e *corsivo*.</p>
+            <p style={{ color:"#94a3b8", fontSize:"0.75rem", marginBottom:10 }}>Ogni scena viene narrata quando i giocatori digitano <strong style={{color:"#a78bfa"}}>avanza</strong>. Puoi usare **grassetto** e *corsivo*.</p>
             {editQ.steps.map((s,i)=>{
               const step = typeof s === "string" ? { text: s } : (s || { text: "" });
               const choices = step.choices || {};
@@ -1493,7 +1493,7 @@ function MasterPanel({ setScreen }) {
               return (
                 <div key={i} style={{ border:"1px solid rgba(255,255,255,0.08)", borderRadius:6, padding:8, marginBottom:8 }}>
                   <div style={{ display:"flex", gap:6, marginBottom:6, alignItems:"flex-start" }}>
-                    <span style={{ color:"#4b5563", fontSize:"0.8rem", minWidth:22, paddingTop:10 }}>{i+1}.</span>
+                    <span style={{ color:"#94a3b8", fontSize:"0.8rem", minWidth:22, paddingTop:10 }}>{i+1}.</span>
                     <textarea style={{...inputStyle,flex:1,height:60,resize:"vertical",fontSize:"0.85rem"}} value={step.text}
                       onChange={e=>updateStep({ text: e.target.value })} />
                     <div style={{ display:"flex", flexDirection:"column", gap:3, paddingTop:2 }}>
@@ -1536,12 +1536,12 @@ function MasterPanel({ setScreen }) {
                 <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"0.4rem 0.7rem", background:"rgba(239,68,68,0.06)", border:`1px solid ${en.isBoss?"#f59e0b":"rgba(239,68,68,0.2)"}`, borderRadius:4 }}>
                   <span style={{ fontSize:"1.2rem" }}>{en.emoji}</span>
                   <span style={{ color:en.isBoss?"#fbbf24":"#e2d9c5", fontWeight:en.isBoss?700:400 }}>{en.name}{en.isBoss?" ⭐":""}</span>
-                  <span style={{ color:"#4b5563", fontSize:"0.72rem" }}>❤️{en.hp} ⚔️{en.atk} 🛡️{en.def} ⭐{en.xp}xp</span>
+                  <span style={{ color:"#94a3b8", fontSize:"0.72rem" }}>❤️{en.hp} ⚔️{en.atk} 🛡️{en.def} ⭐{en.xp}xp</span>
                   <button onClick={()=>setEditQ(q=>({...q,enemies:q.enemies.filter((_,j)=>j!==i)}))} style={{ marginLeft:"auto", ...iconBtnStyle, color:"#f87171" }}>?</button>
                 </div>
               ))}
             </div>
-            <p style={{ color:"#4b5563", fontSize:"0.75rem", marginBottom:8 }}>Aggiungi dal bestiario:</p>
+            <p style={{ color:"#94a3b8", fontSize:"0.75rem", marginBottom:8 }}>Aggiungi dal bestiario:</p>
             <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
               {monsters.map(m=>(
                 <button key={m.id} onClick={()=>addEnemyToQ(m)}
@@ -1557,7 +1557,7 @@ function MasterPanel({ setScreen }) {
       {tab==="monsters" && !editM && (
         <div>
           <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
-            <span style={{ color:"#6b7280", fontSize:"0.85rem" }}>{monsters.length} creature</span>
+            <span style={{ color:"#94a3b8", fontSize:"0.85rem" }}>{monsters.length} creature</span>
             <BigBtn onClick={addMonster} gold icon="?">+ Nuova Creatura</BigBtn>
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))", gap:8 }}>
@@ -1567,10 +1567,10 @@ function MasterPanel({ setScreen }) {
                   <ArtThumb src={getMonsterImage(m)} alt={m.name} size={68} radius={16} />
                   <div>
                     <div style={{ fontFamily:"'Cinzel',serif", color:m.isBoss?"#fbbf24":"#e2d9c5", fontWeight:700 }}>{m.name}{m.isBoss?" ⭐":""}</div>
-                    <div style={{ color:"#4b5563", fontSize:"0.68rem" }}>{m.desc}</div>
+                    <div style={{ color:"#94a3b8", fontSize:"0.68rem" }}>{m.desc}</div>
                   </div>
                 </div>
-                <div style={{ display:"flex", gap:10, fontSize:"0.73rem", color:"#6b7280", marginBottom:8 }}>
+                <div style={{ display:"flex", gap:10, fontSize:"0.73rem", color:"#94a3b8", marginBottom:8 }}>
                   <span>❤️{m.hp}</span><span>⚔️{m.atk}</span><span>🛡️{m.def}</span><span>⭐{m.xp}xp</span>
                 </div>
                 <div style={{ display:"flex", gap:6 }}>
@@ -1635,8 +1635,8 @@ function PlayersView() {
   },[]);
   return (
     <div>
-      <p style={{ color:"#6b7280", fontSize:"0.85rem", marginBottom:"1rem" }}>{players.length} avventurieri � aggiornamento automatico</p>
-      {!players.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun giocatore ancora.</div>}
+      <p style={{ color:"#94a3b8", fontSize:"0.85rem", marginBottom:"1rem" }}>{players.length} avventurieri � aggiornamento automatico</p>
+      {!players.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun giocatore ancora.</div>}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
         {players.map(p=>{ const cls=CLASSES[p?.class||'warrior']||{}; const race=RACES[p?.race||'human']||{};
           const baseHp = (cls.hp||0) + (race.hpB||0);
@@ -1649,12 +1649,12 @@ function PlayersView() {
                 <ArtThumb src={getPlayerPortrait({ class:p?.class, race:p?.race, portrait:p?.portrait, image:p?.image })} alt={p?.name || "Giocatore"} size={64} radius={16} />
                 <div style={{ flex:1 }}>
                   <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{p?.name}</div>
-                  <div style={{ color:"#4b5563", fontSize:"0.68rem" }}>{race.emoji} {race.name} � {cls.name} � Lv.{p?.level||1}</div>
+                  <div style={{ color:"#94a3b8", fontSize:"0.68rem" }}>{race.emoji} {race.name} � {cls.name} � Lv.{p?.level||1}</div>
                 </div>
                 <span style={{ padding:"2px 7px", background:"#3b0764", borderRadius:3, fontSize:"0.68rem", color:"#c4b5fd" }}>Lv.{p?.level||1}</span>
               </div>
               <HpBar cur={p?.hp||0} max={p?.max_hp||0} />
-              <div style={{ display:"flex", gap:10, fontSize:"0.72rem", color:"#6b7280", marginTop:5 }}>
+              <div style={{ display:"flex", gap:10, fontSize:"0.72rem", color:"#94a3b8", marginTop:5 }}>
                 <span>⭐{p?.xp||0}/{xpForLevel(p?.level||1)}XP</span><span>💰{p?.gold||0}oro</span><span>🆔{p?.party_code||""}</span>
               </div>
               <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:10 }}>
@@ -1757,9 +1757,9 @@ function PartiesView() {
 
   return (
     <div>
-      <p style={{ color:"#6b7280", fontSize:"0.85rem", marginBottom:"1rem" }}>{parties.length} party trovati � aggiornamento automatico</p>
+      <p style={{ color:"#94a3b8", fontSize:"0.85rem", marginBottom:"1rem" }}>{parties.length} party trovati � aggiornamento automatico</p>
       {error && <div style={{ color:"#fca5a5", marginBottom:"1rem" }}>{error}</div>}
-      {!parties.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun party ancora.</div>}
+      {!parties.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun party ancora.</div>}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:10 }}>
         {parties.map(code=>(
           <div key={code} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
@@ -1821,15 +1821,15 @@ function UsersView() {
 
   return (
     <div>
-      <div style={{ color:"#6b7280", fontSize:"0.85rem", marginBottom:"1rem" }}>Elenco dei profili giocatore registrati nel database pubblico.</div>
+      <div style={{ color:"#94a3b8", fontSize:"0.85rem", marginBottom:"1rem" }}>Elenco dei profili giocatore registrati nel database pubblico.</div>
       {error && <div style={{ color:"#fca5a5", marginBottom:"1rem" }}>{error}</div>}
-      {loading && <div style={{ color:"#6b7280" }}>Caricamento...</div>}
-      {!loading && !users.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun iscritto trovato.</div>}
+      {loading && <div style={{ color:"#94a3b8" }}>Caricamento...</div>}
+      {!loading && !users.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun iscritto trovato.</div>}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
         {users.map(u=>(
           <div key={u.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
             <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{u.email||u.id}</div>
-            {u.party_code && <div style={{ fontSize:"0.75rem", color:"#6b7280" }}>Party: {u.party_code}</div>}
+            {u.party_code && <div style={{ fontSize:"0.75rem", color:"#94a3b8" }}>Party: {u.party_code}</div>}
           </div>
         ))}
       </div>
@@ -1867,12 +1867,12 @@ function MarketView() {
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
         <div>
           <div style={{ fontFamily:"'Cinzel',serif", fontWeight:700, color:"#e2d9c5" }}>🏪 Market</div>
-          <div style={{ fontSize:"0.85rem", color:"#6b7280" }}>{items.length} oggetti</div>
+          <div style={{ fontSize:"0.85rem", color:"#94a3b8" }}>{items.length} oggetti</div>
         </div>
         <BigBtn onClick={()=>setEditItem({id:`i_${Date.now()}`,name:"",emoji:"",type:"weapon",description:"",bonus_atk:0,bonus_def:0,bonus_mag:0,bonus_hp:0,price:100,available:true})} gold icon="?">+ Nuovo</BigBtn>
       </div>
 
-      {loading && <div style={{ color:"#6b7280" }}>Caricamento...</div>}
+      {loading && <div style={{ color:"#94a3b8" }}>Caricamento...</div>}
 
       {editItem && (
         <Card title={editItem.id?"Modifica Oggetto":"Nuovo Oggetto"}>
@@ -1911,13 +1911,13 @@ function MarketView() {
               <span style={{ fontSize:"1.5rem" }}>{it.emoji||"⭐"}</span>
               <div style={{ flex:1 }}>
                 <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{it.name}</div>
-                <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{it.type}</div>
+                <div style={{ fontSize:"0.72rem", color:"#94a3b8" }}>{it.type}</div>
               </div>
               <SmallBtn onClick={()=>setEditItem(it)}>✏️</SmallBtn>
               <SmallBtn red onClick={()=>remove(it.id)}>🗑️</SmallBtn>
             </div>
-            <div style={{ fontSize:"0.75rem", color:"#4b5563", marginBottom:6 }}>{it.description}</div>
-            <div style={{ display:"flex", gap:8, fontSize:"0.72rem", color:"#6b7280" }}>
+            <div style={{ fontSize:"0.75rem", color:"#94a3b8", marginBottom:6 }}>{it.description}</div>
+            <div style={{ display:"flex", gap:8, fontSize:"0.72rem", color:"#94a3b8" }}>
               <span>⚔️+{it.bonus_atk||0}</span><span>🛡️+{it.bonus_def||0}</span><span>✨+{it.bonus_mag||0}</span><span>❤️+{it.bonus_hp||0}</span>
             </div>
             <div style={{ marginTop:8, fontSize:"0.75rem", color:"#c4b5fd" }}>💰 {it.price} oro</div>
@@ -1953,9 +1953,9 @@ function ShopView({ me, items, loading, error, inventoryCounts, onBuy }) {
           <span style={{ fontSize:"3rem" }}>💰</span> {me?.gold || 0}
         </div>
       </div>
-      {loading && <div style={{ color:"#6b7280" }}>Caricamento...</div>}
+      {loading && <div style={{ color:"#94a3b8" }}>Caricamento...</div>}
       {error && <div style={{ color:"#fca5a5" }}>{error}</div>}
-      {!loading && !shopItems.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun oggetto disponibile.</div>}
+      {!loading && !shopItems.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun oggetto disponibile.</div>}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:16 }}>
         {shopItems.map(it => {
           const canAfford = me && me.gold >= (it.price || 0);
@@ -1967,7 +1967,7 @@ function ShopView({ me, items, loading, error, inventoryCounts, onBuy }) {
                 <ArtThumb src={getItemImage(it)} alt={it.name} size={72} />
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, fontSize:"1rem", lineHeight:1.3 }}>{it.name}</div>
-                  <div style={{ fontSize:"0.78rem", color:"#6b7280", marginTop:2 }}>{itemTypeLabel(it.type)}</div>
+                  <div style={{ fontSize:"0.78rem", color:"#94a3b8", marginTop:2 }}>{itemTypeLabel(it.type)}</div>
                   <div style={{ fontSize:"0.74rem", color:rarityColor, fontWeight:600, marginTop:2, textTransform:"capitalize" }}>{itemRarityLabel(it.rarity)}</div>
                 </div>
                 <div style={{ textAlign:"right", flexShrink:0 }}>
@@ -2001,8 +2001,8 @@ function InventoryView({ loading, groups, equipment, selectedItem, onSelectItem,
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
       <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🎒 Inventario</h3>
-      {loading && <div style={{ color:"#6b7280" }}>Caricamento...</div>}
-      {!loading && !groups.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Inventario vuoto. Saccheggia o compra qualcosa.</div>}
+      {loading && <div style={{ color:"#94a3b8" }}>Caricamento...</div>}
+      {!loading && !groups.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Inventario vuoto. Saccheggia o compra qualcosa.</div>}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))", gap:10 }}>
         {groups.map(group=>{
           const slot = itemSlot(group.item);
@@ -2028,21 +2028,21 @@ function InventoryView({ loading, groups, equipment, selectedItem, onSelectItem,
                 <ArtThumb src={getItemImage(group.item)} alt={group.item.name} size={62} />
                 <div style={{ flex:1 }}>
                   <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{group.item.name}</div>
-                  <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{itemTypeLabel(group.item.type)} • {itemRarityLabel(group.item.rarity)}</div>
+                  <div style={{ fontSize:"0.72rem", color:"#94a3b8" }}>{itemTypeLabel(group.item.type)} • {itemRarityLabel(group.item.rarity)}</div>
                 </div>
                 <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
                   <span style={{ fontSize:"0.78rem", color:"#c4b5fd", fontWeight:700 }}>x{group.quantity}</span>
                   {equipped && <span style={{ fontSize:"0.66rem", color:"#fbbf24" }}>Equip.</span>}
                 </div>
               </div>
-              <div style={{ fontSize:"0.75rem", color:"#4b5563", marginBottom:6 }}>{group.item.description}</div>
-              <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#6b7280", marginBottom:10 }}>
+              <div style={{ fontSize:"0.75rem", color:"#94a3b8", marginBottom:6 }}>{group.item.description}</div>
+              <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#94a3b8", marginBottom:10 }}>
                 {itemStatSummary(group.item).map(stat => <span key={stat}>{stat}</span>)}
               </div>
               <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#9ca3af" }}>
                 <span>Quantità: {group.quantity}</span>
                 <span>Valore: {group.item.price || 0} oro</span>
-                <span style={{ color:"#6b7280" }}>Clicca per ispezionare</span>
+                <span style={{ color:"#94a3b8" }}>Clicca per ispezionare</span>
               </div>
             </button>
           );
@@ -2133,16 +2133,16 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip }) {
                     <span style={{ fontSize:"1.6rem" }}>{item.emoji}</span>
                     <div>
                       <div style={{ color:"#e2d9c5", fontWeight:700 }}>{item.name}</div>
-                      <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{itemRarityLabel(item.rarity)} • {itemTypeLabel(item.type)}</div>
+                      <div style={{ fontSize:"0.72rem", color:"#94a3b8" }}>{itemRarityLabel(item.rarity)} • {itemTypeLabel(item.type)}</div>
                     </div>
                   </div>
-                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#6b7280", marginBottom:10 }}>
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#94a3b8", marginBottom:10 }}>
                     {itemStatSummary(item).map(stat => <span key={stat}>{stat}</span>)}
                   </div>
                   <SmallBtn red onClick={()=>onUnequip(slot.key)}>Rimuovi</SmallBtn>
                 </>
               ) : (
-                <div style={{ color:"#4b5563", fontSize:"0.82rem" }}>{slot.fallback}</div>
+                <div style={{ color:"#94a3b8", fontSize:"0.82rem" }}>{slot.fallback}</div>
               )}
             </div>
           );
@@ -3083,7 +3083,7 @@ ${stepText(step)}`, "quest","Master");
             <ArtThumb src={getPlayerPortrait(me)} alt={me?.name || "Eroe"} size={56} radius={14} />
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontFamily:"'Cinzel',serif", color:"#f9fafb", fontSize:"0.82rem", fontWeight:700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{me?.name}</div>
-              <div style={{ color:"#4b5563", fontSize:"0.62rem" }}>{RACES[me?.race]?.name} {CLASSES[me?.class]?.name}</div>
+              <div style={{ color:"#94a3b8", fontSize:"0.62rem" }}>{RACES[me?.race]?.name} {CLASSES[me?.class]?.name}</div>
             </div>
             <span style={{ padding:"1px 5px", background:"#3b0764", borderRadius:3, fontSize:"0.62rem", color:"#a78bfa", flexShrink:0 }}>Lv.{me.level}</span>
           </div>
@@ -3102,7 +3102,7 @@ ${stepText(step)}`, "quest","Master");
           <div style={{ height:3, background:"#0f172a", borderRadius:2, overflow:"hidden", marginTop:5 }}>
             <div style={{ height:"100%", background:"linear-gradient(90deg,#6d28d9,#a78bfa)", width:`${Math.min(100,me.xp/xpForLevel(me.level)*100)}%`, transition:"width .5s" }} />
           </div>
-          <div style={{ fontSize:"0.58rem", color:"#374151", textAlign:"right", marginTop:1 }}>{me.xp}/{xpForLevel(me.level)} XP</div>
+          <div style={{ fontSize:"0.58rem", color:"#64748b", textAlign:"right", marginTop:1 }}>{me.xp}/{xpForLevel(me.level)} XP</div>
           <div style={{ marginTop:6, padding:"0.35rem 0.45rem", background:"rgba(180,83,9,0.12)", border:"1px solid #78350f", borderRadius:4, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
             <span style={{ fontSize:"0.58rem", color:"#92400e", textTransform:"uppercase", letterSpacing:"0.08em" }}>Tesoro</span>
             <span style={{ fontSize:"0.74rem", color:"#fbbf24", fontWeight:700 }}>💰 {me.gold || 0} oro</span>
@@ -3110,7 +3110,7 @@ ${stepText(step)}`, "quest","Master");
         </div>
 
         <div style={{ background:PANEL_BG_SOFT, border:`1px solid ${PANEL_BORDER}`, borderRadius:4, padding:"0.5rem" }}>
-          <div style={{ fontSize:"0.58rem", color:"#374151", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>👥 Party — {code}</div>
+          <div style={{ fontSize:"0.58rem", color:"#64748b", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>👥 Party — {code}</div>
           {partyPlayers.filter(p=>p.id!==myId).map(p=>(
             <div key={p?.id} style={{ display:"flex", gap:5, alignItems:"center", marginBottom:3 }}>
               <span style={{ fontSize:"0.9rem" }}>{CLASSES[p?.class||'warrior']?.emoji}</span>
@@ -3120,7 +3120,7 @@ ${stepText(step)}`, "quest","Master");
                   <div style={{ height:"100%", background:(p?.hp||0)/(p?.maxHp||1)>0.5?"#22c55e":(p?.hp||0)/(p?.maxHp||1)>0.25?"#f59e0b":"#ef4444", width:`${Math.min(100,(p?.hp||0)/(p?.maxHp||1)*100)}%` }} />
                 </div>
               </div>
-              <span style={{ fontSize:"0.6rem", color:"#4b5563", flexShrink:0 }}>Lv.{p?.level||1}</span>
+              <span style={{ fontSize:"0.6rem", color:"#94a3b8", flexShrink:0 }}>Lv.{p?.level||1}</span>
             </div>
           ))}
           {partyPlayers.length<=1&&<div style={{ color:"#1f2937", fontSize:"0.68rem" }}>Solo per ora</div>}
@@ -3177,7 +3177,7 @@ ${stepText(step)}`, "quest","Master");
           {[["chat","💬 Chat"],["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             return (
-            <button key={k} onClick={()=>{ if(!combatLocked) setTab(k); }} title={combatLocked?"Non disponibile durante il combattimento":undefined} style={{ padding:"0.6rem 1.2rem", background:tab===k?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k?"2px solid #7c3aed":"2px solid transparent", color:combatLocked?"#2d3748":tab===k?"#c4b5fd":"#4b5563", cursor:combatLocked?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", letterSpacing:"0.05em", opacity:combatLocked?0.4:1 }}>
+            <button key={k} onClick={()=>{ if(!combatLocked) setTab(k); }} title={combatLocked?"Non disponibile durante il combattimento":undefined} style={{ padding:"0.6rem 1.2rem", background:tab===k?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k?"2px solid #7c3aed":"2px solid transparent", color:combatLocked?"#334155":tab===k?"#c4b5fd":"#94a3b8", cursor:combatLocked?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", letterSpacing:"0.05em", opacity:combatLocked?0.4:1 }}>
               {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}
             </button>);
           })}
@@ -3186,7 +3186,7 @@ ${stepText(step)}`, "quest","Master");
         {tab==="chat" && <>
           <div style={{ flex:1, overflowY:"auto", padding:"0.8rem", display:"flex", flexDirection:"column", gap:6, background:"rgba(3,7,18,0.48)" }}>
             {visibleChatMessages.length === 0 && (
-              <div style={{ textAlign:"center", color:"#374151", padding:"3rem 1rem" }}>
+              <div style={{ textAlign:"center", color:"#64748b", padding:"3rem 1rem" }}>
                 <div style={{ fontSize:"2rem", marginBottom:"0.5rem" }}>💬</div>
                 <p style={{ fontSize:"0.85rem" }}>Nessun messaggio. Scrivi qualcosa al party!</p>
               </div>
@@ -3353,9 +3353,9 @@ ${stepText(step)}`, "quest","Master");
                         <span style={{ padding:"1px 7px", border:`1px solid ${DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#374151"}`, borderRadius:3, fontSize:"0.65rem", color:DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#6b7280" }}>{missionDifficultyLabel(q.difficulty)}</span>
                         {done&&<span style={{ fontSize:"0.7rem", color:"#22c55e" }}>? Completata</span>}
                       </div>
-                      <p style={{ color:"#6b7280", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
-                      {q.flavor&&<p style={{ color:"#4b5563", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{q.flavor}</p>}
-                      <div style={{ display:"flex", gap:14, fontSize:"0.73rem", color:"#4b5563" }}>
+                      <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
+                      {q.flavor&&<p style={{ color:"#94a3b8", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{q.flavor}</p>}
+                      <div style={{ display:"flex", gap:14, fontSize:"0.73rem", color:"#94a3b8" }}>
                         <span>⭐ {q.xpReward} XP</span><span>💰 {q.goldReward} oro</span><span>🎭 {q.steps.length} scene</span>
                       </div>
                     </div>
@@ -3370,7 +3370,7 @@ ${stepText(step)}`, "quest","Master");
         {tab==="combat" && (
           <div style={{ flex:1, overflowY:"auto", padding:combatMode?"1.35rem":"1rem", background:"linear-gradient(180deg, rgba(20,10,10,0.18) 0%, rgba(3,7,18,0.24) 100%)" }}>
             {!combat?.active ? (
-              <div style={{ textAlign:"center", padding:"3rem", color:"#374151" }}>
+              <div style={{ textAlign:"center", padding:"3rem", color:"#64748b" }}>
                 <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>🔒</div>
                 <p>Nessuna battaglia in corso.</p>
                 <p style={{ fontSize:"0.8rem" }}>Accetta una missione e usa il tab Missioni per iniziare il combattimento.</p>
@@ -3500,7 +3500,7 @@ ${stepText(step)}`, "quest","Master");
                           </button>
                         </div>
                       ) : (
-                        <div style={{ color:"#6b7280", fontSize:"0.9rem", lineHeight:1.6, textAlign:"center" }}>
+                        <div style={{ color:"#94a3b8", fontSize:"0.9rem", lineHeight:1.6, textAlign:"center" }}>
                           Turno di <strong style={{ color:"#f8fafc" }}>{activeCombatant?.name}</strong>...
                         </div>
                       )}
@@ -3520,7 +3520,7 @@ ${stepText(step)}`, "quest","Master");
                       <button onClick={abandonQuest} style={{ width:"100%", padding:"0.6rem 1rem", background:"rgba(127,29,29,0.18)", border:"1px solid rgba(127,29,29,0.5)", borderRadius:8, color:"#f87171", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", cursor:"pointer", letterSpacing:"0.05em" }}>
                         🏃 Abbandona Quest
                       </button>
-                      <span style={{ fontSize:"0.68rem", color:"#4b5563" }}>Richiede una 💨 Pozione di Fuga ({inventoryCounts["potion_escape"]||0} in inventario)</span>
+                      <span style={{ fontSize:"0.68rem", color:"#94a3b8" }}>Richiede una 💨 Pozione di Fuga ({inventoryCounts["potion_escape"]||0} in inventario)</span>
                     </div>
                   </div>
                 </div>
@@ -3565,6 +3565,6 @@ function Card({ title, children }) {
 }
 
 const inputStyle = { width:"100%", padding:"0.55rem 0.75rem", background:"rgba(255,255,255,0.04)", border:"1px solid #1f2937", borderRadius:4, color:"#e2d9c5", fontFamily:"'Crimson Pro',Georgia,serif", fontSize:"0.92rem", display:"block" };
-const labelStyle = { display:"block", color:"#374151", fontSize:"0.63rem", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:4, fontFamily:"'Cinzel',serif" };
-const backBtnStyle = { padding:"0.35rem 0.8rem", background:"transparent", border:"1px solid #1f2937", borderRadius:4, color:"#4b5563", cursor:"pointer", fontFamily:"inherit", fontSize:"0.8rem" };
-const iconBtnStyle = { padding:"2px 6px", background:"rgba(255,255,255,0.04)", border:"1px solid #1f2937", borderRadius:3, color:"#6b7280", cursor:"pointer", fontSize:"0.8rem" };
+const labelStyle = { display:"block", color:"#64748b", fontSize:"0.63rem", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:4, fontFamily:"'Cinzel',serif" };
+const backBtnStyle = { padding:"0.35rem 0.8rem", background:"transparent", border:"1px solid #1f2937", borderRadius:4, color:"#94a3b8", cursor:"pointer", fontFamily:"inherit", fontSize:"0.8rem" };
+const iconBtnStyle = { padding:"2px 6px", background:"rgba(255,255,255,0.04)", border:"1px solid #1f2937", borderRadius:3, color:"#94a3b8", cursor:"pointer", fontSize:"0.8rem" };
