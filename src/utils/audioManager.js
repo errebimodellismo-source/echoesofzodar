@@ -30,10 +30,10 @@ class AudioManager {
 
     // Background music URLs by theme
     this.bgmUrls = {
-      intro: 'https://cdn.pixabay.com/download/audio/2022/10/25/audio_24806a6aee.mp3?filename=fantasy-epic-adventure-123447.mp3', // Example Royaly Free from Pixabay
-      town: 'https://cdn.pixabay.com/download/audio/2022/03/15/audio_1db7998bc1.mp3?filename=medieval-village-110052.mp3',
-      combat: 'https://cdn.pixabay.com/download/audio/2022/01/18/audio_d0a13f69d2.mp3?filename=battle-of-the-dragons-8037.mp3',
-      dungeon: 'https://cdn.pixabay.com/download/audio/2022/11/22/audio_1cd710d065.mp3?filename=dark-ambient-126122.mp3',
+      intro:   '/assets/audio/main.mp3',
+      dungeon: '/assets/audio/main.mp3',
+      town:    '/assets/audio/shop.mp3',
+      combat:  '/assets/audio/combat.mp3',
     };
   }
 
