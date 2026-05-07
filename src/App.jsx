@@ -2638,6 +2638,25 @@ function GameScreen({ myId, setScreen }) {
     await saveQState({ ...qs, combat: { ...qs.combat, pendingLog: null } });
   }
 
+  async function abandonQuest() {
+    const escapeEntry = inventory.find(e => e.itemId === "potion_escape");
+    if(!escapeEntry) {
+      window.alert("Hai bisogno di una 💨 Pozione di Fuga per scappare dalla battaglia.\nComprala al Negozio per poche monete d'oro.");
+      return;
+    }
+    if(!window.confirm("Vuoi davvero abbandonare la missione?\nQuesta azione consumerà la tua Pozione di Fuga e annullerà il combattimento.")) return;
+    await dbRemovePlayerItem(escapeEntry.rowId);
+    const playerToSave = (me.hp || 0) <= 0 ? { ...me, hp: 1 } : me;
+    if(playerToSave.hp !== me.hp) {
+      await dbSavePlayer(playerToSave);
+      setMeRaw(playerToSave);
+    }
+    await saveQState({ ...qs, active: false, step: 0, combat: null });
+    await refreshInventory(playerToSave);
+    await addMsg(`🏃 **${me.name}** beve la **Pozione di Fuga** e svanisce nell'ombra. La missione è abbandonata.`, "info", "Sistema");
+    setTab("quest");
+  }
+
   // -- COMBATTIMENTO --
   async function doAttack() {
     const combat = qs.combat;
@@ -3145,11 +3164,13 @@ ${stepText(step)}`, "quest","Master");
       {/* MAIN */}
       <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", background:combatMode?"rgba(2,6,23,0.76)":"rgba(2,6,23,0.58)", position:"relative", zIndex:1, backdropFilter:"blur(4px)" }}>
         <div style={{ display:"flex", gap:0, borderBottom:`1px solid ${PANEL_BORDER}`, background:combatMode?"rgba(8,10,20,0.94)":"rgba(3,7,18,0.88)", flexShrink:0 }}>
-          {[["chat","💬 Chat"],["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>(
-            <button key={k} onClick={()=>setTab(k)} style={{ padding:"0.6rem 1.2rem", background:tab===k?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k?"2px solid #7c3aed":"2px solid transparent", color:tab===k?"#c4b5fd":"#4b5563", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", letterSpacing:"0.05em" }}>
+          {[["chat","💬 Chat"],["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+            const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
+            return (
+            <button key={k} onClick={()=>{ if(!combatLocked) setTab(k); }} title={combatLocked?"Non disponibile durante il combattimento":undefined} style={{ padding:"0.6rem 1.2rem", background:tab===k?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k?"2px solid #7c3aed":"2px solid transparent", color:combatLocked?"#2d3748":tab===k?"#c4b5fd":"#4b5563", cursor:combatLocked?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", letterSpacing:"0.05em", opacity:combatLocked?0.4:1 }}>
               {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}
-            </button>
-          ))}
+            </button>);
+          })}
         </div>
 
         {tab==="chat" && <>
@@ -3472,6 +3493,13 @@ ${stepText(step)}`, "quest","Master");
                         dangerouslySetInnerHTML={{ __html:fmt(m.content) }} />
                     ))}
                       </div>
+                    </div>
+
+                    <div style={{ padding:"0.75rem 1rem", background:"rgba(20,5,5,0.7)", border:"1px solid rgba(127,29,29,0.3)", borderRadius:10, display:"flex", flexDirection:"column", gap:6, alignItems:"center" }}>
+                      <button onClick={abandonQuest} style={{ width:"100%", padding:"0.6rem 1rem", background:"rgba(127,29,29,0.18)", border:"1px solid rgba(127,29,29,0.5)", borderRadius:8, color:"#f87171", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", cursor:"pointer", letterSpacing:"0.05em" }}>
+                        🏃 Abbandona Quest
+                      </button>
+                      <span style={{ fontSize:"0.68rem", color:"#4b5563" }}>Richiede una 💨 Pozione di Fuga ({inventoryCounts["potion_escape"]||0} in inventario)</span>
                     </div>
                   </div>
                 </div>
