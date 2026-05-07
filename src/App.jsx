@@ -1005,6 +1005,8 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   const [characters, setCharacters] = useState([]);
   const [loadingChars, setLoadingChars] = useState(true);
 
+  useEffect(() => { audioManager.playBGM("intro"); }, []);
+
   async function loadCharacters() {
     if(!authUser?.id) { setCharacters([]); setLoadingChars(false); return; }
     setLoadingChars(true);
@@ -1039,7 +1041,7 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   }
 
   return (
-    <div style={{ minHeight:"100vh", width:"100vw", background:"radial-gradient(at 15% 50%, rgba(109,40,217,0.3) 0%, rgba(0,0,0,0) 55%), radial-gradient(at 85% 30%, rgba(109,40,217,0.2) 0%, rgba(0,0,0,0) 50%), #06060e", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"2rem 1rem" }}>
+    <div onClick={() => audioManager.playBGM("intro")} style={{ minHeight:"100vh", width:"100vw", background:"radial-gradient(at 15% 50%, rgba(109,40,217,0.3) 0%, rgba(0,0,0,0) 55%), radial-gradient(at 85% 30%, rgba(109,40,217,0.2) 0%, rgba(0,0,0,0) 50%), #06060e", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"2rem 1rem" }}>
       {meta.logo
         ? <img src={meta.logo} alt="logo" style={{ maxWidth:260, maxHeight:160, objectFit:"contain", marginBottom:"1rem", filter:"drop-shadow(0 0 24px rgba(251,191,36,.5))" }} />
         : <p style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontSize:"1rem", letterSpacing:"0.6em", margin:"0 0 0.5rem" }}>⚔ ZODAR ⚔</p>
