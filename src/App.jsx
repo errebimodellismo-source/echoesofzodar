@@ -52,7 +52,7 @@ function missionDifficultyLabel(value) {
     speciale: "Speciale",
   })[normalizeMissionDifficulty(value)];
 }
-const BACKGROUND_URL = "https://fv5-4.files.fm/thumb_show.php?i=qdtav95gc2&view&v=1&PHPSESSID=964a794e4d1fe9b3c7e7e8a4950eb15086c6dfc9";
+const BACKGROUND_URL = "/assets/Zodarsfondo.png";
 const MASTER_PASSWORD = "ByBy101112!";
 function debugCharacterFlow(step, payload) {
   console.log(`[CHAR_FLOW] ${step}`, payload ?? "");
