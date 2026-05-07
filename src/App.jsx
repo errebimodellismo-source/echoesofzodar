@@ -2689,11 +2689,13 @@ function GameScreen({ myId, setScreen }) {
 
   // Fallback timer — fires if player doesn't press the button within 8s.
   // Also re-triggers when pendingLog clears (fixes the freeze-after-dismiss bug).
+  // Paused while spellMenu is open so players can read spells without time pressure.
   useEffect(() => {
     if (!qs?.combat?.active) return;
+    if (spellMenu) return;
     const timer = setTimeout(() => { doMonsterTurnRef.current?.(); }, 8000);
     return () => clearTimeout(timer);
-  }, [qs?.combat?.turn, qs?.combat?.active, !!qs?.combat?.pendingLog, myId, code]);
+  }, [qs?.combat?.turn, qs?.combat?.active, !!qs?.combat?.pendingLog, myId, code, spellMenu]);
 
   async function addMsg(content, type="narration", author=null) {
     await dbSendMessage({ party_code:code, author:author||me?.name, content, type });
