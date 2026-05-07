@@ -2437,6 +2437,7 @@ function GameScreen({ myId, setScreen }) {
       const latestQs = await dbGetPartyState(code);
       const latestCombat = latestQs?.combat;
       if (!latestCombat?.active) return;
+      if (latestCombat.pendingLog) return;
       const latestCombatants = [...latestCombat.combatants];
       const actor = latestCombatants[latestCombat.turn % latestCombatants.length];
       if (!actor || actor.isPlayer || actor.hp <= 0) return;
@@ -2475,12 +2476,17 @@ function GameScreen({ myId, setScreen }) {
         const log = formatWeaponAttackLog(actor, pt, resolved, "Attacco naturale", updPt.hp, pt.maxHp);
         const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
         const allDead = latestCombatants.filter(c => !c.isPlayer).every(c => c.hp <= 0);
-        const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound };
-        const newQs = { ...latestQs, combat: allDead ? null : newCombat };
-        await dbSavePartyState(code, newQs);
-        setQs(prev => ({ ...prev, combat: allDead ? null : newCombat }));
-        await dbSendMessage({ party_code: code, author: "Battaglia", content: log, type: "combat" });
-        if (allDead) await dbSendMessage({ party_code: code, author: "Sistema", content: "🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", type: "victory" });
+        if (allDead) {
+          const endQs = { ...latestQs, combat: { ...latestCombat, combatants: latestCombatants } };
+          await dbSavePartyState(code, endQs);
+          setQs(prev => ({ ...prev, combat: endQs.combat }));
+          await dbSendMessage({ party_code: code, author: "Sistema", content: "🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", type: "victory" });
+        } else {
+          const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound, pendingLog: log };
+          await dbSavePartyState(code, { ...latestQs, combat: newCombat });
+          setQs(prev => ({ ...prev, combat: newCombat }));
+          await dbSendMessage({ party_code: code, author: "Battaglia", content: log, type: "combat" });
+        }
       } finally {
         monsterTickBusyRef.current = false;
       }
@@ -2627,19 +2633,22 @@ function GameScreen({ myId, setScreen }) {
     await addMsg(`🧪 **${me.name}** usa **${entry.item.name}** e recupera **${delta} HP**.`, "info", "Sistema");
   }
 
+  async function dismissCombatLog() {
+    if(!qs?.combat?.pendingLog) return;
+    await saveQState({ ...qs, combat: { ...qs.combat, pendingLog: null } });
+  }
+
   // -- COMBATTIMENTO --
   async function doAttack() {
     const combat = qs.combat;
-    if(!combat?.active) return;
+    if(!combat?.active || combat.pendingLog) return;
     const combatants = [...combat.combatants];
     const turn = combat.turn % combatants.length;
     const attacker = combatants[turn];
-    if(!attacker?.isPlayer || attacker.id!==myId) {
-      await addMsg(`⚔️ Non � il tuo turno! Tocca a **${combatants[turn]?.name}**`, "system","Sistema"); return;
-    }
+    if(!attacker?.isPlayer || attacker.id!==myId) return;
     if(attacker.dead || attacker.stable) {
       const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
-      await saveQState({ ...qs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound } });
+      await saveQState({ ...qs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: null } });
       return;
     }
     if(isDyingCombatant(attacker)) {
@@ -2650,9 +2659,7 @@ function GameScreen({ myId, setScreen }) {
       const updatedPlayer = { ...me, hp: deathSave.nextCombatant.hp };
       await dbSavePlayer(updatedPlayer);
       setMeRaw(updatedPlayer);
-      await addMsg(deathSave.log, "combat", "Battaglia");
       if(deathSave.result === "dead" && partyPlayers.length <= 1) {
-        await addMsg(`📜 **La scheda di ${attacker.name} viene strappata dal destino.**`, "victory", "Master");
         await triggerSoloDeath(attacker.name);
         return;
       }
@@ -2661,7 +2668,7 @@ function GameScreen({ myId, setScreen }) {
         return;
       }
       const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
-      await saveQState({ ...qs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound } });
+      await saveQState({ ...qs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: deathSave.log } });
       return;
     }
     const targets = combatants.filter(c=>!c.isPlayer&&c.hp>0);
@@ -2672,21 +2679,15 @@ function GameScreen({ myId, setScreen }) {
     const dmg = resolved.damage;
     const tidx = combatants.findIndex(c=>c.id===target.id);
     combatants[tidx] = {...target, hp:Math.max(0,target.hp-dmg)};
-
     const log = formatWeaponAttackLog(attacker, target, resolved, weapon.name, combatants[tidx].hp, target.maxHp);
-
     const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
-
     const allDead = combatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
-    const newCombat = {...combat, combatants, turn:nextTurn, round:nextRound};
-    const newQs = {...qs, combat:newCombat};
-    await saveQState(newQs);
-    await addMsg(log, "combat", "Battaglia");
-    if(allDead) await endCombat();
+    if(allDead) { await saveQState({...qs, combat:{...combat, combatants}}); await endCombat(); return; }
+    await saveQState({ ...qs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
   }
 
   async function castSpell(spell) {
-    if(!combat?.active) return;
+    if(!combat?.active || combat.pendingLog) return;
     const slots = (combat.spellSlots||{})[myId] || getSpellSlots(me.level);
     const cost = spell.slots || 0;
     if(cost > 0 && (slots[cost]||0) <= 0) {
@@ -2736,55 +2737,18 @@ function GameScreen({ myId, setScreen }) {
     const nextSlots = { ...(combat.spellSlots||{}), [myId]: { ...(slots||{}) } };
     if(cost > 0) nextSlots[myId][cost] = Math.max(0, (nextSlots[myId][cost]||0) - 1);
 
-    let { nextTurn, nextRound } = getNextCombatTurn(newCombatants, combat.turn, combat.round);
-
-    while(true) {
-      const nextActor = newCombatants[nextTurn%newCombatants.length];
-      if(!nextActor) break;
-      if(nextActor.isPlayer) break;
-      if(nextActor.hp<=0) { nextTurn++; if(nextTurn>=newCombatants.length){nextTurn=0; nextRound++;} continue; }
-
-      const alivePlayers = newCombatants
-        .filter(c => c?.isPlayer && (c?.hp || 0) > 0 && !c?.dead)
-        .map(c => {
-          const base = partyPlayers.find(p => p.id === c.id) || {};
-          return { ...base, id:c.id, name:c.name, hp:c.hp, maxHp:c.maxHp };
-        });
-      if(!alivePlayers.length) break;
-      const pt = alivePlayers[roll(alivePlayers.length)-1];
-      if(pt) {
-        const weaponDie = getCombatDamageDie(nextActor);
-        const resolved = await performAsyncAttack(nextActor, pt, weaponDie);
-        const edmg = resolved.damage;
-        const updPt = {...pt, hp:Math.max(0,pt.hp-edmg)};
-        const playerCombatantIdx = newCombatants.findIndex(c => c.id === pt.id);
-        if(playerCombatantIdx >= 0) {
-          newCombatants[playerCombatantIdx] = applyCombatDamageState({
-            ...newCombatants[playerCombatantIdx],
-            maxHp: updPt.maxHp,
-          }, edmg);
-        }
-        await dbSavePlayer(updPt);
-        if(pt.id===myId) setMeRaw(updPt);
-        log += `\n\n${formatWeaponAttackLog(nextActor, pt, resolved, "Attacco naturale", updPt.hp, pt.maxHp)}`;
-      }
-      ({ nextTurn, nextRound } = getNextCombatTurn(newCombatants, nextTurn, nextRound));
-    }
+    const { nextTurn, nextRound } = getNextCombatTurn(newCombatants, combat.turn, combat.round);
 
     if(!hasActionablePlayerCombatants(newCombatants)) {
       setSpellMenu(false);
-      await addMsg(log, "combat", "Battaglia");
       await resolveCombatNoActionablePlayers({ ...qs, combat }, newCombatants);
       return;
     }
 
     const allDead = newCombatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
-    const newCombat = {...combat, combatants:newCombatants, turn:nextTurn, round:nextRound, spellSlots: nextSlots};
-    const newQs = {...qs, combat:newCombat};
-    await saveQState(newQs);
     setSpellMenu(false);
-    await addMsg(log, "combat", "Battaglia");
-    if(allDead) await endCombat();
+    if(allDead) { await saveQState({...qs, combat:{...combat, combatants:newCombatants, spellSlots:nextSlots}}); await endCombat(); return; }
+    await saveQState({ ...qs, combat: { ...combat, combatants:newCombatants, turn:nextTurn, round:nextRound, spellSlots:nextSlots, pendingLog: log } });
   }
 
   async function endCombat() {
@@ -3423,8 +3387,16 @@ ${stepText(step)}`, "quest","Master");
                   </div>
 
                   <div style={{ display:"grid", gap:"1rem", position:"sticky", top:0 }}>
+                    {combat.pendingLog && (
+                      <div style={{ padding:"1.1rem 1.2rem", background:"linear-gradient(180deg,rgba(10,20,10,0.97),rgba(15,23,42,0.97))", border:"1px solid rgba(34,197,94,0.35)", borderRadius:12, boxShadow:"0 8px 24px rgba(0,0,0,0.4)" }}>
+                        <div style={{ fontSize:"0.82rem", color:"#a3e8b0", lineHeight:1.75, whiteSpace:"pre-line", marginBottom:"1rem", fontFamily:"'Crimson Pro',Georgia,serif" }} dangerouslySetInnerHTML={{ __html: fmt(combat.pendingLog) }} />
+                        <button onClick={dismissCombatLog} style={{ width:"100%", padding:"0.85rem 1.2rem", background:"linear-gradient(135deg,#14532d,#16a34a)", border:"2px solid #22c55e", borderRadius:10, color:"#dcfce7", fontFamily:"'Cinzel Decorative',serif", fontSize:"1rem", cursor:"pointer", letterSpacing:"0.08em" }}>
+                          Avanti →
+                        </button>
+                      </div>
+                    )}
                     <div style={{ textAlign:"center", padding:"1.35rem 1.1rem", background:"linear-gradient(180deg, rgba(24,10,10,0.92), rgba(15,23,42,0.94))", border:"1px solid rgba(239,68,68,0.26)", borderRadius:12, boxShadow:"0 18px 40px rgba(0,0,0,0.22)" }}>
-                      {myTurn ? (
+                      {combat.pendingLog ? null : myTurn ? (
                         <>
                           <p style={{ color:"#fecaca", fontFamily:"'Cinzel Decorative',serif", marginBottom:"1rem", fontSize:"1.08rem", letterSpacing:"0.04em" }}>{myDeathTurn ? "🕯️ Sei a terra: tira la tua salvezza contro la morte." : "⚔️ Il campo si apre davanti a te."}</p>
                           {myDeathTurn ? (
