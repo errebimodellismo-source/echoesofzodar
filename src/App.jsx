@@ -3054,7 +3054,7 @@ ${stepText(step)}`, "quest","Master");
 
   return (
     <div style={{ display:"flex", height:"100vh", overflow:"hidden", position:"relative", zIndex:1 }}>
-      <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg, rgba(2,6,23,0.76) 0%, rgba(2,6,23,0.7) 45%, rgba(2,6,23,0.8) 100%)", pointerEvents:"none" }} />
+      <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg, rgba(2,6,23,0.38) 0%, rgba(2,6,23,0.32) 45%, rgba(2,6,23,0.42) 100%)", pointerEvents:"none" }} />
       {deathScene && (
         <div style={{ position:"fixed", inset:0, zIndex:10000, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(2,6,23,0.88)", padding:"1.5rem" }}>
           <div style={{ width:"min(560px,100%)", textAlign:"center", background:"linear-gradient(180deg, rgba(24,10,10,0.96), rgba(8,8,12,0.98))", border:"1px solid #7f1d1d", borderRadius:12, boxShadow:"0 24px 80px rgba(0,0,0,0.5)", padding:"2rem 1.5rem" }}>
@@ -3176,7 +3176,7 @@ ${stepText(step)}`, "quest","Master");
       </aside>
 
       {/* MAIN */}
-      <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", background:combatMode?"rgba(2,6,23,0.76)":"rgba(2,6,23,0.58)", position:"relative", zIndex:1, backdropFilter:"blur(4px)" }}>
+      <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", background:combatMode?"rgba(2,6,23,0.52)":"rgba(2,6,23,0.28)", position:"relative", zIndex:1, backdropFilter:"blur(2px)" }}>
         <div style={{ display:"flex", gap:0, borderBottom:`1px solid ${PANEL_BORDER}`, background:combatMode?"rgba(8,10,20,0.94)":"rgba(3,7,18,0.88)", flexShrink:0 }}>
           {[["chat","💬 Chat"],["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
