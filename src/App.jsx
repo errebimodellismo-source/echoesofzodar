@@ -1929,75 +1929,71 @@ function MarketView() {
   );
 }
 
-function ShopView({ me, items, loading, error, inventoryCounts, onBuy }) {
-  const [category, setCategory] = useState("all");
-  const categoryOptions = [
-    { id:"all", label:"Tutto" },
-    { id:"weapon", label:"Armi" },
-    { id:"armor", label:"Armature" },
-    { id:"shield", label:"Scudi" },
-    { id:"potion", label:"Pozioni" },
-    { id:"accessory", label:"Accessori" },
+function generateShopInventory(items) {
+  const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+  const pick = (pool, n) => shuffle(pool).slice(0, Math.min(n, pool.length));
+  return [
+    ...pick(items.filter(i => i.rarity === "common"), 5),
+    ...pick(items.filter(i => i.rarity === "uncommon"), 3),
+    ...pick(items.filter(i => i.rarity === "rare" || i.rarity === "epic"), 1),
+    ...pick(items.filter(i => i.rarity === "legendary"), 1),
   ];
-  const visibleItems = category === "all"
-    ? items
-    : items.filter(item => item.type === category);
+}
+
+function ShopView({ me, items, loading, error, inventoryCounts, onBuy }) {
+  const [shopItems] = useState(() => items.length ? generateShopInventory(items) : []);
+
+  const RARITY_COLOR = { common:"#9ca3af", uncommon:"#34d399", rare:"#60a5fa", epic:"#a78bfa", legendary:"#fbbf24" };
 
   return (
-    <div>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:"1rem", flexWrap:"wrap" }}>
-        <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0 }}>🛒 Negozio</h3>
-        <div style={{ padding:"0.6rem 1.4rem", background:"linear-gradient(135deg,rgba(180,83,9,0.3) 0%,rgba(180,83,9,0.1) 100%)", border:"3px solid #fbbf24", borderRadius:12, color:"#fbbf24", fontSize:"2.5rem", fontWeight:900, whiteSpace:"nowrap", textShadow:"0 2px 10px rgba(251,191,36,0.4)", lineHeight:1, display:"flex", alignItems:"center", gap:"0.8rem", boxShadow:"0 0 25px rgba(180,83,9,0.2)" }}>
+    <>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:"1.2rem", flexWrap:"wrap" }}>
+        <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, fontSize:"1.1rem" }}>🛒 Negozio — offerta del giorno</h3>
+        <div style={{ padding:"0.6rem 1.4rem", background:"linear-gradient(135deg,rgba(180,83,9,0.3),rgba(180,83,9,0.1))", border:"3px solid #fbbf24", borderRadius:12, color:"#fbbf24", fontSize:"2.5rem", fontWeight:900, whiteSpace:"nowrap", textShadow:"0 2px 10px rgba(251,191,36,0.4)", lineHeight:1, display:"flex", alignItems:"center", gap:"0.8rem", boxShadow:"0 0 25px rgba(180,83,9,0.2)" }}>
           <span style={{ fontSize:"3rem" }}>💰</span> {me?.gold || 0}
         </div>
       </div>
-      <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:"1rem" }}>
-        {categoryOptions.map(option => (
-          <button
-            key={option.id}
-            onClick={()=>setCategory(option.id)}
-            style={{
-              padding:"0.45rem 0.85rem",
-              background:category===option.id ? "rgba(109,40,217,0.28)" : "rgba(255,255,255,0.03)",
-              border:`1px solid ${category===option.id ? "#7c3aed" : "#1f2937"}`,
-              borderRadius:999,
-              color:category===option.id ? "#ddd6fe" : "#6b7280",
-              cursor:"pointer",
-              fontFamily:"'Cinzel',serif",
-              fontSize:"0.75rem",
-              letterSpacing:"0.04em",
-            }}
-          >
-            {option.label}
-          </button>
-        ))}
-      </div>
       {loading && <div style={{ color:"#6b7280" }}>Caricamento...</div>}
       {error && <div style={{ color:"#fca5a5" }}>{error}</div>}
-      {!loading && !visibleItems.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun oggetto disponibile in questa categoria.</div>}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
-        {visibleItems.map(it=>(
-          <div key={it.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
-            <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:6 }}>
-              <ArtThumb src={getItemImage(it)} alt={it.name} size={60} />
-              <div style={{ flex:1 }}>
-                <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{it.name}</div>
-                <div style={{ fontSize:"0.72rem", color:"#6b7280" }}>{itemTypeLabel(it.type)} • {itemRarityLabel(it.rarity)}</div>
+      {!loading && !shopItems.length && <div style={{ color:"#374151", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun oggetto disponibile.</div>}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:16 }}>
+        {shopItems.map(it => {
+          const canAfford = me && me.gold >= (it.price || 0);
+          const owned = inventoryCounts?.[it.id] || 0;
+          const rarityColor = RARITY_COLOR[it.rarity] || "#9ca3af";
+          return (
+            <div key={it.id} style={{ background:"rgba(15,23,42,0.7)", border:`1px solid ${rarityColor}44`, borderRadius:12, padding:"1.2rem", display:"flex", flexDirection:"column", gap:"0.8rem", boxShadow:"0 4px 16px rgba(0,0,0,0.3)" }}>
+              <div style={{ display:"flex", gap:14, alignItems:"center" }}>
+                <ArtThumb src={getItemImage(it)} alt={it.name} size={72} />
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, fontSize:"1rem", lineHeight:1.3 }}>{it.name}</div>
+                  <div style={{ fontSize:"0.78rem", color:"#6b7280", marginTop:2 }}>{itemTypeLabel(it.type)}</div>
+                  <div style={{ fontSize:"0.74rem", color:rarityColor, fontWeight:600, marginTop:2, textTransform:"capitalize" }}>{itemRarityLabel(it.rarity)}</div>
+                </div>
+                <div style={{ textAlign:"right", flexShrink:0 }}>
+                  <div style={{ fontSize:"1.3rem", color:"#fbbf24", fontWeight:900, lineHeight:1 }}>💰 {it.price}</div>
+                  {owned > 0 && <div style={{ fontSize:"0.7rem", color:"#6ee7b7", marginTop:4 }}>Hai: {owned}</div>}
+                </div>
               </div>
-              <span style={{ fontSize:"0.85rem", color:"#c4b5fd" }}>💰 {it.price}</span>
+              <div style={{ fontSize:"0.85rem", color:"#94a3b8", lineHeight:1.55 }}>{it.description}</div>
+              {itemStatSummary(it).length > 0 && (
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                  {itemStatSummary(it).map(stat => (
+                    <span key={stat} style={{ fontSize:"0.75rem", color:"#c4b5fd", background:"rgba(109,40,217,0.15)", border:"1px solid rgba(109,40,217,0.3)", borderRadius:999, padding:"2px 8px" }}>{stat}</span>
+                  ))}
+                </div>
+              )}
+              <button
+                onClick={() => onBuy(it)}
+                disabled={!canAfford}
+                style={{ width:"100%", padding:"0.75rem", background:canAfford?"linear-gradient(135deg,#92400e,#d97706)":"rgba(255,255,255,0.04)", border:`1px solid ${canAfford?"#f59e0b":"#1f2937"}`, borderRadius:8, color:canAfford?"#fef3c7":"#4b5563", fontFamily:"'Cinzel',serif", fontSize:"0.9rem", cursor:canAfford?"pointer":"not-allowed", letterSpacing:"0.06em", fontWeight:700 }}>
+                {canAfford ? `⭐ Compra` : `💰 ${it.price} (non abbastanza oro)`}
+              </button>
             </div>
-            <div style={{ fontSize:"0.75rem", color:"#4b5563", marginBottom:6 }}>{it.description}</div>
-            <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#6b7280", marginBottom:8 }}>
-              {itemStatSummary(it).map(stat => <span key={stat}>{stat}</span>)}
-            </div>
-            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:10 }}>
-              <BigBtn onClick={()=>onBuy(it)} gold icon="⭐" disabled={!me || me.gold < (it.price||0)}>Compra</BigBtn>
-              {!!inventoryCounts?.[it.id] && <span style={{ fontSize:"0.72rem", color:"#6ee7b7" }}>Ne possiedi {inventoryCounts[it.id]}</span>}
-            </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
-    </div>
+    </>
   );
 }
 
@@ -3254,15 +3250,17 @@ ${stepText(step)}`, "quest","Master");
           </div>
         )}
         {tab==="shop" && (
-          <ShopView
-            me={me}
-            items={catalogItems.filter(i=>i.available)}
-            loading={inventoryLoading}
-            error={null}
-            inventoryCounts={inventoryCounts}
-            onBuy={buyItem}
-          />
-        )} 
+          <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.5)" }}>
+            <ShopView
+              me={me}
+              items={catalogItems.filter(i=>i.available)}
+              loading={inventoryLoading}
+              error={null}
+              inventoryCounts={inventoryCounts}
+              onBuy={buyItem}
+            />
+          </div>
+        )}
 
         {tab==="quest" && (
           <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.5)" }}>
