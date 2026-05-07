@@ -3030,7 +3030,7 @@ ${stepText(step)}`, "quest","Master");
   const inventoryCounts = countInventoryItems(inventory);
   const inventoryGroups = groupInventoryEntries(inventory);
   const selectedInventoryItem = inventoryGroups.find(group => group.item.id === selectedInventoryItemId) || null;
-  const visibleChatMessages = messages.filter(msg => ["chat","narration","quest","victory","combat"].includes(msg.type));
+  const visibleChatMessages = messages.filter(msg => msg.type === "chat");
   const equippedWeapon = getEquippedWeapon(equipment, itemMap);
   const combatMode = tab==="combat" && combat?.active;
   const equippedItems = {
@@ -3304,8 +3304,14 @@ ${stepText(step)}`, "quest","Master");
 
         {tab==="chat" && <>
           <div style={{ flex:1, overflowY:"auto", padding:"0.8rem", display:"flex", flexDirection:"column", gap:6, background:"rgba(3,7,18,0.48)" }}>
+            {visibleChatMessages.length === 0 && (
+              <div style={{ textAlign:"center", color:"#374151", padding:"3rem 1rem" }}>
+                <div style={{ fontSize:"2rem", marginBottom:"0.5rem" }}>💬</div>
+                <p style={{ fontSize:"0.85rem" }}>Nessun messaggio. Scrivi qualcosa al party!</p>
+              </div>
+            )}
             {visibleChatMessages.map(msg=>{
-              const s=MSG_COLORS[msg.type]||MSG_COLORS.narration;
+              const s=MSG_COLORS[msg.type]||MSG_COLORS.chat;
               return (
                 <div key={msg.id} className="msg-in" style={{ padding:"0.5rem 0.8rem", borderRadius:4, background:s.bg, borderLeft:`3px solid ${s.border}` }}>
                   {msg.author&&<div style={{ fontSize:"0.58rem", letterSpacing:"0.1em", textTransform:"uppercase", color:s.border, marginBottom:2, fontFamily:"'Cinzel',serif" }}>{msg.author}</div>}
@@ -3317,8 +3323,8 @@ ${stepText(step)}`, "quest","Master");
           </div>
           <div style={{ display:"flex", gap:8, padding:"0.7rem", borderTop:`1px solid ${PANEL_BORDER}`, background:"rgba(3,7,18,0.88)", flexShrink:0 }}>
             <input ref={inputRef} style={{ flex:1, padding:"0.65rem 0.9rem", background:"rgba(255,255,255,0.04)", border:"1px solid #1f2937", borderRadius:4, color:"#e2d9c5", fontFamily:"'Crimson Pro',Georgia,serif", fontSize:"0.92rem" }}
-              placeholder='Scrivi o digita "avanza", "stato", "aiuto"...' value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleInput()} autoComplete="off" />
-            <button onClick={handleInput} style={{ padding:"0.65rem 1.2rem", background:"#3b0764", border:"none", borderRadius:4, color:"#a78bfa", cursor:"pointer", fontSize:"1rem" }}>?</button>
+              placeholder="Scrivi un messaggio al party..." value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleInput()} autoComplete="off" />
+            <button onClick={handleInput} style={{ padding:"0.65rem 1.2rem", background:"#3b0764", border:"none", borderRadius:4, color:"#a78bfa", cursor:"pointer", fontSize:"1rem" }}>→</button>
           </div>
         </>}
         {tab==="inventory" && (
