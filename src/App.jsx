@@ -2410,6 +2410,7 @@ function GameScreen({ myId, setScreen }) {
   const [diceAnim, setDiceAnim] = useState(false);
   const [diceResult, setDiceResult] = useState(null);
   const [spellMenu, setSpellMenu] = useState(false);
+  const [selectedTarget, setSelectedTarget] = useState(null);
   const [tab, setTab] = useState("chat");
   const [lootedStepKey, setLootedStepKey] = useState(null);
   const [catalogItems, setCatalogItems] = useState(DEFAULT_ITEMS);
@@ -2892,7 +2893,8 @@ function GameScreen({ myId, setScreen }) {
     }
     const targets = combatants.filter(c=>!c.isPlayer&&c.hp>0);
     if(!targets.length) { await endCombat(); return; }
-    const target = targets[0];
+    const target = targets.find(c=>c.id===selectedTarget) || targets[0];
+    setSelectedTarget(null);
     const weapon = attacker.id===myId ? getEquippedWeapon(equipment, itemMap) : { name:"Arma", weapon_die:getCombatDamageDie(attacker) };
     const resolved = await performAsyncAttack(attacker, target, weapon.weapon_die || "1d6");
     const masterBuffs = qs.masterBuffs || {};
@@ -2934,7 +2936,8 @@ function GameScreen({ myId, setScreen }) {
 
     const enemies = combatants.filter(c=>!c.isPlayer && c.hp>0);
     if(!enemies.length) { await endCombat(); setSpellMenu(false); return; }
-    const target = enemies[0];
+    const target = enemies.find(c=>c.id===selectedTarget) || enemies[0];
+    setSelectedTarget(null);
 
     const spellMasterBuffs = qs.masterBuffs || {};
     const spellMyBuffs = spellMasterBuffs[myId] || {};
@@ -3653,6 +3656,31 @@ ${stepText(step)}`, "quest","Master");
                           ) : spellMenu ? (
                             <div style={{ display:"grid", gap:8, justifyItems:"center" }}>
                               <div style={{ fontSize:"0.92rem", color:"#fbbf24", fontWeight:700 }}>Scegli un incantesimo</div>
+                              {(() => {
+                                const liveEnemies = combat.combatants.filter(c=>!c.isPlayer&&c.hp>0);
+                                if(liveEnemies.length <= 1) return null;
+                                return (
+                                  <div style={{ width:"100%", marginBottom:4 }}>
+                                    <div style={{ fontSize:"0.7rem", color:"#fca5a5", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>🎯 Bersaglio</div>
+                                    <div style={{ display:"grid", gap:5 }}>
+                                      {liveEnemies.map(e=>{
+                                        const isSel = selectedTarget===e.id;
+                                        return (
+                                          <button key={e.id} onClick={()=>setSelectedTarget(isSel?null:e.id)}
+                                            style={{ display:"flex", alignItems:"center", gap:7, padding:"0.45rem 0.6rem", background:isSel?"rgba(239,68,68,0.25)":"rgba(127,29,29,0.18)", border:`2px solid ${isSel?"#ef4444":"#7f1d1d"}`, borderRadius:7, cursor:"pointer", textAlign:"left" }}>
+                                            <span style={{ fontSize:"1rem" }}>{e.emoji}</span>
+                                            <div style={{ flex:1, minWidth:0 }}>
+                                              <div style={{ fontSize:"0.78rem", color:isSel?"#fee2e2":"#fca5a5", fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{e.name}</div>
+                                              <div style={{ fontSize:"0.65rem", color:"#94a3b8" }}>{e.hp}/{e.maxHp} HP</div>
+                                            </div>
+                                            {isSel && <span style={{ fontSize:"0.68rem", color:"#ef4444" }}>✓</span>}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                               {spellLevels.map(lvl=>{
                                 const spells = spellsByLevel[lvl] || [];
                                 if(!spells.length) return null;
@@ -3685,10 +3713,37 @@ ${stepText(step)}`, "quest","Master");
                             </div>
                           ) : (
                             <>
+                              {/* Selezione bersaglio */}
+                              {(() => {
+                                const liveEnemies = combat.combatants.filter(c=>!c.isPlayer&&c.hp>0);
+                                if(liveEnemies.length <= 1) return null;
+                                return (
+                                  <div style={{ marginBottom:10 }}>
+                                    <div style={{ fontSize:"0.72rem", color:"#fca5a5", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:6, fontFamily:"'Cinzel',serif" }}>🎯 Scegli bersaglio</div>
+                                    <div style={{ display:"grid", gap:6 }}>
+                                      {liveEnemies.map(e=>{
+                                        const isSel = selectedTarget===e.id;
+                                        return (
+                                          <button key={e.id} onClick={()=>setSelectedTarget(isSel?null:e.id)}
+                                            style={{ display:"flex", alignItems:"center", gap:8, padding:"0.55rem 0.75rem", background:isSel?"rgba(239,68,68,0.25)":"rgba(127,29,29,0.18)", border:`2px solid ${isSel?"#ef4444":"#7f1d1d"}`, borderRadius:8, cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}>
+                                            <ArtThumb src={getMonsterImage(e)} alt={e.name} size={36} radius={6} />
+                                            <div style={{ flex:1, minWidth:0 }}>
+                                              <div style={{ fontSize:"0.82rem", color:isSel?"#fee2e2":"#fca5a5", fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{e.emoji} {e.name}</div>
+                                              <div style={{ fontSize:"0.68rem", color:"#94a3b8" }}>{e.hp}/{e.maxHp} HP</div>
+                                            </div>
+                                            {isSel && <span style={{ fontSize:"0.72rem", color:"#ef4444", fontFamily:"'Cinzel',serif", flexShrink:0 }}>✓ SEL.</span>}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                    {!selectedTarget && <div style={{ fontSize:"0.68rem", color:"#64748b", marginTop:4 }}>Nessun bersaglio — attacchi il primo nemico.</div>}
+                                  </div>
+                                );
+                              })()}
                               <div style={{ display:"grid", gap:10 }}>
                                 <button onClick={doAttack} style={{ width:"100%", padding:"1rem 1.4rem", background:"linear-gradient(135deg,#7f1d1d,#dc2626)", border:"2px solid #ef4444", borderRadius:10, color:"#fee2e2", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.1rem", cursor:"pointer", letterSpacing:"0.08em", boxShadow:"0 14px 28px rgba(127,29,29,0.24)" }}>
                                   <span className={diceAnim?"dice-spin":""} style={{ display:"inline-block", marginRight:8 }}>🎲</span>
-                                  ATTACCA
+                                  {selectedTarget ? `ATTACCA ${combat.combatants.find(c=>c.id===selectedTarget)?.name||""}` : "ATTACCA"}
                                 </button>
                                 {isCaster && (
                                   <button onClick={()=>setSpellMenu(true)} disabled={!availableSpells.length} style={{ width:"100%", padding:"1rem 1.4rem", background:availableSpells.length?"linear-gradient(135deg,#551a8b,#7c3aed)":"rgba(75,43,105,0.35)", border:"2px solid #7c3aed", borderRadius:10, color:"#e0d7ff", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.04rem", cursor:availableSpells.length?"pointer":"not-allowed", letterSpacing:"0.08em" }}>
