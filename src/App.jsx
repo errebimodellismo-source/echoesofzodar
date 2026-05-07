@@ -2328,10 +2328,10 @@ function GameScreen({ myId, setScreen }) {
   useEffect(() => {
     if (qs?.combat?.active) {
       audioManager.playBGM("combat");
-    } else if (tab === "shop" || tab === "market") {
+    } else if (tab === "shop") {
       audioManager.playBGM("town");
     } else {
-      audioManager.playBGM("dungeon");
+      audioManager.playBGM("intro");
     }
   }, [qs?.combat?.active, tab]);
 
