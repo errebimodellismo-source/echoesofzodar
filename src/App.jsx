@@ -1624,64 +1624,126 @@ function MasterPanel({ setScreen }) {
 
 function PlayersView() {
   const [players, setPlayers] = useState([]);
+  const [partyStates, setPartyStates] = useState({});
+  const [busy, setBusy] = useState({});
+
   useEffect(()=>{
     const load = async () => {
       const { data } = await supabase.from("players").select("*").order("level", { ascending:false });
       setPlayers(data||[]);
+      // load party states for buff display
+      const codes = [...new Set((data||[]).map(p=>p.party_code).filter(Boolean))];
+      const states = {};
+      await Promise.all(codes.map(async code=>{
+        const { data: ps } = await supabase.from("party_state").select("state").eq("party_code", code).single();
+        if(ps?.state) states[code] = ps.state;
+      }));
+      setPartyStates(states);
     };
     load();
-    const interval = setInterval(load, 3000);
+    const interval = setInterval(load, 4000);
     return ()=>clearInterval(interval);
   },[]);
+
+  // Direct partial update — avoids the camelCase/snake_case bug in dbSavePlayer
+  async function masterUpdate(playerId, fields, optimistic) {
+    setBusy(b=>({...b,[playerId]:true}));
+    await supabase.from("players").update({ ...fields, updated_at: new Date().toISOString() }).eq("id", playerId);
+    setPlayers(prev=>prev.map(x=>x.id===playerId?{...x,...optimistic}:x));
+    setBusy(b=>({...b,[playerId]:false}));
+  }
+
+  async function masterSetBuff(p, buffKey, turns) {
+    const code = p.party_code;
+    if(!code) { window.alert("Questo giocatore non è in un party attivo."); return; }
+    const currentState = partyStates[code] || {};
+    const currentBuffs = currentState.masterBuffs || {};
+    const playerBuffs = currentBuffs[p.id] || {};
+    const newState = { ...currentState, masterBuffs: { ...currentBuffs, [p.id]: { ...playerBuffs, [buffKey]: turns } } };
+    await supabase.from("party_state").update({ state: newState, updated_at: new Date().toISOString() }).eq("party_code", code);
+    setPartyStates(prev=>({...prev,[code]:newState}));
+    window.alert(`✅ ${buffKey === "immortal" ? "Immortalità" : "Tiri Critici"} attivata per ${p.name} (${turns} turni)`);
+  }
+
   return (
     <div>
-      <p style={{ color:"#94a3b8", fontSize:"0.85rem", marginBottom:"1rem" }}>{players.length} avventurieri � aggiornamento automatico</p>
-      {!players.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun giocatore ancora.</div>}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
-        {players.map(p=>{ const cls=CLASSES[p?.class||'warrior']||{}; const race=RACES[p?.race||'human']||{};
-          const baseHp = (cls.hp||0) + (race.hpB||0);
-          const baseAtk = (cls.atk||0) + (race.atkB||0);
-          const baseDef = (cls.def||0) + (race.defB||0);
-          const baseMag = (cls.mag||0) + (race.magB||0);
+      <p style={{ color:"#94a3b8", fontSize:"0.85rem", marginBottom:"1rem" }}>{players.length} avventurieri — aggiornamento automatico</p>
+      {!players.length && <div style={{ color:"#94a3b8", textAlign:"center", padding:"3rem", border:"1px dashed #374151", borderRadius:6 }}>Nessun giocatore ancora.</div>}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:12 }}>
+        {players.map(p=>{
+          const cls=CLASSES[p?.class||'warrior']||{};
+          const race=RACES[p?.race||'human']||{};
+          const baseHp=(cls.hp||0)+(race.hpB||0);
+          const baseAtk=(cls.atk||0)+(race.atkB||0);
+          const baseDef=(cls.def||0)+(race.defB||0);
+          const baseMag=(cls.mag||0)+(race.magB||0);
+          const isBusy = !!busy[p.id];
+          const pState = partyStates[p.party_code] || {};
+          const pBuffs = (pState.masterBuffs || {})[p.id] || {};
           return (
-            <div key={p?.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
-              <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:6 }}>
-                <ArtThumb src={getPlayerPortrait({ class:p?.class, race:p?.race, portrait:p?.portrait, image:p?.image })} alt={p?.name || "Giocatore"} size={64} radius={16} />
+            <div key={p?.id} style={{ background:"rgba(15,23,42,0.85)", border:"1px solid rgba(148,163,184,0.2)", borderRadius:10, padding:"1rem" }}>
+              <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:8 }}>
+                <ArtThumb src={getPlayerPortrait({ class:p?.class, race:p?.race, portrait:p?.portrait, image:p?.image })} alt={p?.name||"PG"} size={56} radius={12} />
                 <div style={{ flex:1 }}>
-                  <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{p?.name}</div>
-                  <div style={{ color:"#94a3b8", fontSize:"0.68rem" }}>{race.emoji} {race.name} � {cls.name} � Lv.{p?.level||1}</div>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, fontSize:"0.95rem" }}>{p?.name}</div>
+                  <div style={{ color:"#94a3b8", fontSize:"0.7rem" }}>{race.emoji} {race.name} · {cls.name} · Lv.{p?.level||1}</div>
+                  <div style={{ color:"#94a3b8", fontSize:"0.68rem", marginTop:2 }}>❤️ {p?.hp||0}/{p?.max_hp||0} · 💰 {p?.gold||0} · ⭐ {p?.xp||0} XP</div>
                 </div>
-                <span style={{ padding:"2px 7px", background:"#3b0764", borderRadius:3, fontSize:"0.68rem", color:"#c4b5fd" }}>Lv.{p?.level||1}</span>
+                {p?.dead && <span style={{ padding:"2px 8px", background:"rgba(127,29,29,0.5)", border:"1px solid #ef4444", borderRadius:4, fontSize:"0.65rem", color:"#fca5a5" }}>💀 MORTO</span>}
               </div>
               <HpBar cur={p?.hp||0} max={p?.max_hp||0} />
-              <div style={{ display:"flex", gap:10, fontSize:"0.72rem", color:"#94a3b8", marginTop:5 }}>
-                <span>⭐{p?.xp||0}/{xpForLevel(p?.level||1)}XP</span><span>💰{p?.gold||0}oro</span><span>🆔{p?.party_code||""}</span>
-              </div>
-              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:10 }}>
-                <SmallBtn onClick={async()=>{
-                  const upd={...p, level:1, xp:0, gold:0, hp:baseHp, max_hp:baseHp, atk:baseAtk, def:baseDef, mag:baseMag};
-                  await dbSavePlayer(upd);
-                  setPlayers(prev=>prev.map(x=>x.id===p.id?upd:x));
-                }}>🔄 Reset PG</SmallBtn>
-                <SmallBtn onClick={async()=>{
-                  const upd={...p, hp:p.max_hp};
-                  await dbSavePlayer(upd);
-                  setPlayers(prev=>prev.map(x=>x.id===p.id?upd:x));
-                }}>❤️ Cura Tutto</SmallBtn>
-                <SmallBtn onClick={async()=>{
-                  const add = parseInt(window.prompt("Quanto oro aggiungere?", "0"),10);
+              {(pBuffs.immortal > 0 || pBuffs.crit > 0) && (
+                <div style={{ display:"flex", gap:6, marginTop:6, flexWrap:"wrap" }}>
+                  {pBuffs.immortal > 0 && <span style={{ fontSize:"0.68rem", color:"#fbbf24", background:"rgba(180,83,9,0.25)", border:"1px solid #fbbf24", borderRadius:999, padding:"1px 8px" }}>🛡️ Immortale {pBuffs.immortal}t</span>}
+                  {pBuffs.crit > 0 && <span style={{ fontSize:"0.68rem", color:"#f87171", background:"rgba(127,29,29,0.25)", border:"1px solid #ef4444", borderRadius:999, padding:"1px 8px" }}>⚔️ Critico {pBuffs.crit}t</span>}
+                </div>
+              )}
+
+              {/* Azioni base */}
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:10, paddingTop:10, borderTop:"1px solid rgba(148,163,184,0.1)" }}>
+                <SmallBtn disabled={isBusy} onClick={async()=>{
+                  await masterUpdate(p.id, { hp: p.max_hp }, { hp: p.max_hp });
+                }}>❤️ Cura tutto</SmallBtn>
+                <SmallBtn disabled={isBusy} onClick={async()=>{
+                  const amt = parseInt(window.prompt(`Quanti HP curare a ${p.name}?`, "10"),10);
+                  if(!amt||isNaN(amt)) return;
+                  const newHp = Math.min(p.max_hp, (p.hp||0)+amt);
+                  await masterUpdate(p.id, { hp: newHp }, { hp: newHp });
+                }}>💊 Cura parziale</SmallBtn>
+                {p?.dead && <SmallBtn disabled={isBusy} onClick={async()=>{
+                  await masterUpdate(p.id, { hp:1, dead:false }, { hp:1, dead:false });
+                }}>✨ Resurrezione</SmallBtn>}
+                <SmallBtn disabled={isBusy} onClick={async()=>{
+                  const add = parseInt(window.prompt(`Quanto oro a ${p.name}?`, "50"),10);
                   if(!add||isNaN(add)) return;
-                  const upd={...p, gold:(p.gold||0)+add};
-                  await dbSavePlayer(upd);
-                  setPlayers(prev=>prev.map(x=>x.id===p.id?upd:x));
-                }}>💰 Dai Oro</SmallBtn>
+                  await masterUpdate(p.id, { gold:(p.gold||0)+add }, { gold:(p.gold||0)+add });
+                }}>💰 Dai oro</SmallBtn>
+                <SmallBtn disabled={isBusy} onClick={async()=>{
+                  const add = parseInt(window.prompt(`Quanta XP a ${p.name}?`, "50"),10);
+                  if(!add||isNaN(add)) return;
+                  await masterUpdate(p.id, { xp:(p.xp||0)+add }, { xp:(p.xp||0)+add });
+                }}>⭐ Dai XP</SmallBtn>
+              </div>
+
+              {/* Poteri divini */}
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:8, paddingTop:8, borderTop:"1px solid rgba(251,191,36,0.15)" }}>
+                <SmallBtn disabled={isBusy} onClick={async()=>{
+                  await masterUpdate(p.id, { hp: p.max_hp }, { hp: p.max_hp });
+                  // Also send a divine message if in party
+                  if(p.party_code) await supabase.from("messages").insert({ party_code:p.party_code, author:"Dungeon Master", content:`✨ **Aiuto Divino!** Una luce celestiale avvolge **${p.name}** e lo riporta in piena salute!`, type:"narration" });
+                }}>✨ Aiuto Divino</SmallBtn>
+                <SmallBtn disabled={isBusy} onClick={()=>masterSetBuff(p,"immortal",10)}>🛡️ Immortale (10t)</SmallBtn>
+                <SmallBtn disabled={isBusy} onClick={()=>masterSetBuff(p,"crit",10)}>⚔️ Critici (10t)</SmallBtn>
+                <SmallBtn disabled={isBusy} red onClick={async()=>{
+                  if(!window.confirm(`Reset completo di ${p.name}?`)) return;
+                  await masterUpdate(p.id, { level:1,xp:0,gold:0,hp:baseHp,max_hp:baseHp,atk:baseAtk,def:baseDef,mag:baseMag,dead:false },
+                    { level:1,xp:0,gold:0,hp:baseHp,max_hp:baseHp,atk:baseAtk,def:baseDef,mag:baseMag,dead:false });
+                }}>🔄 Reset PG</SmallBtn>
               </div>
             </div>
           );
         })}
       </div>
-
-      {/* Party management for each party */}
     </div>
   );
 }
