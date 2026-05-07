@@ -1751,37 +1751,74 @@ function PlayersView() {
 function PartiesView() {
   const [parties, setParties] = useState([]);
   const [partyPlayers, setPartyPlayers] = useState({});
+  const [allPlayers, setAllPlayers] = useState([]);
   const [working, setWorking] = useState({});
   const [banTarget, setBanTarget] = useState({});
+  const [assignTarget, setAssignTarget] = useState({});
+  const [newCode, setNewCode] = useState("");
+  const [creating, setCreating] = useState(false);
+  const [copied, setCopied] = useState({});
   const [error, setError] = useState(null);
+
+  const reload = async () => {
+    const { data, error } = await supabase.from("players").select("id,name,party_code,class,level,hp,max_hp");
+    if(error) { setError(error.message || "Impossibile caricare i party"); return; }
+    setAllPlayers(data || []);
+    const codes = Array.from(new Set((data||[]).map(r=>r.party_code).filter(Boolean)));
+    setParties(codes);
+    const grouped = {};
+    for(const p of (data||[])) {
+      if(!p.party_code) continue;
+      if(!grouped[p.party_code]) grouped[p.party_code] = [];
+      grouped[p.party_code].push(p);
+    }
+    setPartyPlayers(grouped);
+  };
 
   useEffect(()=>{
     let active = true;
-    const load = async () => {
-      const { data, error } = await supabase.from("players").select("id,name,party_code,class");
-      if(error) { setError(error.message || "Impossibile caricare i party"); return; }
-      if(!active) return;
-      const codes = Array.from(new Set((data||[]).map(r=>r.party_code).filter(Boolean)));
-      setParties(codes);
-      const grouped = {};
-      for(const p of (data||[])) {
-        if(!p.party_code) continue;
-        if(!grouped[p.party_code]) grouped[p.party_code] = [];
-        grouped[p.party_code].push(p);
-      }
-      setPartyPlayers(grouped);
-    };
+    const load = async () => { if(active) await reload(); };
     load();
     const interval = setInterval(load, 5000);
     return ()=>{ active=false; clearInterval(interval); };
   },[]);
+
+  const handleCreateParty = async () => {
+    const code = newCode.trim().toUpperCase() || Math.random().toString(36).slice(2,6).toUpperCase();
+    if(parties.includes(code)) { alert(`Il party "${code}" esiste gia'!`); return; }
+    setCreating(true);
+    try {
+      await supabase.from("party_state").upsert({ party_code: code, state: {}, updated_at: new Date().toISOString() });
+      setNewCode("");
+      await reload();
+      alert(`Party "${code}" creato!\nCondividi questo codice con i tuoi giocatori.`);
+    } catch(e) {
+      alert("Errore creazione party: " + (e?.message || e));
+    } finally { setCreating(false); }
+  };
+
+  const handleAssignPlayer = async (partyCode) => {
+    const pid = assignTarget[partyCode];
+    if(!pid) { alert("Seleziona un giocatore."); return; }
+    const player = allPlayers.find(p=>p.id===pid);
+    if(!player) return;
+    setWorking(w=>({...w,[partyCode+"_assign"]:true}));
+    try {
+      await supabase.from("players").update({ party_code: partyCode, updated_at: new Date().toISOString() }).eq("id", pid);
+      await reload();
+      setAssignTarget(prev=>({...prev,[partyCode]:""}));
+      alert(`${player.name} assegnato al party ${partyCode}!\nIl giocatore deve ricaricare la pagina.`);
+    } catch(e) {
+      alert("Errore assegnazione: " + (e?.message || e));
+    } finally { setWorking(w=>({...w,[partyCode+"_assign"]:false})); }
+  };
 
   const handleAction = async (partyCode, action) => {
     setWorking(w=>({ ...w, [partyCode]: action }));
     try {
       if(action === "combat") await resetPartyCombat(partyCode);
       if(action === "campaign") await resetPartyCampaign(partyCode);
-      if(action === "delete") { await deleteParty(partyCode); setParties(prev=>prev.filter(c=>c!==partyCode)); }
+      if(action === "delete") { await deleteParty(partyCode); await reload(); }
     } finally { setWorking(w=>({ ...w, [partyCode]: null })); }
   };
 
@@ -1810,47 +1847,131 @@ function PartiesView() {
     setWorking(w=>({...w,[partyCode]:"ban"}));
     try {
       await supabase.from("players").delete().eq("id", pid);
-      setPartyPlayers(prev=>({...prev,[partyCode]:(prev[partyCode]||[]).filter(p=>p.id!==pid)}));
+      await reload();
       setBanTarget(prev=>({...prev,[partyCode]:""}));
     } finally { setWorking(w=>({...w,[partyCode]:null})); }
+  };
+
+  const copyCode = (code) => {
+    navigator.clipboard.writeText(code).then(()=>{
+      setCopied(c=>({...c,[code]:true}));
+      setTimeout(()=>setCopied(c=>({...c,[code]:false})), 2000);
+    });
   };
 
   const dangerBtn = { background:"#dc2626", color:"white", fontWeight:"bold", padding:"8px 16px", borderRadius:"6px", margin:"4px", border:"none", cursor:"pointer", fontSize:"0.82rem" };
 
   return (
     <div>
+      {/* Crea nuovo party */}
+      <div style={{ marginBottom:"1.5rem", background:"rgba(99,102,241,0.08)", border:"1px solid #4338ca", borderRadius:8, padding:"1rem" }}>
+        <div style={{ fontFamily:"'Cinzel',serif", color:"#a5b4fc", fontSize:"0.9rem", fontWeight:700, marginBottom:"0.75rem" }}>✨ Crea Nuovo Party</div>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
+          <input
+            value={newCode}
+            onChange={e=>setNewCode(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8))}
+            placeholder="Codice (es: ALFA) — vuoto = auto"
+            style={{ flex:1, minWidth:180, background:"#0f172a", border:"1px solid #4338ca", color:"#e2d9c5", padding:"8px 10px", borderRadius:6, fontSize:"0.85rem", fontFamily:"monospace", letterSpacing:"0.15em" }}
+          />
+          <SmallBtn disabled={creating} onClick={handleCreateParty}>{creating ? "Creazione..." : "Crea Party"}</SmallBtn>
+        </div>
+        {allPlayers.filter(p=>!p.party_code).length > 0 && (
+          <div style={{ marginTop:8, fontSize:"0.73rem", color:"#94a3b8" }}>
+            Giocatori senza party: {allPlayers.filter(p=>!p.party_code).map(p=>p.name).join(", ")}
+          </div>
+        )}
+      </div>
+
       <p style={{ color:"#94a3b8", fontSize:"0.85rem", marginBottom:"1rem" }}>{parties.length} party trovati � aggiornamento automatico</p>
       {error && <div style={{ color:"#fca5a5", marginBottom:"1rem" }}>{error}</div>}
-      {!parties.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun party ancora.</div>}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:10 }}>
-        {parties.map(code=>(
-          <div key={code} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
-            <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, marginBottom:6 }}>Party: {code}</div>
-            <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
-              <SmallBtn disabled={!!working[code]} onClick={()=>handleAction(code, "combat")}>💀 Reset Combattimento</SmallBtn>
-              <SmallBtn disabled={!!working[code]} onClick={()=>{ if(window.confirm("Resetta chat e stato combattimento?")) handleAction(code, "campaign"); }}>🔄 Reset Campagna</SmallBtn>
-              <SmallBtn red disabled={!!working[code]} onClick={()=>{ if(window.confirm("Eliminare completamente questo party?")) handleAction(code, "delete"); }}>🗑️ Elimina Party</SmallBtn>
-            </div>
-            {working[code] && <div style={{ marginTop:8, color:"#a78bfa", fontSize:"0.78rem" }}>In corso: {working[code]}...</div>}
-            <div style={{ marginTop:12, background:"#1a0000", border:"1px solid #dc2626", borderRadius:6, padding:"0.8rem" }}>
-              <div style={{ color:"#dc2626", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", fontWeight:700, marginBottom:8, letterSpacing:"0.05em" }}>⚠️ Azioni Pericolose</div>
-              <div style={{ display:"flex", flexWrap:"wrap" }}>
-                <button disabled={!!working[code]} onClick={()=>handleResetStoria(code)} style={dangerBtn}>🔥 Reset Storia Completo</button>
-                <button disabled={!!working[code]} onClick={()=>handleTerminaCombattimento(code)} style={dangerBtn}>💀 Termina Combattimento</button>
+      {!parties.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun party ancora. Creane uno sopra.</div>}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))", gap:12 }}>
+        {parties.map(code=>{
+          const members = partyPlayers[code] || [];
+          return (
+            <div key={code} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:8, padding:"1rem" }}>
+              {/* Intestazione */}
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:10 }}>
+                <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, fontSize:"1rem" }}>
+                  Party: <span style={{ color:"#fbbf24", letterSpacing:"0.18em", fontFamily:"monospace" }}>{code}</span>
+                </div>
+                <button onClick={()=>copyCode(code)}
+                  style={{ background:"rgba(251,191,36,0.1)", border:"1px solid #78350f", color:"#fbbf24", padding:"4px 12px", borderRadius:6, cursor:"pointer", fontSize:"0.72rem", whiteSpace:"nowrap" }}>
+                  {copied[code] ? "Copiato!" : "Copia codice"}
+                </button>
               </div>
-              <div style={{ display:"flex", gap:6, alignItems:"center", marginTop:4 }}>
-                <select value={banTarget[code]||""} onChange={e=>setBanTarget(prev=>({...prev,[code]:e.target.value}))}
-                  style={{ flex:1, background:"#0a0000", border:"1px solid #7f1d1d", color:"#e2d9c5", padding:"6px 8px", borderRadius:4, fontSize:"0.82rem" }}>
-                  <option value="">Seleziona giocatore...</option>
-                  {(partyPlayers[code]||[]).map(p=>(
-                    <option key={p.id} value={p.id}>{p.name} ({CLASSES[p.class]?.name||p.class})</option>
-                  ))}
-                </select>
-                <button disabled={!!working[code]} onClick={()=>handleBanna(code)} style={dangerBtn}>🚫 Banna</button>
+
+              {/* Lista membri */}
+              <div style={{ marginBottom:10 }}>
+                <div style={{ fontSize:"0.68rem", color:"#64748b", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4 }}>Giocatori ({members.length})</div>
+                {!members.length && <div style={{ color:"#374151", fontSize:"0.75rem", fontStyle:"italic" }}>Nessun membro ancora</div>}
+                {members.map(p=>(
+                  <div key={p.id} style={{ display:"flex", gap:6, alignItems:"center", padding:"4px 0", borderBottom:"1px solid #1a2030" }}>
+                    <span style={{ fontSize:"0.85rem" }}>{CLASSES[p.class]?.emoji || "⚔️"}</span>
+                    <span style={{ flex:1, fontSize:"0.8rem", color:"#d1d5db" }}>{p.name}</span>
+                    <span style={{ fontSize:"0.68rem", color:"#64748b" }}>Lv.{p.level||1}</span>
+                    <span style={{ fontSize:"0.68rem", color:(p.hp||0)/(p.max_hp||1)>0.5?"#4ade80":"#fca5a5" }}>{p.hp||0}/{p.max_hp||0} HP</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Aggiungi/sposta giocatore */}
+              <div style={{ marginBottom:10, background:"rgba(99,102,241,0.06)", border:"1px solid #312e81", borderRadius:6, padding:"0.6rem" }}>
+                <div style={{ fontSize:"0.7rem", color:"#818cf8", marginBottom:6 }}>Aggiungi / sposta giocatore</div>
+                <div style={{ display:"flex", gap:6 }}>
+                  <select value={assignTarget[code]||""} onChange={e=>setAssignTarget(prev=>({...prev,[code]:e.target.value}))}
+                    style={{ flex:1, background:"#0f172a", border:"1px solid #312e81", color:"#e2d9c5", padding:"5px 6px", borderRadius:4, fontSize:"0.78rem" }}>
+                    <option value="">Seleziona giocatore...</option>
+                    {allPlayers.filter(p=>!p.party_code).length > 0 && (
+                      <optgroup label="Senza party">
+                        {allPlayers.filter(p=>!p.party_code).map(p=>(
+                          <option key={p.id} value={p.id}>{p.name} ({CLASSES[p.class]?.name||p.class})</option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {allPlayers.filter(p=>p.party_code && p.party_code!==code).length > 0 && (
+                      <optgroup label="Da altri party">
+                        {allPlayers.filter(p=>p.party_code && p.party_code!==code).map(p=>(
+                          <option key={p.id} value={p.id}>{p.name} [{p.party_code}]</option>
+                        ))}
+                      </optgroup>
+                    )}
+                  </select>
+                  <SmallBtn disabled={!!working[code+"_assign"]} onClick={()=>handleAssignPlayer(code)}>
+                    {working[code+"_assign"] ? "..." : "Assegna"}
+                  </SmallBtn>
+                </div>
+              </div>
+
+              {/* Azioni */}
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:6 }}>
+                <SmallBtn disabled={!!working[code]} onClick={()=>handleAction(code, "combat")}>Reset Combattimento</SmallBtn>
+                <SmallBtn disabled={!!working[code]} onClick={()=>{ if(window.confirm("Resetta chat e stato combattimento?")) handleAction(code, "campaign"); }}>Reset Campagna</SmallBtn>
+                <SmallBtn red disabled={!!working[code]} onClick={()=>{ if(window.confirm("Eliminare completamente questo party?")) handleAction(code, "delete"); }}>Elimina</SmallBtn>
+              </div>
+              {working[code] && <div style={{ marginTop:4, color:"#a78bfa", fontSize:"0.78rem" }}>In corso: {working[code]}...</div>}
+
+              {/* Zona pericolosa */}
+              <div style={{ marginTop:8, background:"#1a0000", border:"1px solid #dc2626", borderRadius:6, padding:"0.8rem" }}>
+                <div style={{ color:"#dc2626", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", fontWeight:700, marginBottom:8, letterSpacing:"0.05em" }}>Azioni Pericolose</div>
+                <div style={{ display:"flex", flexWrap:"wrap" }}>
+                  <button disabled={!!working[code]} onClick={()=>handleResetStoria(code)} style={dangerBtn}>Reset Storia</button>
+                  <button disabled={!!working[code]} onClick={()=>handleTerminaCombattimento(code)} style={dangerBtn}>Termina Combattimento</button>
+                </div>
+                <div style={{ display:"flex", gap:6, alignItems:"center", marginTop:6 }}>
+                  <select value={banTarget[code]||""} onChange={e=>setBanTarget(prev=>({...prev,[code]:e.target.value}))}
+                    style={{ flex:1, background:"#0a0000", border:"1px solid #7f1d1d", color:"#e2d9c5", padding:"6px 8px", borderRadius:4, fontSize:"0.78rem" }}>
+                    <option value="">Banna giocatore...</option>
+                    {members.map(p=>(
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
+                  <button disabled={!!working[code]} onClick={()=>handleBanna(code)} style={dangerBtn}>Banna</button>
+                </div>
               </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
@@ -3212,6 +3333,7 @@ ${stepText(step)}`, "quest","Master");
             </div>
           ))}
           {partyPlayers.length<=1&&<div style={{ color:"#1f2937", fontSize:"0.68rem" }}>Solo per ora</div>}
+          <JoinPartyWidget myId={myId} currentCode={code} />
         </div>
 
         {currentQ && (
@@ -3640,6 +3762,47 @@ function BigBtn({ children, onClick, gold, dark, icon, disabled }) {
   if(dark) return <button onClick={onClick} disabled={disabled} style={{...base,background:"rgba(255,255,255,0.05)",color:"#9ca3af",border:"1px solid #1f2937"}}>{icon&&<span>{icon}</span>}{children}</button>;
   return <button onClick={onClick} disabled={disabled} style={{...base,background:"rgba(109,40,217,0.3)",color:"#c4b5fd",border:"1px solid #6d28d9"}}>{icon&&<span>{icon}</span>}{children}</button>;
 }
+function JoinPartyWidget({ myId, currentCode }) {
+  const [input, setInput] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [done, setDone] = useState(false);
+
+  const join = async () => {
+    const code = input.trim().toUpperCase();
+    if(!code || code === currentCode) return;
+    setBusy(true);
+    try {
+      await supabase.from("party_state").upsert({ party_code: code, state: {}, updated_at: new Date().toISOString() });
+      await supabase.from("players").update({ party_code: code, updated_at: new Date().toISOString() }).eq("id", myId);
+      setDone(true);
+    } catch(e) {
+      alert("Errore: " + (e?.message || e));
+    } finally { setBusy(false); }
+  };
+
+  if(done) return (
+    <div style={{ marginTop:8, padding:"6px 8px", background:"rgba(34,197,94,0.08)", border:"1px solid #166534", borderRadius:6, fontSize:"0.7rem", color:"#4ade80" }}>
+      Party cambiato! Ricarica la pagina per entrare.
+      <button onClick={()=>window.location.reload()} style={{ marginLeft:8, background:"#166534", border:"none", color:"#bbf7d0", padding:"2px 8px", borderRadius:4, cursor:"pointer", fontSize:"0.7rem" }}>Ricarica</button>
+    </div>
+  );
+
+  return (
+    <div style={{ marginTop:8, display:"flex", gap:5 }}>
+      <input
+        value={input}
+        onChange={e=>setInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8))}
+        placeholder="Cambia party..."
+        style={{ flex:1, background:"rgba(0,0,0,0.3)", border:"1px solid #1f2937", color:"#e2d9c5", padding:"4px 6px", borderRadius:4, fontSize:"0.7rem", fontFamily:"monospace", letterSpacing:"0.1em" }}
+      />
+      <button disabled={busy || !input.trim()} onClick={join}
+        style={{ background:"rgba(99,102,241,0.2)", border:"1px solid #4338ca", color:"#a5b4fc", padding:"4px 8px", borderRadius:4, cursor:"pointer", fontSize:"0.7rem" }}>
+        {busy ? "..." : "Entra"}
+      </button>
+    </div>
+  );
+}
+
 function SmallBtn({ children, onClick, red, disabled }) {
   return <button disabled={disabled} onClick={onClick} style={{ padding:"0.3rem 0.7rem", background:red?"rgba(239,68,68,0.12)":"rgba(255,255,255,0.04)", border:`1px solid ${red?"#ef4444":"#1f2937"}`, borderRadius:4, color:red?"#fca5a5":"#6b7280", cursor:disabled?"not-allowed":"pointer", opacity:disabled?0.5:1, fontSize:"0.78rem", fontFamily:"inherit" }}>{children}</button>;
 }
