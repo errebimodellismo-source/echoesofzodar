@@ -2526,27 +2526,36 @@ function GameScreen({ myId, setScreen }) {
       const weaponDie = getCombatDamageDie(actor);
       const resolved = await performAsyncAttack(actor, pt, weaponDie);
       const edmg = resolved.damage;
-      const updPt = { ...pt, hp: Math.max(0, pt.hp - edmg) };
+      const ptBuffs = (latestQs.masterBuffs || {})[pt.id] || {};
+      let monsterNewMasterBuffs = latestQs.masterBuffs || {};
+      let effectiveHp = Math.max(0, pt.hp - edmg);
+      if(ptBuffs.immortal > 0 && effectiveHp <= 0) {
+        effectiveHp = 1;
+        monsterNewMasterBuffs = { ...monsterNewMasterBuffs, [pt.id]: { ...ptBuffs, immortal: ptBuffs.immortal - 1 } };
+      }
+      const updPt = { ...pt, hp: effectiveHp };
       const playerCombatantIdx = latestCombatants.findIndex(c => c.id === pt.id);
       if(playerCombatantIdx >= 0) {
         latestCombatants[playerCombatantIdx] = applyCombatDamageState({
           ...latestCombatants[playerCombatantIdx],
           maxHp: updPt.maxHp,
         }, edmg);
+        if(effectiveHp > 0) latestCombatants[playerCombatantIdx].hp = effectiveHp;
       }
       await dbSavePlayer(updPt);
       if (updPt.id === myId) setMeRaw(updPt);
-      const log = formatWeaponAttackLog(actor, pt, resolved, "Attacco naturale", updPt.hp, pt.maxHp);
+      const immortalNote = ptBuffs.immortal > 0 && effectiveHp === 1 ? `\n🛡️ **${pt.name}** è protetto dall'Immortalità! (${ptBuffs.immortal - 1} turni rimasti)` : "";
+      const log = formatWeaponAttackLog(actor, pt, resolved, "Attacco naturale", updPt.hp, pt.maxHp) + immortalNote;
       const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
       const allDead = latestCombatants.filter(c => !c.isPlayer).every(c => c.hp <= 0);
       if (allDead) {
-        const endQs = { ...latestQs, combat: { ...latestCombat, combatants: latestCombatants } };
+        const endQs = { ...latestQs, masterBuffs: monsterNewMasterBuffs, combat: { ...latestCombat, combatants: latestCombatants } };
         await dbSavePartyState(code, endQs);
         setQs(prev => ({ ...prev, combat: endQs.combat }));
         await dbSendMessage({ party_code: code, author: "Sistema", content: "🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", type: "victory" });
       } else {
         const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound, pendingLog: log };
-        await dbSavePartyState(code, { ...latestQs, combat: newCombat });
+        await dbSavePartyState(code, { ...latestQs, masterBuffs: monsterNewMasterBuffs, combat: newCombat });
         setQs(prev => ({ ...prev, combat: newCombat }));
         await dbSendMessage({ party_code: code, author: "Battaglia", content: log, type: "combat" });
       }
@@ -2765,14 +2774,22 @@ function GameScreen({ myId, setScreen }) {
     const target = targets[0];
     const weapon = attacker.id===myId ? getEquippedWeapon(equipment, itemMap) : { name:"Arma", weapon_die:getCombatDamageDie(attacker) };
     const resolved = await performAsyncAttack(attacker, target, weapon.weapon_die || "1d6");
-    const dmg = resolved.damage;
+    const masterBuffs = qs.masterBuffs || {};
+    const myBuffs = masterBuffs[myId] || {};
+    let effectiveResolved = resolved;
+    let newMasterBuffs = masterBuffs;
+    if (myBuffs.crit > 0 && resolved.hit) {
+      effectiveResolved = { ...resolved, isCrit: true, damage: resolved.damageRoll * 2 };
+      newMasterBuffs = { ...masterBuffs, [myId]: { ...myBuffs, crit: myBuffs.crit - 1 } };
+    }
+    const dmg = effectiveResolved.damage;
     const tidx = combatants.findIndex(c=>c.id===target.id);
     combatants[tidx] = {...target, hp:Math.max(0,target.hp-dmg)};
-    const log = formatWeaponAttackLog(attacker, target, resolved, weapon.name, combatants[tidx].hp, target.maxHp);
+    const log = formatWeaponAttackLog(attacker, target, effectiveResolved, weapon.name, combatants[tidx].hp, target.maxHp);
     const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
     const allDead = combatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
-    if(allDead) { await saveQState({...qs, combat:{...combat, combatants}}); await endCombat(); return; }
-    await saveQState({ ...qs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
+    if(allDead) { await saveQState({...qs, masterBuffs: newMasterBuffs, combat:{...combat, combatants}}); await endCombat(); return; }
+    await saveQState({ ...qs, masterBuffs: newMasterBuffs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
   }
 
   async function castSpell(spell) {
@@ -2798,13 +2815,22 @@ function GameScreen({ myId, setScreen }) {
     if(!enemies.length) { await endCombat(); setSpellMenu(false); return; }
     const target = enemies[0];
 
+    const spellMasterBuffs = qs.masterBuffs || {};
+    const spellMyBuffs = spellMasterBuffs[myId] || {};
+    let newSpellMasterBuffs = spellMasterBuffs;
+
     let log = `🔮 **${attacker.name}** lancia **${spell.name}**!\n`;
     let newCombatants = combatants;
 
     if(spell.type === "damage") {
       const base = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), notation:spell.dmg, label:`Danno ${spell.dmg}`, themeColor:"#a855f7" });
       const bonus = Math.floor((attacker.mag||0)/2);
-      const dmg = Math.max(1, base + bonus - Math.floor(target.def/2));
+      let effectiveBase = base;
+      if(spellMyBuffs.crit > 0) {
+        effectiveBase = base * 2;
+        newSpellMasterBuffs = { ...spellMasterBuffs, [myId]: { ...spellMyBuffs, crit: spellMyBuffs.crit - 1 } };
+      }
+      const dmg = Math.max(1, effectiveBase + bonus - Math.floor(target.def/2));
       const tidx = newCombatants.findIndex(c=>c.id===target.id);
       newCombatants[tidx] = {...target, hp:Math.max(0,target.hp-dmg)};
       log += `💥 Tiro danno: **${spell.dmg} = ${base}**\n✨ Bonus magia: **+${bonus}**\n🛡️ Riduzione bersaglio: **-${Math.floor(target.def/2)}**\n🔥 Danno finale: **${dmg}**\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`;
@@ -2836,8 +2862,8 @@ function GameScreen({ myId, setScreen }) {
 
     const allDead = newCombatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
     setSpellMenu(false);
-    if(allDead) { await saveQState({...qs, combat:{...combat, combatants:newCombatants, spellSlots:nextSlots}}); await endCombat(); return; }
-    await saveQState({ ...qs, combat: { ...combat, combatants:newCombatants, turn:nextTurn, round:nextRound, spellSlots:nextSlots, pendingLog: log } });
+    if(allDead) { await saveQState({...qs, masterBuffs: newSpellMasterBuffs, combat:{...combat, combatants:newCombatants, spellSlots:nextSlots}}); await endCombat(); return; }
+    await saveQState({ ...qs, masterBuffs: newSpellMasterBuffs, combat: { ...combat, combatants:newCombatants, turn:nextTurn, round:nextRound, spellSlots:nextSlots, pendingLog: log } });
   }
 
   async function endCombat() {
