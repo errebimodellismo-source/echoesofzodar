@@ -3072,129 +3072,13 @@ ${stepText(step)}`, "quest","Master");
           </div>
         </div>
       )}
-      {diceResult && (
-        <div style={{ position:"fixed", inset:0, zIndex:9999, background:"rgba(0,0,0,0.85)", display:"flex", alignItems:"center", justifyContent:"center" }}>
-          <div style={{ textAlign:"center", color:"#fff" }}>
-            <div style={{ position:"relative" }}>
-              {diceResult.stage!=="rolling" && diceResult.sides===20 && diceResult.value===20 && (
-                <div style={{ position:"absolute", inset:0, pointerEvents:"none" }}>
-                  {Array.from({length:8}).map((_,i)=>(
-                    <span key={i} style={{
-                      position:"absolute",
-                      left:`${10 + i*10}%`,
-                      top:"60%",
-                      width:10,
-                      height:10,
-                      borderRadius:"50%",
-                      background:"radial-gradient(circle, rgba(255,223,93,1) 0%, rgba(255,223,93,0) 70%)",
-                      animation:"sparkle 1s ease-out",
-                      animationDelay:`${i*80}ms`
-                    }} />
-                  ))}
-                </div>
-              )}
-              <span className={diceResult.stage==="rolling" && diceAnim?"dice-spin":""} style={{ width:"10rem", height:"10rem", display:"inline-block" }}>
-                {(()=>{
-                  const result = diceResult.stage==="rolling" ? "?" : diceResult.value;
-                  const rv = Number(diceResult.value || 0);
-                  const sides = Number(diceResult.sides || 20);
-                  const critLike = sides === 20 && rv >= 20;
-                  const failLike = sides === 20 && rv <= 1;
-                  const maxLike = sides !== 20 && rv >= sides;
-                  const color = critLike || maxLike ? "#fef08a" : failLike ? "#ef4444" : "#fbbf24";
-                  const glow = critLike || maxLike
-                    ? "drop-shadow(0 0 22px rgba(255,255,120,0.95))"
-                    : failLike
-                      ? "drop-shadow(0 0 18px rgba(239,68,68,0.95))"
-                      : "drop-shadow(0 0 16px rgba(251,191,36,0.9))";
-                  const stroke = diceResult.stage==="rolling" ? "#fbbf24" : color;
-                  const commonText = <text x="50" y="54" textAnchor="middle" dominantBaseline="middle" fontSize="18" fontWeight="900" fill={stroke} fontFamily="Georgia,serif">{result}</text>;
-
-                  if(sides === 4) {
-                    return (
-                      <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:diceResult.stage==="rolling"?"drop-shadow(0 0 16px rgba(251,191,36,0.9))":glow}}>
-                        <polygon points="50,10 84,78 16,78" fill="rgba(15,23,42,0.94)" stroke={stroke} strokeWidth="2.8" strokeLinejoin="round"/>
-                        <line x1="50" y1="10" x2="50" y2="78" stroke={stroke} strokeWidth="1.8" opacity="0.9"/>
-                        <line x1="16" y1="78" x2="50" y2="46" stroke={stroke} strokeWidth="1.6" opacity="0.82"/>
-                        <line x1="84" y1="78" x2="50" y2="46" stroke={stroke} strokeWidth="1.6" opacity="0.82"/>
-                        {commonText}
-                      </svg>
-                    );
-                  }
-                  if(sides === 6) {
-                    return (
-                      <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:diceResult.stage==="rolling"?"drop-shadow(0 0 16px rgba(251,191,36,0.9))":glow}}>
-                        <polygon points="28,18 72,18 72,82 28,82" fill="rgba(15,23,42,0.94)" stroke={stroke} strokeWidth="2.8" strokeLinejoin="round"/>
-                        <line x1="28" y1="18" x2="72" y2="18" stroke={stroke} strokeWidth="1.8" opacity="0.85"/>
-                        <line x1="28" y1="82" x2="72" y2="82" stroke={stroke} strokeWidth="1.8" opacity="0.85"/>
-                        {commonText}
-                      </svg>
-                    );
-                  }
-                  if(sides === 8) {
-                    return (
-                      <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:diceResult.stage==="rolling"?"drop-shadow(0 0 16px rgba(251,191,36,0.9))":glow}}>
-                        <polygon points="50,8 78,30 78,70 50,92 22,70 22,30" fill="rgba(15,23,42,0.94)" stroke={stroke} strokeWidth="2.8" strokeLinejoin="round"/>
-                        <line x1="50" y1="8" x2="50" y2="92" stroke={stroke} strokeWidth="1.7" opacity="0.88"/>
-                        <line x1="22" y1="30" x2="78" y2="30" stroke={stroke} strokeWidth="1.6" opacity="0.82"/>
-                        <line x1="22" y1="70" x2="78" y2="70" stroke={stroke} strokeWidth="1.6" opacity="0.82"/>
-                        {commonText}
-                      </svg>
-                    );
-                  }
-                  if(sides === 10) {
-                    return (
-                      <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:diceResult.stage==="rolling"?"drop-shadow(0 0 16px rgba(251,191,36,0.9))":glow}}>
-                        <polygon points="50,8 74,22 82,46 66,88 34,88 18,46 26,22" fill="rgba(15,23,42,0.94)" stroke={stroke} strokeWidth="2.8" strokeLinejoin="round"/>
-                        <line x1="26" y1="22" x2="74" y2="22" stroke={stroke} strokeWidth="1.6" opacity="0.82"/>
-                        <line x1="18" y1="46" x2="82" y2="46" stroke={stroke} strokeWidth="1.6" opacity="0.82"/>
-                        <line x1="50" y1="8" x2="50" y2="88" stroke={stroke} strokeWidth="1.7" opacity="0.9"/>
-                        {commonText}
-                      </svg>
-                    );
-                  }
-                  if(sides === 12) {
-                    return (
-                      <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:diceResult.stage==="rolling"?"drop-shadow(0 0 16px rgba(251,191,36,0.9))":glow}}>
-                        <polygon points="50,8 72,16 86,34 82,60 64,84 36,84 18,60 14,34 28,16" fill="rgba(15,23,42,0.94)" stroke={stroke} strokeWidth="2.6" strokeLinejoin="round"/>
-                        <line x1="28" y1="16" x2="72" y2="16" stroke={stroke} strokeWidth="1.5" opacity="0.8"/>
-                        <line x1="14" y1="34" x2="86" y2="34" stroke={stroke} strokeWidth="1.5" opacity="0.8"/>
-                        <line x1="18" y1="60" x2="82" y2="60" stroke={stroke} strokeWidth="1.5" opacity="0.8"/>
-                        {commonText}
-                      </svg>
-                    );
-                  }
-                  return (
-                    <svg viewBox="0 0 100 100" style={{width:"100%",height:"100%",filter:diceResult.stage==="rolling"?"drop-shadow(0 0 16px rgba(251,191,36,0.9))":glow}}>
-                      <polygon points="50,6 70,16 84,34 80,61 64,84 36,84 20,61 16,34 30,16" fill="rgba(15,23,42,0.96)" stroke={stroke} strokeWidth="2.8" strokeLinejoin="round"/>
-                      <polygon points="50,6 63,23 50,34 37,23" fill="rgba(255,255,255,0.08)" stroke={stroke} strokeWidth="1.35" strokeLinejoin="round"/>
-                      <polygon points="30,16 37,23 50,34 31,40 16,34" fill="rgba(255,255,255,0.03)" stroke={stroke} strokeWidth="1.35" strokeLinejoin="round"/>
-                      <polygon points="70,16 84,34 69,40 50,34 63,23" fill="rgba(255,255,255,0.03)" stroke={stroke} strokeWidth="1.35" strokeLinejoin="round"/>
-                      <polygon points="31,40 50,34 69,40 50,54" fill="rgba(255,255,255,0.06)" stroke={stroke} strokeWidth="1.35" strokeLinejoin="round"/>
-                      <polygon points="20,61 31,40 50,54 36,84" fill="rgba(255,255,255,0.026)" stroke={stroke} strokeWidth="1.35" strokeLinejoin="round"/>
-                      <polygon points="80,61 69,40 50,54 64,84" fill="rgba(255,255,255,0.026)" stroke={stroke} strokeWidth="1.35" strokeLinejoin="round"/>
-                      <line x1="30" y1="16" x2="70" y2="16" stroke={stroke} strokeWidth="1.55" opacity="0.86"/>
-                      <line x1="37" y1="23" x2="63" y2="23" stroke={stroke} strokeWidth="1.35" opacity="0.8"/>
-                      <line x1="16" y1="34" x2="84" y2="34" stroke={stroke} strokeWidth="1.25" opacity="0.78"/>
-                      <line x1="31" y1="40" x2="69" y2="40" stroke={stroke} strokeWidth="1.25" opacity="0.82"/>
-                      <line x1="50" y1="6" x2="50" y2="54" stroke={stroke} strokeWidth="1.6" opacity="0.9"/>
-                      <line x1="50" y1="54" x2="50" y2="84" stroke={stroke} strokeWidth="1.35" opacity="0.8"/>
-                      {commonText}
-                    </svg>
-                  );
-                })()}
-              </span>
-              {diceResult.stage!=="rolling" && (
-                <div style={{ marginTop:"0.55rem", textAlign:"center" }}>
-                  <div style={{ fontSize:"1.15rem", color: diceResult.sides===20 && diceResult.value===20?"#fbbf24": diceResult.sides===20 && diceResult.value===1?"#f87171":"#fff", fontFamily:"'Cinzel',serif" }}>
-                    {diceResult.sides===20 && diceResult.value===20 ? "CRITICO!" : diceResult.sides===20 && diceResult.value===1 ? "FALLIMENTO CRITICO!" : diceResult.label || ""}
-                  </div>
-                  <div style={{ fontSize:"0.9rem", color:"#cbd5e1", marginTop:4 }}>
-                    {diceResult.label ? `${diceResult.label}: ` : ""}<strong>{diceResult.value}</strong>
-                  </div>
-                </div>
-              )}
-            </div>
+      {diceResult?.stage === "result" && (
+        <div style={{ position:"fixed", bottom:"12%", left:"50%", transform:"translateX(-50%)", zIndex:10000, textAlign:"center", pointerEvents:"none" }}>
+          <div style={{ fontFamily:"'Cinzel',serif", fontSize:"1.4rem", color: diceResult.value===20?"#fbbf24": diceResult.value===1?"#f87171":"#fff", textShadow:"0 0 20px rgba(0,0,0,0.9)", letterSpacing:"0.1em" }}>
+            {diceResult.value===20 ? "CRITICO!" : diceResult.value===1 ? "FALLIMENTO!" : diceResult.label || ""}
+          </div>
+          <div style={{ fontSize:"1rem", color:"#cbd5e1", marginTop:4, textShadow:"0 0 16px rgba(0,0,0,0.9)" }}>
+            {diceResult.label && diceResult.value !== 20 && diceResult.value !== 1 ? `${diceResult.label}: ` : ""}<strong style={{ fontSize:"1.3rem" }}>{diceResult.value}</strong>
           </div>
         </div>
       )}
@@ -3624,6 +3508,7 @@ ${stepText(step)}`, "quest","Master");
           </div>
         )}
       </main>
+      <DiceRoller ref={diceRef} />
     </div>
   );
 }
