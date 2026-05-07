@@ -17,10 +17,10 @@ const DiceRoller = forwardRef(({ onRollComplete }, ref) => {
           assetPath: '/assets/dice-box/', // Will fail over to unpkg if not found
           theme: 'default',
           themeColor: '#ef4444', 
-          scale: 20,
+          scale: 40,
           spinForce: 6,
-          throwForce: 4,
-          startingHeight: 15,
+          throwForce: 3,
+          startingHeight: 20,
           settleTimeout: 5000,
           lightIntensity: 0.9,
           gravity: 1,
@@ -86,12 +86,13 @@ const DiceRoller = forwardRef(({ onRollComplete }, ref) => {
       ref={containerRef} 
       style={{
         position: 'fixed',
-        top: 0,
-        left: 0,
-        width: '100vw',
-        height: '100vh',
-        pointerEvents: 'none', 
-        zIndex: 9999, 
+        top: '50%',
+        left: '50%',
+        transform: 'translate(-50%, -50%)',
+        width: '80vw',
+        height: '80vh',
+        pointerEvents: 'none',
+        zIndex: 9999,
       }}
     />
   );
