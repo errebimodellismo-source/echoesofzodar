@@ -18,8 +18,8 @@ const DiceRoller = forwardRef(({ onRollComplete }, ref) => {
           assetPath: '/assets/dice-box/', // Will fail over to unpkg if not found
           theme: 'default',
           themeColor: '#ef4444', 
-          scale: 14,
-          size: 18,
+          scale: 5,
+          size: 16,
           spinForce: 9,
           throwForce: 8,
           startingHeight: 18,
