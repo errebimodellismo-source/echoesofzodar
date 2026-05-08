@@ -159,6 +159,50 @@ function maxPreparedSpellsForLevel(level) {
 }
 
 /* ----------------------------------------------
+   DAILY QUEST ROTATION
+---------------------------------------------- */
+function _dateToSeed(dateStr) {
+  let h = 2166136261;
+  for (const c of dateStr) { h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; }
+  return h;
+}
+function _makeRng(seed) {
+  let s = (seed || 1) >>> 0;
+  return () => { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return (s >>> 0) / 0x100000000; };
+}
+function getDailyQuests(allQuests, counts = { facile: 3, medio: 3, difficile: 2 }) {
+  const today = new Date().toLocaleDateString('en-CA');
+  const rng = _makeRng(_dateToSeed(today));
+  const shuffle = arr => {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
+  const byDiff = { facile: [], medio: [], difficile: [] };
+  for (const q of allQuests) {
+    if (!q.active) continue;
+    const d = normalizeMissionDifficulty(q.difficulty);
+    if (byDiff[d]) byDiff[d].push(q);
+  }
+  return [
+    ...shuffle(byDiff.facile).slice(0, counts.facile),
+    ...shuffle(byDiff.medio).slice(0, counts.medio),
+    ...shuffle(byDiff.difficile).slice(0, counts.difficile),
+  ];
+}
+function hoursUntilMidnight() {
+  const now = new Date();
+  const midnight = new Date(now); midnight.setHours(24, 0, 0, 0);
+  const ms = midnight - now;
+  const h = Math.floor(ms / 3600000);
+  const m = Math.floor((ms % 3600000) / 60000);
+  return h > 0 ? `${h}h ${m}m` : `${m}m`;
+}
+
+/* ----------------------------------------------
    LOCAL STORAGE HELPERS (per quests/monsters/meta)
 ---------------------------------------------- */
 function lsGet(key, def) { try { const r=localStorage.getItem(key); return r?JSON.parse(r):def; } catch { return def; } }
@@ -170,20 +214,28 @@ function getQuests() {
   if(!Array.isArray(stored) || !stored.length) return defaults;
 
   const normalizedStored = stored.map(normalizeQuest);
-
-  // Migrate the legacy one-mission seed so expanded default content becomes visible.
-  if(normalizedStored.length === 1 && normalizedStored[0]?.id === "dq1") {
-    const merged = [
-      ...normalizedStored,
-      ...defaults.filter(q => q.id !== "dq1"),
-    ];
+  // Always merge: stored quests keep their customisations, new defaults are appended
+  const storedIds = new Set(normalizedStored.map(q => q.id));
+  const newDefaults = defaults.filter(q => !storedIds.has(q.id));
+  if(newDefaults.length) {
+    const merged = [...normalizedStored, ...newDefaults];
     saveQuests(merged);
     return merged;
   }
-
   return normalizedStored;
 }
-function getMonsters() { return lsGet("eoz_monsters",  DEFAULT_MONSTERS); }
+function getMonsters() {
+  const stored = lsGet("eoz_monsters", null);
+  if(!Array.isArray(stored) || !stored.length) return DEFAULT_MONSTERS;
+  const storedIds = new Set(stored.map(m => m.id));
+  const newDefaults = DEFAULT_MONSTERS.filter(m => !storedIds.has(m.id));
+  if(newDefaults.length) {
+    const merged = [...stored, ...newDefaults];
+    lsSet("eoz_monsters", merged);
+    return merged;
+  }
+  return stored;
+}
 function getMeta()     { return lsGet("eoz_meta",      { worldName:"Echoes of Zodar", worldSub:"Dove l'Equilibrio Regna Supremo", logo:null }); }
 function saveQuests(q)   { lsSet("eoz_quests", q); }
 function saveMonsters(m) { lsSet("eoz_monsters", m); }
@@ -281,6 +333,7 @@ function normalizeQuestChoices(choices) {
   return Object.entries(choices).map(([key, value]) => ({
     label: value?.label || key,
     ...value,
+    next: value?.next ?? (value?.nextStep ? Number(value.nextStep) - 1 : undefined),
   }));
 }
 function normalizeQuestStep(step) {
@@ -292,7 +345,11 @@ function normalizeQuestStep(step) {
   return { ...step, type:"narrative", text:step.text || "" };
 }
 function normalizeQuest(quest) {
-  return { ...quest, steps:(quest.steps || []).map(normalizeQuestStep) };
+  return {
+    ...quest,
+    specialPassword: quest.specialPassword || quest.password || "",
+    steps:(quest.steps || []).map(normalizeQuestStep),
+  };
 }
 function buildInventoryEntries(rows, items = DEFAULT_ITEMS) {
   const itemMap = new Map((items || []).map(item => [item.id, item]));
@@ -1123,32 +1180,44 @@ function FallingLeaves() {
     left: Math.random() * 98,
     size: 10 + Math.random() * 12,
     emoji: leafEmojis[Math.floor(Math.random() * leafEmojis.length)],
-    duration: 9 + Math.random() * 13,
+    duration: 10 + Math.random() * 12,
+    swayDuration: 2.2 + Math.random() * 2.8,
     delay: Math.random() * 20,
-    dx: Math.round(-55 + Math.random() * 110),
-    rot: Math.round(-360 + Math.random() * 720),
+    sw: Math.round(18 + Math.random() * 44),   // sway amplitude px (dimensionless for calc)
+    rot: Math.round(150 + Math.random() * 390), // total rotation deg (dimensionless for calc)
   })), []);
 
   return (
     <>
       <style>{`
         @keyframes leafFall {
-          0%   { transform: translateY(-40px) translateX(0) rotate(0deg); opacity:0; }
-          6%   { opacity: 0.88; }
-          50%  { transform: translateY(50vh) translateX(calc(var(--ldx)*1px)) rotate(200deg); }
-          94%  { opacity: 0.65; }
-          100% { transform: translateY(115vh) translateX(0) rotate(calc(var(--lrot)*1deg)); opacity:0; }
+          0%   { transform: translateY(-40px); opacity: 0; }
+          5%   { opacity: 0.85; }
+          93%  { opacity: 0.7; }
+          100% { transform: translateY(115vh); opacity: 0; }
+        }
+        @keyframes leafSway {
+          0%   { transform: translateX(0px) rotate(0deg); }
+          20%  { transform: translateX(calc(var(--sw) * 1px)) rotate(calc(var(--rot) * 0.18deg)); }
+          45%  { transform: translateX(calc(var(--sw) * -0.65px)) rotate(calc(var(--rot) * 0.42deg)); }
+          65%  { transform: translateX(calc(var(--sw) * 0.85px)) rotate(calc(var(--rot) * 0.68deg)); }
+          85%  { transform: translateX(calc(var(--sw) * -0.4px)) rotate(calc(var(--rot) * 0.88deg)); }
+          100% { transform: translateX(calc(var(--sw) * 0.3px)) rotate(calc(var(--rot) * 1deg)); }
         }
       `}</style>
       {leaves.map(l => (
         <div key={l.id} style={{
           position:'fixed', left:`${l.left}%`, top:'-30px',
-          fontSize:`${l.size}px`, lineHeight:1,
           pointerEvents:'none', zIndex:9990,
-          '--ldx': l.dx, '--lrot': l.rot,
-          animation:`leafFall ${l.duration}s ${l.delay}s ease-in infinite`,
-          userSelect:'none',
-        }}>{l.emoji}</div>
+          animation:`leafFall ${l.duration}s ${l.delay}s linear infinite`,
+        }}>
+          <div style={{
+            fontSize:`${l.size}px`, lineHeight:1,
+            '--sw': l.sw, '--rot': l.rot,
+            animation:`leafSway ${l.swayDuration}s ${l.delay}s ease-in-out infinite`,
+            userSelect:'none',
+          }}>{l.emoji}</div>
+        </div>
       ))}
     </>
   );
@@ -1263,7 +1332,6 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
           </div>
         )}
       </div>
-
       {authUser && <p style={{ marginTop:"1rem", color:"#64748b", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
       <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE • FANTASY • MULTIPLAYER ONLINE</p>
       </div>{/* /zIndex wrapper */}
@@ -1437,6 +1505,10 @@ function MasterPanel({ setScreen }) {
   const [dmBroadcast, setDmBroadcast] = useState("");
   const [broadcasting, setBroadcasting] = useState(false);
   const [masterLogs, setMasterLogs] = useState([]);
+  const [questSearch, setQuestSearch] = useState("");
+  const [questDifficultyFilter, setQuestDifficultyFilter] = useState("all");
+  const [monsterSearch, setMonsterSearch] = useState("");
+  const [monsterTierFilter, setMonsterTierFilter] = useState("all");
 
   function saveAll() {
     saveMeta(meta); saveQuests(quests); saveMonsters(monsters);
@@ -1447,11 +1519,15 @@ function MasterPanel({ setScreen }) {
     const r=new FileReader(); r.onload=ev=>setMeta(m=>({...m,logo:ev.target.result})); r.readAsDataURL(f);
   }
   function addQuest() {
-    const q={id:"q_"+Date.now(),title:"Nuova Missione",desc:"",flavor:"",difficulty:"medio",xpReward:200,goldReward:100,steps:[],enemies:[],active:true};
+    const q={id:"q_"+Date.now(),title:"Nuova Missione",desc:"",flavor:"",difficulty:"medio",specialPassword:"",xpReward:200,goldReward:100,steps:[],enemies:[],active:true};
+    setQuests(prev=>[...prev,q]); setEditQ({...q});
+  }
+  function addSpecialQuest() {
+    const q={id:"sq_"+Date.now(),title:"Missione Speciale",desc:"",flavor:"",difficulty:"speciale",specialPassword:"",xpReward:500,goldReward:250,steps:[],enemies:[],active:true};
     setQuests(prev=>[...prev,q]); setEditQ({...q});
   }
   function saveEditQ() {
-    const normalizedQuest = { ...editQ, difficulty: normalizeMissionDifficulty(editQ?.difficulty) };
+    const normalizedQuest = normalizeQuest({ ...editQ, difficulty: normalizeMissionDifficulty(editQ?.difficulty) });
     setQuests(prev=>prev.map(x=>x.id===normalizedQuest.id ? normalizedQuest : x));
     setEditQ(null);
   }
@@ -1466,6 +1542,17 @@ function MasterPanel({ setScreen }) {
     setMonsters(prev=>[...prev,m]); setEditM({...m});
   }
   function saveEditM() { setMonsters(prev=>prev.map(x=>x.id===editM.id?editM:x)); setEditM(null); }
+  function syncDefaultQuests() {
+    const current = quests.map(normalizeQuest);
+    const currentIds = new Set(current.map(q => q.id));
+    const missing = DEFAULT_QUESTS.map(normalizeQuest).filter(q => !currentIds.has(q.id));
+    if(missing.length) setQuests([...current, ...missing]);
+  }
+  function syncDefaultMonsters() {
+    const currentIds = new Set(monsters.map(m => m.id));
+    const missing = DEFAULT_MONSTERS.filter(m => !currentIds.has(m.id));
+    if(missing.length) setMonsters([...monsters, ...missing]);
+  }
   async function sendDungeonMasterBroadcast() {
     const content = dmBroadcast.trim();
     if(!content || broadcasting) return;
@@ -1502,9 +1589,24 @@ function MasterPanel({ setScreen }) {
 
   const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"👤 Iscritti"}];
   const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
+  const visibleQuests = quests.filter(q => {
+    const term = questSearch.trim().toLowerCase();
+    const diff = normalizeMissionDifficulty(q.difficulty);
+    const matchesTerm = !term || [q.title, q.desc, q.flavor, q.id].some(value => String(value || "").toLowerCase().includes(term));
+    const matchesDiff = questDifficultyFilter === "all" || diff === questDifficultyFilter || (questDifficultyFilter === "locked" && !!q.specialPassword);
+    return matchesTerm && matchesDiff;
+  });
+  const visibleMonsters = monsters.filter(m => {
+    const term = monsterSearch.trim().toLowerCase();
+    const hp = Number(m.hp) || 0;
+    const tier = m.isBoss || hp >= 130 ? "boss" : hp >= 85 ? "hard" : hp >= 27 ? "mid" : "base";
+    const matchesTerm = !term || [m.name, m.desc, m.id].some(value => String(value || "").toLowerCase().includes(term));
+    const matchesTier = monsterTierFilter === "all" || tier === monsterTierFilter;
+    return matchesTerm && matchesTier;
+  });
 
   return (
-    <div style={{ position:"relative", zIndex:1, maxWidth:860, margin:"0 auto", padding:"1rem" }}>
+    <div style={{ position:"relative", zIndex:1, maxWidth:1180, margin:"0 auto", padding:"1rem" }}>
       <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:"1.2rem", paddingBottom:"1rem", borderBottom:"1px solid #1f2937", flexWrap:"wrap" }}>
         <div style={{ flex:1 }}>
           <h1 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.4rem", margin:0 }}>🛡️ Pannello Master</h1>
@@ -1581,18 +1683,34 @@ function MasterPanel({ setScreen }) {
 
       {tab==="quests" && !editQ && (
         <div>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
-            <span style={{ color:"#94a3b8", fontSize:"0.85rem" }}>{quests.length} missioni</span>
-            <BigBtn onClick={addQuest} gold icon="?">+ Nuova Missione</BigBtn>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:"1rem", flexWrap:"wrap" }}>
+            <span style={{ color:"#94a3b8", fontSize:"0.85rem" }}>{visibleQuests.length}/{quests.length} missioni</span>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+              <SmallBtn onClick={syncDefaultQuests}>Mostra tutte le missioni base</SmallBtn>
+              <BigBtn onClick={addSpecialQuest} gold icon="🔐">+ Speciale</BigBtn>
+              <BigBtn onClick={addQuest} gold icon="?">+ Nuova Missione</BigBtn>
+            </div>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"minmax(220px,1fr) 180px", gap:8, marginBottom:"1rem" }}>
+            <input style={inputStyle} value={questSearch} onChange={e=>setQuestSearch(e.target.value)} placeholder="Cerca per titolo, testo o ID..." />
+            <select style={{...inputStyle,cursor:"pointer"}} value={questDifficultyFilter} onChange={e=>setQuestDifficultyFilter(e.target.value)}>
+              <option value="all">Tutte</option>
+              <option value="facile">Facili</option>
+              <option value="medio">Medie</option>
+              <option value="difficile">Difficili</option>
+              <option value="speciale">Speciali</option>
+              <option value="locked">Con password</option>
+            </select>
           </div>
           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-            {quests.map(q=>(
+            {visibleQuests.map(q=>(
               <div key={q.id} style={{ background:"rgba(255,255,255,0.02)", border:`1px solid ${q.active?"#4c1d95":"#1f2937"}`, borderRadius:6, padding:"0.9rem 1rem" }}>
                 <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
                   <div style={{ flex:1 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
                       <span style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontWeight:700, fontSize:"1rem" }}>{q.title}</span>
                       <span style={{ padding:"1px 8px", border:`1px solid ${DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#374151"}`, borderRadius:3, fontSize:"0.65rem", color:DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#6b7280" }}>{missionDifficultyLabel(q.difficulty)}</span>
+                      {!!q.specialPassword && <span style={{ fontSize:"0.65rem", color:"#c4b5fd", border:"1px solid #6d28d9", borderRadius:3, padding:"1px 5px" }}>PASSWORD</span>}
                       {!q.active && <span style={{ fontSize:"0.65rem", color:"#94a3b8", border:"1px solid #1f2937", borderRadius:3, padding:"1px 5px" }}>PAUSA</span>}
                     </div>
                     <p style={{ color:"#94a3b8", fontSize:"0.8rem", margin:"0 0 6px" }}>{q.desc||"Nessuna descrizione."}</p>
@@ -1628,11 +1746,19 @@ function MasterPanel({ setScreen }) {
                   <option value="facile">Facile</option>
                   <option value="medio">Medio</option>
                   <option value="difficile">Difficile</option>
+                  <option value="speciale">Speciale</option>
                 </select>
               </div>
               <div><label style={labelStyle}>XP</label><input style={inputStyle} type="number" value={editQ.xpReward} onChange={e=>setEditQ(q=>({...q,xpReward:+e.target.value}))} /></div>
               <div><label style={labelStyle}>Oro</label><input style={inputStyle} type="number" value={editQ.goldReward} onChange={e=>setEditQ(q=>({...q,goldReward:+e.target.value}))} /></div>
             </div>
+            <label style={{...labelStyle,marginTop:10}}>Password speciale</label>
+            <input
+              style={inputStyle}
+              value={editQ.specialPassword || ""}
+              onChange={e=>setEditQ(q=>({...q,specialPassword:e.target.value.trim()}))}
+              placeholder="Lascia vuoto per missione pubblica. Compila per renderla sbloccabile."
+            />
             <label style={{...labelStyle,marginTop:10}}>Descrizione</label>
             <textarea style={{...inputStyle,height:75,resize:"vertical"}} value={editQ.desc} onChange={e=>setEditQ(q=>({...q,desc:e.target.value}))} placeholder="Descrivi la missione..." />
             <label style={{...labelStyle,marginTop:10}}>Citazione narrativa</label>
@@ -1715,12 +1841,25 @@ function MasterPanel({ setScreen }) {
 
       {tab==="monsters" && !editM && (
         <div>
-          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
-            <span style={{ color:"#94a3b8", fontSize:"0.85rem" }}>{monsters.length} creature</span>
-            <BigBtn onClick={addMonster} gold icon="?">+ Nuova Creatura</BigBtn>
+          <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:"1rem", flexWrap:"wrap" }}>
+            <span style={{ color:"#94a3b8", fontSize:"0.85rem" }}>{visibleMonsters.length}/{monsters.length} creature</span>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+              <SmallBtn onClick={syncDefaultMonsters}>Mostra tutto il bestiario base</SmallBtn>
+              <BigBtn onClick={addMonster} gold icon="?">+ Nuova Creatura</BigBtn>
+            </div>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"minmax(220px,1fr) 180px", gap:8, marginBottom:"1rem" }}>
+            <input style={inputStyle} value={monsterSearch} onChange={e=>setMonsterSearch(e.target.value)} placeholder="Cerca creatura..." />
+            <select style={{...inputStyle,cursor:"pointer"}} value={monsterTierFilter} onChange={e=>setMonsterTierFilter(e.target.value)}>
+              <option value="all">Tutti</option>
+              <option value="base">Base</option>
+              <option value="mid">Intermedi</option>
+              <option value="hard">Duri</option>
+              <option value="boss">Boss</option>
+            </select>
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(230px,1fr))", gap:8 }}>
-            {monsters.map(m=>(
+            {visibleMonsters.map(m=>(
               <div key={m.id} style={{ background:"rgba(255,255,255,0.02)", border:`1px solid ${m.isBoss?"#92400e":"#1f2937"}`, borderRadius:6, padding:"0.8rem" }}>
                 <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:6 }}>
                   <ArtThumb src={getMonsterImage(m)} alt={m.name} size={68} radius={16} />
@@ -2581,6 +2720,9 @@ function GameScreen({ myId, setScreen }) {
   const [preparedSpellIds, setPreparedSpellIds] = useState([]);
   const [inventoryLoading, setInventoryLoading] = useState(true);
   const [selectedInventoryItemId, setSelectedInventoryItemId] = useState(null);
+  const [specialPasswordInput, setSpecialPasswordInput] = useState("");
+  const [specialQuestError, setSpecialQuestError] = useState("");
+  const [unlockedSpecialQuestIds, setUnlockedSpecialQuestIds] = useState([]);
   const [deathScene, setDeathScene] = useState(null);
   const msgEnd = useRef(null);
   const combatLogEndRef = useRef(null);
@@ -2652,6 +2794,31 @@ function GameScreen({ myId, setScreen }) {
   const code = me?.partyCode;
   itemMapRef.current = new Map(catalogItems.map(item => [item.id, item]));
   const itemMap = itemMapRef.current;
+
+  useEffect(() => {
+    if(!code) {
+      setUnlockedSpecialQuestIds([]);
+      return;
+    }
+    setUnlockedSpecialQuestIds(lsGet(`eoz_special_unlocked_${code}`, []));
+  }, [code]);
+
+  function unlockSpecialQuest() {
+    const password = specialPasswordInput.trim();
+    if(!password) return;
+    const match = getQuests().find(q => q.active && q.specialPassword && q.specialPassword.toLowerCase() === password.toLowerCase());
+    if(!match) {
+      setSpecialQuestError("Password non valida o missione non attiva.");
+      return;
+    }
+    setUnlockedSpecialQuestIds(prev => {
+      const next = prev.includes(match.id) ? prev : [...prev, match.id];
+      if(code) lsSet(`eoz_special_unlocked_${code}`, next);
+      return next;
+    });
+    setSpecialPasswordInput("");
+    setSpecialQuestError(`Missione sbloccata: ${match.title}`);
+  }
 
   const refreshAll = useCallback(async (partyCode) => {
     if(!partyCode) return;
@@ -2803,8 +2970,6 @@ function GameScreen({ myId, setScreen }) {
       setQs(prev => ({ ...prev, combat: newCombat }));
       return;
     }
-    const firstAlivePlayer = latestCombatants.find(c => c.isPlayer && !c.dead);
-    if (!firstAlivePlayer || firstAlivePlayer.id !== myId) return;
     monsterTickBusyRef.current = true;
     try {
       const latestPlayers = await dbGetPlayers(code);
@@ -2869,7 +3034,13 @@ function GameScreen({ myId, setScreen }) {
   useEffect(() => {
     if (!qs?.combat?.active) return;
     if (spellMenu) return;
-    const timer = setTimeout(() => { doMonsterTurnRef.current?.(); }, 8000);
+    const combatants = qs?.combat?.combatants || [];
+    const activeCombatantNow = combatants[qs?.combat?.turn % combatants.length];
+    if (!activeCombatantNow || activeCombatantNow.isPlayer) return; // only arm for monster turns
+    const isLeader = combatants.find(c => c.isPlayer && !c.dead)?.id === myId;
+    // Leader fires at 8s; fallback clients fire at 18-28s to avoid double-attack race
+    const delay = isLeader ? 8000 : 18000 + Math.floor(Math.random() * 10000);
+    const timer = setTimeout(() => { doMonsterTurnRef.current?.(); }, delay);
     return () => clearTimeout(timer);
   }, [qs?.combat?.turn, qs?.combat?.active, !!qs?.combat?.pendingLog, myId, code, spellMenu]);
 
@@ -3089,7 +3260,7 @@ function GameScreen({ myId, setScreen }) {
     const log = formatWeaponAttackLog(attacker, target, effectiveResolved, weapon.name, combatants[tidx].hp, target.maxHp);
     const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
     const allDead = combatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
-    if(allDead) { await saveQState({...qs, masterBuffs: newMasterBuffs, combat:{...combat, combatants}}); await endCombat(); return; }
+    if(allDead) { await endCombat({...qs, masterBuffs: newMasterBuffs, combat:{...combat, combatants}}); return; }
     await saveQState({ ...qs, masterBuffs: newMasterBuffs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
   }
 
@@ -3164,13 +3335,13 @@ function GameScreen({ myId, setScreen }) {
 
     const allDead = newCombatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
     setSpellMenu(false);
-    if(allDead) { await saveQState({...qs, masterBuffs: newSpellMasterBuffs, combat:{...combat, combatants:newCombatants, spellSlots:nextSlots}}); await endCombat(); return; }
+    if(allDead) { await endCombat({...qs, masterBuffs: newSpellMasterBuffs, combat:{...combat, combatants:newCombatants, spellSlots:nextSlots}}); return; }
     await saveQState({ ...qs, masterBuffs: newSpellMasterBuffs, combat: { ...combat, combatants:newCombatants, turn:nextTurn, round:nextRound, spellSlots:nextSlots, pendingLog: log } });
   }
 
-  async function endCombat() {
+  async function endCombat(preloadedQs) {
     setSpellMenu(false);
-    const latestQs = await dbGetPartyState(code);
+    const latestQs = preloadedQs || await dbGetPartyState(code);
     const latestCombat = latestQs?.combat;
 
     // --- Distribute XP and gold from slain monsters ---
@@ -3221,6 +3392,10 @@ function GameScreen({ myId, setScreen }) {
 
   // -- QUEST --
   async function acceptQuest(q) {
+    if(q.specialPassword && !unlockedSpecialQuestIds.includes(q.id)) {
+      setSpecialQuestError("Questa missione richiede una password.");
+      return;
+    }
     const newQs = { currentId:q.id, step:0, active:true, combat:null, completed:qs?.completed||[] };
     await saveQState(newQs);
     await addMsg(`📜 **MISSIONE: ${q.title}**
@@ -3454,6 +3629,10 @@ ${stepText(step)}`, "quest","Master");
     return acc;
   }, {});
   const currentQ = qs?.active ? getQuests().find(x=>x.id===qs.currentId) : null;
+  const allActiveQuests = getQuests().filter(q => q.active);
+  const dailyQuestIds = new Set(getDailyQuests(allActiveQuests.filter(q => !q.specialPassword)).map(q => q.id));
+  const publicDailyQuests = allActiveQuests.filter(q => dailyQuestIds.has(q.id));
+  const unlockedSpecialQuests = allActiveQuests.filter(q => q.specialPassword && unlockedSpecialQuestIds.includes(q.id));
   const currentStepKey = `${qs?.currentId || ""}:${qs?.step ?? -1}`;
   const lootDone = lootedStepKey === currentStepKey;
   const inventoryCounts = countInventoryItems(inventory);
@@ -3851,7 +4030,11 @@ ${stepText(step)}`, "quest","Master");
                 </div>
               </div>
             )}
-            {getQuests().filter(q=>q.active).map(q=>{
+            <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:12, padding:"0.45rem 0.75rem", background:"rgba(120,53,15,0.18)", border:"1px solid rgba(180,83,9,0.35)", borderRadius:6 }}>
+              <span style={{ color:"#fbbf24", fontSize:"0.76rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>🗓️ Missioni del Giorno</span>
+              <span style={{ color:"#6b7280", fontSize:"0.71rem" }}>si rinnova in {hoursUntilMidnight()}</span>
+            </div>
+            {publicDailyQuests.map(q=>{
               const done=(qs?.completed||[]).includes(q.id);
               return (
                 <div key={q.id} style={{ background:PANEL_BG, border:`1px solid ${done?PANEL_BORDER:"#475569"}`, borderRadius:6, padding:"1rem", marginBottom:8, opacity:done?0.6:1 }}>
@@ -3860,12 +4043,51 @@ ${stepText(step)}`, "quest","Master");
                       <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:5 }}>
                         <span style={{ fontFamily:"'Cinzel',serif", color:done?"#4b5563":"#fbbf24", fontWeight:700 }}>{q.title}</span>
                         <span style={{ padding:"1px 7px", border:`1px solid ${DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#374151"}`, borderRadius:3, fontSize:"0.65rem", color:DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#6b7280" }}>{missionDifficultyLabel(q.difficulty)}</span>
-                        {done&&<span style={{ fontSize:"0.7rem", color:"#22c55e" }}>? Completata</span>}
+                        {done&&<span style={{ fontSize:"0.7rem", color:"#22c55e" }}>✓ Completata</span>}
                       </div>
                       <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
                       {q.flavor&&<p style={{ color:"#94a3b8", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{q.flavor}</p>}
                       <div style={{ display:"flex", gap:14, fontSize:"0.73rem", color:"#94a3b8" }}>
                         <span>⭐ {q.xpReward} XP</span><span>💰 {q.goldReward} oro</span><span>🎭 {q.steps.length} scene</span>
+                      </div>
+                    </div>
+                    {!done&&!qs?.active&&<BigBtn onClick={()=>acceptQuest(q)} gold icon="⭐">Accetta</BigBtn>}
+                  </div>
+                </div>
+              );
+            })}
+            <div style={{ marginTop:16, marginBottom:12, padding:"0.75rem", background:"rgba(88,28,135,0.16)", border:"1px solid rgba(124,58,237,0.42)", borderRadius:6 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:8 }}>
+                <span style={{ color:"#c4b5fd", fontSize:"0.76rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>Missioni speciali</span>
+                <span style={{ color:"#6b7280", fontSize:"0.71rem" }}>{unlockedSpecialQuests.length} sbloccate</span>
+              </div>
+              <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                <input
+                  style={{...inputStyle, flex:"1 1 220px"}}
+                  value={specialPasswordInput}
+                  onChange={e=>{ setSpecialPasswordInput(e.target.value); setSpecialQuestError(""); }}
+                  onKeyDown={e=>e.key==="Enter"&&unlockSpecialQuest()}
+                  placeholder="Inserisci password data dal Master"
+                />
+                <BigBtn onClick={unlockSpecialQuest} gold icon="🔓" disabled={!specialPasswordInput.trim()}>Sblocca</BigBtn>
+              </div>
+              {specialQuestError && <div style={{ color:specialQuestError.startsWith("Missione")?"#86efac":"#fca5a5", fontSize:"0.78rem", marginTop:8 }}>{specialQuestError}</div>}
+            </div>
+            {unlockedSpecialQuests.map(q=>{
+              const done=(qs?.completed||[]).includes(q.id);
+              return (
+                <div key={q.id} style={{ background:"rgba(88,28,135,0.16)", border:`1px solid ${done?PANEL_BORDER:"#7c3aed"}`, borderRadius:6, padding:"1rem", marginBottom:8, opacity:done?0.6:1 }}>
+                  <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+                    <div style={{ flex:1 }}>
+                      <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:5 }}>
+                        <span style={{ fontFamily:"'Cinzel',serif", color:done?"#4b5563":"#c4b5fd", fontWeight:700 }}>{q.title}</span>
+                        <span style={{ padding:"1px 7px", border:"1px solid #7c3aed", borderRadius:3, fontSize:"0.65rem", color:"#c4b5fd" }}>Speciale</span>
+                        {done&&<span style={{ fontSize:"0.7rem", color:"#22c55e" }}>Completata</span>}
+                      </div>
+                      <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
+                      {q.flavor&&<p style={{ color:"#94a3b8", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{q.flavor}</p>}
+                      <div style={{ display:"flex", gap:14, fontSize:"0.73rem", color:"#94a3b8" }}>
+                        <span>{q.xpReward} XP</span><span>{q.goldReward} oro</span><span>{q.steps.length} scene</span>
                       </div>
                     </div>
                     {!done&&!qs?.active&&<BigBtn onClick={()=>acceptQuest(q)} gold icon="⭐">Accetta</BigBtn>}
