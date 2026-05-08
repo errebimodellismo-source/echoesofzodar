@@ -652,7 +652,7 @@ async function dbSendMessage(msg) {
 
 async function dbSavePlayer(p) {
   const { data, error } = await supabase.from("players").upsert({
-    id: p.id, name: p.name, party_code: p.partyCode, avatar_config: { gender: p.gender || 'male' },
+    id: p.id, name: p.name, party_code: p.partyCode,
     account_id: p.accountId || null,
     class: p?.class || 'warrior', race: p?.race || 'human',
     hp: p?.hp || 0, max_hp: p?.maxHp || 0, atk: p?.atk || 0, def: p?.def || 0,
