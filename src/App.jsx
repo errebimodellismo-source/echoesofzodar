@@ -67,6 +67,15 @@ const PANEL_BG_SOFT = "rgba(7,10,20,0.72)";
 const PANEL_BORDER = "rgba(148,163,184,0.16)";
 
 function xpForLevel(l){ return Math.floor(100*Math.pow(1.5,l-1)); }
+function useMobile() {
+  const [mob, setMob] = useState(() => typeof window !== "undefined" && window.innerWidth <= 768);
+  useEffect(() => {
+    const h = () => setMob(window.innerWidth <= 768);
+    window.addEventListener("resize", h);
+    return () => window.removeEventListener("resize", h);
+  }, []);
+  return mob;
+}
 function d(n){ return Math.floor(Math.random()*n)+1; }
 function roll(sides,num=1){ let t=0; for(let i=0;i<num;i++) t+=d(sides); return t; }
 function randomIntInclusive(min, max) {
@@ -869,6 +878,20 @@ export default function App() {
 
   return (
     <div style={{ minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", fontFamily:"'Crimson Pro',Georgia,serif", color:"#e2d9c5", position:"relative" }}>
+      <style>{`
+        *, *::before, *::after { box-sizing: border-box; }
+        body { overflow-x: hidden; }
+        * { -webkit-tap-highlight-color: transparent; }
+        input, select, textarea { font-size: 16px !important; }
+        button { touch-action: manipulation; }
+        ::-webkit-scrollbar { width: 4px; height: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(109,40,217,0.4); border-radius: 2px; }
+        @media (max-width: 768px) {
+          button { min-height: 40px; }
+          input, select { min-height: 40px; padding: 0.5rem 0.75rem !important; }
+        }
+      `}</style>
       {screen==="master" && <MasterPanelAuth setScreen={setScreen} authUser={authUser} />}
       {screen!=="master" && !authUser && <AuthScreen setAuthUser={setAuthUser} setScreen={setScreen} setMyId={setMyId} />}
       {screen!=="master" && authUser && screen==="landing" && <Landing setScreen={setScreen} goGame={goGame} myId={myId} authUser={authUser} setAuthUser={setAuthUser} />}
@@ -2549,6 +2572,8 @@ function GameScreen({ myId, setScreen }) {
   const [selectedTarget, setSelectedTarget] = useState(null);
   const [tab, setTab] = useState("quest");
   const [victoryScreen, setVictoryScreen] = useState(null);
+  const isMobile = useMobile();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [lootedStepKey, setLootedStepKey] = useState(null);
   const [catalogItems, setCatalogItems] = useState(DEFAULT_ITEMS);
   const [inventory, setInventory] = useState([]);
@@ -3462,6 +3487,10 @@ ${stepText(step)}`, "quest","Master");
   return (
     <div style={{ display:"flex", height:"100vh", overflow:"hidden", position:"relative", zIndex:1 }}>
       <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg, rgba(2,6,23,0.38) 0%, rgba(2,6,23,0.32) 45%, rgba(2,6,23,0.42) 100%)", pointerEvents:"none" }} />
+      {/* Mobile overlay backdrop */}
+      {isMobile && sidebarOpen && (
+        <div onClick={()=>setSidebarOpen(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.55)", zIndex:999, backdropFilter:"blur(2px)" }} />
+      )}
       {deathScene && (
         <div style={{ position:"fixed", inset:0, zIndex:10000, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(2,6,23,0.88)", padding:"1.5rem" }}>
           <div style={{ width:"min(560px,100%)", textAlign:"center", background:"linear-gradient(180deg, rgba(24,10,10,0.96), rgba(8,8,12,0.98))", border:"1px solid #7f1d1d", borderRadius:12, boxShadow:"0 24px 80px rgba(0,0,0,0.5)", padding:"2rem 1.5rem" }}>
@@ -3486,8 +3515,27 @@ ${stepText(step)}`, "quest","Master");
           </div>
         </div>
       )}
-      {/* SIDEBAR */}
-      <aside style={{ width:combatMode?176:200, flexShrink:0, background:combatMode?"rgba(3,7,18,0.97)":"rgba(4,8,18,0.94)", borderRight:"1px solid rgba(148,163,184,0.14)", display:"flex", flexDirection:"column", gap:8, padding:combatMode?"0.85rem 0.7rem":"0.7rem", overflowY:"auto", position:"relative", zIndex:1, backdropFilter:"blur(6px)", boxShadow:combatMode?"inset -1px 0 0 rgba(239,68,68,0.12)":"none" }}>
+      {/* SIDEBAR — drawer on mobile, fixed panel on desktop */}
+      <aside style={{
+        width: isMobile ? 270 : (combatMode ? 176 : 200),
+        flexShrink: 0,
+        background: combatMode ? "rgba(3,7,18,0.98)" : "rgba(4,8,18,0.97)",
+        borderRight: "1px solid rgba(148,163,184,0.14)",
+        display: "flex", flexDirection: "column", gap: 8,
+        padding: combatMode ? "0.85rem 0.7rem" : "0.7rem",
+        overflowY: "auto",
+        position: isMobile ? "fixed" : "relative",
+        left: isMobile ? (sidebarOpen ? 0 : -280) : "auto",
+        top: 0, height: isMobile ? "100vh" : "auto",
+        zIndex: isMobile ? 1000 : 1,
+        transition: isMobile ? "left 0.27s ease" : "none",
+        backdropFilter: "blur(8px)",
+        boxShadow: combatMode ? "inset -1px 0 0 rgba(239,68,68,0.12)" : "none",
+      }}>
+        {/* Mobile close button */}
+        {isMobile && (
+          <button onClick={()=>setSidebarOpen(false)} style={{ alignSelf:"flex-end", background:"rgba(255,255,255,0.06)", border:"1px solid #1f2937", borderRadius:6, color:"#94a3b8", padding:"4px 10px", cursor:"pointer", fontSize:"1rem", marginBottom:4 }}>✕</button>
+        )}
         <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.75rem", color:"#4c1d95", letterSpacing:"0.1em", paddingBottom:8, borderBottom:"1px solid #0f172a" }}>⚔️ {getMeta().worldName}</div>
         <div style={{ background:"rgba(109,40,217,0.1)", border:"1px solid #3b0764", borderRadius:5, padding:"0.6rem" }}>
           <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
@@ -3585,11 +3633,16 @@ ${stepText(step)}`, "quest","Master");
 
       {/* MAIN */}
       <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", background:combatMode?"rgba(2,6,23,0.52)":"rgba(2,6,23,0.28)", position:"relative", zIndex:1, backdropFilter:"blur(2px)" }}>
-        <div style={{ display:"flex", gap:0, borderBottom:`1px solid ${PANEL_BORDER}`, background:combatMode?"rgba(8,10,20,0.94)":"rgba(3,7,18,0.88)", flexShrink:0 }}>
+        <div style={{ display:"flex", gap:0, borderBottom:`1px solid ${PANEL_BORDER}`, background:combatMode?"rgba(8,10,20,0.94)":"rgba(3,7,18,0.88)", flexShrink:0, overflowX:"auto", overflowY:"hidden" }}>
+          {/* Hamburger — mobile only */}
+          {isMobile && (
+            <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
+          )}
           {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             return (
-            <button key={k} onClick={()=>{ if(!combatLocked) setTab(k); }} title={combatLocked?"Non disponibile durante il combattimento":undefined} style={{ padding:"0.6rem 1.2rem", background:tab===k?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k?"2px solid #7c3aed":"2px solid transparent", color:combatLocked?"#334155":tab===k?"#c4b5fd":"#94a3b8", cursor:combatLocked?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", letterSpacing:"0.05em", opacity:combatLocked?0.4:1 }}>
+            <button key={k} onClick={()=>{ if(!combatLocked){ setTab(k); if(isMobile) setSidebarOpen(false); } }} title={combatLocked?"Non disponibile durante il combattimento":undefined}
+              style={{ flexShrink:0, padding: isMobile?"0.6rem 0.8rem":"0.6rem 1.2rem", background:tab===k?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k?"2px solid #7c3aed":"2px solid transparent", color:combatLocked?"#334155":tab===k?"#c4b5fd":"#94a3b8", cursor:combatLocked?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize: isMobile?"0.7rem":"0.78rem", letterSpacing:"0.05em", opacity:combatLocked?0.4:1, whiteSpace:"nowrap" }}>
               {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}
             </button>);
           })}
@@ -3841,9 +3894,9 @@ ${stepText(step)}`, "quest","Master");
                   {myTurn&&<span style={{ padding:"0.45rem 0.95rem", background:"rgba(239,68,68,0.24)", border:"1px solid #ef4444", borderRadius:999, color:"#fee2e2", fontSize:"0.84rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>{myDeathTurn?"🕯️ SALVEZZA":"⚔️ TUO TURNO"}</span>}
                 </div>
 
-                <div style={{ display:"grid", gridTemplateColumns:"minmax(0,1.7fr) minmax(320px,0.95fr)", gap:"1rem", alignItems:"start" }}>
+                <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1.7fr) minmax(320px,0.95fr)", gap:"1rem", alignItems:"start" }}>
                   <div>
-                    <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))", gap:12, marginBottom:"1rem" }}>
+                    <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(250px,1fr))", gap:12, marginBottom:"1rem" }}>
                   {combat.combatants.map((c,i)=>{
                     const isActive = i===combat.turn%combat.combatants.length;
                     return (
@@ -3875,7 +3928,7 @@ ${stepText(step)}`, "quest","Master");
                     </div>
                   </div>
 
-                  <div style={{ display:"grid", gap:"1rem", position:"sticky", top:0 }}>
+                  <div style={{ display:"grid", gap:"1rem", position: isMobile ? "relative" : "sticky", top:0, order: isMobile ? -1 : 0 }}>
                     {combat.pendingLog && (
                       <div style={{ padding:"1.1rem 1.2rem", background:"linear-gradient(180deg,rgba(10,20,10,0.97),rgba(15,23,42,0.97))", border:"1px solid rgba(34,197,94,0.35)", borderRadius:12, boxShadow:"0 8px 24px rgba(0,0,0,0.4)" }}>
                         <div style={{ fontSize:"0.82rem", color:"#a3e8b0", lineHeight:1.75, whiteSpace:"pre-line", marginBottom:"1rem", fontFamily:"'Crimson Pro',Georgia,serif" }} dangerouslySetInnerHTML={{ __html: fmt(combat.pendingLog) }} />
