@@ -13,15 +13,17 @@ const DiceRoller = forwardRef(({ onRollComplete }, ref) => {
     
     const initDice = async () => {
       try {
-        box = new DiceBox("#dice-box-container", {
+        box = new DiceBox({
+          container: "#dice-box-container",
           assetPath: '/assets/dice-box/', // Will fail over to unpkg if not found
           theme: 'default',
           themeColor: '#ef4444', 
-          scale: 20,
-          spinForce: 6,
-          throwForce: 4,
-          startingHeight: 15,
-          settleTimeout: 5000,
+          scale: 14,
+          size: 18,
+          spinForce: 9,
+          throwForce: 8,
+          startingHeight: 18,
+          settleTimeout: 6500,
           lightIntensity: 0.9,
           gravity: 1,
         });
@@ -90,10 +92,25 @@ const DiceRoller = forwardRef(({ onRollComplete }, ref) => {
         left: 0,
         width: '100vw',
         height: '100vh',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        overflow: 'hidden',
         pointerEvents: 'none',
         zIndex: 9999,
       }}
-    />
+    >
+      <style>{`
+        #dice-box-container canvas,
+        #dice-box-container .dice-box-canvas {
+          position: absolute !important;
+          inset: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          display: block !important;
+        }
+      `}</style>
+    </div>
   );
 });
 
