@@ -55,7 +55,6 @@ function missionDifficultyLabel(value) {
 }
 const BACKGROUND_URL = "/assets/Zodarsfondo.png";
 const MASTER_PASSWORD = "ByBy101112!";
-const PORTRAIT_FALLBACK_URL = 'https://fv5-2.files.fm/thumb_show.php?i=p532qftvxy&view&v=1';
 function debugCharacterFlow(step, payload) {
   console.log(`[CHAR_FLOW] ${step}`, payload ?? "");
 }
@@ -108,32 +107,18 @@ const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','pala
 function getPortraitPath(cls, race, gender) {
   return `/assets/portraits/${cls}_${race}_${gender}.png`;
 }
-function getGeneratedPortrait(clsKey, raceKey, gender) {
-  const cls = CLASSES[clsKey] || CLASSES.warrior;
-  const race = RACES[raceKey] || RACES.human;
-  const accent = cls.color || "#fbbf24";
-  const genderLabel = gender === "female" ? "Femmina" : "Maschio";
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-      <defs>
-        <radialGradient id="bg" cx="50%" cy="38%" r="70%">
-          <stop offset="0%" stop-color="${accent}" stop-opacity="0.34"/>
-          <stop offset="46%" stop-color="#111827"/>
-          <stop offset="100%" stop-color="#020617"/>
-        </radialGradient>
-        <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
-          <feGaussianBlur stdDeviation="8" result="blur"/>
-          <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
-        </filter>
-      </defs>
-      <rect width="512" height="512" fill="url(#bg)"/>
-      <circle cx="256" cy="214" r="116" fill="#0f172a" stroke="${accent}" stroke-width="10" filter="url(#glow)"/>
-      <text x="256" y="245" text-anchor="middle" font-size="96" font-family="Arial, sans-serif">${race.emoji || ""}</text>
-      <text x="256" y="342" text-anchor="middle" fill="#f8fafc" font-size="35" font-family="Georgia, serif" font-weight="700">${race.name}</text>
-      <text x="256" y="388" text-anchor="middle" fill="${accent}" font-size="32" font-family="Georgia, serif" font-weight="700">${cls.name}</text>
-      <text x="256" y="426" text-anchor="middle" fill="#cbd5e1" font-size="22" font-family="Arial, sans-serif">${genderLabel}</text>
-    </svg>`;
-  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+function getClassPortraitPath(cls, gender) {
+  return `/assets/portraits/${cls}_${gender}.png`;
+}
+function characterGenderKey(playerId) {
+  return `eoz_character_gender_${playerId}`;
+}
+function getStoredCharacterGender(playerId, fallback = "male") {
+  if(!playerId) return fallback;
+  return localStorage.getItem(characterGenderKey(playerId)) || fallback;
+}
+function saveStoredCharacterGender(playerId, gender) {
+  if(playerId) localStorage.setItem(characterGenderKey(playerId), gender || "male");
 }
 
 function parseDice(dice) {
@@ -600,112 +585,14 @@ function getItemImage(item) {
   const theme = itemImageTheme(item);
   return makeArchetypeImage({ ...theme, icon:item.emoji || theme.icon, title:itemTypeLabel(item.type), subtitle:itemRarityLabel(item.rarity) });
 }
-function _darkenHex(hex, amt = 28) {
-  const n = parseInt((hex||"#888888").replace("#",""), 16);
-  const r = Math.max(0, (n >> 16) - amt);
-  const g = Math.max(0, ((n >> 8) & 0xff) - amt);
-  const b = Math.max(0, (n & 0xff) - amt);
-  return `#${r.toString(16).padStart(2,"0")}${g.toString(16).padStart(2,"0")}${b.toString(16).padStart(2,"0")}`;
-}
-function makeRaceClassPortrait(cls, race, gender) {
-  const R = {
-    human:      { skin:"#deb887", eye:"#5c3d2e", extra:"" },
-    elf:        { skin:"#f0e0c0", eye:"#3a7a4a", extra:"elf_ears" },
-    halfelf:    { skin:"#e8d5b0", eye:"#4a6a3a", extra:"halfelf_ears" },
-    dwarf:      { skin:"#c8935a", eye:"#5c3d2e", extra:"beard" },
-    halforc:    { skin:"#7aaa60", eye:"#884422", extra:"tusks" },
-    dragonborn: { skin:"#9a7040", eye:"#cc4400", extra:"scales" },
-    gnome:      { skin:"#f0c898", eye:"#4a2878", extra:"rosy_cheeks" },
-    halfling:   { skin:"#f5c8a0", eye:"#5a3a28", extra:"rosy_cheeks" },
-    tiefling:   { skin:"#c87898", eye:"#8a1a1a", extra:"horns" },
-  }[race] || { skin:"#deb887", eye:"#5c3d2e", extra:"" };
-  const C = {
-    warrior:  { a:"#ef4444", a2:"#f59e0b", b1:"#2a1313", b2:"#10090a", bd:"#7f1d1d", bc:"#3a1a1a", icon:"⚔️" },
-    barbarian:{ a:"#dc2626", a2:"#f97316", b1:"#2a1010", b2:"#100808", bd:"#991b1b", bc:"#4a1818", icon:"🪓" },
-    mage:     { a:"#60a5fa", a2:"#a855f7", b1:"#111b35", b2:"#080b16", bd:"#3730a3", bc:"#1a2040", icon:"🔮" },
-    sorcerer: { a:"#8b5cf6", a2:"#c084fc", b1:"#1a1135", b2:"#0c0820", bd:"#5b21b6", bc:"#251040", icon:"🪄" },
-    warlock:  { a:"#7c3aed", a2:"#c4b5fd", b1:"#150c2a", b2:"#09060f", bd:"#4c1d95", bc:"#1f1030", icon:"🔮" },
-    bard:     { a:"#f97316", a2:"#fbbf24", b1:"#2a1a08", b2:"#100a04", bd:"#c2410c", bc:"#3a2010", icon:"🎵" },
-    cleric:   { a:"#fbbf24", a2:"#f8fafc", b1:"#2a2112", b2:"#110d08", bd:"#a16207", bc:"#3a3010", icon:"⛪" },
-    druid:    { a:"#22c55e", a2:"#84cc16", b1:"#132418", b2:"#08100a", bd:"#166534", bc:"#1a3020", icon:"🌿" },
-    monk:     { a:"#06b6d4", a2:"#0ea5e9", b1:"#0c2030", b2:"#060f18", bd:"#0e7490", bc:"#102028", icon:"🥋" },
-    paladin:  { a:"#facc15", a2:"#fde68a", b1:"#252010", b2:"#100e08", bd:"#a16207", bc:"#302810", icon:"🛡️" },
-    ranger:   { a:"#14b8a6", a2:"#22c55e", b1:"#0f2220", b2:"#060f0d", bd:"#0f766e", bc:"#102820", icon:"🏹" },
-    rogue:    { a:"#22c55e", a2:"#4ade80", b1:"#0f2018", b2:"#060f0a", bd:"#166534", bc:"#102018", icon:"🗡️" },
-  }[cls] || { a:"#c084fc", a2:"#60a5fa", b1:"#171c2a", b2:"#0b1020", bd:"#334155", bc:"#202030", icon:"⭐" };
-
-  const { skin, eye, extra } = R;
-  const { a, a2, b1, b2, bd, bc, icon } = C;
-  const hairC = gender === "female" ? "#5a3020" : "#3a2010";
-  const skinD = _darkenHex(skin, 22);
-
-  const ears = extra === "elf_ears"
-    ? `<ellipse cx="74" cy="148" rx="14" ry="26" fill="${skin}" stroke="${skinD}" stroke-width="1.5"/>
-       <ellipse cx="246" cy="148" rx="14" ry="26" fill="${skin}" stroke="${skinD}" stroke-width="1.5"/>`
-    : extra === "halfelf_ears"
-    ? `<ellipse cx="77" cy="150" rx="11" ry="19" fill="${skin}"/>
-       <ellipse cx="243" cy="150" rx="11" ry="19" fill="${skin}"/>`
-    : "";
-
-  const special = extra === "beard"
-    ? `<ellipse cx="160" cy="204" rx="54" ry="32" fill="#7a5a38"/>`
-    : extra === "tusks"
-    ? `<rect x="140" y="198" width="13" height="24" rx="5" fill="#f0f0d8"/>
-       <rect x="167" y="198" width="13" height="24" rx="5" fill="#f0f0d8"/>`
-    : extra === "horns"
-    ? `<path d="M128 82 Q105 38 118 16" stroke="#7a2828" stroke-width="11" stroke-linecap="round" fill="none"/>
-       <path d="M192 82 Q215 38 202 16" stroke="#7a2828" stroke-width="11" stroke-linecap="round" fill="none"/>`
-    : extra === "scales"
-    ? `<circle cx="122" cy="130" r="9" fill="${a}" opacity="0.38"/>
-       <circle cx="145" cy="112" r="9" fill="${a}" opacity="0.38"/>
-       <circle cx="175" cy="112" r="9" fill="${a}" opacity="0.38"/>
-       <circle cx="198" cy="130" r="9" fill="${a}" opacity="0.38"/>`
-    : extra === "rosy_cheeks"
-    ? `<circle cx="116" cy="165" r="18" fill="#ff8888" opacity="0.3"/>
-       <circle cx="204" cy="165" r="18" fill="#ff8888" opacity="0.3"/>`
-    : "";
-
-  const hair = gender === "female"
-    ? `<ellipse cx="160" cy="84" rx="84" ry="40" fill="${hairC}"/>
-       <rect x="76" y="84" width="22" height="88" rx="11" fill="${hairC}"/>
-       <rect x="222" y="84" width="22" height="88" rx="11" fill="${hairC}"/>`
-    : `<ellipse cx="160" cy="84" rx="84" ry="34" fill="${hairC}"/>`;
-
-  return svgDataUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 320">
-    <defs>
-      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${b1}"/><stop offset="100%" stop-color="${b2}"/></linearGradient>
-      <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="${a}" stop-opacity="0.5"/><stop offset="100%" stop-color="${a2}" stop-opacity="0.05"/></linearGradient>
-      <clipPath id="cl"><rect width="320" height="320" rx="36"/></clipPath>
-    </defs>
-    <rect width="320" height="320" rx="36" fill="url(#bg)"/>
-    <ellipse cx="160" cy="310" rx="160" ry="72" fill="${bc}" opacity="0.9"/>
-    <rect x="138" y="210" width="44" height="55" rx="10" fill="${skin}"/>
-    <ellipse cx="160" cy="280" rx="96" ry="52" fill="${bc}"/>
-    ${ears}
-    <circle cx="160" cy="152" r="84" fill="${skin}"/>
-    ${special}
-    ${hair}
-    <circle cx="130" cy="148" r="13" fill="${eye}"/>
-    <circle cx="190" cy="148" r="13" fill="${eye}"/>
-    <circle cx="126" cy="144" r="5" fill="white" opacity="0.55"/>
-    <circle cx="186" cy="144" r="5" fill="white" opacity="0.55"/>
-    <circle cx="160" cy="170" r="5" fill="${skinD}"/>
-    <path d="M143 188 Q160 200 177 188" stroke="${skinD}" stroke-width="3.5" fill="none" stroke-linecap="round"/>
-    <circle cx="268" cy="52" r="30" fill="${b1}" opacity="0.92"/>
-    <circle cx="268" cy="52" r="30" fill="none" stroke="${a}" stroke-width="2.5"/>
-    <text x="268" y="63" text-anchor="middle" font-size="28">${icon}</text>
-    <rect x="10" y="10" width="300" height="300" rx="30" fill="none" stroke="${bd}" stroke-width="3" clip-path="url(#cl)"/>
-    <rect x="10" y="10" width="300" height="300" rx="30" fill="url(#glow)" opacity="0.18" clip-path="url(#cl)"/>
-  </svg>`);
-}
 function getPlayerPortrait(player) {
   if(!player) return "";
   if(player.portrait) return player.portrait;
   if(player.image) return player.image;
   const cls  = (player.class  || "warrior").toLowerCase();
   const race = (player.race   || "human").toLowerCase();
-  const gender = player.gender || "male";
-  return makeRaceClassPortrait(cls, race, gender);
+  const gender = player.gender || getStoredCharacterGender(player.id, "male");
+  return getPortraitPath(cls, race, gender);
 }
 function getMonsterImage(monster) {
   if(!monster) return "";
@@ -787,7 +674,7 @@ async function dbGetPlayers(partyCode) {
   return (data || []).map(r => ({
     id: r?.id, name: r?.name, partyCode: r?.party_code,
     accountId: r?.account_id || null,
-    gender: typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male'),
+    gender: getStoredCharacterGender(r?.id, typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male')),
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
     mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
@@ -799,7 +686,7 @@ async function dbGetAccountCharacters(accountId) {
   return (data || []).map(r => ({
     id: r?.id, name: r?.name, partyCode: r?.party_code,
     accountId: r?.account_id || null,
-    gender: typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male'),
+    gender: getStoredCharacterGender(r?.id, typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male')),
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
     mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
@@ -1495,6 +1382,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
         error: saveError?.message || null,
       });
       if(saveError || !savedPlayer?.id) throw saveError || new Error("Salvataggio personaggio fallito");
+      saveStoredCharacterGender(savedPlayer.id, gender);
       const charactersAfterSave = authUser?.id ? await dbGetAccountCharacters(authUser.id) : [];
       debugCharacterFlow("character_list_after_save", {
         accountId: authUser?.id || null,
@@ -1584,20 +1472,8 @@ function CreateChar({ setScreen, goGame, authUser }) {
           <div style={{ background:"rgba(10,14,23,0.8)", border:"1px solid #374151", borderRadius:6, padding:"1.2rem", marginBottom:"1rem", display:"flex", flexDirection:"column", alignItems:"center", gap:15 }}>
             <div style={{ width: 140, height: 140, borderRadius: '50%', overflow: 'hidden', border: '3px solid #fbbf24', boxShadow: '0 0 20px rgba(251,191,36,0.3)', backgroundColor: '#000', position:'relative' }}>
               <img key={`${cls}-${race}-${gender}`} src={getPortraitPath(cls, race, gender)} alt={`${RACES[race].name} ${c.name} ${gender === "female" ? "femmina" : "maschio"}`} onError={(e)=>{
-                const fallbackStep = e.currentTarget.dataset.fallbackStep || "combo";
-                if(fallbackStep === "combo") {
-                  e.currentTarget.dataset.fallbackStep = "generated";
-                  e.currentTarget.src = getGeneratedPortrait(cls, race, gender);
-                } else {
-                  e.currentTarget.src = PORTRAIT_FALLBACK_URL;
-                }
+                e.currentTarget.src = getClassPortraitPath(cls, gender);
               }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              <div style={{ position:'absolute', right:4, bottom:4, minWidth:38, height:38, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(2,6,23,0.88)', border:'2px solid #fbbf24', color:'#f8fafc', fontSize:'1.15rem', boxShadow:'0 0 12px rgba(251,191,36,0.45)' }} title={`${RACES[race].name} - ${gender === "female" ? "Femmina" : "Maschio"}`}>
-                {RACES[race].emoji}
-              </div>
-              <div style={{ position:'absolute', left:7, bottom:8, padding:'0.08rem 0.32rem', borderRadius:999, background:'rgba(2,6,23,0.82)', border:'1px solid rgba(148,163,184,0.45)', color:'#e2e8f0', fontSize:'0.62rem', fontFamily:"'Cinzel',serif" }}>
-                {gender === "female" ? "F" : "M"}
-              </div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize: "1.4rem", fontWeight:700 }}>{name||"Senza Nome"}</div>
@@ -2109,7 +1985,7 @@ function PlayersView() {
           return (
             <div key={p?.id} style={{ background:"rgba(15,23,42,0.85)", border:"1px solid rgba(148,163,184,0.2)", borderRadius:10, padding:"1rem" }}>
               <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:8 }}>
-                <ArtThumb src={getPlayerPortrait({ class:p?.class, race:p?.race, portrait:p?.portrait, image:p?.image })} alt={p?.name||"PG"} size={56} radius={12} />
+                <ArtThumb src={getPlayerPortrait({ id:p?.id, class:p?.class, race:p?.race, gender:p?.gender, portrait:p?.portrait, image:p?.image })} alt={p?.name||"PG"} size={56} radius={12} />
                 <div style={{ flex:1 }}>
                   <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, fontSize:"0.95rem" }}>{p?.name}</div>
                   <div style={{ color:"#94a3b8", fontSize:"0.7rem" }}>{race.emoji} {race.name} · {cls.name} · Lv.{p?.level||1}</div>
