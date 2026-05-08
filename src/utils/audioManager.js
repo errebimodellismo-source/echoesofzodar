@@ -34,6 +34,8 @@ class AudioManager {
       dungeon: '/assets/audio/main.mp3',
       town:    '/assets/audio/shop.mp3',
       combat:  '/assets/audio/combat.mp3',
+      magic:   '/assets/audio/magic.mp3',
+      tavern:  '/assets/audio/tavern.mp3',
     };
   }
 
@@ -55,9 +57,46 @@ class AudioManager {
     this.sfxEnabled = enabled;
   }
 
+  // Call once at app startup — tries immediate play, falls back to first user gesture
+  autoplayOnStartup(theme = 'intro') {
+    this._pendingTheme = theme;
+    // Attempt immediate play (works if browser allows it)
+    this._tryAutoplay(theme);
+  }
+
+  _tryAutoplay(theme) {
+    this._startBGM(theme);
+    // Howler/HTML5 audio play returns a Promise; check after a tick if it actually started
+    const checkAndFallback = () => {
+      if (this.bgm && !this.bgm.playing()) {
+        // Browser blocked it — wait for first user gesture
+        this._setupGestureFallback();
+      }
+    };
+    setTimeout(checkAndFallback, 500);
+  }
+
+  _setupGestureFallback() {
+    if (this._gestureBound) return;
+    this._gestureBound = true;
+    const resume = () => {
+      // If BGM exists but isn't playing, resume it
+      if (this.bgm && !this.bgm.playing() && this.musicEnabled) {
+        this.bgm.play();
+        this.bgm.fade(0, 0.4, 2000);
+      }
+      document.removeEventListener('click', resume);
+      document.removeEventListener('keydown', resume);
+      document.removeEventListener('touchstart', resume);
+    };
+    document.addEventListener('click', resume);
+    document.addEventListener('keydown', resume);
+    document.addEventListener('touchstart', resume);
+  }
+
   playBGM(theme) {
     if (this.currentTheme === theme) return;
-    
+
     if (this.bgm) {
       this.bgm.fade(this.bgm.volume(), 0, 1000);
       setTimeout(() => {

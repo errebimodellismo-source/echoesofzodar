@@ -38,18 +38,19 @@ import audioManager from "./utils/audioManager";
 /* ----------------------------------------------
    CONSTANTS
 ---------------------------------------------- */
-const DIFF_COLOR = { facile:"#22c55e", difficile:"#f97316", speciale:"#a855f7" };
+const DIFF_COLOR = { facile:"#22c55e", medio:"#f97316", difficile:"#ef4444" };
 function normalizeMissionDifficulty(value) {
   const key = String(value || "").trim().toLowerCase();
   if(key === "facile") return "facile";
-  if(key === "speciale" || key === "molto difficile" || key === "leggendario") return "speciale";
-  return "difficile";
+  if(key === "difficile") return "difficile";
+  if(key === "speciale" || key === "molto difficile" || key === "leggendario") return "difficile";
+  return "medio";
 }
 function missionDifficultyLabel(value) {
   return ({
     facile: "Facile",
+    medio: "Medio",
     difficile: "Difficile",
-    speciale: "Speciale",
   })[normalizeMissionDifficulty(value)];
 }
 const BACKGROUND_URL = "/assets/Zodarsfondo.png";
@@ -625,7 +626,7 @@ async function dbGetAccountCharacters(accountId) {
 async function dbGetMessages(partyCode) {
   let query = supabase.from("messages").select("*");
   if(partyCode) query = query.eq("party_code", partyCode);
-  const { data } = await query.order("created_at", { ascending: true }).limit(partyCode ? 100 : 200);
+  const { data } = await query.order("created_at", { ascending: true }).limit(partyCode ? 300 : 400);
   return data || [];
 }
 
@@ -774,6 +775,9 @@ export default function App() {
   const [myId, setMyId] = useState(() => localStorage.getItem("eoz_myId") || null);
   const [authUser, setAuthUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+
+  // Try to autoplay BGM as soon as the app loads (falls back to first user gesture)
+  useEffect(() => { audioManager.autoplayOnStartup('intro'); }, []);
 
   useEffect(() => {
     if (screen === "landing" || screen === "create" || screen === "master") {
@@ -1089,6 +1093,44 @@ function FireEmbers() {
   );
 }
 
+function FallingLeaves() {
+  const leafEmojis = ['🍃','🍂','🍁','🌿'];
+  const leaves = useMemo(() => Array.from({ length: 36 }, (_, i) => ({
+    id: i,
+    left: Math.random() * 98,
+    size: 10 + Math.random() * 12,
+    emoji: leafEmojis[Math.floor(Math.random() * leafEmojis.length)],
+    duration: 9 + Math.random() * 13,
+    delay: Math.random() * 20,
+    dx: Math.round(-55 + Math.random() * 110),
+    rot: Math.round(-360 + Math.random() * 720),
+  })), []);
+
+  return (
+    <>
+      <style>{`
+        @keyframes leafFall {
+          0%   { transform: translateY(-40px) translateX(0) rotate(0deg); opacity:0; }
+          6%   { opacity: 0.88; }
+          50%  { transform: translateY(50vh) translateX(calc(var(--ldx)*1px)) rotate(200deg); }
+          94%  { opacity: 0.65; }
+          100% { transform: translateY(115vh) translateX(0) rotate(calc(var(--lrot)*1deg)); opacity:0; }
+        }
+      `}</style>
+      {leaves.map(l => (
+        <div key={l.id} style={{
+          position:'fixed', left:`${l.left}%`, top:'-30px',
+          fontSize:`${l.size}px`, lineHeight:1,
+          pointerEvents:'none', zIndex:9990,
+          '--ldx': l.dx, '--lrot': l.rot,
+          animation:`leafFall ${l.duration}s ${l.delay}s ease-in infinite`,
+          userSelect:'none',
+        }}>{l.emoji}</div>
+      ))}
+    </>
+  );
+}
+
 function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   const meta = getMeta();
   const [characters, setCharacters] = useState([]);
@@ -1130,8 +1172,10 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   }
 
   return (
-    <div onClick={() => audioManager.playBGM("intro")} style={{ minHeight:"100vh", width:"100vw", background:"radial-gradient(at 15% 50%, rgba(109,40,217,0.3) 0%, rgba(0,0,0,0) 55%), radial-gradient(at 85% 30%, rgba(109,40,217,0.2) 0%, rgba(0,0,0,0) 50%), #06060e", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"2rem 1rem", position:"relative" }}>
+    <div onClick={() => audioManager.playBGM("intro")} style={{ minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"2rem 1rem", position:"relative" }}>
+      <div style={{ position:"absolute", inset:0, background:"radial-gradient(at 15% 50%, rgba(109,40,217,0.3) 0%, rgba(0,0,0,0) 55%), radial-gradient(at 85% 30%, rgba(109,40,217,0.2) 0%, rgba(0,0,0,0) 50%), rgba(0,0,0,0.42)" }} />
       <FireEmbers />
+      <FallingLeaves />
       <div style={{ position:"relative", zIndex:2, display:"flex", flexDirection:"column", alignItems:"center", width:"100%" }}>
       {meta.logo
         ? <img src={meta.logo} alt="logo" style={{ maxWidth:260, maxHeight:160, objectFit:"contain", marginBottom:"1rem", filter:"drop-shadow(0 0 24px rgba(251,191,36,.5))" }} />
@@ -1380,7 +1424,7 @@ function MasterPanel({ setScreen }) {
     const r=new FileReader(); r.onload=ev=>setMeta(m=>({...m,logo:ev.target.result})); r.readAsDataURL(f);
   }
   function addQuest() {
-    const q={id:"q_"+Date.now(),title:"Nuova Missione",desc:"",flavor:"",difficulty:"facile",xpReward:200,goldReward:100,steps:[],enemies:[],active:true};
+    const q={id:"q_"+Date.now(),title:"Nuova Missione",desc:"",flavor:"",difficulty:"medio",xpReward:200,goldReward:100,steps:[],enemies:[],active:true};
     setQuests(prev=>[...prev,q]); setEditQ({...q});
   }
   function saveEditQ() {
@@ -1559,8 +1603,8 @@ function MasterPanel({ setScreen }) {
               <div><label style={labelStyle}>Difficolt�</label>
                 <select style={{...inputStyle,cursor:"pointer"}} value={normalizeMissionDifficulty(editQ.difficulty)} onChange={e=>setEditQ(q=>({...q,difficulty:e.target.value}))}>
                   <option value="facile">Facile</option>
+                  <option value="medio">Medio</option>
                   <option value="difficile">Difficile</option>
-                  <option value="speciale">Speciale</option>
                 </select>
               </div>
               <div><label style={labelStyle}>XP</label><input style={inputStyle} type="number" value={editQ.xpReward} onChange={e=>setEditQ(q=>({...q,xpReward:+e.target.value}))} /></div>
@@ -2503,7 +2547,8 @@ function GameScreen({ myId, setScreen }) {
   const [diceResult, setDiceResult] = useState(null);
   const [spellMenu, setSpellMenu] = useState(false);
   const [selectedTarget, setSelectedTarget] = useState(null);
-  const [tab, setTab] = useState("chat");
+  const [tab, setTab] = useState("quest");
+  const [victoryScreen, setVictoryScreen] = useState(null);
   const [lootedStepKey, setLootedStepKey] = useState(null);
   const [catalogItems, setCatalogItems] = useState(DEFAULT_ITEMS);
   const [inventory, setInventory] = useState([]);
@@ -2513,6 +2558,7 @@ function GameScreen({ myId, setScreen }) {
   const [selectedInventoryItemId, setSelectedInventoryItemId] = useState(null);
   const [deathScene, setDeathScene] = useState(null);
   const msgEnd = useRef(null);
+  const combatLogEndRef = useRef(null);
   const inputRef = useRef(null);
   const subRef = useRef(null);
   const itemMapRef = useRef(DEFAULT_ITEM_MAP);
@@ -2605,10 +2651,14 @@ function GameScreen({ myId, setScreen }) {
       audioManager.playBGM("combat");
     } else if (tab === "shop") {
       audioManager.playBGM("town");
+    } else if (tab === "chat") {
+      audioManager.playBGM("tavern");
+    } else if (spellMenu) {
+      audioManager.playBGM("magic");
     } else {
       audioManager.playBGM("intro");
     }
-  }, [qs?.combat?.active, tab]);
+  }, [qs?.combat?.active, tab, spellMenu]);
 
   const refreshInventory = useCallback(async (playerOverride=null) => {
     if(!myId) return;
@@ -2692,6 +2742,15 @@ function GameScreen({ myId, setScreen }) {
   },[myId, refreshAll, refreshInventory, setScreen]);
 
   useEffect(()=>{ msgEnd.current?.scrollIntoView({behavior:"smooth"}); },[messages]);
+  useEffect(()=>{ combatLogEndRef.current?.scrollIntoView({behavior:"smooth"}); },[messages]);
+
+  // Fallback poll — keeps the log alive if Supabase realtime silently drops
+  useEffect(() => {
+    const code = me?.partyCode;
+    if (!code) return;
+    const id = setInterval(() => refreshAll(code), 15000);
+    return () => clearInterval(id);
+  }, [me?.partyCode, refreshAll]);
 
   useEffect(() => {
     const stepData = qs?.active ? normalizeQuestStep(getQuests().find(q=>q.id===qs.currentId)?.steps?.[qs.step]) : null;
@@ -3087,16 +3146,52 @@ function GameScreen({ myId, setScreen }) {
   async function endCombat() {
     setSpellMenu(false);
     const latestQs = await dbGetPartyState(code);
-    // If on a quest combat step, keep combat object with won:true so UI shows "Avanti →"
+    const latestCombat = latestQs?.combat;
+
+    // --- Distribute XP and gold from slain monsters ---
+    const slain = (latestCombat?.combatants || [])
+      .filter(c => !c.isPlayer && c.hp <= 0)
+      .map(c => ({ name: c.name, emoji: c.emoji || "👾", xp: c.xp || 0 }));
+    const totalXp = slain.reduce((s, m) => s + m.xp, 0);
+    const totalGold = slain.reduce((s, m) => s + Math.floor(m.xp * 0.35), 0);
+    const partyCount = Math.max(partyPlayers.length, 1);
+    const xpEach = Math.floor(totalXp / partyCount);
+    const goldEach = Math.floor(totalGold / partyCount);
+
+    const playerResults = [];
+    for (const p of partyPlayers) {
+      const beforeXp = p.xp || 0;
+      const beforeLevel = p.level || 1;
+      let up = { ...p, xp: beforeXp + xpEach, gold: (p.gold || 0) + goldEach };
+      const leveledUpTo = [];
+      while (up.xp >= xpForLevel(up.level)) {
+        up.xp -= xpForLevel(up.level);
+        up.level++;
+        up.maxHp += 10; up.hp = up.maxHp; up.atk += 2; up.def += 1; up.mag += 1;
+        leveledUpTo.push(up.level);
+      }
+      await dbSavePlayer(up);
+      if (up.id === myId) setMeRaw(up);
+      playerResults.push({
+        id: p.id, name: p.name,
+        beforeXp, beforeLevel, xpThreshold: xpForLevel(beforeLevel),
+        afterXp: up.xp, afterLevel: up.level,
+        xpGained: xpEach, goldGained: goldEach,
+        leveledUpTo,
+      });
+    }
+
+    const victoryData = { slain, xpEach, goldEach, totalXp, totalGold, playerResults, ts: Date.now() };
     const onQuestCombat = latestQs?.active && latestQs?.currentId && (() => {
-      const q = getQuests().find(x=>x.id===latestQs.currentId);
+      const q = getQuests().find(x => x.id === latestQs.currentId);
       return q && isCombatStep(q.steps[latestQs.step]);
     })();
-    const newCombat = onQuestCombat ? { active:false, won:true } : null;
-    const newQs = {...latestQs, combat:newCombat};
+    const newCombat = { active: false, won: !!onQuestCombat, victoryData };
+    const newQs = { ...latestQs, combat: newCombat };
     await dbSavePartyState(code, newQs);
-    setQs(prev => ({...prev, combat:newCombat}));
-    await dbSendMessage({party_code:code, author:"Sistema", content:"🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti! Clicca **Avanti →** per continuare.", type:"victory"});
+    setQs(prev => ({ ...prev, combat: newCombat }));
+    await dbSendMessage({ party_code: code, author: "Sistema",
+      content: `🏆 **BATTAGLIA VINTA!** ⭐ +${xpEach} XP — 💰 +${goldEach} oro a testa`, type: "victory" });
   }
 
   // -- QUEST --
@@ -3179,6 +3274,16 @@ ${stepText(step)}`, "quest","Master");
     setTab("combat");
   }
   startCombatStepRef.current = startCombatStep;
+
+  // Show victory overlay when combat ends (all clients see it via shared combat.victoryData.ts)
+  const shownVictoryRef = useRef(null);
+  useEffect(() => {
+    const vd = qs?.combat?.victoryData;
+    if (!vd || shownVictoryRef.current === vd.ts) return;
+    shownVictoryRef.current = vd.ts;
+    setVictoryScreen(vd);
+    setTab("quest");
+  }, [qs?.combat?.victoryData?.ts]);
 
   async function advanceQuest() {
     const quests = getQuests();
@@ -3481,7 +3586,7 @@ ${stepText(step)}`, "quest","Master");
       {/* MAIN */}
       <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", background:combatMode?"rgba(2,6,23,0.52)":"rgba(2,6,23,0.28)", position:"relative", zIndex:1, backdropFilter:"blur(2px)" }}>
         <div style={{ display:"flex", gap:0, borderBottom:`1px solid ${PANEL_BORDER}`, background:combatMode?"rgba(8,10,20,0.94)":"rgba(3,7,18,0.88)", flexShrink:0 }}>
-          {[["chat","💬 Chat"],["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             return (
             <button key={k} onClick={()=>{ if(!combatLocked) setTab(k); }} title={combatLocked?"Non disponibile durante il combattimento":undefined} style={{ padding:"0.6rem 1.2rem", background:tab===k?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k?"2px solid #7c3aed":"2px solid transparent", color:combatLocked?"#334155":tab===k?"#c4b5fd":"#94a3b8", cursor:combatLocked?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", letterSpacing:"0.05em", opacity:combatLocked?0.4:1 }}>
@@ -3490,31 +3595,75 @@ ${stepText(step)}`, "quest","Master");
           })}
         </div>
 
-        {tab==="chat" && <>
-          <div style={{ flex:1, overflowY:"auto", padding:"0.8rem", display:"flex", flexDirection:"column", gap:6, background:"rgba(3,7,18,0.48)" }}>
-            {visibleChatMessages.length === 0 && (
-              <div style={{ textAlign:"center", color:"#64748b", padding:"3rem 1rem" }}>
-                <div style={{ fontSize:"2rem", marginBottom:"0.5rem" }}>💬</div>
-                <p style={{ fontSize:"0.85rem" }}>Nessun messaggio. Scrivi qualcosa al party!</p>
+        {tab==="chat" && (
+          <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+
+            {/* ── Pinned tavern intro ── */}
+            <div style={{ flexShrink:0, maxHeight:210, overflowY:"auto", background:"linear-gradient(180deg,rgba(20,10,2,0.98),rgba(15,8,2,0.97))", borderBottom:"1px solid rgba(180,100,20,0.4)", padding:"0.9rem 1.1rem" }}>
+              <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1rem", textAlign:"center", marginBottom:"0.55rem", letterSpacing:"0.06em" }}>🍺 Benvenuti alla Taverna Storta</div>
+              <div style={{ fontFamily:"'Crimson Pro',Georgia,serif", color:"#c49a5a", fontSize:"0.82rem", lineHeight:1.8 }}>
+                <p style={{ margin:"0 0 0.5rem" }}>L'odore di legno umido, arrosto speziato e birra forte riempie l'aria. Le travi del soffitto sembrano piegate dal tempo, il pavimento scricchiola a ogni passo e il grande lampadario ondeggia lentamente… anche se nessuno lo ha toccato.</p>
+                <p style={{ margin:"0 0 0.5rem" }}>Dietro al bancone, un oste dall'occhio storto pulisce lo stesso boccale da almeno mezz'ora. Con voce roca, vi squadra uno a uno.</p>
+                <blockquote style={{ margin:"0.4rem 0", padding:"0.4rem 0.8rem", borderLeft:"3px solid #b45309", color:"#fde68a", fontStyle:"italic" }}>
+                  "Ascoltate bene, viandanti… Qui dentro non si parla come fuori dal mondo. Niente voci divine, niente pensieri sospesi nel vuoto, niente parole senza volto."
+                </blockquote>
+                <p style={{ margin:"0.4rem 0 0.4rem" }}>L'oste punta il dito verso il centro della sala.</p>
+                <blockquote style={{ margin:"0.4rem 0", padding:"0.4rem 0.8rem", borderLeft:"3px solid #b45309", color:"#fde68a", fontStyle:"italic" }}>
+                  "Alla Taverna Storta esiste una sola legge: qui si parla <strong>SOLO ruolando.</strong>"
+                </blockquote>
+                <p style={{ margin:"0.4rem 0" }}>Un silenzio attraversa la sala. Poi un nano ubriaco cade dalla sedia. Nessuno sembra farci caso.</p>
+                <blockquote style={{ margin:"0.4rem 0", padding:"0.4rem 0.8rem", borderLeft:"3px solid #b45309", color:"#fde68a", fontStyle:"italic" }}>
+                  "Se volete parlare… dovete farlo come i vostri personaggi. Sedetevi, bevete, litigate, raccontate storie, fate accordi… ma restate nel mondo."
+                </blockquote>
+                <p style={{ margin:"0.4rem 0" }}>Con un colpo secco appoggia il boccale sul bancone.</p>
+                <blockquote style={{ margin:"0.4rem 0", padding:"0.4rem 0.8rem", borderLeft:"3px solid #92400e", color:"#fcd34d", fontStyle:"italic", fontWeight:600 }}>
+                  "La Taverna Storta apre le sue porte solo ai gruppi completi. Un avventuriero solitario qui non può entrare. Serve un Party."
+                </blockquote>
+                <p style={{ margin:"0.5rem 0 0", color:"#9a6630", fontSize:"0.78rem", textAlign:"center", fontStyle:"italic" }}>"Perché nessuno sopravvive a questo mondo da solo."</p>
               </div>
-            )}
-            {visibleChatMessages.map(msg=>{
-              const s=MSG_COLORS[msg.type]||MSG_COLORS.chat;
-              return (
-                <div key={msg.id} className="msg-in" style={{ padding:"0.5rem 0.8rem", borderRadius:4, background:s.bg, borderLeft:`3px solid ${s.border}` }}>
-                  {msg.author&&<div style={{ fontSize:"0.58rem", letterSpacing:"0.1em", textTransform:"uppercase", color:s.border, marginBottom:2, fontFamily:"'Cinzel',serif" }}>{msg.author}</div>}
-                  <div style={{ fontSize:"0.88rem", lineHeight:1.65, color:s.color }} dangerouslySetInnerHTML={{ __html:fmt(msg.content) }} />
+            </div>
+
+            {/* ── Party gate OR messages + input ── */}
+            {!code ? (
+              <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"2rem", textAlign:"center", background:"rgba(10,5,1,0.7)" }}>
+                <div style={{ fontSize:"3rem", marginBottom:"1rem", filter:"grayscale(0.4)" }}>🚪</div>
+                <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#92400e", fontSize:"1rem", marginBottom:"0.7rem" }}>La porta è sbarrata</div>
+                <div style={{ color:"#78350f", fontSize:"0.85rem", maxWidth:300, lineHeight:1.7, fontFamily:"'Crimson Pro',Georgia,serif" }}>
+                  L'oste ti fissa senza muoversi.<br/>
+                  <em>"Torna con il tuo gruppo."</em><br/><br/>
+                  Unisciti a un Party per varcare la soglia della Taverna Storta.
                 </div>
-              );
-            })}
-            <div ref={msgEnd} />
+              </div>
+            ) : (<>
+              <div style={{ flex:1, overflowY:"auto", padding:"0.8rem", display:"flex", flexDirection:"column", gap:7, background:"rgba(10,5,1,0.62)" }}>
+                {visibleChatMessages.length === 0 && (
+                  <div style={{ textAlign:"center", padding:"3rem 1rem" }}>
+                    <div style={{ fontSize:"2.5rem", marginBottom:"0.6rem" }}>🍺</div>
+                    <div style={{ color:"#78350f", fontFamily:"'Crimson Pro',Georgia,serif", fontSize:"0.88rem", fontStyle:"italic" }}>Il camino crepita. Nessuno ha ancora aperto bocca.</div>
+                    <div style={{ color:"#6b5030", fontSize:"0.78rem", marginTop:"0.4rem" }}>Sii il primo a parlare — come il tuo personaggio.</div>
+                  </div>
+                )}
+                {visibleChatMessages.map(msg => (
+                  <div key={msg.id} className="msg-in" style={{ padding:"0.6rem 0.9rem", borderRadius:6, background:"rgba(40,18,4,0.7)", borderLeft:"3px solid #92400e", boxShadow:"0 2px 8px rgba(0,0,0,0.3)" }}>
+                    {msg.author && (
+                      <div style={{ fontSize:"0.6rem", letterSpacing:"0.12em", textTransform:"uppercase", color:"#b45309", marginBottom:3, fontFamily:"'Cinzel',serif" }}>{msg.author}</div>
+                    )}
+                    <div style={{ fontSize:"0.9rem", lineHeight:1.7, color:"#e8d5b0", fontFamily:"'Crimson Pro',Georgia,serif", fontStyle:"italic" }} dangerouslySetInnerHTML={{ __html: fmt(msg.content) }} />
+                  </div>
+                ))}
+                <div ref={msgEnd} />
+              </div>
+              <div style={{ display:"flex", gap:8, padding:"0.7rem", borderTop:"1px solid rgba(180,100,20,0.3)", background:"rgba(15,7,1,0.95)", flexShrink:0 }}>
+                <input ref={inputRef}
+                  style={{ flex:1, padding:"0.65rem 0.9rem", background:"rgba(40,18,4,0.5)", border:"1px solid rgba(146,64,14,0.5)", borderRadius:4, color:"#e8d5b0", fontFamily:"'Crimson Pro',Georgia,serif", fontSize:"0.92rem", fontStyle:"italic" }}
+                  placeholder={`${me?.name || "Il tuo personaggio"} dice…`}
+                  value={input} onChange={e=>setInput(e.target.value)}
+                  onKeyDown={e=>e.key==="Enter"&&handleInput()} autoComplete="off" />
+                <button onClick={handleInput} style={{ padding:"0.65rem 1.1rem", background:"#78350f", border:"1px solid #92400e", borderRadius:4, color:"#fde68a", cursor:"pointer", fontSize:"1rem" }}>🍺</button>
+              </div>
+            </>)}
           </div>
-          <div style={{ display:"flex", gap:8, padding:"0.7rem", borderTop:`1px solid ${PANEL_BORDER}`, background:"rgba(3,7,18,0.88)", flexShrink:0 }}>
-            <input ref={inputRef} style={{ flex:1, padding:"0.65rem 0.9rem", background:"rgba(255,255,255,0.04)", border:"1px solid #1f2937", borderRadius:4, color:"#e2d9c5", fontFamily:"'Crimson Pro',Georgia,serif", fontSize:"0.92rem" }}
-              placeholder="Scrivi un messaggio al party..." value={input} onChange={e=>setInput(e.target.value)} onKeyDown={e=>e.key==="Enter"&&handleInput()} autoComplete="off" />
-            <button onClick={handleInput} style={{ padding:"0.65rem 1.2rem", background:"#3b0764", border:"none", borderRadius:4, color:"#a78bfa", cursor:"pointer", fontSize:"1rem" }}>→</button>
-          </div>
-        </>}
+        )}
         {tab==="inventory" && (
           <InventoryView
             loading={inventoryLoading}
@@ -3868,10 +4017,11 @@ ${stepText(step)}`, "quest","Master");
                     <div style={{ background:"rgba(8,14,28,0.9)", border:"1px solid rgba(148,163,184,0.16)", borderRadius:12, padding:"1rem", boxShadow:"0 16px 34px rgba(0,0,0,0.18)" }}>
                       <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.78rem", color:"#cbd5e1", marginBottom:8, letterSpacing:"0.08em" }}>LOG DI BATTAGLIA</div>
                       <div style={{ maxHeight:360, overflowY:"auto" }}>
-                    {messages.filter(m=>m.type==="combat").slice(-10).map(m=>(
+                    {messages.filter(m=>m.type==="combat").map(m=>(
                       <div key={m.id} style={{ padding:"0.75rem 0.85rem", background:"rgba(127,29,29,0.16)", border:"1px solid #7f1d1d", borderRadius:8, marginBottom:8, fontSize:"0.84rem", color:"#fecaca", lineHeight:1.6 }}
                         dangerouslySetInnerHTML={{ __html:fmt(m.content) }} />
                     ))}
+                        <div ref={combatLogEndRef} />
                       </div>
                     </div>
 
@@ -3889,6 +4039,97 @@ ${stepText(step)}`, "quest","Master");
         )}
       </main>
       <DiceRoller ref={diceRef} />
+
+      {/* ── Victory Screen Overlay ── */}
+      {victoryScreen && (() => {
+        const vd = victoryScreen;
+        const myResult = vd.playerResults?.find(r => r.id === myId);
+        const xpBefore = myResult?.beforeXp ?? 0;
+        const xpAfter  = myResult?.afterXp  ?? 0;
+        const lvBefore = myResult?.beforeLevel ?? 1;
+        const lvAfter  = myResult?.afterLevel  ?? lvBefore;
+        const threshold = myResult?.xpThreshold ?? xpForLevel(lvBefore);
+        const leveledUp = myResult?.leveledUpTo?.length > 0;
+        const barPct = Math.min(100, Math.round((xpBefore / threshold) * 100));
+        const barPctAfter = Math.min(100, Math.round((xpAfter / xpForLevel(lvAfter)) * 100));
+        return (
+          <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.82)", zIndex:10050, display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
+            <div style={{ background:"linear-gradient(180deg,#0d1b0d,#0a1628)", border:"2px solid #fbbf24", borderRadius:18, padding:"2rem 2.2rem", maxWidth:520, width:"100%", boxShadow:"0 0 60px rgba(251,191,36,0.25), 0 24px 48px rgba(0,0,0,0.6)", textAlign:"center", maxHeight:"90vh", overflowY:"auto" }}>
+
+              {/* Header */}
+              <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(1.6rem,5vw,2.4rem)", background:"linear-gradient(135deg,#fbbf24,#f59e0b,#b45309)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", letterSpacing:"0.08em", marginBottom:"0.3rem" }}>⚔ VITTORIA! ⚔</div>
+              <div style={{ color:"#86efac", fontSize:"0.82rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.15em", marginBottom:"1.5rem" }}>BATTAGLIA VINTA</div>
+
+              {/* Slain monsters */}
+              {vd.slain?.length > 0 && (
+                <div style={{ background:"rgba(0,0,0,0.35)", border:"1px solid rgba(127,29,29,0.4)", borderRadius:10, padding:"0.9rem 1rem", marginBottom:"1.2rem", textAlign:"left" }}>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#f87171", fontSize:"0.72rem", letterSpacing:"0.12em", marginBottom:"0.6rem" }}>NEMICI SCONFITTI</div>
+                  {vd.slain.map((m, i) => (
+                    <div key={i} style={{ display:"flex", justifyContent:"space-between", color:"#fecaca", fontSize:"0.85rem", padding:"2px 0" }}>
+                      <span>{m.emoji} {m.name}</span>
+                      <span style={{ color:"#fbbf24" }}>+{m.xp} XP</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Loot summary */}
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:"1.4rem" }}>
+                <div style={{ background:"rgba(91,33,182,0.25)", border:"1px solid rgba(139,92,246,0.35)", borderRadius:10, padding:"0.8rem" }}>
+                  <div style={{ fontSize:"1.4rem", marginBottom:4 }}>⭐</div>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontSize:"0.7rem", letterSpacing:"0.1em" }}>XP GUADAGNATA</div>
+                  <div style={{ color:"#e9d5ff", fontSize:"1.4rem", fontWeight:700, fontFamily:"'Cinzel Decorative',serif" }}>+{vd.xpEach}</div>
+                </div>
+                <div style={{ background:"rgba(161,120,0,0.2)", border:"1px solid rgba(251,191,36,0.35)", borderRadius:10, padding:"0.8rem" }}>
+                  <div style={{ fontSize:"1.4rem", marginBottom:4 }}>💰</div>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#fcd34d", fontSize:"0.7rem", letterSpacing:"0.1em" }}>ORO GUADAGNATO</div>
+                  <div style={{ color:"#fde68a", fontSize:"1.4rem", fontWeight:700, fontFamily:"'Cinzel Decorative',serif" }}>+{vd.goldEach}</div>
+                </div>
+              </div>
+
+              {/* XP Progress bar for this player */}
+              {myResult && (
+                <div style={{ background:"rgba(0,0,0,0.35)", border:"1px solid rgba(148,163,184,0.18)", borderRadius:10, padding:"1rem", marginBottom:"1.2rem", textAlign:"left" }}>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#94a3b8", fontSize:"0.72rem", letterSpacing:"0.12em", marginBottom:"0.7rem" }}>AVANZAMENTO ESPERIENZA</div>
+                  <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.78rem", color:"#cbd5e1", marginBottom:6 }}>
+                    <span>Lv. {lvBefore}</span>
+                    <span style={{ color:"#fbbf24" }}>{xpBefore} → {xpAfter} / {xpForLevel(lvAfter)} XP</span>
+                    <span>Lv. {lvAfter}</span>
+                  </div>
+                  {/* Before bar (grey) */}
+                  <div style={{ position:"relative", height:14, background:"rgba(255,255,255,0.08)", borderRadius:999, overflow:"hidden", marginBottom:4 }}>
+                    <div style={{ position:"absolute", left:0, top:0, height:"100%", width:`${barPct}%`, background:"rgba(148,163,184,0.4)", borderRadius:999, transition:"width 0.6s ease" }} />
+                    <div style={{ position:"absolute", left:0, top:0, height:"100%", width:`${barPctAfter}%`, background:"linear-gradient(90deg,#7c3aed,#a855f7,#c084fc)", borderRadius:999, transition:"width 0.8s ease 0.3s", boxShadow:"0 0 8px rgba(168,85,247,0.6)" }} />
+                  </div>
+                  <div style={{ fontSize:"0.7rem", color:"#6b7280", textAlign:"right" }}>{xpAfter} / {xpForLevel(lvAfter)} XP per Lv. {lvAfter + 1}</div>
+                  {leveledUp && (
+                    <div style={{ marginTop:"0.7rem", padding:"0.5rem 0.8rem", background:"linear-gradient(135deg,rgba(251,191,36,0.2),rgba(245,158,11,0.15))", border:"1px solid #fbbf24", borderRadius:8, color:"#fde68a", fontFamily:"'Cinzel Decorative',serif", fontSize:"0.92rem", textAlign:"center", letterSpacing:"0.06em" }}>
+                      ⬆️ LIVELLO {lvAfter}! Sei più forte ora.
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Party members summary (if multiplayer) */}
+              {vd.playerResults?.length > 1 && (
+                <div style={{ marginBottom:"1.2rem", textAlign:"left" }}>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#94a3b8", fontSize:"0.72rem", letterSpacing:"0.12em", marginBottom:"0.5rem" }}>PARTY</div>
+                  {vd.playerResults.map(r => (
+                    <div key={r.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"4px 0", color:"#cbd5e1", fontSize:"0.82rem", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+                      <span>{r.id === myId ? "⭐ " : ""}{r.name}</span>
+                      <span style={{ color:"#a78bfa", fontSize:"0.76rem" }}>Lv.{r.afterLevel}{r.leveledUpTo?.length > 0 ? " ⬆️" : ""}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <button onClick={() => setVictoryScreen(null)} style={{ width:"100%", padding:"1rem 1.4rem", background:"linear-gradient(135deg,#14532d,#16a34a)", border:"2px solid #22c55e", borderRadius:12, color:"#dcfce7", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.05rem", cursor:"pointer", letterSpacing:"0.08em", boxShadow:"0 8px 20px rgba(34,197,94,0.2)" }}>
+                Continua →
+              </button>
+            </div>
+          </div>
+        );
+      })()}
     </div>
   );
 }
@@ -3937,16 +4178,16 @@ function JoinPartyWidget({ myId, currentCode }) {
   );
 
   return (
-    <div style={{ marginTop:8, display:"flex", gap:5 }}>
+    <div style={{ marginTop:8, display:"flex", flexDirection:"column", gap:5 }}>
       <input
         value={input}
         onChange={e=>setInput(e.target.value.toUpperCase().replace(/[^A-Z0-9]/g,"").slice(0,8))}
-        placeholder="Cambia party..."
-        style={{ flex:1, background:"rgba(0,0,0,0.3)", border:"1px solid #1f2937", color:"#e2d9c5", padding:"4px 6px", borderRadius:4, fontSize:"0.7rem", fontFamily:"monospace", letterSpacing:"0.1em" }}
+        placeholder="Codice party..."
+        style={{ width:"100%", boxSizing:"border-box", background:"rgba(0,0,0,0.3)", border:"1px solid #1f2937", color:"#e2d9c5", padding:"5px 7px", borderRadius:4, fontSize:"0.7rem", fontFamily:"monospace", letterSpacing:"0.1em" }}
       />
       <button disabled={busy || !input.trim()} onClick={join}
-        style={{ background:"rgba(99,102,241,0.2)", border:"1px solid #4338ca", color:"#a5b4fc", padding:"4px 8px", borderRadius:4, cursor:"pointer", fontSize:"0.7rem" }}>
-        {busy ? "..." : "Entra"}
+        style={{ width:"100%", background:"rgba(99,102,241,0.2)", border:"1px solid #4338ca", color:"#a5b4fc", padding:"5px 0", borderRadius:4, cursor: busy || !input.trim() ? "not-allowed" : "pointer", fontSize:"0.72rem", opacity: !input.trim() ? 0.5 : 1 }}>
+        {busy ? "Caricamento…" : "Entra nel Party →"}
       </button>
     </div>
   );
