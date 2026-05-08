@@ -2732,6 +2732,7 @@ function GameScreen({ myId, setScreen }) {
   const startCombatStepRef = useRef(null);
   const monsterTickBusyRef = useRef(false);
   const doMonsterTurnRef = useRef(null);
+  const advanceTurnBusyRef = useRef(false);
 
     const diceRef = useRef(null);
 
@@ -3186,6 +3187,42 @@ function GameScreen({ myId, setScreen }) {
   async function dismissCombatLog() {
     if(!qs?.combat?.pendingLog) return;
     await saveQState({ ...qs, combat: { ...qs.combat, pendingLog: null } });
+  }
+
+  async function forceNextCombatTurn() {
+    if(advanceTurnBusyRef.current) return;
+    advanceTurnBusyRef.current = true;
+    try {
+      const latestQs = await dbGetPartyState(code);
+      const latestCombat = latestQs?.combat;
+      if(!latestCombat?.active) return;
+      if(latestCombat.pendingLog) {
+        const newCombat = { ...latestCombat, pendingLog:null };
+        await dbSavePartyState(code, { ...latestQs, combat:newCombat });
+        setQs(prev => ({ ...prev, combat:newCombat }));
+        return;
+      }
+      const combatants = [...(latestCombat.combatants || [])];
+      if(!combatants.length) return;
+      const actor = combatants[latestCombat.turn % combatants.length];
+      if(actor && !actor.isPlayer && actor.hp > 0) {
+        await doMonsterTurnRef.current?.();
+        return;
+      }
+      const { nextTurn, nextRound } = getNextCombatTurn(combatants, latestCombat.turn, latestCombat.round);
+      const skippedName = actor?.name || "il turno";
+      const newCombat = {
+        ...latestCombat,
+        combatants,
+        turn:nextTurn,
+        round:nextRound,
+        pendingLog:`⏭️ **Turno saltato:** ${skippedName}.`,
+      };
+      await dbSavePartyState(code, { ...latestQs, combat:newCombat });
+      setQs(prev => ({ ...prev, combat:newCombat }));
+    } finally {
+      advanceTurnBusyRef.current = false;
+    }
   }
 
   async function abandonQuest() {
@@ -4155,7 +4192,7 @@ ${stepText(step)}`, "quest","Master");
                       <div style={{ padding:"1.1rem 1.2rem", background:"linear-gradient(180deg,rgba(10,20,10,0.97),rgba(15,23,42,0.97))", border:"1px solid rgba(34,197,94,0.35)", borderRadius:12, boxShadow:"0 8px 24px rgba(0,0,0,0.4)" }}>
                         <div style={{ fontSize:"0.82rem", color:"#a3e8b0", lineHeight:1.75, whiteSpace:"pre-line", marginBottom:"1rem", fontFamily:"'Crimson Pro',Georgia,serif" }} dangerouslySetInnerHTML={{ __html: fmt(combat.pendingLog) }} />
                         <button onClick={dismissCombatLog} style={{ width:"100%", padding:"0.85rem 1.2rem", background:"linear-gradient(135deg,#14532d,#16a34a)", border:"2px solid #22c55e", borderRadius:10, color:"#dcfce7", fontFamily:"'Cinzel Decorative',serif", fontSize:"1rem", cursor:"pointer", letterSpacing:"0.08em" }}>
-                          Avanti →
+                          Prossimo turno
                         </button>
                       </div>
                     )}
@@ -4286,6 +4323,11 @@ ${stepText(step)}`, "quest","Master");
                         <div style={{ color:"#94a3b8", fontSize:"0.9rem", lineHeight:1.6, textAlign:"center" }}>
                           Turno di <strong style={{ color:"#f8fafc" }}>{activeCombatant?.name}</strong>...
                         </div>
+                      )}
+                      {!combat.pendingLog && (
+                        <button onClick={forceNextCombatTurn} style={{ width:"100%", maxWidth:340, marginTop:"1rem", padding:"0.82rem 1rem", background:"rgba(30,41,59,0.78)", border:"1px solid rgba(148,163,184,0.36)", borderRadius:9, color:"#e2e8f0", fontFamily:"'Cinzel',serif", fontSize:"0.9rem", cursor:"pointer", letterSpacing:"0.06em" }}>
+                          Prossimo turno
+                        </button>
                       )}
                     </div>
 
