@@ -66,8 +66,30 @@ const MASTER_EMAILS = (import.meta.env.VITE_MASTER_EMAILS || "")
 const PANEL_BG = "rgba(7,10,20,0.82)";
 const PANEL_BG_SOFT = "rgba(7,10,20,0.72)";
 const PANEL_BORDER = "rgba(148,163,184,0.16)";
+const LEGENDARY_ITEMS = [
+  // Armi
+  { id:"leg_excalibur",   name:"Excalibur",          emoji:"⚔️",  type:"weapon", weapon_die:"2d8",  bonus_atk:5, desc:"La leggendaria spada del re" },
+  { id:"leg_vorpal",      name:"Lama Vorpal",         emoji:"🗡️",  type:"weapon", weapon_die:"2d6",  bonus_atk:4, desc:"Taglia il destino stesso" },
+  { id:"leg_frostbrand",  name:"Frostbrand",          emoji:"❄️",  type:"weapon", weapon_die:"2d6",  bonus_atk:4, desc:"Congela i nemici con ogni colpo" },
+  { id:"leg_flamebrand",  name:"Spada di Fuoco",      emoji:"🔥",  type:"weapon", weapon_die:"1d10", bonus_atk:4, desc:"Incendia l'avversario" },
+  { id:"leg_moonbow",     name:"Arco della Luna",     emoji:"🏹",  type:"weapon", weapon_die:"2d6",  bonus_atk:4, desc:"Frecce d'argento guidate dalla luna" },
+  { id:"leg_thunderhammer",name:"Martello del Tuono", emoji:"⚡",  type:"weapon", weapon_die:"2d10", bonus_atk:3, desc:"Ogni colpo fa tremare la terra" },
+  // Armature
+  { id:"leg_dragonscale", name:"Armatura del Drago",  emoji:"🐉",  type:"armor",  bonus_def:6, desc:"Squame di drago antico, impenetrabili" },
+  { id:"leg_aegis",       name:"Egida degli Dei",     emoji:"🛡️",  type:"armor",  bonus_def:5, desc:"Protetto dalla volontà divina" },
+  { id:"leg_shadowcloak", name:"Mantello d'Ombra",    emoji:"🌑",  type:"armor",  bonus_def:4, desc:"Si fonde con le tenebre" },
+  { id:"leg_titanplate",  name:"Armatura Titanica",   emoji:"🔱",  type:"armor",  bonus_def:7, desc:"Forgiata dai Titani nel fuoco primordiale" },
+  // Focus magici
+  { id:"leg_phylactery",  name:"Filatteri del Lich",  emoji:"💀",  type:"magic",  bonus_mag:6, desc:"Frammento dell'anima di un lich" },
+  { id:"leg_eye_gods",    name:"Occhio degli Dei",    emoji:"👁️",  type:"magic",  bonus_mag:5, desc:"Vede ogni punto debole del nemico" },
+  { id:"leg_starstaff",   name:"Baculo delle Stelle", emoji:"🌟",  type:"magic",  bonus_mag:6, desc:"Forgia incantesimi di potere cosmico" },
+  // Reliquie di Zodar — doni supremi del Master
+  { id:"leg_zodar_sword", name:"Spada di Zodar",      emoji:"🌌",  type:"weapon", weapon_die:"5d20", bonus_atk:10, desc:"Forgiata da Zodar nell'alba dei tempi — nessuna lama la eguaglia" },
+  { id:"leg_zodar_armor", name:"Armatura di Zodar",   emoji:"✨",  type:"armor",  bonus_def:20, desc:"Ogni scaglia porta il sigillo di Zodar — il male non osa toccarla" },
+];
 
-function xpForLevel(l){ return Math.floor(100*Math.pow(1.5,l-1)); }
+const XP_TABLE = [0,0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000];
+function xpForLevel(l){ const lv = Math.max(1,Math.min(20,l)); return XP_TABLE[lv] ?? XP_TABLE[20]; }
 function useMobile() {
   const [mob, setMob] = useState(() => typeof window !== "undefined" && window.innerWidth <= 768);
   useEffect(() => {
@@ -99,11 +121,45 @@ function fmt(t=""){
     .replace(/\n/g,"<br/>");
 }
 function canAccessMasterPanel(user) {
+  if(!MASTER_EMAILS.length) return true; // nessuna email configurata = password basta
   const email = user?.email?.trim().toLowerCase();
   return !!email && MASTER_EMAILS.includes(email);
 }
 
 const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','paladin','ranger'];
+const ABILITY_LABELS = {
+  str:{ short:"FOR", name:"Forza" },
+  dex:{ short:"DES", name:"Destrezza" },
+  con:{ short:"COS", name:"Costituzione" },
+  int:{ short:"INT", name:"Intelligenza" },
+  wis:{ short:"SAG", name:"Saggezza" },
+  cha:{ short:"CAR", name:"Carisma" },
+};
+const CLASS_ABILITY_BASES = {
+  barbarian:{ str:16, dex:14, con:16, int:8,  wis:12, cha:10 },
+  warrior:  { str:16, dex:12, con:14, int:10, wis:10, cha:10 },
+  monk:     { str:12, dex:16, con:13, int:10, wis:14, cha:10 },
+  paladin:  { str:16, dex:10, con:14, int:10, wis:12, cha:14 },
+  ranger:   { str:12, dex:16, con:13, int:10, wis:14, cha:10 },
+  rogue:    { str:10, dex:16, con:13, int:12, wis:12, cha:12 },
+  cleric:   { str:12, dex:10, con:14, int:10, wis:16, cha:12 },
+  druid:    { str:10, dex:12, con:14, int:12, wis:16, cha:10 },
+  bard:     { str:10, dex:14, con:12, int:12, wis:10, cha:16 },
+  mage:     { str:8,  dex:14, con:12, int:16, wis:12, cha:10 },
+  sorcerer: { str:8,  dex:14, con:12, int:10, wis:12, cha:16 },
+  warlock:  { str:10, dex:12, con:14, int:12, wis:10, cha:16 },
+};
+const RACE_ABILITY_BONUSES = {
+  human:     { str:1, dex:1, con:1, int:1, wis:1, cha:1 },
+  dwarf:     { str:1, dex:0, con:2, int:0, wis:1, cha:0 },
+  elf:       { str:0, dex:2, con:0, int:1, wis:1, cha:0 },
+  halfling:  { str:0, dex:2, con:0, int:0, wis:0, cha:1 },
+  dragonborn:{ str:2, dex:0, con:0, int:0, wis:0, cha:1 },
+  gnome:     { str:0, dex:1, con:0, int:2, wis:0, cha:0 },
+  halfelf:   { str:0, dex:1, con:1, int:0, wis:0, cha:2 },
+  halforc:   { str:2, dex:0, con:1, int:0, wis:0, cha:0 },
+  tiefling:  { str:0, dex:0, con:0, int:1, wis:0, cha:2 },
+};
 const CLASS_LEVEL_GAINS = {
   barbarian:{ hp:16, atk:3, def:1, mag:0, label:"+16 HP, +3 ATK, +1 DEF" },
   warrior:  { hp:14, atk:3, def:2, mag:0, label:"+14 HP, +3 ATK, +2 DEF" },
@@ -148,6 +204,44 @@ function applyLevelUpToPlayer(player) {
     mag: (player?.mag || 0) + gain.mag,
   };
   return { player:next, leveled:true, needed, gain };
+}
+function clampAbility(score) {
+  return Math.max(1, Math.min(30, Number(score) || 10));
+}
+function abilityModifier(score) {
+  return Math.floor((clampAbility(score) - 10) / 2);
+}
+function signedModifier(value) {
+  const n = Number(value) || 0;
+  return `${n >= 0 ? "+" : ""}${n}`;
+}
+function getProficiencyBonus(level=1) {
+  return Math.min(6, 2 + Math.floor((Math.max(1, Number(level) || 1) - 1) / 4));
+}
+function spellcastingAbilityForClass(cls) {
+  if(["mage"].includes(cls)) return "int";
+  if(["cleric","druid","ranger"].includes(cls)) return "wis";
+  if(["bard","sorcerer","warlock","paladin"].includes(cls)) return "cha";
+  return "int";
+}
+function getAbilityScores(actor={}) {
+  if(actor.abilities) return actor.abilities;
+  if(actor.class || actor.race) {
+    const base = CLASS_ABILITY_BASES[actor.class] || CLASS_ABILITY_BASES.warrior;
+    const race = RACE_ABILITY_BONUSES[actor.race] || {};
+    return Object.fromEntries(Object.keys(ABILITY_LABELS).map(key => [key, clampAbility((base[key] || 10) + (race[key] || 0))]));
+  }
+  return {
+    str: clampAbility(10 + Math.floor((actor.atk || 0) / 2)),
+    dex: clampAbility(10 + Math.floor((actor.init || 0) * 1.5)),
+    con: clampAbility(10 + Math.floor((actor.maxHp || actor.max_hp || actor.hp || 10) / 25)),
+    int: 10,
+    wis: 10,
+    cha: 10,
+  };
+}
+function getAbilityMod(actor, ability) {
+  return abilityModifier(getAbilityScores(actor)[ability]);
 }
 function monsterXpValue(monster) {
   const hpSource = monster?.maxHp ?? monster?.max_hp ?? (Number(monster?.hp) > 0 ? monster?.hp : undefined);
@@ -502,6 +596,25 @@ function countInventoryItems(entries) {
 function getEquippedWeapon(equipment, itemMap) {
   return (equipment?.weapon && itemMap.get(equipment.weapon)) || DEFAULT_WEAPON;
 }
+function weaponAttackProfile(weapon, actor={}) {
+  const key = `${weapon?.id || ""} ${weapon?.name || ""}`.toLowerCase();
+  const ranged = /bow|arco|crossbow|balestra|sling|fionda/.test(key);
+  const finesse = /dagger|pugnale|knife|coltello|rapier|frusta|whip/.test(key);
+  const magical = /wand|bacchetta|staff|bastone|grimoire|grimorio|tome|tomo|orb|sfera|rod|verga/.test(key);
+  const scores = getAbilityScores(actor);
+  if(magical) {
+    const ability = spellcastingAbilityForClass(actor.class);
+    return { ability, type:"magica", mod:abilityModifier(scores[ability]) };
+  }
+  if(finesse) {
+    const strMod = abilityModifier(scores.str);
+    const dexMod = abilityModifier(scores.dex);
+    const ability = dexMod >= strMod ? "dex" : "str";
+    return { ability, type:"finesse", mod:Math.max(strMod, dexMod) };
+  }
+  if(ranged) return { ability:"dex", type:"distanza", mod:abilityModifier(scores.dex) };
+  return { ability:"str", type:"mischia", mod:abilityModifier(scores.str) };
+}
 function getCombatDamageDie(actor) {
   if(actor?.weaponDie) return actor.weaponDie;
   if(actor?.isPlayer) return DEFAULT_WEAPON.weapon_die;
@@ -510,7 +623,11 @@ function getCombatDamageDie(actor) {
   if((actor?.atk || 0) >= 8) return "1d8";
   return "1d6";
 }
-function getCombatAttackBonus(actor) {
+function getCombatAttackBonus(actor, weapon=null) {
+  if(actor?.isPlayer) {
+    const profile = weaponAttackProfile(weapon, actor);
+    return profile.mod + getProficiencyBonus(actor.level || 1) + (weapon?.bonus_atk || 0);
+  }
   return Math.max(1, Math.floor((actor?.atk || 0) / 3));
 }
 function resolveWeaponAttack(attacker, target, weaponDie) {
@@ -529,7 +646,12 @@ function formatWeaponAttackLog(attacker, target, resolved, weaponName, targetHpA
   const hitLine = `🎯 Tiro per colpire: **d20 ${resolved.hitRoll} + bonus ${resolved.attackBonus} = ${resolved.attackTotal}** contro CA **${resolved.targetCa}**`;
   if(!resolved.hit) return `${header}\n${hitLine}\n❌ **Mancato**`;
   const critNote = resolved.isCrit ? " — **CRITICO!**" : "";
-  const dmgLine = `💥 Tiro danno: **${resolved.weaponDie} = ${resolved.damageRoll}**${resolved.isCrit ? `, critico => **${resolved.damage}**` : ` => **${resolved.damage}**`} con **${weaponName}**`;
+  const modStr = resolved.damageMod != null && resolved.damageMod !== 0 && resolved.damageAbility
+    ? ` ${signedModifier(resolved.damageMod)} (${resolved.damageAbility.toUpperCase()})`
+    : "";
+  const dmgLine = resolved.isCrit
+    ? `💥 Tiro danno: **${resolved.weaponDie} = ${resolved.damageRoll}**${modStr}, critico => **${resolved.damage}** con **${weaponName}**`
+    : `💥 Tiro danno: **${resolved.weaponDie} = ${resolved.damageRoll}**${modStr} => **${resolved.damage}** con **${weaponName}**`;
   const hpLine = `❤️ ${target?.name}: ${targetHpAfter}/${targetMaxHp} HP`;
   return `${header}\n${hitLine}\n✅ **Colpisce**${critNote}\n${dmgLine}\n${hpLine}`;
 }
@@ -1703,7 +1825,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
         accountId: authUser?.id || null,
         hp:maxHp, maxHp, atk:c.atk+r.atkB, def:c.def+r.defB,
         mag:c.mag+r.magB, init:c.init+r.initB,
-        xp:0, level:1, gold:0, dead:false,
+        xp:0, level:1, gold:20, dead:false,
       };
       debugCharacterFlow("create_player_generated", player);
       debugCharacterFlow("save_attempt", { id: player.id, accountId: player.accountId, partyCode: player.partyCode });
@@ -2296,6 +2418,7 @@ function PlayersView({ authUser }) {
   const [partyStates, setPartyStates] = useState({});
   const [playerMeta, setPlayerMeta] = useState({});
   const [busy, setBusy] = useState({});
+  const [legendaryGrant, setLegendaryGrant] = useState({}); // { [playerId]: { itemId, turns } }
 
   useEffect(()=>{
     const load = async () => {
@@ -2339,6 +2462,21 @@ function PlayersView({ authUser }) {
     }
   }
 
+  async function masterGrantLegendary(p, itemId, turns) {
+    const code = p.party_code;
+    if(!code) { window.alert("Questo giocatore non è in un party attivo."); return; }
+    const item = LEGENDARY_ITEMS.find(i => i.id === itemId);
+    if(!item) return;
+    const currentState = await dbGetPartyState(code);
+    const currentBuffs = currentState.masterBuffs || {};
+    const playerBuffs = currentBuffs[p.id] || {};
+    const legendaryItem = turns > 0 ? { ...item, turnsLeft: turns } : null;
+    const newState = { ...currentState, masterBuffs: { ...currentBuffs, [p.id]: { ...playerBuffs, legendaryItem } } };
+    await dbSavePartyState(code, newState);
+    setPartyStates(prev=>({...prev,[code]:newState}));
+    if(turns > 0) window.alert(`✅ ${item.emoji} ${item.name} donato a ${p.name} (${turns} turni)`);
+    else window.alert(`✅ Oggetto leggendario rimosso da ${p.name}`);
+  }
   async function masterSetBuff(p, buffKey, turns) {
     const code = p.party_code;
     if(!code) { window.alert("Questo giocatore non è in un party attivo."); return; }
@@ -2408,10 +2546,11 @@ function PlayersView({ authUser }) {
                 {p?.dead && <span style={{ padding:"2px 8px", background:"rgba(127,29,29,0.5)", border:"1px solid #ef4444", borderRadius:4, fontSize:"0.65rem", color:"#fca5a5" }}>💀 MORTO</span>}
               </div>
               <HpBar cur={p?.hp||0} max={p?.max_hp||0} />
-              {(pBuffs.immortal > 0 || pBuffs.crit > 0) && (
+              {(pBuffs.immortal > 0 || pBuffs.crit > 0 || pBuffs.legendaryItem) && (
                 <div style={{ display:"flex", gap:6, marginTop:6, flexWrap:"wrap" }}>
                   {pBuffs.immortal > 0 && <span style={{ fontSize:"0.68rem", color:"#fbbf24", background:"rgba(180,83,9,0.25)", border:"1px solid #fbbf24", borderRadius:999, padding:"1px 8px" }}>🛡️ Immortale {pBuffs.immortal}t</span>}
                   {pBuffs.crit > 0 && <span style={{ fontSize:"0.68rem", color:"#f87171", background:"rgba(127,29,29,0.25)", border:"1px solid #ef4444", borderRadius:999, padding:"1px 8px" }}>⚔️ Critico {pBuffs.crit}t</span>}
+                  {pBuffs.legendaryItem && <span style={{ fontSize:"0.68rem", color:"#c4b5fd", background:"rgba(76,29,149,0.35)", border:"1px solid #7c3aed", borderRadius:999, padding:"1px 8px" }}>{pBuffs.legendaryItem.emoji} {pBuffs.legendaryItem.name} {pBuffs.legendaryItem.turnsLeft}t</span>}
                 </div>
               )}
 
@@ -2456,6 +2595,62 @@ function PlayersView({ authUser }) {
                     { level:1,xp:0,gold:0,hp:baseHp,max_hp:baseHp,atk:baseAtk,def:baseDef,mag:baseMag,dead:false });
                 }}>🔄 Reset PG</SmallBtn>
                 <SmallBtn disabled={isBusy} red onClick={()=>masterDeletePlayer(p)}>Elimina PG</SmallBtn>
+              </div>
+
+              {/* Oggetti Leggendari */}
+              <div style={{ marginTop:8, paddingTop:8, borderTop:"1px solid rgba(167,139,250,0.2)" }}>
+                <div style={{ color:"#a78bfa", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6 }}>🏆 Dono Leggendario</div>
+                {pBuffs.legendaryItem && (
+                  <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6, background:"rgba(76,29,149,0.25)", border:"1px solid #7c3aed", borderRadius:4, padding:"4px 8px" }}>
+                    <span style={{ fontSize:"0.8rem" }}>{pBuffs.legendaryItem.emoji} <strong style={{ color:"#c4b5fd" }}>{pBuffs.legendaryItem.name}</strong> — {pBuffs.legendaryItem.turnsLeft} turni rimasti</span>
+                    <SmallBtn disabled={isBusy} onClick={()=>masterGrantLegendary(p, pBuffs.legendaryItem.id, 0)} style={{ marginLeft:"auto", fontSize:"0.6rem", padding:"1px 6px" }}>✕</SmallBtn>
+                  </div>
+                )}
+                <div style={{ display:"flex", gap:4, flexWrap:"wrap", marginBottom:4 }}>
+                  <select
+                    value={(legendaryGrant[p.id]?.itemId) || ""}
+                    onChange={e=>setLegendaryGrant(prev=>({...prev,[p.id]:{...prev[p.id],itemId:e.target.value}}))}
+                    style={{ flex:1, minWidth:120, background:"rgba(15,23,42,0.9)", border:"1px solid #7c3aed", borderRadius:4, color:"#e2e8f0", fontSize:"0.72rem", padding:"3px 6px" }}
+                  >
+                    <option value="">-- Scegli oggetto --</option>
+                    {[
+                      { label:"🌌 Reliquie di Zodar", items: LEGENDARY_ITEMS.filter(i=>i.id.startsWith("leg_zodar")) },
+                      { label:"⚔️ Armi", items: LEGENDARY_ITEMS.filter(i=>i.type==="weapon"&&!i.id.startsWith("leg_zodar")) },
+                      { label:"🛡️ Armature", items: LEGENDARY_ITEMS.filter(i=>i.type==="armor"&&!i.id.startsWith("leg_zodar")) },
+                      { label:"🌟 Focus magici", items: LEGENDARY_ITEMS.filter(i=>i.type==="magic"&&!i.id.startsWith("leg_zodar")) },
+                    ].map(group=>(
+                      <optgroup key={group.label} label={group.label}>
+                        {group.items.map(item=>(
+                          <option key={item.id} value={item.id}>{item.emoji} {item.name}</option>
+                        ))}
+                      </optgroup>
+                    ))}
+                  </select>
+                </div>
+                {legendaryGrant[p.id]?.itemId && (() => {
+                  const item = LEGENDARY_ITEMS.find(i=>i.id===legendaryGrant[p.id]?.itemId);
+                  if(!item) return null;
+                  const statLine = [
+                    item.bonus_atk ? `+${item.bonus_atk} ATK` : null,
+                    item.bonus_def ? `+${item.bonus_def} DEF` : null,
+                    item.bonus_mag ? `+${item.bonus_mag} MAG` : null,
+                    item.weapon_die ? `dado ${item.weapon_die}` : null,
+                  ].filter(Boolean).join(" · ");
+                  return (
+                    <div style={{ fontSize:"0.65rem", color:"#94a3b8", marginBottom:4, padding:"3px 4px", background:"rgba(15,23,42,0.5)", borderRadius:3 }}>
+                      {item.desc} · <span style={{ color:"#c4b5fd" }}>{statLine}</span>
+                    </div>
+                  );
+                })()}
+                <div style={{ display:"flex", gap:4 }}>
+                  {[10,20,30].map(t=>(
+                    <SmallBtn key={t} disabled={isBusy||!legendaryGrant[p.id]?.itemId}
+                      onClick={()=>masterGrantLegendary(p, legendaryGrant[p.id]?.itemId, t)}
+                      style={{ flex:1, fontSize:"0.68rem" }}>
+                      {t} turni
+                    </SmallBtn>
+                  ))}
+                </div>
               </div>
             </div>
           );
@@ -3361,23 +3556,29 @@ function GameScreen({ myId, setScreen }) {
     }
   }
 
-  async function performAsyncAttack(attacker, target, weaponDie) {
+  async function performAsyncAttack(attacker, target, weaponDie, weapon=null) {
     const themeColor = attacker.isPlayer ? "#3b82f6" : "#ef4444";
     const hitRoll = await showDiceVisual({ sides:20, notation:"1d20", label:"Tiro per colpire", themeColor });
-    
-    const attackBonus = getCombatAttackBonus(attacker);
+
+    const attackBonus = getCombatAttackBonus(attacker, weapon);
     const attackTotal = hitRoll + attackBonus;
     const targetCa = Math.max(8, target?.def || 10);
     const isCrit = hitRoll === 20;
     const hit = isCrit || attackTotal >= targetCa;
-    
+
+    // Ability modifier for damage (players only)
+    const profile = attacker.isPlayer ? weaponAttackProfile(weapon, attacker) : null;
+    const damageMod = profile ? profile.mod : 0;
+    const damageAbility = profile ? profile.ability : null;
+
     let damageRoll = 0;
     if (hit) {
       damageRoll = await showDiceVisual({ sides:getPrimaryDieSides(weaponDie,6), notation:weaponDie||"1d6", label:`Danno ${weaponDie||"1d6"}`, themeColor });
     }
-    
-    const damage = hit ? damageRoll + (isCrit ? damageRoll : 0) : 0;
-    return { hitRoll, isCrit, attackBonus, attackTotal, targetCa, hit, damageRoll, damage, weaponDie: weaponDie || "1d6" };
+
+    // D&D 5e crit: double the dice only, not the modifier
+    const damage = hit ? damageRoll + damageMod + (isCrit ? damageRoll : 0) : 0;
+    return { hitRoll, isCrit, attackBonus, attackTotal, targetCa, hit, damageRoll, damageMod, damageAbility, damage, weaponDie: weaponDie || "1d6" };
   }
   async function triggerSoloDeath(finalName) {
     setDeathScene({ name: finalName || me?.name || "Eroe caduto" });
@@ -3591,11 +3792,15 @@ function GameScreen({ myId, setScreen }) {
         return;
       }
       const pt = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
-      const weaponDie = getCombatDamageDie(actor);
-      const resolved = await performAsyncAttack(actor, pt, weaponDie);
-      const edmg = resolved.damage;
       const ptBuffs = (latestQs.masterBuffs || {})[pt.id] || {};
       let monsterNewMasterBuffs = latestQs.masterBuffs || {};
+      const weaponDie = getCombatDamageDie(actor);
+      // Apply legendary armor defense bonus passively
+      const ptLegendary = ptBuffs.legendaryItem;
+      const legDefBonus = (ptLegendary?.turnsLeft > 0 && ptLegendary?.bonus_def) ? ptLegendary.bonus_def : 0;
+      const effectivePt = legDefBonus ? { ...pt, def: (pt.def || 0) + legDefBonus } : pt;
+      const resolved = await performAsyncAttack(actor, effectivePt, weaponDie);
+      const edmg = resolved.damage;
       let effectiveHp = Math.max(0, pt.hp - edmg);
       const playerCombatantIdx = latestCombatants.findIndex(c => c.id === pt.id);
       if(ptBuffs.immortal > 0 && effectiveHp <= 0) {
@@ -3966,8 +4171,20 @@ function GameScreen({ myId, setScreen }) {
     if(!targets.length) { await endCombat(); return; }
     const target = targets.find(c=>c.id===selectedTarget) || targets[0];
     setSelectedTarget(null);
-    const weapon = attacker.id===myId ? getEquippedWeapon(equipment, itemMap) : { name:"Arma", weapon_die:getCombatDamageDie(attacker) };
-    const resolved = await performAsyncAttack(attacker, target, weapon.weapon_die || "1d6");
+    // Check legendary item from local state (synced via realtime before attack)
+    const myPreBuff = (qs?.masterBuffs?.[myId]?.legendaryItem?.turnsLeft > 0) ? qs.masterBuffs[myId].legendaryItem : null;
+    let weapon;
+    if(attacker.id === myId) {
+      const equipped = getEquippedWeapon(equipment, itemMap);
+      if(myPreBuff?.type === "weapon") {
+        weapon = { name:myPreBuff.name, emoji:myPreBuff.emoji, weapon_die:myPreBuff.weapon_die || equipped.weapon_die, bonus_atk:(myPreBuff.bonus_atk||0) };
+      } else {
+        weapon = equipped;
+      }
+    } else {
+      weapon = { name:"Arma", weapon_die:getCombatDamageDie(attacker) };
+    }
+    const resolved = await performAsyncAttack(attacker, target, weapon.weapon_die || "1d6", weapon);
     const latestBuffState = await dbGetPartyState(code);
     const masterBuffs = latestBuffState.masterBuffs || {};
     const myBuffs = masterBuffs[myId] || {};
@@ -3976,6 +4193,11 @@ function GameScreen({ myId, setScreen }) {
     if (myBuffs.crit > 0 && resolved.hit) {
       effectiveResolved = { ...resolved, isCrit: true, damage: resolved.damageRoll * 2 };
       newMasterBuffs = { ...masterBuffs, [myId]: { ...myBuffs, crit: myBuffs.crit - 1 } };
+    }
+    // Decrement legendary item turns after attack
+    if(myBuffs.legendaryItem?.turnsLeft > 0) {
+      const newTurns = myBuffs.legendaryItem.turnsLeft - 1;
+      newMasterBuffs = { ...newMasterBuffs, [myId]: { ...(newMasterBuffs[myId] || myBuffs), legendaryItem: newTurns > 0 ? { ...myBuffs.legendaryItem, turnsLeft: newTurns } : null } };
     }
     const dmg = effectiveResolved.damage;
     const tidx = combatants.findIndex(c=>c.id===target.id);
@@ -4021,7 +4243,8 @@ function GameScreen({ myId, setScreen }) {
 
     if(spell.type === "damage") {
       const base = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), notation:spell.dmg, label:`Danno ${spell.dmg}`, themeColor:"#a855f7" });
-      const bonus = Math.floor((attacker.mag||0)/2);
+      const magLegBonus = (spellMyBuffs.legendaryItem?.turnsLeft > 0 && spellMyBuffs.legendaryItem?.bonus_mag) ? spellMyBuffs.legendaryItem.bonus_mag : 0;
+      const bonus = Math.floor((attacker.mag||0)/2) + magLegBonus;
       let effectiveBase = base;
       if(spellMyBuffs.crit > 0) {
         effectiveBase = base * 2;
@@ -4030,7 +4253,8 @@ function GameScreen({ myId, setScreen }) {
       const dmg = Math.max(1, effectiveBase + bonus - Math.floor(target.def/2));
       const tidx = newCombatants.findIndex(c=>c.id===target.id);
       newCombatants[tidx] = {...target, hp:Math.max(0,target.hp-dmg)};
-      log += `💥 Tiro danno: **${spell.dmg} = ${base}**\n✨ Bonus magia: **+${bonus}**\n🛡️ Riduzione bersaglio: **-${Math.floor(target.def/2)}**\n🔥 Danno finale: **${dmg}**\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`;
+      const bonusLabel = magLegBonus > 0 ? `+${Math.floor((attacker.mag||0)/2)} +${magLegBonus}(leg)` : `+${bonus}`;
+      log += `💥 Tiro danno: **${spell.dmg} = ${base}**\n✨ Bonus magia: **${bonusLabel}**\n🛡️ Riduzione bersaglio: **-${Math.floor(target.def/2)}**\n🔥 Danno finale: **${dmg}**\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`;
     } else if(spell.type === "heal") {
       const baseHeal = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), notation:spell.dmg, label:`Cura ${spell.dmg}`, themeColor:"#10b981" });
       const heal = Math.max(1, baseHeal + Math.floor((attacker.mag||0)/2));
@@ -4046,6 +4270,11 @@ function GameScreen({ myId, setScreen }) {
       log += `${spell.desc || "Effetto speciale"}`;
     }
 
+    // Decrement legendary item turns after spell
+    if(spellMyBuffs.legendaryItem?.turnsLeft > 0) {
+      const newTurns = spellMyBuffs.legendaryItem.turnsLeft - 1;
+      newSpellMasterBuffs = { ...newSpellMasterBuffs, [myId]: { ...(newSpellMasterBuffs[myId] || spellMyBuffs), legendaryItem: newTurns > 0 ? { ...spellMyBuffs.legendaryItem, turnsLeft: newTurns } : null } };
+    }
     const nextSlots = { ...(combat.spellSlots||{}), [myId]: { ...(slots||{}) } };
     if(cost > 0) nextSlots[myId][cost] = Math.max(0, (nextSlots[myId][cost]||0) - 1);
 
@@ -4509,6 +4738,17 @@ ${stepText(step)}`, "quest","Master");
             )}
           </div>
         )}
+        {(() => {
+          const myLeg = qs?.masterBuffs?.[myId]?.legendaryItem;
+          if(!myLeg || myLeg.turnsLeft <= 0) return null;
+          return (
+            <div style={{ background:"rgba(76,29,149,0.3)", border:"1px solid #7c3aed", borderRadius:4, padding:"0.4rem 0.5rem" }}>
+              <div style={{ fontSize:"0.58rem", color:"#a78bfa", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:2 }}>🏆 Oggetto Leggendario</div>
+              <div style={{ fontSize:"0.72rem", color:"#c4b5fd", fontWeight:700 }}>{myLeg.emoji} {myLeg.name}</div>
+              <div style={{ fontSize:"0.6rem", color:"#7c3aed", marginTop:1 }}>{myLeg.turnsLeft} turni rimasti</div>
+            </div>
+          );
+        })()}
 
         <button
           onClick={()=>setScreen("landing")}
@@ -4660,6 +4900,34 @@ ${stepText(step)}`, "quest","Master");
                     </div>
                   ))}
                 </div>
+                {/* D&D Ability Scores */}
+                {(() => {
+                  const scores = getAbilityScores(me);
+                  const profBonus = getProficiencyBonus(me.level || 1);
+                  const spellAbility = spellcastingAbilityForClass(me.class);
+                  return (
+                    <div style={{ marginBottom:"1rem" }}>
+                      <div style={{ color:"#94a3b8", fontSize:"0.7rem", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:6 }}>Caratteristiche — Bonus competenza: {signedModifier(profBonus)}</div>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:6 }}>
+                        {Object.entries(ABILITY_LABELS).map(([key, {short, name}]) => {
+                          const score = scores[key] ?? 10;
+                          const mod = abilityModifier(score);
+                          const isSpell = key === spellAbility;
+                          return (
+                            <div key={key} style={{ background:"rgba(2,6,23,0.7)", border:`1px solid ${isSpell ? "#a78bfa" : "#1e293b"}`, borderRadius:6, padding:"0.6rem 0.4rem", textAlign:"center", position:"relative" }}>
+                              {isSpell && <div style={{ position:"absolute", top:2, right:4, fontSize:"0.5rem", color:"#a78bfa" }}>*</div>}
+                              <div style={{ color:"#94a3b8", fontSize:"0.62rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>{short}</div>
+                              <div style={{ color:"#f8fafc", fontSize:"1.35rem", fontWeight:700, lineHeight:1.1 }}>{score}</div>
+                              <div style={{ color: mod >= 0 ? "#34d399" : "#f87171", fontSize:"0.85rem", fontWeight:700 }}>{signedModifier(mod)}</div>
+                              <div style={{ color:"#475569", fontSize:"0.55rem" }}>{name}</div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                      <div style={{ color:"#64748b", fontSize:"0.65rem", marginTop:4 }}>* = abilita da incantatore</div>
+                    </div>
+                  );
+                })()}
                 <BigBtn onClick={handleLevelUp} gold disabled={!canLevelUp}>Aumenta di livello</BigBtn>
               </Card>
             </div>
