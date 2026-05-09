@@ -1814,7 +1814,7 @@ function MasterPanel({ setScreen }) {
       <div style={{ display:"flex", gap:6, marginBottom:"1.2rem", flexWrap:"wrap" }}>
         {TABS.map(t=>(
           <button key={t.k} onClick={()=>{ setEditQ(null); setEditM(null); setTab(t.k); }}
-            style={{ padding:"0.5rem 1.1rem", background:tab===t.k?"rgba(109,40,217,0.35)":"rgba(255,255,255,0.03)", border:`1px solid ${tab===t.k?"#7c3aed":"#374151"}`, borderRadius:4, color:tab===t.k?"#c4b5fd":"#6b7280", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.82rem", letterSpacing:"0.05em" }}>
+            style={{ padding:"0.5rem 1.1rem", background:tab===t.k?"#4c1d95":"rgba(15,23,42,0.92)", border:`1px solid ${tab===t.k?"#c4b5fd":"#64748b"}`, borderRadius:4, color:tab===t.k?"#ffffff":"#e2e8f0", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.82rem", letterSpacing:"0.05em", fontWeight:700, boxShadow:tab===t.k?"0 0 0 1px rgba(196,181,253,0.2), 0 8px 20px rgba(76,29,149,0.32)":"0 6px 16px rgba(0,0,0,0.2)", textShadow:"0 1px 2px rgba(0,0,0,0.75)" }}>
             {t.l}
           </button>
         ))}
@@ -2412,6 +2412,9 @@ function PartiesView() {
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))", gap:12 }}>
         {parties.map(code=>{
           const members = partyPlayers[code] || [];
+          const availablePlayers = allPlayers.filter(p => p.id && p.party_code !== code);
+          const playersWithoutParty = availablePlayers.filter(p => !p.party_code);
+          const playersFromOtherParties = availablePlayers.filter(p => p.party_code);
           return (
             <div key={code} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:8, padding:"1rem" }}>
               {/* Intestazione */}
@@ -2443,31 +2446,36 @@ function PartiesView() {
               </div>
 
               {/* Aggiungi/sposta giocatore */}
-              <div style={{ marginBottom:10, background:"rgba(99,102,241,0.06)", border:"1px solid #312e81", borderRadius:6, padding:"0.6rem" }}>
-                <div style={{ fontSize:"0.7rem", color:"#818cf8", marginBottom:6 }}>Aggiungi / sposta giocatore</div>
-                <div style={{ display:"flex", gap:6 }}>
+              <div style={{ marginBottom:12, background:"rgba(30,41,59,0.92)", border:"1px solid #f59e0b", borderRadius:6, padding:"0.8rem", boxShadow:"0 10px 22px rgba(0,0,0,0.22)" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:8 }}>
+                  <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.78rem", color:"#fef3c7", fontWeight:700, letterSpacing:"0.05em" }}>Aggiungi giocatore a questo party</div>
+                  <span style={{ color:"#cbd5e1", fontSize:"0.68rem" }}>{availablePlayers.length} disponibili</span>
+                </div>
+                <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                   <select value={assignTarget[code]||""} onChange={e=>setAssignTarget(prev=>({...prev,[code]:e.target.value}))}
-                    style={{ flex:1, background:"#0f172a", border:"1px solid #312e81", color:"#e2d9c5", padding:"5px 6px", borderRadius:4, fontSize:"0.78rem" }}>
+                    disabled={!availablePlayers.length}
+                    style={{ flex:"1 1 220px", background:"#020617", border:"1px solid #94a3b8", color:"#f8fafc", padding:"8px 10px", borderRadius:4, fontSize:"0.82rem" }}>
                     <option value="">Seleziona giocatore...</option>
-                    {allPlayers.filter(p=>!p.party_code).length > 0 && (
+                    {playersWithoutParty.length > 0 && (
                       <optgroup label="Senza party">
-                        {allPlayers.filter(p=>!p.party_code).map(p=>(
+                        {playersWithoutParty.map(p=>(
                           <option key={p.id} value={p.id}>{p.name}{playerMeta[p.id]?.realPlayerName ? ` - ${playerMeta[p.id].realPlayerName}` : ""} ({CLASSES[p.class]?.name||p.class})</option>
                         ))}
                       </optgroup>
                     )}
-                    {allPlayers.filter(p=>p.party_code && p.party_code!==code).length > 0 && (
+                    {playersFromOtherParties.length > 0 && (
                       <optgroup label="Da altri party">
-                        {allPlayers.filter(p=>p.party_code && p.party_code!==code).map(p=>(
+                        {playersFromOtherParties.map(p=>(
                           <option key={p.id} value={p.id}>{p.name}{playerMeta[p.id]?.realPlayerName ? ` - ${playerMeta[p.id].realPlayerName}` : ""} [{p.party_code}]</option>
                         ))}
                       </optgroup>
                     )}
                   </select>
                   <SmallBtn disabled={!!working[code+"_assign"]} onClick={()=>handleAssignPlayer(code)}>
-                    {working[code+"_assign"] ? "..." : "Assegna"}
+                    {working[code+"_assign"] ? "Sposto..." : "Aggiungi al party"}
                   </SmallBtn>
                 </div>
+                {!availablePlayers.length && <div style={{ color:"#94a3b8", fontSize:"0.72rem", marginTop:8 }}>Nessun altro giocatore disponibile da assegnare a questo party.</div>}
               </div>
 
               {/* Azioni */}
@@ -4693,10 +4701,10 @@ function HpBar({ cur, max, red }) {
   );
 }
 function BigBtn({ children, onClick, gold, dark, icon, disabled }) {
-  const base = { padding:"0.6rem 1.2rem", borderRadius:5, cursor:disabled?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.82rem", letterSpacing:"0.06em", border:"none", opacity:disabled?0.45:1, display:"inline-flex", alignItems:"center", gap:6 };
-  if(gold) return <button onClick={onClick} disabled={disabled} style={{...base,background:"linear-gradient(135deg,#92400e,#d97706)",color:"#fef3c7",border:"1px solid #f59e0b"}}>{icon&&<span>{icon}</span>}{children}</button>;
-  if(dark) return <button onClick={onClick} disabled={disabled} style={{...base,background:"rgba(255,255,255,0.05)",color:"#9ca3af",border:"1px solid #1f2937"}}>{icon&&<span>{icon}</span>}{children}</button>;
-  return <button onClick={onClick} disabled={disabled} style={{...base,background:"rgba(109,40,217,0.3)",color:"#c4b5fd",border:"1px solid #6d28d9"}}>{icon&&<span>{icon}</span>}{children}</button>;
+  const base = { padding:"0.6rem 1.2rem", borderRadius:5, cursor:disabled?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.82rem", letterSpacing:"0.06em", border:"none", opacity:disabled?0.45:1, display:"inline-flex", alignItems:"center", gap:6, fontWeight:700, textShadow:"0 1px 2px rgba(0,0,0,0.75)", boxShadow:"0 8px 20px rgba(0,0,0,0.24)" };
+  if(gold) return <button onClick={onClick} disabled={disabled} style={{...base,background:"linear-gradient(135deg,#92400e,#d97706)",color:"#fff7ed",border:"1px solid #fbbf24"}}>{icon&&<span>{icon}</span>}{children}</button>;
+  if(dark) return <button onClick={onClick} disabled={disabled} style={{...base,background:"#111827",color:"#f8fafc",border:"1px solid #64748b"}}>{icon&&<span>{icon}</span>}{children}</button>;
+  return <button onClick={onClick} disabled={disabled} style={{...base,background:"#4c1d95",color:"#ffffff",border:"1px solid #a78bfa"}}>{icon&&<span>{icon}</span>}{children}</button>;
 }
 function JoinPartyWidget({ myId, currentCode }) {
   const [input, setInput] = useState("");
@@ -4708,7 +4716,7 @@ function JoinPartyWidget({ myId, currentCode }) {
     if(!code || code === currentCode) return;
     setBusy(true);
     try {
-      await supabase.from("party_state").upsert({ party_code: code, state: {}, updated_at: new Date().toISOString() });
+      await dbSavePartyState(code, { currentId:null, step:0, active:false, completed:[], combat:null });
       await supabase.from("players").update({ party_code: code, updated_at: new Date().toISOString() }).eq("id", myId);
       setDone(true);
     } catch(e) {
@@ -4740,7 +4748,7 @@ function JoinPartyWidget({ myId, currentCode }) {
 }
 
 function SmallBtn({ children, onClick, red, disabled }) {
-  return <button disabled={disabled} onClick={onClick} style={{ padding:"0.3rem 0.7rem", background:red?"rgba(239,68,68,0.12)":"rgba(255,255,255,0.04)", border:`1px solid ${red?"#ef4444":"#1f2937"}`, borderRadius:4, color:red?"#fca5a5":"#6b7280", cursor:disabled?"not-allowed":"pointer", opacity:disabled?0.5:1, fontSize:"0.78rem", fontFamily:"inherit" }}>{children}</button>;
+  return <button disabled={disabled} onClick={onClick} style={{ padding:"0.42rem 0.78rem", background:red?"#7f1d1d":"#1e293b", border:`1px solid ${red?"#fca5a5":"#94a3b8"}`, borderRadius:4, color:red?"#fff1f2":"#f8fafc", cursor:disabled?"not-allowed":"pointer", opacity:disabled?0.5:1, fontSize:"0.78rem", fontFamily:"inherit", fontWeight:700, boxShadow:"0 6px 14px rgba(0,0,0,0.22)", textShadow:"0 1px 2px rgba(0,0,0,0.75)" }}>{children}</button>;
 }
 function Card({ title, children }) {
   return (
