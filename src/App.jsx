@@ -1708,6 +1708,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
       if(saveError || !savedPlayer?.id) throw saveError || new Error("Salvataggio personaggio fallito");
       await dbAddPlayerItem(savedPlayer.id, "weapon_moonfork_dagger");
       await dbAddPlayerItem(savedPlayer.id, "potion_full_heal", 2);
+      await dbAddPlayerItem(savedPlayer.id, "potion_escape", 2);
       saveStoredCharacterGender(savedPlayer.id, gender);
       await dbSavePlayerMasterMeta({
         playerId: savedPlayer.id,
