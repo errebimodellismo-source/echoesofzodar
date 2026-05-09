@@ -827,7 +827,7 @@ async function dbGetMessages(partyCode) {
 }
 
 async function dbSavePartyState(partyCode, state) {
-  await supabase.from("party_state").upsert({
+  const { error } = await supabase.from("party_state").upsert({
     party_code: partyCode,
     quest_id: state.currentId,
     quest_step: state.step,
@@ -836,6 +836,7 @@ async function dbSavePartyState(partyCode, state) {
     combat: state.combat || null,
     updated_at: new Date().toISOString(),
   });
+  if (error) throw error;
 }
 
 async function dbGetPartyState(partyCode) {
@@ -2189,10 +2190,20 @@ function PartiesView() {
   const [error, setError] = useState(null);
 
   const reload = async () => {
-    const { data, error } = await supabase.from("players").select("id,name,party_code,class,level,hp,max_hp");
-    if(error) { setError(error.message || "Impossibile caricare i party"); return; }
+    const [{ data, error }, { data: stateRows, error: stateError }] = await Promise.all([
+      supabase.from("players").select("id,name,party_code,class,level,hp,max_hp"),
+      supabase.from("party_state").select("party_code"),
+    ]);
+    if(error || stateError) {
+      setError((error || stateError)?.message || "Impossibile caricare i party");
+      return;
+    }
+    setError(null);
     setAllPlayers(data || []);
-    const codes = Array.from(new Set((data||[]).map(r=>r.party_code).filter(Boolean)));
+    const codes = Array.from(new Set([
+      ...(stateRows || []).map(r=>r.party_code).filter(Boolean),
+      ...(data || []).map(r=>r.party_code).filter(Boolean),
+    ])).sort();
     setParties(codes);
     const grouped = {};
     for(const p of (data||[])) {
@@ -2216,7 +2227,9 @@ function PartiesView() {
     if(parties.includes(code)) { alert(`Il party "${code}" esiste gia'!`); return; }
     setCreating(true);
     try {
-      await supabase.from("party_state").upsert({ party_code: code, state: {}, updated_at: new Date().toISOString() });
+      await dbSavePartyState(code, { currentId:null, step:0, active:false, completed:[], combat:null });
+      setParties(prev=>prev.includes(code) ? prev : [...prev, code].sort());
+      setPartyPlayers(prev=>({...prev, [code]: prev[code] || []}));
       setNewCode("");
       await reload();
       alert(`Party "${code}" creato!\nCondividi questo codice con i tuoi giocatori.`);
