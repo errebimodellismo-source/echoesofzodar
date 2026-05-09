@@ -1230,12 +1230,16 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
 /* ----------------------------------------------
    MASTER PANEL AUTH WRAPPER
 ---------------------------------------------- */
-function MasterPanelAuth({ setScreen }) {
+function MasterPanelAuth({ setScreen, authUser }) {
   const [pwd, setPwd] = useState("");
-  const [ok, setOk] = useState(false);
+  const [ok, setOk] = useState(() => canAccessMasterPanel(authUser));
   const [err, setErr] = useState(false);
 
-  if(ok) return <MasterPanel setScreen={setScreen} />;
+  useEffect(() => {
+    if(canAccessMasterPanel(authUser)) setOk(true);
+  }, [authUser]);
+
+  if(ok) return <MasterPanel setScreen={setScreen} authUser={authUser} />;
 
   return (
     <div style={{ minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", position:"relative" }}>
@@ -1689,7 +1693,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
 /* ----------------------------------------------
    MASTER PANEL
 ---------------------------------------------- */
-function MasterPanel({ setScreen }) {
+function MasterPanel({ setScreen, authUser }) {
   const [tab, setTab]       = useState("world");
   const [meta, setMeta]     = useState(getMeta());
   const [quests, setQuests] = useState(getQuests());
@@ -1811,6 +1815,11 @@ function MasterPanel({ setScreen }) {
         <BigBtn onClick={saveAll} gold icon={saved?"?":"⭐"}>{saved?"Salvato!":"Salva tutto"}</BigBtn>
         <SmallBtn onClick={()=>setScreen("landing")}>← Torna al menu</SmallBtn>
       </div>
+      {!canAccessMasterPanel(authUser) && (
+        <div style={{ background:"rgba(127,29,29,0.88)", border:"1px solid #fca5a5", color:"#fff1f2", borderRadius:6, padding:"0.85rem 1rem", marginBottom:"1rem", fontSize:"0.86rem", lineHeight:1.45 }}>
+          <strong>Accesso Master parziale.</strong> La password apre il pannello, ma per vedere e spostare i personaggi devi accedere al sito con l'account email Master autorizzato. Senza quella sessione Supabase la lista giocatori puo' risultare vuota.
+        </div>
+      )}
       <div style={{ display:"flex", gap:6, marginBottom:"1.2rem", flexWrap:"wrap" }}>
         {TABS.map(t=>(
           <button key={t.k} onClick={()=>{ setEditQ(null); setEditM(null); setTab(t.k); }}
@@ -2108,15 +2117,15 @@ function MasterPanel({ setScreen }) {
         </div>
       )}
 
-      {tab==="players" && <PlayersView />}
-      {tab==="party" && <PartiesView />}
+      {tab==="players" && <PlayersView authUser={authUser} />}
+      {tab==="party" && <PartiesView authUser={authUser} />}
       {tab==="market" && <MarketView />}
       {tab==="users" && <UsersView />}
     </div>
   );
 }
 
-function PlayersView() {
+function PlayersView({ authUser }) {
   const [players, setPlayers] = useState([]);
   const [partyStates, setPartyStates] = useState({});
   const [playerMeta, setPlayerMeta] = useState({});
@@ -2166,6 +2175,11 @@ function PlayersView() {
 
   return (
     <div>
+      {!canAccessMasterPanel(authUser) && (
+        <div style={{ background:"rgba(127,29,29,0.78)", border:"1px solid #fca5a5", color:"#fff1f2", borderRadius:6, padding:"0.8rem 1rem", marginBottom:"1rem", fontSize:"0.82rem", lineHeight:1.45 }}>
+          Per vedere tutti gli avventurieri devi accedere con l'account Master autorizzato. La sola password non ha i permessi database sui personaggi.
+        </div>
+      )}
       <p style={{ color:"#94a3b8", fontSize:"0.85rem", marginBottom:"1rem" }}>{players.length} avventurieri — aggiornamento automatico</p>
       {!players.length && <div style={{ color:"#94a3b8", textAlign:"center", padding:"3rem", border:"1px dashed #374151", borderRadius:6 }}>Nessun giocatore ancora.</div>}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:12 }}>
@@ -2249,7 +2263,7 @@ function PlayersView() {
   );
 }
 
-function PartiesView() {
+function PartiesView({ authUser }) {
   const [parties, setParties] = useState([]);
   const [partyPlayers, setPartyPlayers] = useState({});
   const [allPlayers, setAllPlayers] = useState([]);
@@ -2387,6 +2401,11 @@ function PartiesView() {
 
   return (
     <div>
+      {!canAccessMasterPanel(authUser) && (
+        <div style={{ background:"rgba(127,29,29,0.78)", border:"1px solid #fca5a5", color:"#fff1f2", borderRadius:6, padding:"0.8rem 1rem", marginBottom:"1rem", fontSize:"0.82rem", lineHeight:1.45 }}>
+          Per assegnare player ai party devi accedere con l'account Master autorizzato. Se entri solo con la password, Supabase non mostra i personaggi e il menu resta a 0 disponibili.
+        </div>
+      )}
       {/* Crea nuovo party */}
       <div style={{ marginBottom:"1.5rem", background:"rgba(99,102,241,0.08)", border:"1px solid #4338ca", borderRadius:8, padding:"1rem" }}>
         <div style={{ fontFamily:"'Cinzel',serif", color:"#a5b4fc", fontSize:"0.9rem", fontWeight:700, marginBottom:"0.75rem" }}>✨ Crea Nuovo Party</div>
