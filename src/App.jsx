@@ -780,6 +780,57 @@ async function dbSendMessage(msg) {
   });
 }
 
+function parsePlayerMasterMeta(msg) {
+  try {
+    const parsed = JSON.parse(msg?.content || "{}");
+    if(!parsed?.playerId) return null;
+    return {
+      playerId: parsed.playerId,
+      realPlayerName: String(parsed.realPlayerName || "").trim(),
+      heroName: String(parsed.heroName || "").trim(),
+      partyCode: parsed.partyCode || msg.party_code || "",
+      updatedAt: parsed.updatedAt || msg.created_at || "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function dbSavePlayerMasterMeta({ playerId, partyCode, heroName, realPlayerName }) {
+  const cleanRealName = String(realPlayerName || "").trim();
+  if(!playerId || !cleanRealName) return;
+  const content = JSON.stringify({
+    playerId,
+    partyCode,
+    heroName,
+    realPlayerName: cleanRealName,
+    updatedAt: new Date().toISOString(),
+  });
+  const { error } = await supabase.from("messages").insert({
+    party_code: partyCode,
+    author: `player_meta:${playerId}`,
+    content,
+    type: "player_meta",
+  });
+  if(error) throw error;
+}
+
+async function dbGetPlayerMasterMeta() {
+  const { data, error } = await supabase
+    .from("messages")
+    .select("party_code,author,content,type,created_at")
+    .eq("type", "player_meta")
+    .order("created_at", { ascending: true })
+    .limit(2000);
+  if(error) throw error;
+  const byPlayer = {};
+  for(const msg of (data || [])) {
+    const meta = parsePlayerMasterMeta(msg);
+    if(meta) byPlayer[meta.playerId] = meta;
+  }
+  return byPlayer;
+}
+
 async function dbSavePlayer(p) {
   const { data, error } = await supabase.from("players").upsert({
     id: p.id, name: p.name, party_code: p.partyCode,
@@ -823,7 +874,7 @@ async function dbGetMessages(partyCode) {
   let query = supabase.from("messages").select("*");
   if(partyCode) query = query.eq("party_code", partyCode);
   const { data } = await query.order("created_at", { ascending: true }).limit(partyCode ? 300 : 400);
-  return data || [];
+  return (data || []).filter(msg => msg.type !== "player_meta");
 }
 
 async function dbSavePartyState(partyCode, state) {
@@ -1475,6 +1526,7 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
 ---------------------------------------------- */
 function CreateChar({ setScreen, goGame, authUser }) {
   const [name, setName] = useState("");
+  const [realPlayerName, setRealPlayerName] = useState("");
   const [cls,  setCls]  = useState("warrior");
   const [race, setRace] = useState("human");
   const [gender, setGender] = useState("male");
@@ -1484,10 +1536,10 @@ function CreateChar({ setScreen, goGame, authUser }) {
   const c = CLASSES[cls]; const r = RACES[race];
 
   async function create() {
-    if(!name.trim() || loading) return;
+    if(!name.trim() || !realPlayerName.trim() || loading) return;
     setLoading(true);
     try {
-      debugCharacterFlow("create_start", { accountId: authUser?.id || null, name: name.trim(), class: cls, race });
+      debugCharacterFlow("create_start", { accountId: authUser?.id || null, name: name.trim(), realPlayerName: realPlayerName.trim(), class: cls, race });
       const id = `pc_${Date.now().toString(36)}_${Math.random().toString(36).slice(2,8)}`;
       const partyCode = code.trim().toUpperCase() || Math.random().toString(36).slice(2,6).toUpperCase();
       const maxHp = c.hp + r.hpB;
@@ -1510,6 +1562,12 @@ function CreateChar({ setScreen, goGame, authUser }) {
       });
       if(saveError || !savedPlayer?.id) throw saveError || new Error("Salvataggio personaggio fallito");
       saveStoredCharacterGender(savedPlayer.id, gender);
+      await dbSavePlayerMasterMeta({
+        playerId: savedPlayer.id,
+        partyCode,
+        heroName: player.name,
+        realPlayerName: realPlayerName.trim(),
+      });
       const charactersAfterSave = authUser?.id ? await dbGetAccountCharacters(authUser.id) : [];
       debugCharacterFlow("character_list_after_save", {
         accountId: authUser?.id || null,
@@ -1533,7 +1591,8 @@ function CreateChar({ setScreen, goGame, authUser }) {
     }
   }
 
-  const steps = ["Nome","Classe","Razza e Genere","Party"];
+  const canContinueFromName = name.trim() && realPlayerName.trim();
+  const steps = ["Nomi","Classe","Razza e Genere","Party"];
   return (
     <div style={{ position:"relative", zIndex:1, maxWidth:620, margin:"0 auto", padding:"1.5rem 1rem", minHeight:"100vh" }}>
       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:"1.5rem" }}>
@@ -1549,9 +1608,15 @@ function CreateChar({ setScreen, goGame, authUser }) {
       </div>
 
       {step===0 && (
-        <Card title="✏️ Come ti chiamerai?">
-          <input style={inputStyle} value={name} onChange={e=>setName(e.target.value)} placeholder="Il nome del tuo eroe..." maxLength={24} autoFocus onKeyDown={e=>e.key==="Enter"&&name.trim()&&setStep(1)} />
-          <div style={{ marginTop:"1rem" }}><BigBtn onClick={()=>name.trim()&&setStep(1)} gold disabled={!name.trim()}>Avanti →</BigBtn></div>
+        <Card title="✏️ Nomi dell'eroe e del giocatore">
+          <label style={labelStyle}>Nome dell'eroe</label>
+          <input style={inputStyle} value={name} onChange={e=>setName(e.target.value)} placeholder="Il nome del tuo eroe..." maxLength={24} autoFocus onKeyDown={e=>e.key==="Enter"&&canContinueFromName&&setStep(1)} />
+          <label style={{...labelStyle, marginTop:"0.9rem"}}>Nome e cognome del giocatore</label>
+          <input style={inputStyle} value={realPlayerName} onChange={e=>setRealPlayerName(e.target.value)} placeholder="Es: Mario Rossi" maxLength={60} onKeyDown={e=>e.key==="Enter"&&canContinueFromName&&setStep(1)} />
+          <p style={{ color:"#94a3b8", fontSize:"0.76rem", margin:"8px 0 0", lineHeight:1.5 }}>
+            Serve solo al Master per riconoscere e organizzare tavoli, party e ricompense. Gli altri giocatori vedranno solo il nome dell'eroe.
+          </p>
+          <div style={{ marginTop:"1rem" }}><BigBtn onClick={()=>canContinueFromName&&setStep(1)} gold disabled={!canContinueFromName}>Avanti →</BigBtn></div>
         </Card>
       )}
       {step===1 && (
@@ -2054,12 +2119,17 @@ function MasterPanel({ setScreen }) {
 function PlayersView() {
   const [players, setPlayers] = useState([]);
   const [partyStates, setPartyStates] = useState({});
+  const [playerMeta, setPlayerMeta] = useState({});
   const [busy, setBusy] = useState({});
 
   useEffect(()=>{
     const load = async () => {
-      const { data } = await supabase.from("players").select("*").order("level", { ascending:false });
+      const [{ data }, meta] = await Promise.all([
+        supabase.from("players").select("*").order("level", { ascending:false }),
+        dbGetPlayerMasterMeta().catch(() => ({})),
+      ]);
       setPlayers(data||[]);
+      setPlayerMeta(meta || {});
       // load party states for buff display
       const codes = [...new Set((data||[]).map(p=>p.party_code).filter(Boolean))];
       const states = {};
@@ -2109,12 +2179,14 @@ function PlayersView() {
           const isBusy = !!busy[p.id];
           const pState = partyStates[p.party_code] || {};
           const pBuffs = (pState.masterBuffs || {})[p.id] || {};
+          const masterMeta = playerMeta[p.id] || {};
           return (
             <div key={p?.id} style={{ background:"rgba(15,23,42,0.85)", border:"1px solid rgba(148,163,184,0.2)", borderRadius:10, padding:"1rem" }}>
               <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:8 }}>
                 <ArtThumb src={getPlayerPortrait({ id:p?.id, class:p?.class, race:p?.race, gender:p?.gender, portrait:p?.portrait, image:p?.image })} alt={p?.name||"PG"} size={56} radius={12} />
                 <div style={{ flex:1 }}>
                   <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, fontSize:"0.95rem" }}>{p?.name}</div>
+                  {masterMeta.realPlayerName && <div style={{ color:"#fbbf24", fontSize:"0.72rem", marginTop:2 }}>Giocatore: {masterMeta.realPlayerName}</div>}
                   <div style={{ color:"#94a3b8", fontSize:"0.7rem" }}>{race.emoji} {race.name} · {cls.name} · Lv.{p?.level||1}</div>
                   <div style={{ color:"#94a3b8", fontSize:"0.68rem", marginTop:2 }}>❤️ {p?.hp||0}/{p?.max_hp||0} · 💰 {p?.gold||0} · ⭐ {p?.xp||0} XP</div>
                 </div>
@@ -2181,6 +2253,7 @@ function PartiesView() {
   const [parties, setParties] = useState([]);
   const [partyPlayers, setPartyPlayers] = useState({});
   const [allPlayers, setAllPlayers] = useState([]);
+  const [playerMeta, setPlayerMeta] = useState({});
   const [working, setWorking] = useState({});
   const [banTarget, setBanTarget] = useState({});
   const [assignTarget, setAssignTarget] = useState({});
@@ -2190,9 +2263,10 @@ function PartiesView() {
   const [error, setError] = useState(null);
 
   const reload = async () => {
-    const [{ data, error }, { data: stateRows, error: stateError }] = await Promise.all([
+    const [{ data, error }, { data: stateRows, error: stateError }, meta] = await Promise.all([
       supabase.from("players").select("id,name,party_code,class,level,hp,max_hp"),
       supabase.from("party_state").select("party_code"),
+      dbGetPlayerMasterMeta().catch(() => ({})),
     ]);
     if(error || stateError) {
       setError((error || stateError)?.message || "Impossibile caricare i party");
@@ -2200,6 +2274,7 @@ function PartiesView() {
     }
     setError(null);
     setAllPlayers(data || []);
+    setPlayerMeta(meta || {});
     const codes = Array.from(new Set([
       ...(stateRows || []).map(r=>r.party_code).filter(Boolean),
       ...(data || []).map(r=>r.party_code).filter(Boolean),
@@ -2246,6 +2321,14 @@ function PartiesView() {
     setWorking(w=>({...w,[partyCode+"_assign"]:true}));
     try {
       await supabase.from("players").update({ party_code: partyCode, updated_at: new Date().toISOString() }).eq("id", pid);
+      if(playerMeta[pid]?.realPlayerName) {
+        await dbSavePlayerMasterMeta({
+          playerId: pid,
+          partyCode,
+          heroName: player.name,
+          realPlayerName: playerMeta[pid].realPlayerName,
+        });
+      }
       await reload();
       setAssignTarget(prev=>({...prev,[partyCode]:""}));
       alert(`${player.name} assegnato al party ${partyCode}!\nIl giocatore deve ricaricare la pagina.`);
@@ -2349,7 +2432,10 @@ function PartiesView() {
                 {members.map(p=>(
                   <div key={p.id} style={{ display:"flex", gap:6, alignItems:"center", padding:"4px 0", borderBottom:"1px solid #1a2030" }}>
                     <span style={{ fontSize:"0.85rem" }}>{CLASSES[p.class]?.emoji || "⚔️"}</span>
-                    <span style={{ flex:1, fontSize:"0.8rem", color:"#d1d5db" }}>{p.name}</span>
+                    <span style={{ flex:1, fontSize:"0.8rem", color:"#d1d5db" }}>
+                      {p.name}
+                      {playerMeta[p.id]?.realPlayerName && <span style={{ display:"block", color:"#fbbf24", fontSize:"0.68rem", marginTop:2 }}>Giocatore: {playerMeta[p.id].realPlayerName}</span>}
+                    </span>
                     <span style={{ fontSize:"0.68rem", color:"#64748b" }}>Lv.{p.level||1}</span>
                     <span style={{ fontSize:"0.68rem", color:(p.hp||0)/(p.max_hp||1)>0.5?"#4ade80":"#fca5a5" }}>{p.hp||0}/{p.max_hp||0} HP</span>
                   </div>
@@ -2366,14 +2452,14 @@ function PartiesView() {
                     {allPlayers.filter(p=>!p.party_code).length > 0 && (
                       <optgroup label="Senza party">
                         {allPlayers.filter(p=>!p.party_code).map(p=>(
-                          <option key={p.id} value={p.id}>{p.name} ({CLASSES[p.class]?.name||p.class})</option>
+                          <option key={p.id} value={p.id}>{p.name}{playerMeta[p.id]?.realPlayerName ? ` - ${playerMeta[p.id].realPlayerName}` : ""} ({CLASSES[p.class]?.name||p.class})</option>
                         ))}
                       </optgroup>
                     )}
                     {allPlayers.filter(p=>p.party_code && p.party_code!==code).length > 0 && (
                       <optgroup label="Da altri party">
                         {allPlayers.filter(p=>p.party_code && p.party_code!==code).map(p=>(
-                          <option key={p.id} value={p.id}>{p.name} [{p.party_code}]</option>
+                          <option key={p.id} value={p.id}>{p.name}{playerMeta[p.id]?.realPlayerName ? ` - ${playerMeta[p.id].realPlayerName}` : ""} [{p.party_code}]</option>
                         ))}
                       </optgroup>
                     )}
