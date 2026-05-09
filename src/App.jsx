@@ -120,8 +120,9 @@ function fmt(t=""){
     .replace(/\*(.+?)\*/g,"<em>$1</em>")
     .replace(/\n/g,"<br/>");
 }
+let _masterPasswordVerified = false;
 function canAccessMasterPanel(user) {
-  if(!MASTER_EMAILS.length) return true; // nessuna email configurata = password basta
+  if(_masterPasswordVerified) return true;
   const email = user?.email?.trim().toLowerCase();
   return !!email && MASTER_EMAILS.includes(email);
 }
@@ -1528,11 +1529,11 @@ function MasterPanelAuth({ setScreen, authUser }) {
           value={pwd}
           onChange={e=>{ setPwd(e.target.value); setErr(false); }}
           placeholder="Password"
-          onKeyDown={e=>e.key==="Enter"&&(pwd===MASTER_PASSWORD?setOk(true):setErr(true))}
+          onKeyDown={e=>{ if(e.key==="Enter"){ if(pwd===MASTER_PASSWORD){ _masterPasswordVerified=true; setOk(true); } else setErr(true); } }}
         />
         {err && <div style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:12 }}>Password errata.</div>}
         <div style={{ display:"flex", gap:8, justifyContent:"center" }}>
-          <BigBtn onClick={()=>pwd===MASTER_PASSWORD?setOk(true):setErr(true)} gold icon="🗝️">Entra</BigBtn>
+          <BigBtn onClick={()=>{ if(pwd===MASTER_PASSWORD){ _masterPasswordVerified=true; setOk(true); } else setErr(true); }} gold icon="🗝️">Entra</BigBtn>
           <SmallBtn onClick={()=>setScreen("landing")}>← Torna alla home</SmallBtn>
         </div>
       </div>
