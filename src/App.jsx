@@ -149,6 +149,26 @@ function applyLevelUpToPlayer(player) {
   };
   return { player:next, leveled:true, needed, gain };
 }
+function monsterXpValue(monster) {
+  const hpSource = monster?.maxHp ?? monster?.max_hp ?? (Number(monster?.hp) > 0 ? monster?.hp : undefined);
+  if(hpSource == null && Number(monster?.xp) > 0) return Number(monster.xp);
+  const hp = Number(hpSource) || 0;
+  const atk = Number(monster?.atk) || 0;
+  const def = Number(monster?.def) || 0;
+  const bossMultiplier = monster?.isBoss ? 1.75 : 1;
+  const raw = (hp * 0.45) + (atk * 4.2) + (def * 3.2);
+  return Math.max(5, Math.round((raw * bossMultiplier) / 5) * 5);
+}
+function monsterGoldValue(monster) {
+  return Math.max(1, Math.floor(monsterXpValue(monster) * 0.35));
+}
+function monsterThreatTier(monster) {
+  if(monster?.isBoss) return "boss";
+  const xp = monsterXpValue(monster);
+  if(xp >= 120) return "hard";
+  if(xp >= 55) return "mid";
+  return "base";
+}
 
 function getPortraitPath(cls, race, gender) {
   return `/assets/portraits/${cls}_${race}_${gender}.png`;
@@ -1835,12 +1855,21 @@ function MasterPanel({ setScreen, authUser }) {
     setEditQ(q=>({...q,steps:[...q.steps,{ text:newStep.trim(), choices:{ good:{}, neutral:{}, bad:{} } }]}));
     setNewStep("");
   }
-  function addEnemyToQ(monster) { setEditQ(q=>({...q,enemies:[...q.enemies,{...monster,maxHp:monster.hp,id:"e_"+Date.now()}]})); }
+  function addEnemyToQ(monster) {
+    const maxHp = monster.maxHp || monster.hp;
+    const xp = monsterXpValue({ ...monster, maxHp });
+    setEditQ(q=>({...q,enemies:[...q.enemies,{...monster,maxHp,xp,id:"e_"+Date.now()}]}));
+  }
   function addMonster() {
     const m={id:"m_"+Date.now(),name:"Nuova Creatura",emoji:"🧩",hp:30,atk:8,def:3,xp:20,desc:"",isBoss:false};
+    m.xp = monsterXpValue(m);
     setMonsters(prev=>[...prev,m]); setEditM({...m});
   }
-  function saveEditM() { setMonsters(prev=>prev.map(x=>x.id===editM.id?editM:x)); setEditM(null); }
+  function saveEditM() {
+    const normalized = { ...editM, xp: monsterXpValue(editM) };
+    setMonsters(prev=>prev.map(x=>x.id===normalized.id?normalized:x));
+    setEditM(null);
+  }
   function syncDefaultQuests() {
     const current = quests.map(normalizeQuest);
     const currentIds = new Set(current.map(q => q.id));
@@ -1897,8 +1926,7 @@ function MasterPanel({ setScreen, authUser }) {
   });
   const visibleMonsters = monsters.filter(m => {
     const term = monsterSearch.trim().toLowerCase();
-    const hp = Number(m.hp) || 0;
-    const tier = m.isBoss || hp >= 130 ? "boss" : hp >= 85 ? "hard" : hp >= 27 ? "mid" : "base";
+    const tier = monsterThreatTier(m);
     const matchesTerm = !term || [m.name, m.desc, m.id].some(value => String(value || "").toLowerCase().includes(term));
     const matchesTier = monsterTierFilter === "all" || tier === monsterTierFilter;
     return matchesTerm && matchesTier;
@@ -2125,7 +2153,7 @@ function MasterPanel({ setScreen, authUser }) {
                 <div key={i} style={{ display:"flex", alignItems:"center", gap:8, padding:"0.4rem 0.7rem", background:"rgba(239,68,68,0.06)", border:`1px solid ${en.isBoss?"#f59e0b":"rgba(239,68,68,0.2)"}`, borderRadius:4 }}>
                   <span style={{ fontSize:"1.2rem" }}>{en.emoji}</span>
                   <span style={{ color:en.isBoss?"#fbbf24":"#e2d9c5", fontWeight:en.isBoss?700:400 }}>{en.name}{en.isBoss?" ⭐":""}</span>
-                  <span style={{ color:"#94a3b8", fontSize:"0.72rem" }}>❤️{en.hp} ⚔️{en.atk} 🛡️{en.def} ⭐{en.xp}xp</span>
+                  <span style={{ color:"#94a3b8", fontSize:"0.72rem" }}>❤️{en.hp} ⚔️{en.atk} 🛡️{en.def} ⭐{monsterXpValue(en)}xp</span>
                   <button onClick={()=>setEditQ(q=>({...q,enemies:q.enemies.filter((_,j)=>j!==i)}))} style={{ marginLeft:"auto", ...iconBtnStyle, color:"#f87171" }}>?</button>
                 </div>
               ))}
@@ -2173,7 +2201,7 @@ function MasterPanel({ setScreen, authUser }) {
                   </div>
                 </div>
                 <div style={{ display:"flex", gap:10, fontSize:"0.73rem", color:"#94a3b8", marginBottom:8 }}>
-                  <span>❤️{m.hp}</span><span>⚔️{m.atk}</span><span>🛡️{m.def}</span><span>⭐{m.xp}xp</span>
+                  <span>❤️{m.hp}</span><span>⚔️{m.atk}</span><span>🛡️{m.def}</span><span>⭐{monsterXpValue(m)}xp</span>
                 </div>
                 <div style={{ display:"flex", gap:6 }}>
                   <SmallBtn onClick={()=>setEditM({...m})}>✏️</SmallBtn>
@@ -2204,7 +2232,11 @@ function MasterPanel({ setScreen, authUser }) {
               <div><label style={labelStyle}>HP</label><input style={inputStyle} type="number" value={editM.hp} onChange={e=>setEditM(m=>({...m,hp:+e.target.value}))} /></div>
               <div><label style={labelStyle}>ATK</label><input style={inputStyle} type="number" value={editM.atk} onChange={e=>setEditM(m=>({...m,atk:+e.target.value}))} /></div>
               <div><label style={labelStyle}>DEF</label><input style={inputStyle} type="number" value={editM.def} onChange={e=>setEditM(m=>({...m,def:+e.target.value}))} /></div>
-              <div><label style={labelStyle}>XP</label><input style={inputStyle} type="number" value={editM.xp} onChange={e=>setEditM(m=>({...m,xp:+e.target.value}))} /></div>
+              <div>
+                <label style={labelStyle}>XP calcolata</label>
+                <input style={{...inputStyle,color:"#fbbf24",fontWeight:700}} type="number" value={monsterXpValue(editM)} readOnly />
+                <div style={{ color:"#94a3b8", fontSize:"0.72rem", marginTop:4 }}>Si aggiorna da HP, ATK, DEF e Boss.</div>
+              </div>
             </div>
             <label style={{...labelStyle,marginTop:10}}>Lore</label>
             <textarea style={{...inputStyle,height:70,resize:"vertical"}} value={editM.desc} onChange={e=>setEditM(m=>({...m,desc:e.target.value}))} />
@@ -3818,9 +3850,9 @@ function GameScreen({ myId, setScreen }) {
     // --- Distribute XP and gold from slain monsters ---
     const slain = (latestCombat?.combatants || [])
       .filter(c => !c.isPlayer && c.hp <= 0)
-      .map(c => ({ name: c.name, emoji: c.emoji || "👾", xp: c.xp || 0 }));
+      .map(c => ({ name: c.name, emoji: c.emoji || "👾", xp: monsterXpValue(c), gold: monsterGoldValue(c) }));
     const totalXp = slain.reduce((s, m) => s + m.xp, 0);
-    const totalGold = slain.reduce((s, m) => s + Math.floor(m.xp * 0.35), 0);
+    const totalGold = slain.reduce((s, m) => s + m.gold, 0);
     const partyCount = Math.max(partyPlayers.length, 1);
     const xpEach = Math.floor(totalXp / partyCount);
     const goldEach = Math.floor(totalGold / partyCount);
@@ -3908,7 +3940,10 @@ ${stepText(step)}`, "quest","Master");
   }
 
   async function startCombatStep(stepData) {
-    const monsters = (stepData.monsters||[]).map(e=>({ ...e, hp:e.maxHp||e.hp, maxHp:e.maxHp||e.hp, weaponDie:e.weaponDie || getCombatDamageDie(e) }));
+    const monsters = (stepData.monsters||[]).map(e=>{
+      const maxHp = e.maxHp || e.hp;
+      return { ...e, hp:maxHp, maxHp, xp:monsterXpValue({ ...e, maxHp }), weaponDie:e.weaponDie || getCombatDamageDie(e) };
+    });
     const players = partyPlayers.map(p=>({
       id:p?.id,
       name:p?.name,
