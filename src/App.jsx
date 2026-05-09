@@ -1050,6 +1050,10 @@ async function dbAddPlayerItem(playerId, itemId, quantity=1) {
   const payload = Array.from({ length: amount }, () => ({ player_id: playerId, item_id: itemId }));
   await supabase.from("player_items").insert(payload);
 }
+async function dbTransferPlayerItem(rowId, nextPlayerId) {
+  const { error } = await supabase.from("player_items").update({ player_id: nextPlayerId }).eq("id", rowId);
+  if(error) throw error;
+}
 async function dbGetPlayerItems(playerId) {
   const { data } = await supabase.from("player_items").select("*").eq("player_id", playerId).order("created_at", { ascending: true });
   return data || [];
@@ -1684,6 +1688,8 @@ function CreateChar({ setScreen, goGame, authUser }) {
         error: saveError?.message || null,
       });
       if(saveError || !savedPlayer?.id) throw saveError || new Error("Salvataggio personaggio fallito");
+      await dbAddPlayerItem(savedPlayer.id, "weapon_moonfork_dagger");
+      await dbAddPlayerItem(savedPlayer.id, "potion_full_heal", 2);
       saveStoredCharacterGender(savedPlayer.id, gender);
       await dbSavePlayerMasterMeta({
         playerId: savedPlayer.id,
@@ -3035,6 +3041,87 @@ function InventoryView({ loading, groups, equipment, selectedItem, onSelectItem,
   );
 }
 
+function PartyTradeView({ me, players, groups, loading, equipment, onTrade }) {
+  const partyMates = (players || []).filter(p => p.id !== me?.id && !p.dead);
+  const [itemId, setItemId] = useState("");
+  const [targetId, setTargetId] = useState("");
+  const [price, setPrice] = useState(0);
+  const selectedGroup = groups.find(group => group.itemId === itemId) || null;
+  const selectedTarget = partyMates.find(p => p.id === targetId) || null;
+  const tradePrice = Math.max(0, Number(price) || 0);
+  const canTrade = !!selectedGroup && !!selectedTarget && !loading;
+
+  useEffect(() => {
+    if(groups.length && (!itemId || !groups.some(group => group.itemId === itemId))) setItemId(groups[0].itemId);
+  }, [groups, itemId]);
+  useEffect(() => {
+    if(partyMates.length && (!targetId || !partyMates.some(p => p.id === targetId))) setTargetId(partyMates[0].id);
+  }, [partyMates, targetId]);
+
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.5)" }}>
+      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🤝 Scambi del Party</h3>
+      <div style={{ maxWidth:820, margin:"0 auto", display:"grid", gap:"1rem" }}>
+        <Card title="Passa un Oggetto">
+          <p style={{ color:"#94a3b8", fontSize:"0.84rem", lineHeight:1.55, margin:"0 0 1rem" }}>
+            Scegli un compagno, un oggetto e un prezzo. Prezzo 0 significa regalo.
+          </p>
+          {!partyMates.length && <div style={{ color:"#64748b", padding:"1rem", border:"1px dashed #334155", borderRadius:6 }}>Nessun altro giocatore nel party.</div>}
+          {!loading && !groups.length && <div style={{ color:"#64748b", padding:"1rem", border:"1px dashed #334155", borderRadius:6 }}>Inventario vuoto.</div>}
+          {!!partyMates.length && !!groups.length && (
+            <>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:10 }}>
+                <div>
+                  <label style={labelStyle}>Oggetto</label>
+                  <select style={{...inputStyle,cursor:"pointer"}} value={itemId} onChange={e=>setItemId(e.target.value)}>
+                    {groups.map(group => (
+                      <option key={group.itemId} value={group.itemId}>{group.item.name} x{group.quantity}</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>A chi</label>
+                  <select style={{...inputStyle,cursor:"pointer"}} value={targetId} onChange={e=>setTargetId(e.target.value)}>
+                    {partyMates.map(p => (
+                      <option key={p.id} value={p.id}>{p.name} ({p.gold || 0} oro)</option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>Prezzo in oro</label>
+                  <input style={inputStyle} type="number" min="0" value={price} onChange={e=>setPrice(e.target.value)} />
+                </div>
+              </div>
+              {selectedGroup && (
+                <div style={{ marginTop:"1rem", background:"rgba(15,23,42,0.78)", border:"1px solid #334155", borderRadius:6, padding:"0.85rem", display:"flex", gap:10, alignItems:"center", flexWrap:"wrap" }}>
+                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={selectedGroup.item.name} size={58} />
+                  <div style={{ flex:1, minWidth:220 }}>
+                    <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700 }}>{selectedGroup.item.name}</div>
+                    <div style={{ color:"#94a3b8", fontSize:"0.78rem" }}>{itemStatSummary(selectedGroup.item).join(" • ") || selectedGroup.item.description}</div>
+                  </div>
+                  <div style={{ color:tradePrice > 0 ? "#fbbf24" : "#86efac", fontFamily:"'Cinzel',serif", fontWeight:700 }}>
+                    {tradePrice > 0 ? `${tradePrice} oro` : "Regalo"}
+                  </div>
+                </div>
+              )}
+              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:"1rem" }}>
+                <BigBtn onClick={()=>onTrade(selectedGroup, targetId, tradePrice)} gold disabled={!canTrade}>
+                  {tradePrice > 0 ? "Scambia e incassa" : "Regala oggetto"}
+                </BigBtn>
+              </div>
+            </>
+          )}
+        </Card>
+        <Card title="Regola">
+          <div style={{ color:"#cbd5e1", fontSize:"0.86rem", lineHeight:1.6 }}>
+            Il compratore deve avere abbastanza oro. Se passi l'ultima copia di un oggetto equipaggiato, viene rimosso dall'equipaggiamento prima dello scambio.
+          </div>
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip }) {
   const slots = [
     { key:"weapon", label:"Arma", fallback:"Nessuna arma equipaggiata" },
@@ -3605,6 +3692,46 @@ function GameScreen({ myId, setScreen }) {
 
     await refreshInventory(syncedPlayer);
     await addMsg(`💰 **${me.name}** vende **${group.item.name}** per ${sellPrice} oro.`, "info", "Sistema");
+  }
+
+  async function handlePartyTrade(group, targetId, price=0) {
+    if(!group?.item || !group?.entries?.length || !me || !code) return;
+    const target = partyPlayers.find(p => p.id === targetId);
+    if(!target || target.id === me.id) return;
+    const tradePrice = Math.max(0, Number(price) || 0);
+    if(tradePrice > (target.gold || 0)) {
+      window.alert(`${target.name} non ha abbastanza oro.`);
+      return;
+    }
+    const label = tradePrice > 0 ? `${tradePrice} oro` : "gratis";
+    if(!window.confirm(`Passare ${group.item.name} a ${target.name} per ${label}?`)) return;
+
+    const entryToTrade = group.entries[0];
+    const slot = itemSlot(group.item);
+    const isEquippedLastCopy = !!slot && equipment?.[slot] === group.item.id && group.quantity <= 1;
+    const nextEquipment = isEquippedLastCopy ? { ...equipment, [slot]: null } : equipment;
+    const updatedBuyer = { ...target, gold: (target.gold || 0) - tradePrice };
+    let updatedSeller = { ...me, gold: (me.gold || 0) + tradePrice };
+    if(isEquippedLastCopy) updatedSeller = applyEquipmentToPlayer(updatedSeller, nextEquipment, itemMap);
+
+    await dbTransferPlayerItem(entryToTrade.rowId, target.id);
+    await dbSavePlayer(updatedBuyer);
+    if(isEquippedLastCopy) {
+      saveStoredEquipment(myId, nextEquipment);
+      setEquipment(nextEquipment);
+    }
+    await dbSavePlayer(updatedSeller);
+    setMeRaw(updatedSeller);
+    setSelectedInventoryItemId(null);
+    await refreshInventory(updatedSeller);
+    await refreshAll(code);
+    await addMsg(
+      tradePrice > 0
+        ? `ðŸ¤ **${me.name}** passa **${group.item.name}** a **${target.name}** per **${tradePrice} oro**.`
+        : `ðŸ¤ **${me.name}** regala **${group.item.name}** a **${target.name}**.`,
+      "info",
+      "Sistema"
+    );
   }
 
   async function usePotion(entry) {
@@ -4318,7 +4445,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["trade","🤝 Scambi"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             return (
             <button key={k} onClick={()=>{ if(!combatLocked){ setTab(k); if(isMobile) setSidebarOpen(false); } }} title={combatLocked?"Non disponibile durante il combattimento":undefined}
@@ -4456,6 +4583,16 @@ ${stepText(step)}`, "quest","Master");
             onSell={handleInventorySell}
             onUse={usePotion}
             canUseConsumables={(me?.hp || 0) > 0 && !myCombatant?.dying && !myCombatant?.dead && !myCombatant?.stable}
+          />
+        )}
+        {tab==="trade" && (
+          <PartyTradeView
+            me={me}
+            players={partyPlayers}
+            groups={inventoryGroups}
+            loading={inventoryLoading}
+            equipment={equipment}
+            onTrade={handlePartyTrade}
           />
         )}
         {tab==="equipment" && (
