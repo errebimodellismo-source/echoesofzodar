@@ -796,6 +796,55 @@ function parsePlayerMasterMeta(msg) {
   }
 }
 
+function parseUserMasterMeta(msg) {
+  try {
+    const parsed = JSON.parse(msg?.content || "{}");
+    if(!parsed?.userId || !parsed?.email) return null;
+    return {
+      userId: parsed.userId,
+      email: String(parsed.email || "").trim().toLowerCase(),
+      registeredAt: parsed.registeredAt || msg.created_at || "",
+      lastSeenAt: parsed.lastSeenAt || msg.created_at || "",
+    };
+  } catch {
+    return null;
+  }
+}
+
+async function dbSaveUserMasterMeta(user, registeredAt) {
+  if(!user?.id || !user?.email) return;
+  const now = new Date().toISOString();
+  const content = JSON.stringify({
+    userId: user.id,
+    email: user.email,
+    registeredAt: registeredAt || user.created_at || now,
+    lastSeenAt: now,
+  });
+  const { error } = await supabase.from("messages").insert({
+    party_code: "__users",
+    author: `user_meta:${user.id}`,
+    content,
+    type: "user_meta",
+  });
+  if(error) console.warn("Impossibile salvare metadati utente:", error.message);
+}
+
+async function dbGetUserMasterMeta() {
+  const { data, error } = await supabase
+    .from("messages")
+    .select("party_code,author,content,type,created_at")
+    .eq("type", "user_meta")
+    .order("created_at", { ascending: true })
+    .limit(3000);
+  if(error) throw error;
+  const byUser = {};
+  for(const msg of (data || [])) {
+    const meta = parseUserMasterMeta(msg);
+    if(meta) byUser[meta.userId] = { ...(byUser[meta.userId] || {}), ...meta };
+  }
+  return byUser;
+}
+
 async function dbSavePlayerMasterMeta({ playerId, partyCode, heroName, realPlayerName }) {
   const cleanRealName = String(realPlayerName || "").trim();
   if(!playerId || !cleanRealName) return;
@@ -874,7 +923,7 @@ async function dbGetMessages(partyCode) {
   let query = supabase.from("messages").select("*");
   if(partyCode) query = query.eq("party_code", partyCode);
   const { data } = await query.order("created_at", { ascending: true }).limit(partyCode ? 300 : 400);
-  return (data || []).filter(msg => msg.type !== "player_meta");
+  return (data || []).filter(msg => !["player_meta","user_meta"].includes(msg.type));
 }
 
 async function dbSavePartyState(partyCode, state) {
@@ -1036,10 +1085,12 @@ export default function App() {
   useEffect(()=>{
     supabase.auth.getSession().then(({data:{session}})=>{
       setAuthUser(session?.user || null);
+      if(session?.user) dbSaveUserMasterMeta(session.user);
       setAuthLoading(false);
     });
     const {data:{subscription}} = supabase.auth.onAuthStateChange((_,session)=>{
       setAuthUser(session?.user || null);
+      if(session?.user) dbSaveUserMasterMeta(session.user);
     });
     return ()=>subscription.unsubscribe();
   },[]);
@@ -1164,12 +1215,14 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
       const {data,error:e} = await supabase.auth.signInWithPassword({email,password});
       if(e) { setError("Email o password errati."); setLoading(false); return; }
       setAuthUser(data.user);
+      await dbSaveUserMasterMeta(data.user);
       const savedId = (localStorage.getItem("eoz_myId") || "").trim();
       if(savedId) setMyId(savedId);
       setScreen("landing");
     } else {
-      const {error:e} = await supabase.auth.signUp({email,password});
+      const {data,error:e} = await supabase.auth.signUp({email,password});
       if(e) { setError(e.message); setLoading(false); return; }
+      if(data?.user) await dbSaveUserMasterMeta(data.user, new Date().toISOString());
       setSuccess("? Registrazione completata! Ora puoi accedere.");
       setMode("login");
     }
@@ -1787,7 +1840,7 @@ function MasterPanel({ setScreen, authUser }) {
     return ()=>{ alive = false; clearInterval(timer); };
   }, [tab]);
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"👤 Iscritti"}];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"📊 Report"}];
   const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
   const visibleQuests = quests.filter(q => {
     const term = questSearch.trim().toLowerCase();
@@ -2120,7 +2173,7 @@ function MasterPanel({ setScreen, authUser }) {
       {tab==="players" && <PlayersView authUser={authUser} />}
       {tab==="party" && <PartiesView authUser={authUser} />}
       {tab==="market" && <MarketView />}
-      {tab==="users" && <UsersView />}
+      {tab==="users" && <UsersView authUser={authUser} />}
     </div>
   );
 }
@@ -2531,8 +2584,9 @@ function PartiesView({ authUser }) {
   );
 }
 
-function UsersView() {
-  const [users, setUsers] = useState([]);
+function UsersView({ authUser }) {
+  const [reportRows, setReportRows] = useState([]);
+  const [stats, setStats] = useState({ accounts:0, characters:0, parties:0, withoutEmail:0 });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -2540,14 +2594,39 @@ function UsersView() {
     let active = true;
     const load = async () => {
       setLoading(true);
-      const { data, error: playersErr } = await supabase.from("players").select("id,name,party_code");
+      const [{ data, error: playersErr }, userMeta, playerMeta] = await Promise.all([
+        supabase.from("players").select("id,name,party_code,account_id,class,race,level,gold,xp,dead,updated_at").order("updated_at", { ascending:false }),
+        dbGetUserMasterMeta().catch(() => ({})),
+        dbGetPlayerMasterMeta().catch(() => ({})),
+      ]);
       if(!active) return;
       if(playersErr) {
         setError(playersErr.message || "Impossibile caricare gli iscritti");
-        setUsers([]);
+        setReportRows([]);
+        setStats({ accounts:0, characters:0, parties:0, withoutEmail:0 });
       } else {
         setError(null);
-        setUsers((data||[]).map(p=>({ id:p.id, email:p.name, party_code:p.party_code })));
+        const byAccount = {};
+        for(const meta of Object.values(userMeta || {})) {
+          byAccount[meta.userId] = { userId: meta.userId, email: meta.email, registeredAt: meta.registeredAt, lastSeenAt: meta.lastSeenAt, characters: [] };
+        }
+        for(const p of (data || [])) {
+          const accountId = p.account_id || `no_account:${p.id}`;
+          if(!byAccount[accountId]) byAccount[accountId] = { userId: accountId, email: "", registeredAt: "", lastSeenAt: "", characters: [] };
+          byAccount[accountId].characters.push({ ...p, realPlayerName: playerMeta?.[p.id]?.realPlayerName || "" });
+        }
+        const rows = Object.values(byAccount).sort((a,b) => {
+          const ad = a.lastSeenAt || a.registeredAt || "";
+          const bd = b.lastSeenAt || b.registeredAt || "";
+          return bd.localeCompare(ad);
+        });
+        setReportRows(rows);
+        setStats({
+          accounts: rows.length,
+          characters: (data || []).length,
+          parties: new Set((data || []).map(p=>p.party_code).filter(Boolean)).size,
+          withoutEmail: rows.filter(r=>!r.email).length,
+        });
       }
       setLoading(false);
     };
@@ -2558,15 +2637,54 @@ function UsersView() {
 
   return (
     <div>
-      <div style={{ color:"#94a3b8", fontSize:"0.85rem", marginBottom:"1rem" }}>Elenco dei profili giocatore registrati nel database pubblico.</div>
+      {!canAccessMasterPanel(authUser) && (
+        <div style={{ background:"rgba(127,29,29,0.78)", border:"1px solid #fca5a5", color:"#fff1f2", borderRadius:6, padding:"0.8rem 1rem", marginBottom:"1rem", fontSize:"0.82rem", lineHeight:1.45 }}>
+          Per vedere email e report completi devi accedere con l'account Master autorizzato. I nuovi utenti verranno tracciati da ora in poi al momento di registrazione/login.
+        </div>
+      )}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(160px,1fr))", gap:10, marginBottom:"1rem" }}>
+        {[
+          ["Account", stats.accounts],
+          ["Personaggi", stats.characters],
+          ["Party attivi", stats.parties],
+          ["Senza email storica", stats.withoutEmail],
+        ].map(([label,value])=>(
+          <div key={label} style={{ background:"rgba(15,23,42,0.88)", border:"1px solid #334155", borderRadius:6, padding:"0.85rem" }}>
+            <div style={{ color:"#94a3b8", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>{label}</div>
+            <div style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontSize:"1.35rem", fontWeight:700 }}>{value}</div>
+          </div>
+        ))}
+      </div>
+      <div style={{ color:"#94a3b8", fontSize:"0.85rem", marginBottom:"1rem" }}>Report iscritti: email account, personaggi collegati, party e nome/cognome giocatore quando disponibile.</div>
       {error && <div style={{ color:"#fca5a5", marginBottom:"1rem" }}>{error}</div>}
       {loading && <div style={{ color:"#94a3b8" }}>Caricamento...</div>}
-      {!loading && !users.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun iscritto trovato.</div>}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
-        {users.map(u=>(
-          <div key={u.id} style={{ background:"rgba(255,255,255,0.02)", border:"1px solid #1f2937", borderRadius:6, padding:"0.8rem" }}>
-            <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{u.email||u.id}</div>
-            {u.party_code && <div style={{ fontSize:"0.75rem", color:"#94a3b8" }}>Party: {u.party_code}</div>}
+      {!loading && !reportRows.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun iscritto trovato.</div>}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))", gap:10 }}>
+        {reportRows.map(u=>(
+          <div key={u.userId} style={{ background:"rgba(15,23,42,0.86)", border:"1px solid #334155", borderRadius:6, padding:"0.9rem" }}>
+            <div style={{ fontFamily:"'Cinzel',serif", color:u.email?"#e2d9c5":"#fca5a5", fontWeight:700, wordBreak:"break-word" }}>{u.email || "Email non disponibile (utente storico)"}</div>
+            <div style={{ fontSize:"0.68rem", color:"#64748b", marginTop:2, wordBreak:"break-all" }}>{u.userId}</div>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:8, fontSize:"0.72rem", color:"#94a3b8" }}>
+              <span>PG: {u.characters.length}</span>
+              {u.registeredAt && <span>Registrato: {new Date(u.registeredAt).toLocaleDateString("it-IT")}</span>}
+              {u.lastSeenAt && <span>Ultimo accesso: {new Date(u.lastSeenAt).toLocaleDateString("it-IT")}</span>}
+            </div>
+            <div style={{ marginTop:10, display:"flex", flexDirection:"column", gap:6 }}>
+              {!u.characters.length && <div style={{ color:"#64748b", fontSize:"0.76rem", fontStyle:"italic" }}>Nessun personaggio creato.</div>}
+              {u.characters.map(ch=>(
+                <div key={ch.id} style={{ background:"rgba(2,6,23,0.62)", border:"1px solid #1e293b", borderRadius:5, padding:"0.55rem 0.65rem" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", gap:8, alignItems:"center" }}>
+                    <strong style={{ color:"#f8fafc", fontSize:"0.85rem" }}>{ch.name}</strong>
+                    <span style={{ color:"#fbbf24", fontSize:"0.72rem", fontFamily:"monospace" }}>{ch.party_code || "NO PARTY"}</span>
+                  </div>
+                  <div style={{ color:"#94a3b8", fontSize:"0.72rem", marginTop:2 }}>
+                    {(RACES[ch.race]?.name || ch.race || "Razza")} - {(CLASSES[ch.class]?.name || ch.class || "Classe")} - Lv.{ch.level || 1}
+                    {ch.realPlayerName ? ` - Giocatore: ${ch.realPlayerName}` : ""}
+                    {ch.dead ? " - MORTO" : ""}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
         ))}
       </div>
