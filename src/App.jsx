@@ -1093,6 +1093,16 @@ async function dbSyncCombatantPlayer(partyCode, playerId, updates={}) {
   });
   await dbSavePartyState(partyCode, { ...state, combat:{ ...combat, combatants } });
 }
+async function dbRemovePlayerFromPartyState(partyCode, playerId) {
+  if(!partyCode || !playerId) return;
+  const state = await dbGetPartyState(partyCode);
+  const masterBuffs = { ...(state.masterBuffs || {}) };
+  delete masterBuffs[playerId];
+  const combat = state.combat?.combatants
+    ? { ...state.combat, combatants: state.combat.combatants.filter(c => c.id !== playerId) }
+    : state.combat;
+  await dbSavePartyState(partyCode, { ...state, masterBuffs, combat });
+}
 
 async function dbDeleteMessages(partyCode) {
   await supabase.from("messages").delete().eq("party_code", partyCode);
@@ -2340,6 +2350,29 @@ function PlayersView({ authUser }) {
     setPartyStates(prev=>({...prev,[code]:newState}));
     window.alert(`✅ ${buffKey === "immortal" ? "Immortalità" : "Tiri Critici"} attivata per ${p.name} (${turns} turni)`);
   }
+  async function masterDeletePlayer(p) {
+    if(!p?.id) return;
+    if(!window.confirm(`Eliminare definitivamente ${p.name}?\n\nVerranno cancellati il personaggio e i suoi oggetti.`)) return;
+    setBusy(b=>({...b,[p.id]:true}));
+    try {
+      if(p.party_code) await dbRemovePlayerFromPartyState(p.party_code, p.id);
+      await dbDeleteCharacter(p.id);
+      setPlayers(prev=>prev.filter(x=>x.id!==p.id));
+      setPlayerMeta(prev=>{
+        const next = { ...prev };
+        delete next[p.id];
+        return next;
+      });
+      if(p.party_code) {
+        const refreshed = await dbGetPartyState(p.party_code);
+        setPartyStates(prev=>({...prev,[p.party_code]:refreshed}));
+      }
+    } catch(e) {
+      window.alert("Errore eliminazione giocatore: " + (e?.message || e));
+    } finally {
+      setBusy(b=>({...b,[p.id]:false}));
+    }
+  }
 
   return (
     <div>
@@ -2422,6 +2455,7 @@ function PlayersView({ authUser }) {
                   await masterUpdatePlayer(p, { level:1,xp:0,gold:0,hp:baseHp,max_hp:baseHp,atk:baseAtk,def:baseDef,mag:baseMag,dead:false },
                     { level:1,xp:0,gold:0,hp:baseHp,max_hp:baseHp,atk:baseAtk,def:baseDef,mag:baseMag,dead:false });
                 }}>🔄 Reset PG</SmallBtn>
+                <SmallBtn disabled={isBusy} red onClick={()=>masterDeletePlayer(p)}>Elimina PG</SmallBtn>
               </div>
             </div>
           );
