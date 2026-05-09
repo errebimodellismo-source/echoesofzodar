@@ -108,6 +108,19 @@ const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','pala
 function getPortraitPath(cls, race, gender) {
   return `/assets/portraits/${cls}_${race}_${gender}.png`;
 }
+function getClassPortraitPath(cls, gender) {
+  return `/assets/portraits/${cls}_${gender}.png`;
+}
+function characterGenderKey(playerId) {
+  return `eoz_character_gender_${playerId}`;
+}
+function getStoredCharacterGender(playerId, fallback = "male") {
+  if(!playerId) return fallback;
+  return localStorage.getItem(characterGenderKey(playerId)) || fallback;
+}
+function saveStoredCharacterGender(playerId, gender) {
+  if(playerId) localStorage.setItem(characterGenderKey(playerId), gender || "male");
+}
 function getGeneratedPortrait(clsKey, raceKey, gender) {
   const cls = CLASSES[clsKey] || CLASSES.warrior;
   const race = RACES[raceKey] || RACES.human;
@@ -704,8 +717,8 @@ function getPlayerPortrait(player) {
   if(player.image) return player.image;
   const cls  = (player.class  || "warrior").toLowerCase();
   const race = (player.race   || "human").toLowerCase();
-  const gender = player.gender || "male";
-  return makeRaceClassPortrait(cls, race, gender);
+  const gender = player.gender || getStoredCharacterGender(player.id, "male");
+  return getPortraitPath(cls, race, gender);
 }
 function getMonsterImage(monster) {
   if(!monster) return "";
@@ -787,7 +800,7 @@ async function dbGetPlayers(partyCode) {
   return (data || []).map(r => ({
     id: r?.id, name: r?.name, partyCode: r?.party_code,
     accountId: r?.account_id || null,
-    gender: typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male'),
+    gender: getStoredCharacterGender(r?.id, typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male')),
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
     mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
@@ -799,7 +812,7 @@ async function dbGetAccountCharacters(accountId) {
   return (data || []).map(r => ({
     id: r?.id, name: r?.name, partyCode: r?.party_code,
     accountId: r?.account_id || null,
-    gender: typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male'),
+    gender: getStoredCharacterGender(r?.id, typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male')),
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
     mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
@@ -1495,6 +1508,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
         error: saveError?.message || null,
       });
       if(saveError || !savedPlayer?.id) throw saveError || new Error("Salvataggio personaggio fallito");
+      saveStoredCharacterGender(savedPlayer.id, gender);
       const charactersAfterSave = authUser?.id ? await dbGetAccountCharacters(authUser.id) : [];
       debugCharacterFlow("character_list_after_save", {
         accountId: authUser?.id || null,
@@ -1584,20 +1598,8 @@ function CreateChar({ setScreen, goGame, authUser }) {
           <div style={{ background:"rgba(10,14,23,0.8)", border:"1px solid #374151", borderRadius:6, padding:"1.2rem", marginBottom:"1rem", display:"flex", flexDirection:"column", alignItems:"center", gap:15 }}>
             <div style={{ width: 140, height: 140, borderRadius: '50%', overflow: 'hidden', border: '3px solid #fbbf24', boxShadow: '0 0 20px rgba(251,191,36,0.3)', backgroundColor: '#000', position:'relative' }}>
               <img key={`${cls}-${race}-${gender}`} src={getPortraitPath(cls, race, gender)} alt={`${RACES[race].name} ${c.name} ${gender === "female" ? "femmina" : "maschio"}`} onError={(e)=>{
-                const fallbackStep = e.currentTarget.dataset.fallbackStep || "combo";
-                if(fallbackStep === "combo") {
-                  e.currentTarget.dataset.fallbackStep = "generated";
-                  e.currentTarget.src = getGeneratedPortrait(cls, race, gender);
-                } else {
-                  e.currentTarget.src = PORTRAIT_FALLBACK_URL;
-                }
+                e.currentTarget.src = getClassPortraitPath(cls, gender);
               }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              <div style={{ position:'absolute', right:4, bottom:4, minWidth:38, height:38, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', background:'rgba(2,6,23,0.88)', border:'2px solid #fbbf24', color:'#f8fafc', fontSize:'1.15rem', boxShadow:'0 0 12px rgba(251,191,36,0.45)' }} title={`${RACES[race].name} - ${gender === "female" ? "Femmina" : "Maschio"}`}>
-                {RACES[race].emoji}
-              </div>
-              <div style={{ position:'absolute', left:7, bottom:8, padding:'0.08rem 0.32rem', borderRadius:999, background:'rgba(2,6,23,0.82)', border:'1px solid rgba(148,163,184,0.45)', color:'#e2e8f0', fontSize:'0.62rem', fontFamily:"'Cinzel',serif" }}>
-                {gender === "female" ? "F" : "M"}
-              </div>
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize: "1.4rem", fontWeight:700 }}>{name||"Senza Nome"}</div>
@@ -2109,7 +2111,7 @@ function PlayersView() {
           return (
             <div key={p?.id} style={{ background:"rgba(15,23,42,0.85)", border:"1px solid rgba(148,163,184,0.2)", borderRadius:10, padding:"1rem" }}>
               <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:8 }}>
-                <ArtThumb src={getPlayerPortrait({ class:p?.class, race:p?.race, portrait:p?.portrait, image:p?.image })} alt={p?.name||"PG"} size={56} radius={12} />
+                <ArtThumb src={getPlayerPortrait({ id:p?.id, class:p?.class, race:p?.race, gender:p?.gender, portrait:p?.portrait, image:p?.image })} alt={p?.name||"PG"} size={56} radius={12} />
                 <div style={{ flex:1 }}>
                   <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, fontSize:"0.95rem" }}>{p?.name}</div>
                   <div style={{ color:"#94a3b8", fontSize:"0.7rem" }}>{race.emoji} {race.name} · {cls.name} · Lv.{p?.level||1}</div>
