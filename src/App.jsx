@@ -603,11 +603,12 @@ function resolveDeathSave(combatant, forcedRoll) {
     };
   }
   if(successes >= 3) {
+    const revivedHp = Math.max(1, Math.ceil((combatant?.maxHp || combatant?.max_hp || 1) * 0.5));
     return {
       rollValue,
-      result: "stable",
-      nextCombatant: { ...combatant, hp: 0, dying: false, stable: true, dead: false, deathSuccesses: successes, deathFailures: failures },
-      log: `🛌 **${combatant.name}** ottiene la terza salvezza (${successes}/3) ed è **stabile**, ma resta a 0 HP.`,
+      result: "revived",
+      nextCombatant: reviveCombatantState(combatant, revivedHp),
+      log: `🕯️ **${combatant.name}** ottiene la terza salvezza (${successes}/3) e torna in piedi con **${revivedHp} HP**!`,
     };
   }
   return {
@@ -3911,7 +3912,7 @@ function GameScreen({ myId, setScreen }) {
       const deathSave = resolveDeathSave(attacker, deathSaveRoll);
       const idx = combatants.findIndex(c => c.id === attacker.id);
       combatants[idx] = deathSave.nextCombatant;
-      const updatedPlayer = { ...me, hp: deathSave.nextCombatant.hp };
+      const updatedPlayer = { ...me, hp: deathSave.nextCombatant.hp, dead: !!deathSave.nextCombatant.dead };
       await dbSavePlayer(updatedPlayer);
       setMeRaw(updatedPlayer);
       if(deathSave.result === "dead" && partyPlayers.length <= 1) {
