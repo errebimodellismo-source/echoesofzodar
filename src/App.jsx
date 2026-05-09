@@ -104,6 +104,51 @@ function canAccessMasterPanel(user) {
 }
 
 const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','paladin','ranger'];
+const CLASS_LEVEL_GAINS = {
+  barbarian:{ hp:16, atk:3, def:1, mag:0, label:"+16 HP, +3 ATK, +1 DEF" },
+  warrior:  { hp:14, atk:3, def:2, mag:0, label:"+14 HP, +3 ATK, +2 DEF" },
+  monk:     { hp:10, atk:2, def:2, mag:0, label:"+10 HP, +2 ATK, +2 DEF" },
+  paladin:  { hp:12, atk:2, def:2, mag:1, label:"+12 HP, +2 ATK, +2 DEF, +1 MAG" },
+  ranger:   { hp:10, atk:2, def:1, mag:1, label:"+10 HP, +2 ATK, +1 DEF, +1 MAG" },
+  rogue:    { hp:9,  atk:3, def:1, mag:0, label:"+9 HP, +3 ATK, +1 DEF" },
+  cleric:   { hp:10, atk:1, def:2, mag:2, label:"+10 HP, +1 ATK, +2 DEF, +2 MAG" },
+  druid:    { hp:9,  atk:1, def:1, mag:2, label:"+9 HP, +1 ATK, +1 DEF, +2 MAG" },
+  bard:     { hp:8,  atk:1, def:1, mag:2, label:"+8 HP, +1 ATK, +1 DEF, +2 MAG" },
+  mage:     { hp:6,  atk:0, def:1, mag:3, label:"+6 HP, +1 DEF, +3 MAG" },
+  sorcerer: { hp:6,  atk:0, def:0, mag:4, label:"+6 HP, +4 MAG" },
+  warlock:  { hp:7,  atk:1, def:1, mag:3, label:"+7 HP, +1 ATK, +1 DEF, +3 MAG" },
+};
+function levelGainForClass(cls) {
+  return CLASS_LEVEL_GAINS[cls || "warrior"] || CLASS_LEVEL_GAINS.warrior;
+}
+function totalLevelGains(cls, level) {
+  const gain = levelGainForClass(cls);
+  const steps = Math.max(0, (Number(level) || 1) - 1);
+  return {
+    hp: gain.hp * steps,
+    atk: gain.atk * steps,
+    def: gain.def * steps,
+    mag: gain.mag * steps,
+  };
+}
+function applyLevelUpToPlayer(player) {
+  const level = Math.max(1, Number(player?.level) || 1);
+  const needed = xpForLevel(level);
+  if((player?.xp || 0) < needed) return { player, leveled:false, needed };
+  const gain = levelGainForClass(player?.class);
+  const nextMaxHp = (player?.maxHp ?? player?.max_hp ?? 0) + gain.hp;
+  const next = {
+    ...player,
+    xp: (player?.xp || 0) - needed,
+    level: level + 1,
+    maxHp: nextMaxHp,
+    hp: nextMaxHp,
+    atk: (player?.atk || 0) + gain.atk,
+    def: (player?.def || 0) + gain.def,
+    mag: (player?.mag || 0) + gain.mag,
+  };
+  return { player:next, leveled:true, needed, gain };
+}
 
 function getPortraitPath(cls, race, gender) {
   return `/assets/portraits/${cls}_${race}_${gender}.png`;
@@ -333,12 +378,13 @@ function getBaseStats(player) {
   const cls = CLASSES[player?.class || "warrior"] || CLASSES.warrior;
   const race = RACES[player?.race || "human"] || RACES.human;
   const level = Math.max(1, Number(player?.level) || 1);
+  const gains = totalLevelGains(player?.class || "warrior", level);
   return {
-    atk: cls.atk + race.atkB + (level - 1) * 2,
-    def: cls.def + race.defB + (level - 1),
-    mag: cls.mag + race.magB + (level - 1),
+    atk: cls.atk + race.atkB + gains.atk,
+    def: cls.def + race.defB + gains.def,
+    mag: cls.mag + race.magB + gains.mag,
     init: cls.init + race.initB,
-    maxHp: cls.hp + race.hpB + (level - 1) * 10,
+    maxHp: cls.hp + race.hpB + gains.hp,
   };
 }
 function getEquipmentBonuses(equipment, itemMap) {
@@ -3558,6 +3604,20 @@ function GameScreen({ myId, setScreen }) {
     await addMsg(`🧪 **${me.name}** usa **${entry.item.name}** e recupera **${delta} HP**.`, "info", "Sistema");
   }
 
+  async function handleLevelUp() {
+    if(!me) return;
+    const result = applyLevelUpToPlayer(me);
+    if(!result.leveled) {
+      window.alert(`Ti servono ${result.needed} XP per il prossimo livello.`);
+      return;
+    }
+    const updated = result.player;
+    await dbSavePlayer(updated);
+    setMeRaw(updated);
+    await addMsg(`â­ **${me.name}** sale al **livello ${updated.level}**!\n${levelGainForClass(me.class).label}`, "info", "Sistema");
+    await refreshAll(code);
+  }
+
   async function dismissCombatLog() {
     if(!qs?.combat?.pendingLog) return;
     await saveQState({ ...qs, combat: { ...qs.combat, pendingLog: null } });
@@ -3770,13 +3830,6 @@ function GameScreen({ myId, setScreen }) {
       const beforeXp = p.xp || 0;
       const beforeLevel = p.level || 1;
       let up = { ...p, xp: beforeXp + xpEach, gold: (p.gold || 0) + goldEach };
-      const leveledUpTo = [];
-      while (up.xp >= xpForLevel(up.level)) {
-        up.xp -= xpForLevel(up.level);
-        up.level++;
-        up.maxHp += 10; up.hp = up.maxHp; up.atk += 2; up.def += 1; up.mag += 1;
-        leveledUpTo.push(up.level);
-      }
       await dbSavePlayer(up);
       if (up.id === myId) setMeRaw(up);
       playerResults.push({
@@ -3784,7 +3837,7 @@ function GameScreen({ myId, setScreen }) {
         beforeXp, beforeLevel, xpThreshold: xpForLevel(beforeLevel),
         afterXp: up.xp, afterLevel: up.level,
         xpGained: xpEach, goldGained: goldEach,
-        leveledUpTo,
+        canLevelUp: up.xp >= xpForLevel(up.level),
       });
     }
 
@@ -3798,7 +3851,7 @@ function GameScreen({ myId, setScreen }) {
     await dbSavePartyState(code, newQs);
     setQs(prev => ({ ...prev, combat: newCombat }));
     await dbSendMessage({ party_code: code, author: "Sistema",
-      content: `🏆 **BATTAGLIA VINTA!** ⭐ +${xpEach} XP — 💰 +${goldEach} oro a testa`, type: "victory" });
+      content: `🏆 **BATTAGLIA VINTA!** ⭐ +${xpEach} XP — 💰 +${goldEach} oro a testa\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, type: "victory" });
   }
 
   // -- QUEST --
@@ -3846,13 +3899,12 @@ ${stepText(step)}`, "quest","Master");
     const goldE = Math.floor(q.goldReward/Math.max(partyPlayers.length,1));
     for(const p of partyPlayers) {
       let up={...p,xp:p.xp+xpE,gold:p.gold+goldE};
-      while(up.xp>=xpForLevel(up.level)){up.xp-=xpForLevel(up.level);up.level++;up.maxHp+=10;up.hp=up.maxHp;up.atk+=2;up.def+=1;up.mag+=1;}
       await dbSavePlayer(up);
       if(up.id===myId) setMeRaw(up);
     }
     const newQs={...qs,active:false,step:0,currentId:null,completed:[...(qs.completed||[]),q.id]};
     await saveQState(newQs);
-    await addMsg(`⚔️ **MISSIONE COMPLETATA: ${q.title}!**\n\n⭐ +${xpE} XP a testa � 💰 +${goldE} oro a testa`, "victory","Master");
+    await addMsg(`⚔️ **MISSIONE COMPLETATA: ${q.title}!**\n\n⭐ +${xpE} XP a testa � 💰 +${goldE} oro a testa\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, "victory","Master");
   }
 
   async function startCombatStep(stepData) {
@@ -3934,11 +3986,10 @@ ${stepText(step)}`, "quest","Master");
       if(xpE||goldE) {
         for(const p of partyPlayers) {
           let up={...p,xp:p.xp+xpE,gold:p.gold+goldE};
-          while(up.xp>=xpForLevel(up.level)){up.xp-=xpForLevel(up.level);up.level++;up.maxHp+=10;up.hp=up.maxHp;up.atk+=2;up.def+=1;up.mag+=1;}
           await dbSavePlayer(up);
           if(up.id===myId) setMeRaw(up);
         }
-        await addMsg(`✅ Scelta giusta! ⭐ +${xpE} XP a testa — 💰 +${goldE} oro a testa`, "victory", "Master");
+        await addMsg(`✅ Scelta giusta! ⭐ +${xpE} XP a testa — 💰 +${goldE} oro a testa\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, "victory", "Master");
       }
     } else {
       await addMsg(`❌ Hai scelto male... il party non guadagna nulla e avanza comunque.`, "system", "Sistema");
@@ -4059,6 +4110,10 @@ ${stepText(step)}`, "quest","Master");
     armor: itemMap.get(equipment.armor) || null,
     shield: itemMap.get(equipment.shield) || null,
   };
+  const currentLevelGain = levelGainForClass(me?.class);
+  const nextLevelXp = xpForLevel(me?.level || 1);
+  const canLevelUp = (me?.xp || 0) >= nextLevelXp;
+  const nextLevelPreview = me ? applyLevelUpToPlayer(me).player : null;
 
   function togglePreparedSpell(spellId) {
     if(!myId) return;
@@ -4228,7 +4283,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             return (
             <button key={k} onClick={()=>{ if(!combatLocked){ setTab(k); if(isMobile) setSidebarOpen(false); } }} title={combatLocked?"Non disponibile durante il combattimento":undefined}
@@ -4305,6 +4360,53 @@ ${stepText(step)}`, "quest","Master");
                 <button onClick={handleInput} style={{ padding:"0.65rem 1.1rem", background:"#78350f", border:"1px solid #92400e", borderRadius:4, color:"#fde68a", cursor:"pointer", fontSize:"1rem" }}>🍺</button>
               </div>
             </>)}
+          </div>
+        )}
+        {tab==="level" && (
+          <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(2,6,23,0.45)" }}>
+            <div style={{ maxWidth:760, margin:"0 auto" }}>
+              <Card title="â­ Aumenta di Livello">
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:10, marginBottom:"1rem" }}>
+                  <div style={{ background:"rgba(15,23,42,0.84)", border:"1px solid #334155", borderRadius:6, padding:"0.85rem" }}>
+                    <div style={{ color:"#94a3b8", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>Livello attuale</div>
+                    <div style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontSize:"1.8rem", fontWeight:700 }}>{me.level}</div>
+                  </div>
+                  <div style={{ background:"rgba(15,23,42,0.84)", border:"1px solid #334155", borderRadius:6, padding:"0.85rem" }}>
+                    <div style={{ color:"#94a3b8", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>Esperienza</div>
+                    <div style={{ color:"#e2e8f0", fontFamily:"'Cinzel',serif", fontSize:"1.2rem", fontWeight:700 }}>{me.xp || 0}/{nextLevelXp} XP</div>
+                  </div>
+                  <div style={{ background:"rgba(15,23,42,0.84)", border:"1px solid #334155", borderRadius:6, padding:"0.85rem" }}>
+                    <div style={{ color:"#94a3b8", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>Classe</div>
+                    <div style={{ color:"#e2e8f0", fontFamily:"'Cinzel',serif", fontSize:"1.1rem", fontWeight:700 }}>{CLASSES[me.class]?.name || me.class}</div>
+                  </div>
+                </div>
+                <div style={{ height:9, background:"#0f172a", border:"1px solid #1e293b", borderRadius:999, overflow:"hidden", marginBottom:"0.9rem" }}>
+                  <div style={{ height:"100%", background:canLevelUp?"linear-gradient(90deg,#f59e0b,#fbbf24)":"linear-gradient(90deg,#6d28d9,#a78bfa)", width:`${Math.min(100,((me.xp||0)/nextLevelXp)*100)}%`, transition:"width .4s" }} />
+                </div>
+                <div style={{ background:canLevelUp?"rgba(180,83,9,0.18)":"rgba(15,23,42,0.7)", border:`1px solid ${canLevelUp?"#f59e0b":"#334155"}`, borderRadius:6, padding:"0.9rem", marginBottom:"1rem" }}>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:canLevelUp?"#fbbf24":"#cbd5e1", fontWeight:700, marginBottom:6 }}>
+                    {canLevelUp ? `Pronto per il livello ${me.level + 1}` : `Mancano ${Math.max(0,nextLevelXp-(me.xp||0))} XP al livello ${me.level + 1}`}
+                  </div>
+                  <div style={{ color:"#cbd5e1", fontSize:"0.86rem", lineHeight:1.6 }}>
+                    Bonus della tua classe: <strong>{currentLevelGain.label}</strong>
+                  </div>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))", gap:8, marginBottom:"1rem" }}>
+                  {[
+                    ["HP", me.maxHp, nextLevelPreview?.maxHp],
+                    ["ATK", me.atk, nextLevelPreview?.atk],
+                    ["DEF", me.def, nextLevelPreview?.def],
+                    ["MAG", me.mag, nextLevelPreview?.mag],
+                  ].map(([label, current, next])=>(
+                    <div key={label} style={{ background:"rgba(2,6,23,0.58)", border:"1px solid #1e293b", borderRadius:6, padding:"0.75rem", textAlign:"center" }}>
+                      <div style={{ color:"#94a3b8", fontSize:"0.68rem", letterSpacing:"0.08em" }}>{label}</div>
+                      <div style={{ color:"#f8fafc", fontSize:"1rem", fontWeight:700 }}>{current} {canLevelUp && <span style={{ color:"#fbbf24" }}>â†’ {next}</span>}</div>
+                    </div>
+                  ))}
+                </div>
+                <BigBtn onClick={handleLevelUp} gold disabled={!canLevelUp}>Aumenta di livello</BigBtn>
+              </Card>
+            </div>
           </div>
         )}
         {tab==="inventory" && (
