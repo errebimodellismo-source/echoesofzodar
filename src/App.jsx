@@ -1075,6 +1075,23 @@ async function dbDeleteCharacter(characterId) {
   await supabase.from("player_items").delete().eq("player_id", characterId);
   await supabase.from("players").delete().eq("id", characterId);
 }
+async function dbSyncCombatantPlayer(partyCode, playerId, updates={}) {
+  if(!partyCode || !playerId) return;
+  const state = await dbGetPartyState(partyCode);
+  const combat = state?.combat;
+  if(!combat?.combatants?.length) return;
+  const combatants = combat.combatants.map(c => {
+    if(!c?.isPlayer || c.id !== playerId) return c;
+    const hp = updates.hp ?? c.hp;
+    const maxHp = updates.maxHp ?? updates.max_hp ?? c.maxHp;
+    const dead = updates.dead ?? c.dead;
+    if((hp || 0) > 0 || dead === false) {
+      return reviveCombatantState({ ...c, ...updates, maxHp }, Math.max(1, hp || 1));
+    }
+    return { ...c, ...updates, maxHp };
+  });
+  await dbSavePartyState(partyCode, { ...state, combat:{ ...combat, combatants } });
+}
 
 async function dbDeleteMessages(partyCode) {
   await supabase.from("messages").delete().eq("party_code", partyCode);
@@ -2297,15 +2314,27 @@ function PlayersView({ authUser }) {
     setPlayers(prev=>prev.map(x=>x.id===playerId?{...x,...optimistic}:x));
     setBusy(b=>({...b,[playerId]:false}));
   }
+  async function masterUpdatePlayer(p, fields, optimistic) {
+    await masterUpdate(p.id, fields, optimistic);
+    if(p.party_code && ("hp" in optimistic || "dead" in optimistic || "max_hp" in optimistic)) {
+      await dbSyncCombatantPlayer(p.party_code, p.id, {
+        hp: optimistic.hp,
+        maxHp: optimistic.max_hp ?? p.max_hp,
+        dead: optimistic.dead,
+      });
+      const refreshed = await dbGetPartyState(p.party_code);
+      setPartyStates(prev=>({...prev,[p.party_code]:refreshed}));
+    }
+  }
 
   async function masterSetBuff(p, buffKey, turns) {
     const code = p.party_code;
     if(!code) { window.alert("Questo giocatore non è in un party attivo."); return; }
-    const currentState = partyStates[code] || {};
+    const currentState = await dbGetPartyState(code);
     const currentBuffs = currentState.masterBuffs || {};
     const playerBuffs = currentBuffs[p.id] || {};
     const newState = { ...currentState, masterBuffs: { ...currentBuffs, [p.id]: { ...playerBuffs, [buffKey]: turns } } };
-    await supabase.from("party_state").update({ state: newState, updated_at: new Date().toISOString() }).eq("party_code", code);
+    await dbSavePartyState(code, newState);
     setPartyStates(prev=>({...prev,[code]:newState}));
     window.alert(`✅ ${buffKey === "immortal" ? "Immortalità" : "Tiri Critici"} attivata per ${p.name} (${turns} turni)`);
   }
@@ -2354,16 +2383,16 @@ function PlayersView({ authUser }) {
               {/* Azioni base */}
               <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:10, paddingTop:10, borderTop:"1px solid rgba(148,163,184,0.1)" }}>
                 <SmallBtn disabled={isBusy} onClick={async()=>{
-                  await masterUpdate(p.id, { hp: p.max_hp }, { hp: p.max_hp });
+                  await masterUpdatePlayer(p, { hp: p.max_hp, dead:false }, { hp: p.max_hp, dead:false });
                 }}>❤️ Cura tutto</SmallBtn>
                 <SmallBtn disabled={isBusy} onClick={async()=>{
                   const amt = parseInt(window.prompt(`Quanti HP curare a ${p.name}?`, "10"),10);
                   if(!amt||isNaN(amt)) return;
                   const newHp = Math.min(p.max_hp, (p.hp||0)+amt);
-                  await masterUpdate(p.id, { hp: newHp }, { hp: newHp });
+                  await masterUpdatePlayer(p, { hp: newHp, dead:false }, { hp: newHp, dead:false });
                 }}>💊 Cura parziale</SmallBtn>
                 {p?.dead && <SmallBtn disabled={isBusy} onClick={async()=>{
-                  await masterUpdate(p.id, { hp:1, dead:false }, { hp:1, dead:false });
+                  await masterUpdatePlayer(p, { hp:1, dead:false }, { hp:1, dead:false });
                 }}>✨ Resurrezione</SmallBtn>}
                 <SmallBtn disabled={isBusy} onClick={async()=>{
                   const add = parseInt(window.prompt(`Quanto oro a ${p.name}?`, "50"),10);
@@ -2380,7 +2409,7 @@ function PlayersView({ authUser }) {
               {/* Poteri divini */}
               <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:8, paddingTop:8, borderTop:"1px solid rgba(251,191,36,0.15)" }}>
                 <SmallBtn disabled={isBusy} onClick={async()=>{
-                  await masterUpdate(p.id, { hp: p.max_hp }, { hp: p.max_hp });
+                  await masterUpdatePlayer(p, { hp: p.max_hp, dead:false }, { hp: p.max_hp, dead:false });
                   // Also send a divine message if in party
                   if(p.party_code) await supabase.from("messages").insert({ party_code:p.party_code, author:"Dungeon Master", content:`✨ **Aiuto Divino!** Una luce celestiale avvolge **${p.name}** e lo riporta in piena salute!`, type:"narration" });
                 }}>✨ Aiuto Divino</SmallBtn>
@@ -2388,7 +2417,7 @@ function PlayersView({ authUser }) {
                 <SmallBtn disabled={isBusy} onClick={()=>masterSetBuff(p,"crit",10)}>⚔️ Critici (10t)</SmallBtn>
                 <SmallBtn disabled={isBusy} red onClick={async()=>{
                   if(!window.confirm(`Reset completo di ${p.name}?`)) return;
-                  await masterUpdate(p.id, { level:1,xp:0,gold:0,hp:baseHp,max_hp:baseHp,atk:baseAtk,def:baseDef,mag:baseMag,dead:false },
+                  await masterUpdatePlayer(p, { level:1,xp:0,gold:0,hp:baseHp,max_hp:baseHp,atk:baseAtk,def:baseDef,mag:baseMag,dead:false },
                     { level:1,xp:0,gold:0,hp:baseHp,max_hp:baseHp,atk:baseAtk,def:baseDef,mag:baseMag,dead:false });
                 }}>🔄 Reset PG</SmallBtn>
               </div>
@@ -3532,18 +3561,18 @@ function GameScreen({ myId, setScreen }) {
       const ptBuffs = (latestQs.masterBuffs || {})[pt.id] || {};
       let monsterNewMasterBuffs = latestQs.masterBuffs || {};
       let effectiveHp = Math.max(0, pt.hp - edmg);
+      const playerCombatantIdx = latestCombatants.findIndex(c => c.id === pt.id);
       if(ptBuffs.immortal > 0 && effectiveHp <= 0) {
         effectiveHp = 1;
         monsterNewMasterBuffs = { ...monsterNewMasterBuffs, [pt.id]: { ...ptBuffs, immortal: ptBuffs.immortal - 1 } };
       }
-      const updPt = { ...pt, hp: effectiveHp };
-      const playerCombatantIdx = latestCombatants.findIndex(c => c.id === pt.id);
+      const immortalTriggered = ptBuffs.immortal > 0 && effectiveHp === 1 && edmg >= (pt.hp || 0);
+      const updPt = { ...pt, hp: effectiveHp, dead:false };
       if(playerCombatantIdx >= 0) {
-        latestCombatants[playerCombatantIdx] = applyCombatDamageState({
-          ...latestCombatants[playerCombatantIdx],
-          maxHp: updPt.maxHp,
-        }, edmg);
-        if(effectiveHp > 0) latestCombatants[playerCombatantIdx].hp = effectiveHp;
+        latestCombatants[playerCombatantIdx] = immortalTriggered
+          ? reviveCombatantState({ ...latestCombatants[playerCombatantIdx], maxHp: updPt.maxHp }, 1)
+          : applyCombatDamageState({ ...latestCombatants[playerCombatantIdx], maxHp: updPt.maxHp }, edmg);
+        if(effectiveHp > 0 && !immortalTriggered) latestCombatants[playerCombatantIdx].hp = effectiveHp;
       }
       await dbSavePlayer(updPt);
       if (updPt.id === myId) setMeRaw(updPt);
@@ -3851,6 +3880,33 @@ function GameScreen({ myId, setScreen }) {
       return;
     }
     if(isDyingCombatant(attacker)) {
+      const latestBuffState = await dbGetPartyState(code);
+      const deathSaveBuffs = latestBuffState.masterBuffs || {};
+      const deathSaveMyBuffs = deathSaveBuffs[myId] || {};
+      if(deathSaveMyBuffs.immortal > 0) {
+        const idx = combatants.findIndex(c => c.id === attacker.id);
+        combatants[idx] = reviveCombatantState(attacker, 1);
+        const updatedPlayer = { ...me, hp:1, dead:false };
+        const newMasterBuffs = {
+          ...deathSaveBuffs,
+          [myId]: { ...deathSaveMyBuffs, immortal: deathSaveMyBuffs.immortal - 1 },
+        };
+        await dbSavePlayer(updatedPlayer);
+        setMeRaw(updatedPlayer);
+        const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
+        await saveQState({
+          ...latestBuffState,
+          masterBuffs:newMasterBuffs,
+          combat: {
+            ...combat,
+            combatants,
+            turn: nextTurn,
+            round: nextRound,
+            pendingLog:`🛡️ **${attacker.name}** viene salvato dall'**Immortalità** e torna a **1 HP**! (${deathSaveMyBuffs.immortal - 1} turni rimasti)`,
+          },
+        });
+        return;
+      }
       const deathSaveRoll = await showDiceVisual({ sides:20, notation:"1d20", label:"Salvezza contro la morte", themeColor:"#fbbf24" });
       const deathSave = resolveDeathSave(attacker, deathSaveRoll);
       const idx = combatants.findIndex(c => c.id === attacker.id);
@@ -3876,7 +3932,8 @@ function GameScreen({ myId, setScreen }) {
     setSelectedTarget(null);
     const weapon = attacker.id===myId ? getEquippedWeapon(equipment, itemMap) : { name:"Arma", weapon_die:getCombatDamageDie(attacker) };
     const resolved = await performAsyncAttack(attacker, target, weapon.weapon_die || "1d6");
-    const masterBuffs = qs.masterBuffs || {};
+    const latestBuffState = await dbGetPartyState(code);
+    const masterBuffs = latestBuffState.masterBuffs || {};
     const myBuffs = masterBuffs[myId] || {};
     let effectiveResolved = resolved;
     let newMasterBuffs = masterBuffs;
@@ -3890,8 +3947,8 @@ function GameScreen({ myId, setScreen }) {
     const log = formatWeaponAttackLog(attacker, target, effectiveResolved, weapon.name, combatants[tidx].hp, target.maxHp);
     const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
     const allDead = combatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
-    if(allDead) { await endCombat({...qs, masterBuffs: newMasterBuffs, combat:{...combat, combatants}}); return; }
-    await saveQState({ ...qs, masterBuffs: newMasterBuffs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
+    if(allDead) { await endCombat({...latestBuffState, masterBuffs: newMasterBuffs, combat:{...combat, combatants}}); return; }
+    await saveQState({ ...latestBuffState, masterBuffs: newMasterBuffs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
   }
 
   async function castSpell(spell) {
@@ -3918,7 +3975,8 @@ function GameScreen({ myId, setScreen }) {
     const target = enemies.find(c=>c.id===selectedTarget) || enemies[0];
     setSelectedTarget(null);
 
-    const spellMasterBuffs = qs.masterBuffs || {};
+    const latestSpellBuffState = await dbGetPartyState(code);
+    const spellMasterBuffs = latestSpellBuffState.masterBuffs || {};
     const spellMyBuffs = spellMasterBuffs[myId] || {};
     let newSpellMasterBuffs = spellMasterBuffs;
 
@@ -3965,8 +4023,8 @@ function GameScreen({ myId, setScreen }) {
 
     const allDead = newCombatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
     setSpellMenu(false);
-    if(allDead) { await endCombat({...qs, masterBuffs: newSpellMasterBuffs, combat:{...combat, combatants:newCombatants, spellSlots:nextSlots}}); return; }
-    await saveQState({ ...qs, masterBuffs: newSpellMasterBuffs, combat: { ...combat, combatants:newCombatants, turn:nextTurn, round:nextRound, spellSlots:nextSlots, pendingLog: log } });
+    if(allDead) { await endCombat({...latestSpellBuffState, masterBuffs: newSpellMasterBuffs, combat:{...combat, combatants:newCombatants, spellSlots:nextSlots}}); return; }
+    await saveQState({ ...latestSpellBuffState, masterBuffs: newSpellMasterBuffs, combat: { ...combat, combatants:newCombatants, turn:nextTurn, round:nextRound, spellSlots:nextSlots, pendingLog: log } });
   }
 
   async function endCombat(preloadedQs) {
