@@ -66,6 +66,8 @@ const MASTER_EMAILS = (import.meta.env.VITE_MASTER_EMAILS || "")
 const PANEL_BG = "rgba(7,10,20,0.82)";
 const PANEL_BG_SOFT = "rgba(7,10,20,0.72)";
 const PANEL_BORDER = "rgba(148,163,184,0.16)";
+const ONLINE_GRACE_MS = 2 * 60 * 1000;
+const USER_HEARTBEAT_MS = 30 * 1000;
 const LEGENDARY_ITEMS = [
   // Armi
   { id:"leg_excalibur",   name:"Excalibur",          emoji:"⚔️",  type:"weapon", weapon_die:"2d8",  bonus_atk:5, desc:"La leggendaria spada del re" },
@@ -372,9 +374,9 @@ function _makeRng(seed) {
   let s = (seed || 1) >>> 0;
   return () => { s ^= s << 13; s ^= s >> 17; s ^= s << 5; return (s >>> 0) / 0x100000000; };
 }
-function getDailyQuests(allQuests, counts = { facile: 3, medio: 3, difficile: 2 }) {
+function getDailyQuests(allQuests, counts = { facile: 3, medio: 3, difficile: 2 }, extraSeed = 0) {
   const today = new Date().toLocaleDateString('en-CA');
-  const rng = _makeRng(_dateToSeed(today));
+  const rng = _makeRng(_dateToSeed(today + "_" + extraSeed));
   const shuffle = arr => {
     const a = [...arr];
     for (let i = a.length - 1; i > 0; i--) {
@@ -409,6 +411,14 @@ function hoursUntilMidnight() {
 ---------------------------------------------- */
 function lsGet(key, def) { try { const r=localStorage.getItem(key); return r?JSON.parse(r):def; } catch { return def; } }
 function lsSet(key, val) { try { localStorage.setItem(key, JSON.stringify(val)); } catch { /* ignore */ } }
+function slugifyAssetName(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
 function getQuests() {
   const defaults = DEFAULT_QUESTS.map(normalizeQuest);
@@ -449,8 +459,28 @@ function saveMeta(m)     { lsSet("eoz_meta", m); }
 
 const DEFAULT_ITEM_MAP = new Map(DEFAULT_ITEMS.map(item => [item.id, item]));
 
+function normalizeLegendaryInventoryItem(item) {
+  return {
+    ...item,
+    description: item.description || item.desc || "",
+    slot: item.slot || (item.type === "armor" ? "armor" : item.type === "magic" ? "weapon" : item.type || null),
+    type: item.type === "magic" ? "weapon" : item.type,
+    rarity: item.rarity || "legendary",
+    price: item.price || 999,
+    available: item.available ?? false,
+    weapon_die: item.weapon_die || null,
+    heal_amount: item.heal_amount || 0,
+    bonus_hp: item.bonus_hp || 0,
+    bonus_init: item.bonus_init || 0,
+  };
+}
+
 function mergeCatalogItems(items=[]) {
-  const merged = new Map(DEFAULT_ITEMS.map(item => [item.id, item]));
+  const baseItems = [
+    ...DEFAULT_ITEMS,
+    ...LEGENDARY_ITEMS.map(normalizeLegendaryInventoryItem),
+  ];
+  const merged = new Map(baseItems.map(item => [item.id, item]));
   for(const item of items) {
     const base = merged.get(item.id) || {};
     merged.set(item.id, { ...base, ...item, slot:item.slot || base.slot || null, weapon_die:item.weapon_die || base.weapon_die || null, heal_amount:item.heal_amount || base.heal_amount || 0, bonus_init:item.bonus_init ?? base.bonus_init ?? 0 });
@@ -458,7 +488,13 @@ function mergeCatalogItems(items=[]) {
   return Array.from(merged.values()).sort((a,b)=>a.name.localeCompare(b.name, "it"));
 }
 function itemSlot(item) {
-  return item?.slot || (item?.type==="weapon" ? "weapon" : item?.type==="armor" ? "armor" : item?.type==="shield" ? "shield" : null);
+  if(item?.slot) return item.slot;
+  if(item?.type === "weapon" || item?.weapon_die) return "weapon";
+  if(item?.type === "armor") return "armor";
+  if(item?.type === "shield") return "shield";
+  if(item?.type === "accessory") return "accessory";
+  if(item?.type === "magic") return "weapon";
+  return null;
 }
 function isEquippableItem(item) {
   return !!itemSlot(item);
@@ -470,7 +506,7 @@ function preparedSpellsKey(playerId) {
   return `eoz_prepared_spells_${playerId}`;
 }
 function getStoredEquipment(playerId) {
-  return lsGet(equipmentKey(playerId), { weapon:null, armor:null, shield:null });
+  return { weapon:null, armor:null, shield:null, accessory:null, ...lsGet(equipmentKey(playerId), {}) };
 }
 function saveStoredEquipment(playerId, equipment) {
   lsSet(equipmentKey(playerId), equipment);
@@ -503,7 +539,7 @@ function getBaseStats(player) {
   };
 }
 function getEquipmentBonuses(equipment, itemMap) {
-  const ids = [equipment?.weapon, equipment?.armor, equipment?.shield].filter(Boolean);
+  const ids = [equipment?.weapon, equipment?.armor, equipment?.shield, equipment?.accessory].filter(Boolean);
   return ids.reduce((totals, itemId) => {
     const item = itemMap.get(itemId);
     if(!item) return totals;
@@ -914,6 +950,7 @@ function getMonsterImage(monster) {
   if(!monster) return "";
   if(monster.image) return monster.image;
   if(monster.image_url) return monster.image_url;
+  if(monster.id && monster.name) return `/assets/monsters/${monster.id}-${slugifyAssetName(monster.name)}.png`;
   const key = `${monster.id || ""} ${monster.name || ""} ${monster.desc || ""}`.toLowerCase();
   const theme =
     /drago|dragon/.test(key) ? { icon:"🐉", title:"Drago", accent:"#ef4444", accent2:"#f59e0b", bg1:"#2b1010", bg2:"#120808", border:"#991b1b" } :
@@ -932,6 +969,10 @@ function ArtThumb({ src, alt, size=56, radius=12 }) {
     <img
       src={src}
       alt={alt}
+      onError={e => {
+        e.currentTarget.onerror = null;
+        e.currentTarget.src = makeArchetypeImage({ icon:"👾", title:alt || "Creatura", subtitle:"" });
+      }}
       style={{ width:size, height:size, minWidth:size, borderRadius:radius, objectFit:"cover", display:"block", background:"rgba(15,23,42,0.72)", border:"1px solid rgba(148,163,184,0.16)", boxShadow:"0 10px 24px rgba(0,0,0,0.22)" }}
     />
   );
@@ -1024,15 +1065,25 @@ async function dbGetUserMasterMeta() {
     .from("messages")
     .select("party_code,author,content,type,created_at")
     .eq("type", "user_meta")
-    .order("created_at", { ascending: true })
+    .order("created_at", { ascending: false })
     .limit(3000);
   if(error) throw error;
   const byUser = {};
   for(const msg of (data || [])) {
     const meta = parseUserMasterMeta(msg);
-    if(meta) byUser[meta.userId] = { ...(byUser[meta.userId] || {}), ...meta };
+    if(meta && !byUser[meta.userId]) byUser[meta.userId] = meta;
   }
   return byUser;
+}
+
+function isRecentlyOnline(lastSeenAt, nowMs = Date.now()) {
+  const seenMs = Date.parse(lastSeenAt || "");
+  return Number.isFinite(seenMs) && nowMs - seenMs <= ONLINE_GRACE_MS;
+}
+
+function isPartyPlayerOnline(player, userMetaById, nowMs = Date.now()) {
+  if(!player?.accountId) return false;
+  return isRecentlyOnline(userMetaById?.[player.accountId]?.lastSeenAt, nowMs);
 }
 
 async function dbSavePlayerMasterMeta({ playerId, partyCode, heroName, realPlayerName }) {
@@ -1172,11 +1223,19 @@ async function dbDeleteItem(itemId) {
 async function dbAddPlayerItem(playerId, itemId, quantity=1) {
   const amount = Math.max(1, Number(quantity) || 1);
   const payload = Array.from({ length: amount }, () => ({ player_id: playerId, item_id: itemId }));
-  await supabase.from("player_items").insert(payload);
+  const { error } = await supabase.from("player_items").insert(payload);
+  if(error) throw error;
 }
 async function dbTransferPlayerItem(rowId, nextPlayerId) {
-  const { error } = await supabase.from("player_items").update({ player_id: nextPlayerId }).eq("id", rowId);
+  const { data, error } = await supabase
+    .from("player_items")
+    .update({ player_id: nextPlayerId })
+    .eq("id", rowId)
+    .select("id,player_id,item_id")
+    .maybeSingle();
   if(error) throw error;
+  if(!data) throw new Error("Oggetto non trovato o gia trasferito.");
+  return data;
 }
 async function dbGetPlayerItems(playerId) {
   const { data } = await supabase.from("player_items").select("*").eq("player_id", playerId).order("created_at", { ascending: true });
@@ -1316,6 +1375,13 @@ export default function App() {
     return ()=>subscription.unsubscribe();
   },[]);
 
+  useEffect(() => {
+    if(!authUser) return;
+    dbSaveUserMasterMeta(authUser);
+    const timer = setInterval(() => dbSaveUserMasterMeta(authUser), USER_HEARTBEAT_MS);
+    return () => clearInterval(timer);
+  }, [authUser]);
+
   async function goGame(characterOrId) {
     const selectedCharacter = characterOrId && typeof characterOrId === "object" ? characterOrId : null;
     const validId = (selectedCharacter?.id ?? characterOrId ?? "").toString().trim();
@@ -1409,7 +1475,7 @@ export default function App() {
       {screen!=="master" && authUser && screen==="create"  && <CreateChar setScreen={setScreen} goGame={goGame} authUser={authUser} />}
       {screen!=="master" && authUser && screen==="game" && (
         <ErrorBoundary onReset={()=>setScreen("landing")}> 
-          <GameScreen myId={myId} setScreen={setScreen} />
+          <GameScreen myId={myId} setScreen={setScreen} authUser={authUser} />
         </ErrorBoundary>
       )}
     </div>
@@ -2473,9 +2539,10 @@ function PlayersView({ authUser }) {
     const playerBuffs = currentBuffs[p.id] || {};
     const legendaryItem = turns > 0 ? { ...item, turnsLeft: turns } : null;
     const newState = { ...currentState, masterBuffs: { ...currentBuffs, [p.id]: { ...playerBuffs, legendaryItem } } };
+    if(turns > 0) await dbAddPlayerItem(p.id, item.id, 1);
     await dbSavePartyState(code, newState);
     setPartyStates(prev=>({...prev,[code]:newState}));
-    if(turns > 0) window.alert(`✅ ${item.emoji} ${item.name} donato a ${p.name} (${turns} turni)`);
+    if(turns > 0) window.alert(`✅ ${item.emoji} ${item.name} donato a ${p.name}: ora è anche nell'inventario. (${turns} turni)`);
     else window.alert(`✅ Oggetto leggendario rimosso da ${p.name}`);
   }
   async function masterSetBuff(p, buffKey, turns) {
@@ -3129,8 +3196,17 @@ function MarketView() {
   );
 }
 
-function generateShopInventory(items) {
-  const shuffle = arr => [...arr].sort(() => Math.random() - 0.5);
+function generateShopInventory(items, seed = 0) {
+  const today = new Date().toLocaleDateString('en-CA');
+  const rng = _makeRng(_dateToSeed(today + "_shop_" + seed));
+  const shuffle = arr => {
+    const a = [...arr];
+    for(let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  };
   const pick = (pool, n) => shuffle(pool).slice(0, Math.min(n, pool.length));
   return [
     ...pick(items.filter(i => i.rarity === "common"), 5),
@@ -3140,8 +3216,8 @@ function generateShopInventory(items) {
   ];
 }
 
-function ShopView({ me, items, loading, error, inventoryCounts, onBuy }) {
-  const [shopItems] = useState(() => items.length ? generateShopInventory(items) : []);
+function ShopView({ me, items, loading, error, inventoryCounts, onBuy, restSeed = 0 }) {
+  const [shopItems] = useState(() => items.length ? generateShopInventory(items, restSeed) : []);
 
   const RARITY_COLOR = { common:"#9ca3af", uncommon:"#34d399", rare:"#60a5fa", epic:"#a78bfa", legendary:"#fbbf24" };
 
@@ -3388,6 +3464,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip }) {
     { key:"weapon", label:"Arma", fallback:"Nessuna arma equipaggiata" },
     { key:"armor", label:"Armatura", fallback:"Nessuna armatura equipaggiata" },
     { key:"shield", label:"Scudo", fallback:"Nessuno scudo equipaggiato" },
+    { key:"accessory", label:"Accessorio", fallback:"Nessun accessorio equipaggiato" },
   ];
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
@@ -3499,7 +3576,7 @@ function SpellbookView({ spellsByLevel, preparedSpellIds, preparedCount, maxPrep
 /* ----------------------------------------------
    GAME SCREEN
 ---------------------------------------------- */
-function GameScreen({ myId, setScreen }) {
+function GameScreen({ myId, setScreen, authUser }) {
   const [me, setMeRaw] = useState(null);
   const [messages, setMessages] = useState([]);
   const [partyPlayers, setPartyPlayers] = useState([]);
@@ -3509,6 +3586,7 @@ function GameScreen({ myId, setScreen }) {
   const [diceResult, setDiceResult] = useState(null);
   const [spellMenu, setSpellMenu] = useState(false);
   const [selectedTarget, setSelectedTarget] = useState(null);
+  const [restTimeLeft, setRestTimeLeft] = useState(null);
   const [tab, setTab] = useState("quest");
   const [victoryScreen, setVictoryScreen] = useState(null);
   const isMobile = useMobile();
@@ -3537,15 +3615,27 @@ function GameScreen({ myId, setScreen }) {
     const diceRef = useRef(null);
 
   async function showDiceVisual({ sides, notation, label, themeColor="#ef4444" }) {
+    const diceNotation = notation || `1d${sides}`;
     if (diceRef.current) {
-      setDiceResult({ stage:"rolling", label, value:null });
-      const total = await diceRef.current.roll(notation || `1d${sides}`, themeColor);
-      setDiceResult({ stage:"result", label, value: total });
-      await new Promise(r => setTimeout(r, 1200));
-      setDiceResult(null);
-      return total !== null ? total : parseDice(notation || `1d${sides}`);
+      const fallbackTotal = parseDice(diceNotation);
+      try {
+        setDiceResult({ stage:"rolling", label, value:null });
+        const total = await diceRef.current.roll(diceNotation, themeColor);
+        const resolvedTotal = total !== null ? total : fallbackTotal;
+        setDiceResult({ stage:"result", label, value: resolvedTotal });
+        await new Promise(r => setTimeout(r, 1200));
+        return resolvedTotal;
+      } catch (err) {
+        console.error("Dice visual failed:", err);
+        setDiceResult({ stage:"result", label, value: fallbackTotal });
+        await new Promise(r => setTimeout(r, 1200));
+        return fallbackTotal;
+      } finally {
+        setDiceResult(null);
+        diceRef.current?.clear?.();
+      }
     } else {
-      const val = parseDice(notation || `1d${sides}`);
+      const val = parseDice(diceNotation);
       setDiceResult({ stage:"rolling", sides, value:null, label });
       setDiceAnim(true);
       await new Promise(resolve => setTimeout(resolve, 450));
@@ -3671,6 +3761,7 @@ function GameScreen({ myId, setScreen }) {
         weapon: ownedIds.has(nextEquipment.weapon) ? nextEquipment.weapon : null,
         armor: ownedIds.has(nextEquipment.armor) ? nextEquipment.armor : null,
         shield: ownedIds.has(nextEquipment.shield) ? nextEquipment.shield : null,
+        accessory: ownedIds.has(nextEquipment.accessory) ? nextEquipment.accessory : null,
       };
       saveStoredEquipment(myId, sanitizedEquipment);
       setCatalogItems(items);
@@ -3726,6 +3817,8 @@ function GameScreen({ myId, setScreen }) {
             () => refreshAll(p.partyCode))
           .on("postgres_changes", { event:"*", schema:"public", table:"players", filter:`party_code=eq.${p.partyCode}` },
             () => refreshAll(p.partyCode))
+          .on("postgres_changes", { event:"*", schema:"public", table:"player_items" },
+            () => refreshInventory(p))
           .on("postgres_changes", { event:"*", schema:"public", table:"party_state", filter:`party_code=eq.${p.partyCode}` },
             () => refreshAll(p.partyCode))
           .subscribe();
@@ -3780,7 +3873,8 @@ function GameScreen({ myId, setScreen }) {
     monsterTickBusyRef.current = true;
     try {
       const latestPlayers = await dbGetPlayers(code);
-      const alivePlayers = latestPlayers.filter(p => (p?.hp || 0) > 0);
+      const combatPlayerIds = new Set(latestCombatants.filter(c => c?.isPlayer).map(c => c.id));
+      const alivePlayers = latestPlayers.filter(p => combatPlayerIds.has(p.id) && (p?.hp || 0) > 0);
       if (!alivePlayers.length) {
         if(!hasActionablePlayerCombatants(latestCombatants)) {
           await resolveCombatNoActionablePlayers(latestQs, latestCombatants);
@@ -3865,7 +3959,8 @@ function GameScreen({ myId, setScreen }) {
   }
   async function resolveCombatNoActionablePlayers(latestState, combatants) {
     const soloCombatant = (combatants || []).find(c => c?.isPlayer && c.id === myId);
-    if(partyPlayers.length <= 1 && soloCombatant?.stable && !soloCombatant?.dead) {
+    const activeCombatPlayerCount = (combatants || []).filter(c => c?.isPlayer).length;
+    if(activeCombatPlayerCount <= 1 && soloCombatant?.stable && !soloCombatant?.dead) {
       const recoveredPlayer = { ...me, hp:1 };
       await dbSavePlayer(recoveredPlayer);
       setMeRaw(recoveredPlayer);
@@ -3985,7 +4080,8 @@ function GameScreen({ myId, setScreen }) {
     let updatedSeller = { ...me, gold: (me.gold || 0) + tradePrice };
     if(isEquippedLastCopy) updatedSeller = applyEquipmentToPlayer(updatedSeller, nextEquipment, itemMap);
 
-    await dbTransferPlayerItem(entryToTrade.rowId, target.id);
+    try {
+      await dbTransferPlayerItem(entryToTrade.rowId, target.id);
     await dbSavePlayer(updatedBuyer);
     if(isEquippedLastCopy) {
       saveStoredEquipment(myId, nextEquipment);
@@ -4002,7 +4098,12 @@ function GameScreen({ myId, setScreen }) {
         : `ðŸ¤ **${me.name}** regala **${group.item.name}** a **${target.name}**.`,
       "info",
       "Sistema"
-    );
+      );
+    } catch(e) {
+      console.error("Scambio oggetto fallito:", e);
+      window.alert(`Scambio fallito: ${e?.message || "errore sconosciuto"}`);
+      await refreshInventory(me);
+    }
   }
 
   async function usePotion(entry) {
@@ -4108,6 +4209,81 @@ function GameScreen({ myId, setScreen }) {
     setTab("quest");
   }
 
+  // -- RIPOSO --
+  async function startRest(type) {
+    if(combat?.active) return;
+    if(!code) return;
+    if(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date()) return;
+    const durationMs = type === "short" ? 30 * 60 * 1000 : 60 * 60 * 1000;
+    const endsAt = new Date(Date.now() + durationMs).toISOString();
+    await saveQState({ ...qs, rest: { type, endsAt, startedBy: myId } });
+    const label = type === "short" ? "Riposo Breve (30 minuti)" : "Riposo Lungo (1 ora)";
+    await addMsg(`🛌 **${me?.name}** ha avviato un **${label}**. Il gruppo si accampa e recupera le forze...`, "system", "Sistema");
+  }
+
+  async function cancelRest() {
+    if(!code) return;
+    await saveQState({ ...qs, rest: null });
+    await addMsg(`⚡ Il riposo è stato interrotto!`, "system", "Sistema");
+  }
+
+  // Countdown display + auto-apply when timer expires
+  useEffect(() => {
+    if(!qs?.rest?.endsAt || !code) { setRestTimeLeft(null); return; }
+    let applied = false;
+    const applyRest = async () => {
+      if(applied) return;
+      applied = true;
+      const isLeader = partyPlayers.length === 0 || partyPlayers[0]?.id === myId;
+      if(!isLeader) return;
+      const latestQs = await dbGetPartyState(code);
+      if(!latestQs?.rest?.endsAt) return; // already applied
+      const type = latestQs.rest.type;
+      const allPlayers = await dbGetPlayers(code);
+      const newPersistentSlots = { ...(latestQs.persistentSpellSlots || {}) };
+      for(const p of allPlayers) {
+        const maxSlots = getSpellSlots(p.level || 1);
+        if(type === "long") {
+          const fullHp = p.max_hp || p.maxHp || p.hp;
+          const updated = { ...p, hp: fullHp, dead: false };
+          await dbSavePlayer(updated);
+          if(p.id === myId) setMeRaw(updated);
+          newPersistentSlots[p.id] = { ...maxSlots };
+        } else {
+          const half = Math.floor((p.max_hp || p.maxHp || p.hp) / 2);
+          const healed = Math.min(p.max_hp || p.maxHp || p.hp, (p.hp || 0) + half);
+          const updated = { ...p, hp: healed };
+          await dbSavePlayer(updated);
+          if(p.id === myId) setMeRaw(updated);
+          const cur = newPersistentSlots[p.id] || maxSlots;
+          const halfRestored = {};
+          for(const [lvl, max] of Object.entries(maxSlots)) {
+            const used = max - (cur[lvl] || 0);
+            halfRestored[lvl] = Math.min(max, (cur[lvl] || 0) + Math.ceil(used / 2));
+          }
+          newPersistentSlots[p.id] = halfRestored;
+        }
+      }
+      const newLongRestSeed = type === "long" ? (latestQs.longRestSeed || 0) + 1 : (latestQs.longRestSeed || 0);
+      await saveQState({ ...latestQs, rest: null, persistentSpellSlots: newPersistentSlots, longRestSeed: newLongRestSeed });
+      const msg = type === "long"
+        ? `🌅 **Riposo Lungo completato!** Il gruppo si risveglia completamente guarito. Tutti gli incantesimi sono ripristinati. Shop e missioni aggiornati!`
+        : `☀️ **Riposo Breve completato!** Il gruppo recupera metà dei punti vita e metà degli incantesimi.`;
+      await addMsg(msg, "system", "Sistema");
+    };
+    const tick = () => {
+      const ms = new Date(qs.rest.endsAt) - new Date();
+      if(ms <= 0) { setRestTimeLeft(null); applyRest(); }
+      else {
+        const s = Math.ceil(ms / 1000);
+        setRestTimeLeft({ mm: Math.floor(s / 60), ss: s % 60 });
+      }
+    };
+    tick();
+    const iv = setInterval(tick, 1000);
+    return () => clearInterval(iv);
+  }, [qs?.rest?.endsAt, code]);  // eslint-disable-line
+
   // -- COMBATTIMENTO --
   async function doAttack() {
     const combat = qs.combat;
@@ -4156,7 +4332,8 @@ function GameScreen({ myId, setScreen }) {
       const updatedPlayer = { ...me, hp: deathSave.nextCombatant.hp, dead: !!deathSave.nextCombatant.dead };
       await dbSavePlayer(updatedPlayer);
       setMeRaw(updatedPlayer);
-      if(deathSave.result === "dead" && partyPlayers.length <= 1) {
+      const activeCombatPlayerCount = combatants.filter(c => c?.isPlayer).length;
+      if(deathSave.result === "dead" && activeCombatPlayerCount <= 1) {
         await triggerSoloDeath(attacker.name);
         return;
       }
@@ -4304,12 +4481,14 @@ function GameScreen({ myId, setScreen }) {
       .map(c => ({ name: c.name, emoji: c.emoji || "👾", xp: monsterXpValue(c), gold: monsterGoldValue(c) }));
     const totalXp = slain.reduce((s, m) => s + m.xp, 0);
     const totalGold = slain.reduce((s, m) => s + m.gold, 0);
-    const partyCount = Math.max(partyPlayers.length, 1);
+    const combatPlayerIds = new Set((latestCombat?.combatants || []).filter(c => c?.isPlayer).map(c => c.id));
+    const rewardPlayers = partyPlayers.filter(p => combatPlayerIds.has(p.id));
+    const partyCount = Math.max(rewardPlayers.length, 1);
     const xpEach = Math.floor(totalXp / partyCount);
     const goldEach = Math.floor(totalGold / partyCount);
 
     const playerResults = [];
-    for (const p of partyPlayers) {
+    for (const p of rewardPlayers) {
       const beforeXp = p.xp || 0;
       const beforeLevel = p.level || 1;
       let up = { ...p, xp: beforeXp + xpEach, gold: (p.gold || 0) + goldEach };
@@ -4330,7 +4509,10 @@ function GameScreen({ myId, setScreen }) {
       return q && isCombatStep(q.steps[latestQs.step]);
     })();
     const newCombat = { active: false, won: !!onQuestCombat, victoryData };
-    const newQs = { ...latestQs, combat: newCombat };
+    // Persist remaining spell slots so they carry over between combats
+    const usedSlots = latestCombat?.spellSlots || {};
+    const newPersistentSlots = { ...(latestQs.persistentSpellSlots || {}), ...usedSlots };
+    const newQs = { ...latestQs, combat: newCombat, persistentSpellSlots: newPersistentSlots };
     await dbSavePartyState(code, newQs);
     setQs(prev => ({ ...prev, combat: newCombat }));
     await dbSendMessage({ party_code: code, author: "Sistema",
@@ -4369,6 +4551,17 @@ ${q.desc}
     return typeof step === "string" ? step : step.text || "";
   }
 
+  async function getOnlinePartyPlayersForCombat() {
+    const userMeta = await dbGetUserMasterMeta();
+    const nowMs = Date.now();
+    const onlinePlayers = partyPlayers.filter(player =>
+      player.id === myId ||
+      player.accountId === authUser?.id ||
+      isPartyPlayerOnline(player, userMeta, nowMs)
+    );
+    return onlinePlayers.length ? onlinePlayers : partyPlayers.filter(player => player.id === myId);
+  }
+
   async function postQuestStepMessage(q, stepIndex) {
     const step = q.steps[stepIndex];
     const icon = isCombatStep(step)?"⚔️":isLootStep(step)?"💰":isChoiceStep(step)?"🎯":"📜";
@@ -4395,7 +4588,8 @@ ${stepText(step)}`, "quest","Master");
       const maxHp = e.maxHp || e.hp;
       return { ...e, hp:maxHp, maxHp, xp:monsterXpValue({ ...e, maxHp }), weaponDie:e.weaponDie || getCombatDamageDie(e) };
     });
-    const players = partyPlayers.map(p=>({
+    const combatPartyPlayers = await getOnlinePartyPlayersForCombat();
+    const players = combatPartyPlayers.map(p=>({
       id:p?.id,
       name:p?.name,
       emoji:CLASSES[p?.class||'warrior']?.emoji||"⚔️",
@@ -4415,11 +4609,18 @@ ${stepText(step)}`, "quest","Master");
     }));
     const allCombatants = [...players,...monsters].map(c=>({...c, rollInit:(c.init||1)+roll(20)}));
     allCombatants.sort((a,b)=>b.rollInit-a.rollInit);
-    const spellSlots = Object.fromEntries(players.map(p=>[p.id, getSpellSlots(p.level||1)]));
+    const spellSlots = Object.fromEntries(players.map(p=>{
+      const persisted = (qs.persistentSpellSlots || {})[p.id];
+      return [p.id, persisted || getSpellSlots(p.level||1)];
+    }));
     const newCombat = { active:true, combatants:allCombatants, turn:0, round:1, spellSlots };
     const newQs = {...qs, combat:newCombat};
     await saveQState(newQs);
     await addMsg(`⚔️ **BATTAGLIA INIZIATA!** Round 1\n\n**Ordine di Iniziativa:**\n${allCombatants.map((c,i)=>`${i+1}. ${c.emoji||"⭐"} ${c.name} (${c.rollInit})`).join("\n")}`, "combat", "Sistema");
+    const absentPlayers = partyPlayers.filter(p => !combatPartyPlayers.some(active => active.id === p.id));
+    if(absentPlayers.length) {
+      await addMsg(`Non partecipano perche offline: ${absentPlayers.map(p => p.name).join(", ")}.`, "system", "Sistema");
+    }
     setTab("combat");
   }
   startCombatStepRef.current = startCombatStep;
@@ -4563,7 +4764,7 @@ ${stepText(step)}`, "quest","Master");
   const myTurn = combat?.active && activeCombatant?.id===myId;
   const myDeathTurn = myTurn && isDyingCombatant(activeCombatant);
   const isCaster = MAGIC_CLASSES.includes(me?.class);
-  const spellSlots = combat?.spellSlots?.[myId] || getSpellSlots(me?.level);
+  const spellSlots = combat?.spellSlots?.[myId] || (qs?.persistentSpellSlots?.[myId]) || getSpellSlots(me?.level);
   const availableSpells = isCaster ? availableSpellsFor(me?.class, me?.level) : [];
   const maxPreparedSpells = maxPreparedSpellsForLevel(me?.level || 1);
   const preparedNormalSpellCount = availableSpells.filter(spell => spell.slots > 0 && preparedSpellIds.includes(spell.id)).length;
@@ -4578,7 +4779,7 @@ ${stepText(step)}`, "quest","Master");
   }, {});
   const currentQ = qs?.active ? getQuests().find(x=>x.id===qs.currentId) : null;
   const allActiveQuests = getQuests().filter(q => q.active);
-  const dailyQuestIds = new Set(getDailyQuests(allActiveQuests.filter(q => !q.specialPassword)).map(q => q.id));
+  const dailyQuestIds = new Set(getDailyQuests(allActiveQuests.filter(q => !q.specialPassword), undefined, qs?.longRestSeed || 0).map(q => q.id));
   const publicDailyQuests = allActiveQuests.filter(q => dailyQuestIds.has(q.id));
   const unlockedSpecialQuests = allActiveQuests.filter(q => q.specialPassword && unlockedSpecialQuestIds.includes(q.id));
   const currentStepKey = `${qs?.currentId || ""}:${qs?.step ?? -1}`;
@@ -4595,6 +4796,7 @@ ${stepText(step)}`, "quest","Master");
     weapon: itemMap.get(equipment.weapon) || null,
     armor: itemMap.get(equipment.armor) || null,
     shield: itemMap.get(equipment.shield) || null,
+    accessory: itemMap.get(equipment.accessory) || null,
   };
   const currentLevelGain = levelGainForClass(me?.class);
   const nextLevelXp = xpForLevel(me?.level || 1);
@@ -4818,6 +5020,41 @@ ${stepText(step)}`, "quest","Master");
               </div>
             </div>
 
+            {/* ── Rest panel ── */}
+            {code && !combat?.active && (
+              <div style={{ flexShrink:0, background:"rgba(2,10,2,0.9)", borderBottom:"1px solid rgba(34,197,94,0.2)", padding:"0.65rem 1rem" }}>
+                {qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date() ? (
+                  <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
+                    <div style={{ flex:1 }}>
+                      <div style={{ color:"#86efac", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>
+                        {qs.rest.type === "short" ? "🌙 Riposo Breve" : "🌅 Riposo Lungo"} in corso
+                      </div>
+                      <div style={{ color:"#4ade80", fontSize:"1.1rem", fontFamily:"'Cinzel',serif", fontWeight:700 }}>
+                        {restTimeLeft ? `${restTimeLeft.mm}:${String(restTimeLeft.ss).padStart(2,"0")}` : "Quasi finito..."}
+                      </div>
+                      <div style={{ color:"#166534", fontSize:"0.65rem" }}>
+                        {qs.rest.type === "short" ? "Mezza cura + metà incantesimi al termine" : "Cura completa + tutti gli incantesimi al termine"}
+                      </div>
+                    </div>
+                    <button onClick={cancelRest} style={{ padding:"0.4rem 0.8rem", background:"rgba(127,29,29,0.5)", border:"1px solid #ef4444", borderRadius:4, color:"#fca5a5", cursor:"pointer", fontSize:"0.72rem", fontFamily:"inherit" }}>
+                      ✕ Interrompi
+                    </button>
+                  </div>
+                ) : (
+                  <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
+                    <span style={{ color:"#4ade80", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em", marginRight:4 }}>🏕️ Riposo:</span>
+                    <button onClick={()=>startRest("short")} style={{ padding:"0.35rem 0.8rem", background:"rgba(20,83,45,0.5)", border:"1px solid #16a34a", borderRadius:4, color:"#86efac", cursor:"pointer", fontSize:"0.72rem", fontFamily:"inherit", fontWeight:700 }}>
+                      🌙 Breve <span style={{ color:"#4ade80", fontSize:"0.65rem" }}>(30 min)</span>
+                    </button>
+                    <button onClick={()=>startRest("long")} style={{ padding:"0.35rem 0.8rem", background:"rgba(20,83,45,0.7)", border:"1px solid #15803d", borderRadius:4, color:"#4ade80", cursor:"pointer", fontSize:"0.72rem", fontFamily:"inherit", fontWeight:700 }}>
+                      🌅 Lungo <span style={{ color:"#86efac", fontSize:"0.65rem" }}>(1 ora)</span>
+                    </button>
+                    <span style={{ color:"#166534", fontSize:"0.62rem" }}>Solo fuori dal combattimento</span>
+                  </div>
+                )}
+              </div>
+            )}
+
             {/* ── Party gate OR messages + input ── */}
             {!code ? (
               <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"2rem", textAlign:"center", background:"rgba(10,5,1,0.7)" }}>
@@ -4988,12 +5225,14 @@ ${stepText(step)}`, "quest","Master");
         {tab==="shop" && (
           <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.5)" }}>
             <ShopView
+              key={qs?.longRestSeed || 0}
               me={me}
               items={catalogItems.filter(i=>i.available)}
               loading={inventoryLoading}
               error={null}
               inventoryCounts={inventoryCounts}
               onBuy={buyItem}
+              restSeed={qs?.longRestSeed || 0}
             />
           </div>
         )}
