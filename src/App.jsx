@@ -1122,15 +1122,16 @@ async function dbGetPlayerMasterMeta() {
 }
 
 async function dbSavePlayer(p) {
-  const { data, error } = await supabase.from("players").upsert({
+  const payload = {
     id: p.id, name: p.name, party_code: p.partyCode,
-    account_id: p.accountId || null,
     class: p?.class || 'warrior', race: p?.race || 'human',
     hp: p?.hp || 0, max_hp: p?.maxHp || 0, atk: p?.atk || 0, def: p?.def || 0,
     mag: p?.mag || 0, init: p?.init || 1, xp: p?.xp || 0, level: p?.level || 1, gold: p?.gold || 0,
     dead: !!p?.dead,
     updated_at: new Date().toISOString(),
-  }).select("id,account_id,dead").single();
+  };
+  if(p.accountId) payload.account_id = p.accountId;
+  const { data, error } = await supabase.from("players").upsert(payload).select("id,account_id,dead").single();
   return { data, error };
 }
 
@@ -1760,7 +1761,18 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
     if(!authUser?.id) { setCharacters([]); setLoadingChars(false); return; }
     setLoadingChars(true);
     try {
-      const nextCharacters = await dbGetAccountCharacters(authUser.id);
+      let nextCharacters = await dbGetAccountCharacters(authUser.id);
+      // Recovery: if no characters found but localStorage has an ID, try to re-bind it
+      if(!nextCharacters.length) {
+        const savedId = (localStorage.getItem("eoz_myId") || "").trim();
+        if(savedId) {
+          const { data: orphan } = await supabase.from("players").select("*").eq("id", savedId).maybeSingle();
+          if(orphan && !orphan.account_id) {
+            await supabase.from("players").update({ account_id: authUser.id, updated_at: new Date().toISOString() }).eq("id", savedId);
+            nextCharacters = await dbGetAccountCharacters(authUser.id);
+          }
+        }
+      }
       debugCharacterFlow("character_list_refresh_result", {
         accountId: authUser.id,
         count: nextCharacters.length,
@@ -3808,7 +3820,7 @@ function GameScreen({ myId, setScreen, authUser }) {
           setScreen("landing");
           return;
         }
-        const p = { id:data.id, name:data.name, partyCode:data.party_code, class:data.class, race:data.race, hp:data.hp, maxHp:data.max_hp, atk:data.atk, def:data.def, mag:data.mag, init:data.init, xp:data.xp, level:data.level, gold:data.gold };
+        const p = { id:data.id, name:data.name, partyCode:data.party_code, accountId:data.account_id||null, class:data.class, race:data.race, hp:data.hp, maxHp:data.max_hp, atk:data.atk, def:data.def, mag:data.mag, init:data.init, xp:data.xp, level:data.level, gold:data.gold };
         setMeRaw(p);
         await refreshAll(p.partyCode);
         await refreshInventory(p);
