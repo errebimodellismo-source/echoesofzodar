@@ -20,6 +20,8 @@ import audioManager from "./utils/audioManager";
   style.textContent = `
     @keyframes fadeUp   { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
     @keyframes goldenGlow { 0%,100%{text-shadow:0 0 20px rgba(251,191,36,.5)} 50%{text-shadow:0 0 50px rgba(251,191,36,.9),0 0 100px rgba(245,158,11,.4)} }
+    @keyframes legNotifIn { from{opacity:0;transform:translateY(-40px) scale(0.92)} to{opacity:1;transform:translateY(0) scale(1)} }
+    @keyframes legPulse { 0%,100%{box-shadow:0 0 18px rgba(109,40,217,0.5)} 50%{box-shadow:0 0 40px rgba(139,92,246,0.9),0 0 80px rgba(109,40,217,0.5)} }
 .msg-in   { animation: fadeUp 0.25s ease; }
     ::-webkit-scrollbar{width:5px}
     ::-webkit-scrollbar{width:5px}
@@ -3853,6 +3855,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [guildMissionForm, setGuildMissionForm] = useState({ title:"", desc:"", goal:1, rewardGold:0, rewardXp:50 });
   const [showMissionForm, setShowMissionForm] = useState(false);
   const [turnTimeLeft, setTurnTimeLeft] = useState(null);
+  const [legNotif, setLegNotif] = useState(null);
   const [selectedTarget, setSelectedTarget] = useState(null);
   const [restTimeLeft, setRestTimeLeft] = useState(null);
   const [pendingHealItem, setPendingHealItem] = useState(null);
@@ -3880,6 +3883,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const guildChatSubRef = useRef(null);
   const turnTimerRef = useRef(null);
   const pendingLogRef = useRef(false);
+  const prevLegItemRef = useRef(null);
   const itemMapRef = useRef(DEFAULT_ITEM_MAP);
   const startCombatStepRef = useRef(null);
   const monsterTickBusyRef = useRef(false);
@@ -4137,6 +4141,19 @@ function GameScreen({ myId, setScreen, authUser }) {
   useEffect(() => {
     pendingLogRef.current = !!(qs?.combat?.pendingLog);
   }, [qs?.combat?.pendingLog]);
+
+  // Notify player when master grants a legendary item
+  useEffect(() => {
+    const leg = qs?.masterBuffs?.[myId]?.legendaryItem;
+    const prev = prevLegItemRef.current;
+    if(leg && leg.turnsLeft > 0 && leg.name !== prev?.name) {
+      setLegNotif(leg);
+      const t = setTimeout(() => setLegNotif(null), 7000);
+      prevLegItemRef.current = leg;
+      return () => clearTimeout(t);
+    }
+    if(!leg) prevLegItemRef.current = null;
+  }, [qs?.masterBuffs?.[myId]?.legendaryItem?.name, myId]);
 
   // 30-second turn timer — auto-skips the active player if they do nothing
   const TURN_TIMEOUT_S = 30;
@@ -6478,6 +6495,25 @@ ${stepText(step)}`, "quest","Master");
         )}
       </main>
       <DiceRoller ref={diceRef} />
+
+      {/* ── Legendary Item Notification ── */}
+      {legNotif && (
+        <div onClick={()=>setLegNotif(null)} style={{ position:"fixed", top:24, left:"50%", transform:"translateX(-50%)", zIndex:10200, maxWidth:340, width:"90vw", animation:"legNotifIn 0.4s cubic-bezier(.22,1,.36,1)", cursor:"pointer" }}>
+          <div style={{ background:"linear-gradient(135deg,rgba(49,10,101,0.97),rgba(17,5,40,0.98))", border:"2px solid #7c3aed", borderRadius:16, padding:"1.1rem 1.3rem", display:"flex", gap:14, alignItems:"center", animation:"legPulse 2s ease-in-out infinite" }}>
+            <span style={{ fontSize:"2.6rem", lineHeight:1 }}>{legNotif.emoji}</span>
+            <div style={{ flex:1 }}>
+              <div style={{ fontSize:"0.6rem", color:"#a78bfa", textTransform:"uppercase", letterSpacing:"0.12em", marginBottom:3 }}>🏆 Il Master ti ha donato</div>
+              <div style={{ fontFamily:"'Cinzel',serif", fontWeight:700, color:"#e9d5ff", fontSize:"1rem", lineHeight:1.2 }}>{legNotif.name}</div>
+              <div style={{ fontSize:"0.72rem", color:"#7c3aed", marginTop:4 }}>
+                {legNotif.type==="weapon"&&`⚔️ ${legNotif.weapon_die} +${legNotif.bonus_atk} ATK`}
+                {legNotif.type==="armor"&&`🛡️ +${legNotif.bonus_def} DEF`}
+                {legNotif.type==="magic"&&`✨ +${legNotif.bonus_mag} MAG`}
+                <span style={{ marginLeft:8 }}>· {legNotif.turnsLeft} turni</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── Potion Heal-Target Picker ── */}
       {pendingHealItem && (
