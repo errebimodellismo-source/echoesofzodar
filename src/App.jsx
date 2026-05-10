@@ -3596,6 +3596,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [diceAnim, setDiceAnim] = useState(false);
   const [diceResult, setDiceResult] = useState(null);
   const [spellMenu, setSpellMenu] = useState(false);
+  const [showCombatLog, setShowCombatLog] = useState(false);
   const [selectedTarget, setSelectedTarget] = useState(null);
   const [restTimeLeft, setRestTimeLeft] = useState(null);
   const [pendingHealItem, setPendingHealItem] = useState(null);
@@ -3847,7 +3848,10 @@ function GameScreen({ myId, setScreen, authUser }) {
   },[myId, refreshAll, refreshInventory, setScreen]);
 
   useEffect(()=>{ msgEnd.current?.scrollIntoView({behavior:"smooth"}); },[messages]);
-  useEffect(()=>{ combatLogEndRef.current?.scrollIntoView({behavior:"smooth"}); },[messages]);
+  useEffect(()=>{
+    const el = combatLogEndRef.current;
+    if(el) { const p = el.parentElement; if(p) p.scrollTop = p.scrollHeight; }
+  },[messages]);
 
   // Fallback poll — keeps the log alive if Supabase realtime silently drops
   useEffect(() => {
@@ -5679,15 +5683,21 @@ ${stepText(step)}`, "quest","Master");
                       )}
                     </div>
 
-                    <div style={{ background:"rgba(8,14,28,0.9)", border:"1px solid rgba(148,163,184,0.16)", borderRadius:12, padding:"1rem", boxShadow:"0 16px 34px rgba(0,0,0,0.18)" }}>
-                      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.78rem", color:"#cbd5e1", marginBottom:8, letterSpacing:"0.08em" }}>LOG DI BATTAGLIA</div>
-                      <div style={{ maxHeight:360, overflowY:"auto" }}>
-                    {messages.filter(m=>m.type==="combat").map(m=>(
-                      <div key={m.id} style={{ padding:"0.75rem 0.85rem", background:"rgba(127,29,29,0.16)", border:"1px solid #7f1d1d", borderRadius:8, marginBottom:8, fontSize:"0.84rem", color:"#fecaca", lineHeight:1.6 }}
-                        dangerouslySetInnerHTML={{ __html:fmt(m.content) }} />
-                    ))}
-                        <div ref={combatLogEndRef} />
-                      </div>
+                    <div style={{ background:"rgba(8,14,28,0.9)", border:"1px solid rgba(148,163,184,0.16)", borderRadius:12, overflow:"hidden", boxShadow:"0 16px 34px rgba(0,0,0,0.18)" }}>
+                      <button onClick={()=>setShowCombatLog(v=>!v)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0.75rem 1rem", background:"transparent", border:"none", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", color:"#cbd5e1", letterSpacing:"0.08em" }}>
+                        <span>📜 LOG DI BATTAGLIA ({messages.filter(m=>m.type==="combat").length})</span>
+                        <span style={{ fontSize:"0.9rem", color:"#94a3b8" }}>{showCombatLog ? "▲ chiudi" : "▼ apri"}</span>
+                      </button>
+                      {showCombatLog && (
+                        <div style={{ maxHeight:320, overflowY:"auto", padding:"0 0.85rem 0.85rem", borderTop:"1px solid rgba(148,163,184,0.1)" }} onClick={()=>setShowCombatLog(false)}>
+                          {messages.filter(m=>m.type==="combat").map(m=>(
+                            <div key={m.id} style={{ padding:"0.65rem 0.75rem", background:"rgba(127,29,29,0.16)", border:"1px solid #7f1d1d", borderRadius:8, marginBottom:6, marginTop:6, fontSize:"0.82rem", color:"#fecaca", lineHeight:1.6 }}
+                              dangerouslySetInnerHTML={{ __html:fmt(m.content) }} />
+                          ))}
+                          <div ref={combatLogEndRef} />
+                          <div style={{ textAlign:"center", fontSize:"0.7rem", color:"#4b5563", marginTop:4 }}>tocca per chiudere</div>
+                        </div>
+                      )}
                     </div>
 
                     <div style={{ padding:"0.75rem 1rem", background:"rgba(20,5,5,0.7)", border:"1px solid rgba(127,29,29,0.3)", borderRadius:10, display:"flex", flexDirection:"column", gap:6, alignItems:"center" }}>
