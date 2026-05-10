@@ -128,9 +128,15 @@ const DiceRoller = forwardRef(({ onRollComplete }, ref) => {
           height: isMobile ? '100vh' : 'min(420px, 70vh)',
           overflow: 'hidden',
           borderRadius: isMobile ? 0 : 18,
+          pointerEvents: 'none',
         }}
       >
         <style>{`
+          #dice-box-container,
+          #dice-box-container canvas,
+          #dice-box-container .dice-box-canvas {
+            pointer-events: none !important;
+          }
           #dice-box-container canvas,
           #dice-box-container .dice-box-canvas {
             position: absolute !important;

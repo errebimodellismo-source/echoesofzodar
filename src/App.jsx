@@ -29,7 +29,7 @@ import audioManager from "./utils/audioManager";
     ::-webkit-scrollbar-thumb{background:#2d1b69;border-radius:3px}
     button{transition:all .15s}
     button:hover{filter:brightness(1.2)}
-    select,input,textarea{outline:none}
+    select,input,textarea{outline:none;cursor:text !important}
     * { box-sizing: border-box; }
     * { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg transform='rotate(-45 16 16)'%3E%3Crect x='15' y='2' width='3' height='20' fill='%23c0c0c0' rx='1'/%3E%3Crect x='14' y='20' width='5' height='3' fill='%23b8860b'/%3E%3Crect x='9' y='18' width='15' height='2' fill='%23b8860b' rx='1'/%3E%3Crect x='14' y='23' width='5' height='7' fill='%23b8860b' rx='1'/%3E%3Crect x='15' y='1' width='3' height='4' fill='%23ffd700' rx='1'/%3E%3C/g%3E%3C/svg%3E") 4 4, auto !important; }
     button { cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cg transform='rotate(-45 16 16)'%3E%3Crect x='15' y='2' width='3' height='20' fill='%23ffd700' rx='1'/%3E%3Crect x='14' y='20' width='5' height='3' fill='%23ff8c00'/%3E%3Crect x='9' y='18' width='15' height='2' fill='%23ff8c00' rx='1'/%3E%3Crect x='14' y='23' width='5' height='7' fill='%23ff8c00' rx='1'/%3E%3Crect x='15' y='1' width='3' height='4' fill='%23fff' rx='1'/%3E%3C/g%3E%3C/svg%3E") 4 4, pointer !important; }
@@ -6277,6 +6277,25 @@ ${stepText(step)}`, "quest","Master");
                           </div>
                         )}
                         <HpBar cur={c.hp} max={c.maxHp} red={!c.isPlayer} />
+                        {c.isPlayer && MAGIC_CLASSES.includes(c.class) && (() => {
+                          const curSlots = combat?.spellSlots?.[c.id] || qs?.persistentSpellSlots?.[c.id] || getSpellSlots(c.level||1);
+                          const maxSlots = getSpellSlots(c.level||1);
+                          const cur = totalSlots(curSlots);
+                          const max = totalSlots(maxSlots);
+                          if(max <= 0) return null;
+                          const pct = Math.min(100, Math.round((cur/max)*100));
+                          return (
+                            <div style={{ marginTop:5 }}>
+                              <div style={{ height:4, background:"rgba(30,41,59,0.6)", borderRadius:2, overflow:"hidden" }}>
+                                <div style={{ height:"100%", width:`${pct}%`, background:`linear-gradient(90deg,${cur===0?"#4b0082":"#6d28d9"},${cur===0?"#7c3aed":"#a78bfa"})`, borderRadius:2, transition:"width .4s" }}/>
+                              </div>
+                              <div style={{ display:"flex", justifyContent:"space-between", marginTop:2, fontSize:"0.62rem", color:"#a78bfa" }}>
+                                <span>✨ Mana</span>
+                                <span>{cur}/{max}</span>
+                              </div>
+                            </div>
+                          );
+                        })()}
                         <div style={{ display:"flex", justifyContent:"space-between", marginTop:6, fontSize:"0.74rem" }}>
                           <span style={{ color:c.isPlayer?"#c4b5fd":"#fca5a5" }}>{c.isPlayer?"Alleato":"Nemico"}</span>
                           <span style={{ color:"#e2e8f0", fontWeight:700 }}>{c.hp}/{c.maxHp} HP</span>
