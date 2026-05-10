@@ -1754,6 +1754,8 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   const meta = getMeta();
   const [characters, setCharacters] = useState([]);
   const [loadingChars, setLoadingChars] = useState(true);
+  const [recoverId, setRecoverId] = useState("");
+  const [recoverError, setRecoverError] = useState("");
 
   useEffect(() => { audioManager.playBGM("intro"); }, []);
 
@@ -1870,6 +1872,27 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
           </div>
         )}
       </div>
+
+      {/* Recupero personaggio per ID */}
+      <div style={{ marginTop:"1rem", width:"100%", maxWidth:940, background:"rgba(0,0,0,0.32)", border:"1px solid #1f2937", borderRadius:10, padding:"0.85rem 1.2rem", backdropFilter:"blur(6px)" }}>
+        <div style={{ color:"#64748b", fontSize:"0.74rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.06em", marginBottom:8 }}>🔍 Recupera personaggio per ID</div>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+          <input
+            value={recoverId}
+            onChange={e=>{ setRecoverId(e.target.value.trim()); setRecoverError(""); }}
+            onKeyDown={e=>{ if(e.key==="Enter" && recoverId) goGame(recoverId).catch(err=>setRecoverError(err?.message||"Errore")); }}
+            placeholder="Incolla qui l'ID del personaggio (chiedi al Master)"
+            style={{ flex:"1 1 280px", padding:"0.5rem 0.75rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.8rem", outline:"none" }}
+          />
+          <button
+            onClick={async ()=>{ if(!recoverId){ setRecoverError("Inserisci un ID."); return; } try{ await goGame(recoverId); }catch(e){ setRecoverError(e?.message||"ID non trovato o non valido."); } }}
+            style={{ padding:"0.5rem 1rem", background:"rgba(109,40,217,0.3)", border:"1px solid #7c3aed", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", whiteSpace:"nowrap" }}>
+            Recupera →
+          </button>
+        </div>
+        {recoverError && <div style={{ color:"#fca5a5", fontSize:"0.74rem", marginTop:6 }}>{recoverError}</div>}
+      </div>
+
       {authUser && <p style={{ marginTop:"1rem", color:"#64748b", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
       <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE • FANTASY • MULTIPLAYER ONLINE</p>
       </div>{/* /zIndex wrapper */}
@@ -2621,6 +2644,10 @@ function PlayersView({ authUser }) {
                   {masterMeta.realPlayerName && <div style={{ color:"#fbbf24", fontSize:"0.72rem", marginTop:2 }}>Giocatore: {masterMeta.realPlayerName}</div>}
                   <div style={{ color:"#94a3b8", fontSize:"0.7rem" }}>{race.emoji} {race.name} · {cls.name} · Lv.{p?.level||1}</div>
                   <div style={{ color:"#94a3b8", fontSize:"0.68rem", marginTop:2 }}>❤️ {p?.hp||0}/{p?.max_hp||0} · 💰 {p?.gold||0} · ⭐ {p?.xp||0} XP</div>
+                  <div style={{ display:"flex", alignItems:"center", gap:4, marginTop:3 }}>
+                    <span style={{ color:"#4b5563", fontSize:"0.6rem", fontFamily:"monospace" }}>ID: {p?.id}</span>
+                    <button onClick={()=>{ navigator.clipboard?.writeText(p?.id||""); window.alert("ID copiato!"); }} style={{ fontSize:"0.55rem", padding:"1px 5px", background:"rgba(30,41,59,0.6)", border:"1px solid #334155", borderRadius:3, color:"#64748b", cursor:"pointer" }}>📋 copia</button>
+                  </div>
                 </div>
                 {p?.dead && <span style={{ padding:"2px 8px", background:"rgba(127,29,29,0.5)", border:"1px solid #ef4444", borderRadius:4, fontSize:"0.65rem", color:"#fca5a5" }}>💀 MORTO</span>}
               </div>
