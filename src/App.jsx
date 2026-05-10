@@ -3587,6 +3587,8 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [spellMenu, setSpellMenu] = useState(false);
   const [selectedTarget, setSelectedTarget] = useState(null);
   const [restTimeLeft, setRestTimeLeft] = useState(null);
+  const [pendingHealItem, setPendingHealItem] = useState(null);
+  const [selectedAllyTarget, setSelectedAllyTarget] = useState(null);
   const [tab, setTab] = useState("quest");
   const [victoryScreen, setVictoryScreen] = useState(null);
   const isMobile = useMobile();
@@ -4115,24 +4117,34 @@ function GameScreen({ myId, setScreen, authUser }) {
     }
     const amount = Math.max(1, entry.item.heal_amount || 0);
     if(amount <= 0) return;
-    if(me.hp >= me.maxHp) {
-      window.alert("Sei già al massimo della vita.");
+    // Se ci sono compagni, mostra il modal di selezione; altrimenti usa su se stesso
+    const validTargets = partyPlayers.filter(p => !p.dead && (p.hp || 0) < (p.max_hp || p.maxHp || 1));
+    if(validTargets.length > 1 || (validTargets.length === 1 && validTargets[0].id !== myId)) {
+      setPendingHealItem(entry);
       return;
     }
-    const healed = Math.min(me.maxHp, me.hp + amount);
-    const delta = healed - me.hp;
+    await applyPotion(entry, me);
+  }
+
+  async function applyPotion(entry, targetPlayer) {
+    setPendingHealItem(null);
+    const amount = Math.max(1, entry.item?.heal_amount || 0);
+    const maxHp = targetPlayer.max_hp || targetPlayer.maxHp || targetPlayer.hp;
+    const healed = Math.min(maxHp, (targetPlayer.hp || 0) + amount);
+    const delta = healed - (targetPlayer.hp || 0);
     await dbRemovePlayerItem(entry.rowId);
-    const updatedPlayer = { ...me, hp: healed };
-    await dbSavePlayer(updatedPlayer);
-    setMeRaw(updatedPlayer);
+    const updatedTarget = { ...targetPlayer, hp: healed, dead: false };
+    await dbSavePlayer(updatedTarget);
+    if(targetPlayer.id === myId) setMeRaw(updatedTarget);
     if(qs?.combat?.active) {
       const combatants = [...qs.combat.combatants];
-      const idx = combatants.findIndex(c => c.id === me.id);
+      const idx = combatants.findIndex(c => c.id === targetPlayer.id);
       if(idx >= 0) combatants[idx] = reviveCombatantState(combatants[idx], healed);
       await saveQState({ ...qs, combat: { ...qs.combat, combatants } });
     }
-    await refreshInventory(updatedPlayer);
-    await addMsg(`🧪 **${me.name}** usa **${entry.item.name}** e recupera **${delta} HP**.`, "info", "Sistema");
+    await refreshInventory(me);
+    const giver = targetPlayer.id === myId ? "" : ` (da **${me.name}**)`;
+    await addMsg(`🧪 **${targetPlayer.name}** usa **${entry.item.name}**${giver} e recupera **${delta} HP**.`, "info", "Sistema");
   }
 
   async function handleLevelUp() {
@@ -4387,7 +4399,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     await saveQState({ ...latestBuffState, masterBuffs: newMasterBuffs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
   }
 
-  async function castSpell(spell) {
+  async function castSpell(spell, allyTargetId = null) {
     if(!combat?.active || combat.pendingLog) return;
     const slots = (combat.spellSlots||{})[myId] || getSpellSlots(me.level);
     const cost = spell.slots || 0;
@@ -4434,16 +4446,26 @@ function GameScreen({ myId, setScreen, authUser }) {
       const bonusLabel = magLegBonus > 0 ? `+${Math.floor((attacker.mag||0)/2)} +${magLegBonus}(leg)` : `+${bonus}`;
       log += `💥 Tiro danno: **${spell.dmg} = ${base}**\n✨ Bonus magia: **${bonusLabel}**\n🛡️ Riduzione bersaglio: **-${Math.floor(target.def/2)}**\n🔥 Danno finale: **${dmg}**\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`;
     } else if(spell.type === "heal") {
+      // Heal target: ally if selected, otherwise self
+      const healCombatant = (allyTargetId && allyTargetId !== attacker.id)
+        ? newCombatants.find(c => c.isPlayer && c.id === allyTargetId && !c.dead)
+        : attacker;
+      const healTarget = healCombatant || attacker;
+      const magLegHealBonus = (spellMyBuffs.legendaryItem?.turnsLeft > 0 && spellMyBuffs.legendaryItem?.bonus_mag) ? spellMyBuffs.legendaryItem.bonus_mag : 0;
       const baseHeal = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), notation:spell.dmg, label:`Cura ${spell.dmg}`, themeColor:"#10b981" });
-      const heal = Math.max(1, baseHeal + Math.floor((attacker.mag||0)/2));
-      const healed = Math.min(attacker.maxHp, attacker.hp + heal);
-      const delta = healed - attacker.hp;
-      const pid = newCombatants.findIndex(c=>c.id===attacker.id);
-      newCombatants[pid] = reviveCombatantState(attacker, healed);
-      log += `💚 Tiro cura: **${spell.dmg} = ${baseHeal}**\n✨ Bonus magia: **+${Math.floor((attacker.mag||0)/2)}**\n🌿 Cura finale: **${heal}**\n❤️ ${attacker.name}: ${healed}/${attacker.maxHp} HP`;
-      const updated = {...me, hp:healed};
-      await dbSavePlayer(updated);
-      setMeRaw(updated);
+      const heal = Math.max(1, baseHeal + Math.floor((attacker.mag||0)/2) + magLegHealBonus);
+      const healed = Math.min(healTarget.maxHp, healTarget.hp + heal);
+      const pid = newCombatants.findIndex(c=>c.id===healTarget.id);
+      newCombatants[pid] = reviveCombatantState(healTarget, healed);
+      const targetLabel = healTarget.id === attacker.id ? healTarget.name : `${healTarget.name} (da ${attacker.name})`;
+      log += `💚 Tiro cura: **${spell.dmg} = ${baseHeal}**\n✨ Bonus magia: **+${Math.floor((attacker.mag||0)/2)}**\n🌿 Cura finale: **${heal}**\n❤️ ${targetLabel}: ${healed}/${healTarget.maxHp} HP`;
+      const healPlayerData = partyPlayers.find(p => p.id === healTarget.id) || (healTarget.id === myId ? me : null);
+      if(healPlayerData) {
+        const updated = {...healPlayerData, hp: healed, dead: false};
+        await dbSavePlayer(updated);
+        if(healTarget.id === myId) setMeRaw(updated);
+      }
+      setSelectedAllyTarget(null);
     } else {
       log += `${spell.desc || "Effetto speciale"}`;
     }
@@ -5461,12 +5483,13 @@ ${stepText(step)}`, "quest","Master");
                           ) : spellMenu ? (
                             <div style={{ display:"grid", gap:8, justifyItems:"center" }}>
                               <div style={{ fontSize:"0.92rem", color:"#fbbf24", fontWeight:700 }}>Scegli un incantesimo</div>
+                              {/* Bersaglio nemico (per magie danno) */}
                               {(() => {
                                 const liveEnemies = combat.combatants.filter(c=>!c.isPlayer&&c.hp>0);
                                 if(liveEnemies.length <= 1) return null;
                                 return (
                                   <div style={{ width:"100%", marginBottom:4 }}>
-                                    <div style={{ fontSize:"0.7rem", color:"#fca5a5", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>🎯 Bersaglio</div>
+                                    <div style={{ fontSize:"0.7rem", color:"#fca5a5", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>🎯 Bersaglio nemico</div>
                                     <div style={{ display:"grid", gap:5 }}>
                                       {liveEnemies.map(e=>{
                                         const isSel = selectedTarget===e.id;
@@ -5486,6 +5509,33 @@ ${stepText(step)}`, "quest","Master");
                                   </div>
                                 );
                               })()}
+                              {/* Bersaglio alleato (per magie curative) */}
+                              {(() => {
+                                const allies = combat.combatants.filter(c=>c.isPlayer&&!c.dead&&c.hp<c.maxHp);
+                                const hasHealSpell = preparedSpells.some(s=>s.type==="heal");
+                                if(!hasHealSpell || allies.length <= 1) return null;
+                                return (
+                                  <div style={{ width:"100%", marginBottom:4 }}>
+                                    <div style={{ fontSize:"0.7rem", color:"#4ade80", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>💚 Cura alleato (opzionale)</div>
+                                    <div style={{ display:"grid", gap:5 }}>
+                                      {allies.map(a=>{
+                                        const isSel = selectedAllyTarget===a.id;
+                                        return (
+                                          <button key={a.id} onClick={()=>setSelectedAllyTarget(isSel?null:a.id)}
+                                            style={{ display:"flex", alignItems:"center", gap:7, padding:"0.45rem 0.6rem", background:isSel?"rgba(34,197,94,0.2)":"rgba(20,83,45,0.18)", border:`2px solid ${isSel?"#22c55e":"#166534"}`, borderRadius:7, cursor:"pointer", textAlign:"left" }}>
+                                            <span style={{ fontSize:"0.9rem" }}>{CLASSES[a.class||"warrior"]?.emoji||"⚔️"}</span>
+                                            <div style={{ flex:1, minWidth:0 }}>
+                                              <div style={{ fontSize:"0.78rem", color:isSel?"#bbf7d0":"#86efac", fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{a.name}</div>
+                                              <div style={{ fontSize:"0.65rem", color:"#94a3b8" }}>{a.hp}/{a.maxHp} HP</div>
+                                            </div>
+                                            {isSel && <span style={{ fontSize:"0.68rem", color:"#22c55e" }}>✓</span>}
+                                          </button>
+                                        );
+                                      })}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
                               {spellLevels.map(lvl=>{
                                 const spells = spellsByLevel[lvl] || [];
                                 if(!spells.length) return null;
@@ -5496,7 +5546,7 @@ ${stepText(step)}`, "quest","Master");
                                       <span style={{ fontSize:"0.78rem", color:"#cbd5e1" }}>{lvl===0 ? "gratis" : `${spellSlots[lvl]} slot`}</span>
                                     </div>
                                     {spells.map(spell=> (
-                                      <button key={spell.id} onClick={()=>castSpell(spell)} style={{ width:"100%", padding:"0.95rem 1rem", background:"rgba(99,102,241,0.15)", border:"1px solid #4338ca", borderRadius:10, color:"#e0d7ff", cursor:"pointer", fontFamily:"inherit", textAlign:"left", marginBottom:8 }}>
+                                      <button key={spell.id} onClick={()=>{ castSpell(spell, spell.type==="heal"?selectedAllyTarget:null); }} style={{ width:"100%", padding:"0.95rem 1rem", background:"rgba(99,102,241,0.15)", border:`1px solid ${spell.type==="heal"?"#16a34a":"#4338ca"}`, borderRadius:10, color:"#e0d7ff", cursor:"pointer", fontFamily:"inherit", textAlign:"left", marginBottom:8 }}>
                                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
                                           <span style={{ fontWeight:700, fontSize:"0.9rem" }}>{spell.emoji||"✨"} {spell.name}</span>
                                           <span style={{ fontSize:"0.74rem", color:"#cbd5e1" }}>{spell.slots===0 ? "Gratis" : `Slot ${spell.slots||0}`}</span>
@@ -5507,6 +5557,11 @@ ${stepText(step)}`, "quest","Master");
                                               {detail}
                                             </span>
                                           ))}
+                                          {spell.type==="heal" && selectedAllyTarget && selectedAllyTarget !== myId && (
+                                            <span style={{ fontSize:"0.7rem", color:"#4ade80", background:"rgba(20,83,45,0.3)", border:"1px solid #16a34a", borderRadius:999, padding:"2px 7px" }}>
+                                              → {combat.combatants.find(c=>c.id===selectedAllyTarget)?.name || "Alleato"}
+                                            </span>
+                                          )}
                                         </div>
                                         <div style={{ fontSize:"0.76rem", color:"#cbd5e1", marginTop:4, lineHeight:1.45 }}>{spell.desc}</div>
                                       </button>
@@ -5514,7 +5569,7 @@ ${stepText(step)}`, "quest","Master");
                                   </div>
                                 );
                               })}
-                              <SmallBtn onClick={()=>setSpellMenu(false)}>← Indietro</SmallBtn>
+                              <SmallBtn onClick={()=>{ setSpellMenu(false); setSelectedAllyTarget(null); }}>← Indietro</SmallBtn>
                             </div>
                           ) : (
                             <>
@@ -5606,6 +5661,46 @@ ${stepText(step)}`, "quest","Master");
         )}
       </main>
       <DiceRoller ref={diceRef} />
+
+      {/* ── Potion Heal-Target Picker ── */}
+      {pendingHealItem && (
+        <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", zIndex:10100, display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
+          <div style={{ background:"linear-gradient(180deg,#0d1b0d,#0a1628)", border:"2px solid #22c55e", borderRadius:16, padding:"1.5rem 1.8rem", maxWidth:380, width:"100%", boxShadow:"0 0 40px rgba(34,197,94,0.2)" }}>
+            <div style={{ fontSize:"1rem", fontWeight:700, color:"#4ade80", marginBottom:"0.5rem", fontFamily:"Cinzel" }}>
+              🧪 {pendingHealItem.item?.name}
+            </div>
+            <div style={{ fontSize:"0.8rem", color:"#94a3b8", marginBottom:"1rem" }}>
+              Cura <strong style={{ color:"#4ade80" }}>+{pendingHealItem.item?.heal_amount || 0} HP</strong> — scegli il bersaglio:
+            </div>
+            <div style={{ display:"grid", gap:8 }}>
+              {partyPlayers.filter(p => !p.dead).map(p => {
+                const maxHp = p.max_hp || p.maxHp || p.hp || 1;
+                const curHp = p.hp || 0;
+                const pct = Math.round((curHp / maxHp) * 100);
+                const isFull = curHp >= maxHp;
+                return (
+                  <button key={p.id} onClick={() => !isFull && applyPotion(pendingHealItem, p)}
+                    disabled={isFull}
+                    style={{ display:"flex", alignItems:"center", gap:10, padding:"0.65rem 0.8rem", background:isFull?"rgba(30,30,30,0.4)":"rgba(20,83,45,0.25)", border:`1.5px solid ${isFull?"#374151":"#16a34a"}`, borderRadius:10, cursor:isFull?"not-allowed":"pointer", opacity:isFull?0.5:1, textAlign:"left" }}>
+                    <span style={{ fontSize:"1.1rem" }}>{p.avatar || "🧑"}</span>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontSize:"0.85rem", fontWeight:700, color:isFull?"#64748b":"#e2e8f0" }}>{p.name}</div>
+                      <div style={{ fontSize:"0.72rem", color:isFull?"#4b5563":"#86efac" }}>
+                        {curHp}/{maxHp} HP ({pct}%){isFull ? " — già pieno" : ""}
+                      </div>
+                    </div>
+                    {!isFull && <span style={{ fontSize:"0.75rem", color:"#4ade80", fontWeight:700 }}>+{pendingHealItem.item?.heal_amount || 0}</span>}
+                  </button>
+                );
+              })}
+            </div>
+            <button onClick={() => setPendingHealItem(null)}
+              style={{ marginTop:"1rem", width:"100%", padding:"0.55rem", background:"rgba(239,68,68,0.15)", border:"1px solid #7f1d1d", borderRadius:8, color:"#f87171", cursor:"pointer", fontFamily:"inherit", fontSize:"0.82rem" }}>
+              Annulla
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ── Victory Screen Overlay ── */}
       {victoryScreen && (() => {
