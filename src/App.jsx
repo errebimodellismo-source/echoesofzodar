@@ -4851,6 +4851,9 @@ ${stepText(step)}`, "quest","Master");
     const players = combatPartyPlayers.map(p=>({
       id:p?.id,
       name:p?.name,
+      class:p?.class||"warrior",
+      race:p?.race||"human",
+      gender:p?.gender||getStoredCharacterGender(p?.id,"male"),
       emoji:CLASSES[p?.class||'warrior']?.emoji||"⚔️",
       hp:p?.hp||0,
       maxHp:p?.maxHp||0,
