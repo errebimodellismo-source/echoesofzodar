@@ -5363,28 +5363,43 @@ ${stepText(step)}`, "quest","Master");
               <span style={{ color:"#fbbf24", fontSize:"0.76rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>🗓️ Missioni del Giorno</span>
               <span style={{ color:"#6b7280", fontSize:"0.71rem" }}>si rinnova in {hoursUntilMidnight()}</span>
             </div>
-            {publicDailyQuests.map(q=>{
-              const done=(qs?.completed||[]).includes(q.id);
+            {(() => {
+              const completedIds = new Set(qs?.completed || []);
+              const availableDaily = publicDailyQuests.filter(q => !completedIds.has(q.id));
+              const doneCount = publicDailyQuests.length - availableDaily.length;
               return (
-                <div key={q.id} style={{ background:PANEL_BG, border:`1px solid ${done?PANEL_BORDER:"#475569"}`, borderRadius:6, padding:"1rem", marginBottom:8, opacity:done?0.6:1 }}>
-                  <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
-                    <div style={{ flex:1 }}>
-                      <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:5 }}>
-                        <span style={{ fontFamily:"'Cinzel',serif", color:done?"#4b5563":"#fbbf24", fontWeight:700 }}>{q.title}</span>
-                        <span style={{ padding:"1px 7px", border:`1px solid ${DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#374151"}`, borderRadius:3, fontSize:"0.65rem", color:DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#6b7280" }}>{missionDifficultyLabel(q.difficulty)}</span>
-                        {done&&<span style={{ fontSize:"0.7rem", color:"#22c55e" }}>✓ Completata</span>}
-                      </div>
-                      <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
-                      {q.flavor&&<p style={{ color:"#94a3b8", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{q.flavor}</p>}
-                      <div style={{ display:"flex", gap:14, fontSize:"0.73rem", color:"#94a3b8" }}>
-                        <span>⭐ {q.xpReward} XP</span><span>💰 {q.goldReward} oro</span><span>🎭 {q.steps.length} scene</span>
+                <>
+                  {doneCount > 0 && (
+                    <div style={{ fontSize:"0.72rem", color:"#22c55e", marginBottom:8, paddingLeft:4 }}>
+                      ✓ {doneCount} {doneCount===1?"missione completata":"missioni completate"} oggi
+                    </div>
+                  )}
+                  {availableDaily.length === 0 && (
+                    <div style={{ color:"#4b5563", textAlign:"center", padding:"1.5rem", border:"1px dashed #1f2937", borderRadius:6, fontSize:"0.82rem" }}>
+                      Tutte le missioni del giorno sono state completate!
+                    </div>
+                  )}
+                  {availableDaily.map(q => (
+                    <div key={q.id} style={{ background:PANEL_BG, border:"1px solid #475569", borderRadius:6, padding:"1rem", marginBottom:8 }}>
+                      <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+                        <div style={{ flex:1 }}>
+                          <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:5 }}>
+                            <span style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontWeight:700 }}>{q.title}</span>
+                            <span style={{ padding:"1px 7px", border:`1px solid ${DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#374151"}`, borderRadius:3, fontSize:"0.65rem", color:DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#6b7280" }}>{missionDifficultyLabel(q.difficulty)}</span>
+                          </div>
+                          <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
+                          {q.flavor&&<p style={{ color:"#94a3b8", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{q.flavor}</p>}
+                          <div style={{ display:"flex", gap:14, fontSize:"0.73rem", color:"#94a3b8" }}>
+                            <span>⭐ {q.xpReward} XP</span><span>💰 {q.goldReward} oro</span><span>🎭 {q.steps.length} scene</span>
+                          </div>
+                        </div>
+                        {!qs?.active&&<BigBtn onClick={()=>acceptQuest(q)} gold icon="⭐">Accetta</BigBtn>}
                       </div>
                     </div>
-                    {!done&&!qs?.active&&<BigBtn onClick={()=>acceptQuest(q)} gold icon="⭐">Accetta</BigBtn>}
-                  </div>
-                </div>
+                  ))}
+                </>
               );
-            })}
+            })()}
             <div style={{ marginTop:16, marginBottom:12, padding:"0.75rem", background:"rgba(88,28,135,0.16)", border:"1px solid rgba(124,58,237,0.42)", borderRadius:6 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:8 }}>
                 <span style={{ color:"#c4b5fd", fontSize:"0.76rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>Missioni speciali</span>
@@ -5402,28 +5417,24 @@ ${stepText(step)}`, "quest","Master");
               </div>
               {specialQuestError && <div style={{ color:specialQuestError.startsWith("Missione")?"#86efac":"#fca5a5", fontSize:"0.78rem", marginTop:8 }}>{specialQuestError}</div>}
             </div>
-            {unlockedSpecialQuests.map(q=>{
-              const done=(qs?.completed||[]).includes(q.id);
-              return (
-                <div key={q.id} style={{ background:"rgba(88,28,135,0.16)", border:`1px solid ${done?PANEL_BORDER:"#7c3aed"}`, borderRadius:6, padding:"1rem", marginBottom:8, opacity:done?0.6:1 }}>
-                  <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
-                    <div style={{ flex:1 }}>
-                      <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:5 }}>
-                        <span style={{ fontFamily:"'Cinzel',serif", color:done?"#4b5563":"#c4b5fd", fontWeight:700 }}>{q.title}</span>
-                        <span style={{ padding:"1px 7px", border:"1px solid #7c3aed", borderRadius:3, fontSize:"0.65rem", color:"#c4b5fd" }}>Speciale</span>
-                        {done&&<span style={{ fontSize:"0.7rem", color:"#22c55e" }}>Completata</span>}
-                      </div>
-                      <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
-                      {q.flavor&&<p style={{ color:"#94a3b8", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{q.flavor}</p>}
-                      <div style={{ display:"flex", gap:14, fontSize:"0.73rem", color:"#94a3b8" }}>
-                        <span>{q.xpReward} XP</span><span>{q.goldReward} oro</span><span>{q.steps.length} scene</span>
-                      </div>
+            {unlockedSpecialQuests.filter(q => !(qs?.completed||[]).includes(q.id)).map(q => (
+              <div key={q.id} style={{ background:"rgba(88,28,135,0.16)", border:"1px solid #7c3aed", borderRadius:6, padding:"1rem", marginBottom:8 }}>
+                <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
+                  <div style={{ flex:1 }}>
+                    <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:5 }}>
+                      <span style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontWeight:700 }}>{q.title}</span>
+                      <span style={{ padding:"1px 7px", border:"1px solid #7c3aed", borderRadius:3, fontSize:"0.65rem", color:"#c4b5fd" }}>Speciale</span>
                     </div>
-                    {!done&&!qs?.active&&<BigBtn onClick={()=>acceptQuest(q)} gold icon="⭐">Accetta</BigBtn>}
+                    <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
+                    {q.flavor&&<p style={{ color:"#94a3b8", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{q.flavor}</p>}
+                    <div style={{ display:"flex", gap:14, fontSize:"0.73rem", color:"#94a3b8" }}>
+                      <span>{q.xpReward} XP</span><span>{q.goldReward} oro</span><span>{q.steps.length} scene</span>
+                    </div>
                   </div>
+                  {!qs?.active&&<BigBtn onClick={()=>acceptQuest(q)} gold icon="⭐">Accetta</BigBtn>}
                 </div>
-              );
-            })}
+              </div>
+            ))}
           </div>
         )}
 
