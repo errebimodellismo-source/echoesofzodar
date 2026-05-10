@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "monster:prompts": "node scripts/build-monster-image-prompts.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

@@ -144,6 +144,119 @@ function hasPerm(member, perm) {
   const rd = GUILD_ROLES[member.customRole||DEFAULT_ROLE];
   return rd?.perms?.includes(perm)||false;
 }
+
+/* ── Stemma araldico ── */
+const EMBLEM_SHAPES = ["classic","heater","round","gothic","banner"];
+const EMBLEM_PATTERNS = ["solid","pale","fess","quarterly","chevron","bend","saltire"];
+const EMBLEM_SYMBOLS = ["⚔️","🛡️","🐉","🦅","👑","🌙","☀️","⚡","🔥","❄️","🌿","💀","🔮","🏹","⚖️","🌌","✨","🦁","🐺","🦊","🐻","🦋","🌹","⭐","💎","🗡️","🏰","🌊","🍃","🔱"];
+const EMBLEM_COLORS = [
+  {id:"gold",   label:"Oro",     hex:"#fbbf24"}, {id:"silver", label:"Argento", hex:"#e2e8f0"},
+  {id:"gules",  label:"Rosso",   hex:"#ef4444"}, {id:"azure",  label:"Azzurro", hex:"#3b82f6"},
+  {id:"sable",  label:"Nero",    hex:"#1e293b"}, {id:"vert",   label:"Verde",   hex:"#22c55e"},
+  {id:"purple", label:"Viola",   hex:"#7c3aed"}, {id:"orange", label:"Arancio", hex:"#f97316"},
+  {id:"teal",   label:"Teal",    hex:"#14b8a6"}, {id:"crimson",label:"Cremisi", hex:"#be123c"},
+];
+const DEFAULT_EMBLEM = { shape:"classic", pattern:"solid", color1:"purple", color2:"gold", symbol:"⚔️", border:"gold" };
+
+function GuildEmblemSVG({ emblem={}, size=80 }) {
+  const e = { ...DEFAULT_EMBLEM, ...emblem };
+  const c1 = EMBLEM_COLORS.find(c=>c.id===e.color1)?.hex || "#7c3aed";
+  const c2 = EMBLEM_COLORS.find(c=>c.id===e.color2)?.hex || "#fbbf24";
+  const bd = EMBLEM_COLORS.find(c=>c.id===e.border)?.hex  || "#fbbf24";
+  const w=size, h=size;
+  // Shield paths for each shape
+  const paths = {
+    classic: `M${w*.1},${h*.08} L${w*.9},${h*.08} L${w*.9},${h*.65} Q${w*.5},${h*1.0} ${w*.1},${h*.65} Z`,
+    heater:  `M${w*.1},${h*.08} L${w*.9},${h*.08} L${w*.9},${h*.55} Q${w*.5},${h*.92} ${w*.1},${h*.55} Z`,
+    round:   `M${w*.1},${h*.08} L${w*.9},${h*.08} L${w*.9},${h*.7} Q${w*.5},${h*.95} ${w*.1},${h*.7} Z`,
+    gothic:  `M${w*.1},${h*.08} L${w*.5},${h*.02} L${w*.9},${h*.08} L${w*.9},${h*.62} Q${w*.5},${h*.98} ${w*.1},${h*.62} Z`,
+    banner:  `M${w*.1},${h*.08} L${w*.9},${h*.08} L${w*.9},${h*.78} L${w*.5},${h*.92} L${w*.1},${h*.78} Z`,
+  };
+  const clipId = `clip_${Math.random().toString(36).substr(2,6)}`;
+  const shPath = paths[e.shape] || paths.classic;
+  // Pattern fills
+  const patternFill = () => {
+    if(e.pattern==="solid") return <path d={shPath} fill={c1}/>;
+    if(e.pattern==="pale")  return <><path d={shPath} fill={c1}/><clipPath id={clipId}><path d={shPath}/></clipPath><rect x={w*.5} y="0" width={w*.5} height={h} fill={c2} clipPath={`url(#${clipId})`}/></>;
+    if(e.pattern==="fess")  return <><path d={shPath} fill={c1}/><clipPath id={clipId}><path d={shPath}/></clipPath><rect x="0" y={h*.5} width={w} height={h*.5} fill={c2} clipPath={`url(#${clipId})`}/></>;
+    if(e.pattern==="quarterly") return <><path d={shPath} fill={c1}/><clipPath id={clipId}><path d={shPath}/></clipPath><rect x={w*.5} y="0" width={w*.5} height={h*.5} fill={c2} clipPath={`url(#${clipId})`}/><rect x="0" y={h*.5} width={w*.5} height={h*.5} fill={c2} clipPath={`url(#${clipId})`}/></>;
+    if(e.pattern==="chevron") return <><path d={shPath} fill={c1}/><clipPath id={clipId}><path d={shPath}/></clipPath><polygon points={`0,${h*1} ${w*.5},${h*.35} ${w},${h*1}`} fill={c2} clipPath={`url(#${clipId})`}/></>;
+    if(e.pattern==="bend")  return <><path d={shPath} fill={c1}/><clipPath id={clipId}><path d={shPath}/></clipPath><polygon points={`0,0 ${w},0 ${w},${h*.45} 0,${h*.45}`} fill={c2} clipPath={`url(#${clipId})`}/></>;
+    if(e.pattern==="saltire") return <><path d={shPath} fill={c1}/><clipPath id={clipId}><path d={shPath}/></clipPath><polygon points={`0,0 ${w*.15},0 ${w*.5},${h*.38} ${w*.85},0 ${w},0 ${w},${h*.15} ${w*.62},${h*.5} ${w},${h*.85} ${w},${h} ${w*.85},${h} ${w*.5},${h*.62} ${w*.15},${h} 0,${h} 0,${h*.85} ${w*.38},${h*.5} 0,${h*.15}`} fill={c2} clipPath={`url(#${clipId})`}/></>;
+    return <path d={shPath} fill={c1}/>;
+  };
+  return (
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ filter:`drop-shadow(0 2px 8px rgba(0,0,0,0.5))` }}>
+      <defs><clipPath id={clipId}><path d={shPath}/></clipPath></defs>
+      {patternFill()}
+      <path d={shPath} fill="none" stroke={bd} strokeWidth={w*0.045}/>
+      <text x={w*.5} y={h*.62} textAnchor="middle" fontSize={w*.38} dominantBaseline="middle">{e.symbol}</text>
+    </svg>
+  );
+}
+
+function GuildEmblemEditor({ emblem, onChange }) {
+  const e = { ...DEFAULT_EMBLEM, ...emblem };
+  const Row = ({ label, children }) => (
+    <div style={{ marginBottom:10 }}>
+      <div style={{ fontSize:"0.68rem", color:"#64748b", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4 }}>{label}</div>
+      {children}
+    </div>
+  );
+  const ColorPicker = ({ field }) => (
+    <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+      {EMBLEM_COLORS.map(c=>(
+        <button key={c.id} onClick={()=>onChange({...e,[field]:c.id})} title={c.label}
+          style={{ width:22, height:22, borderRadius:"50%", background:c.hex, border:`2px solid ${e[field]===c.id?"#fff":"transparent"}`, cursor:"pointer", outline:"none" }}/>
+      ))}
+    </div>
+  );
+  return (
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+      <div>
+        <Row label="Forma scudo">
+          <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+            {EMBLEM_SHAPES.map(s=>(
+              <button key={s} onClick={()=>onChange({...e,shape:s})}
+                style={{ padding:"3px 8px", background:e.shape===s?"rgba(109,40,217,0.4)":"rgba(15,23,42,0.5)", border:`1px solid ${e.shape===s?"#7c3aed":"#334155"}`, borderRadius:4, color:e.shape===s?"#c4b5fd":"#64748b", cursor:"pointer", fontSize:"0.65rem" }}>
+                {s}
+              </button>
+            ))}
+          </div>
+        </Row>
+        <Row label="Partizione">
+          <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+            {EMBLEM_PATTERNS.map(p=>(
+              <button key={p} onClick={()=>onChange({...e,pattern:p})}
+                style={{ padding:"3px 8px", background:e.pattern===p?"rgba(109,40,217,0.4)":"rgba(15,23,42,0.5)", border:`1px solid ${e.pattern===p?"#7c3aed":"#334155"}`, borderRadius:4, color:e.pattern===p?"#c4b5fd":"#64748b", cursor:"pointer", fontSize:"0.65rem" }}>
+                {p}
+              </button>
+            ))}
+          </div>
+        </Row>
+        <Row label="Colore 1"><ColorPicker field="color1"/></Row>
+        <Row label="Colore 2"><ColorPicker field="color2"/></Row>
+        <Row label="Bordo"><ColorPicker field="border"/></Row>
+      </div>
+      <div>
+        <Row label="Simbolo">
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:4, maxHeight:160, overflowY:"auto" }}>
+            {EMBLEM_SYMBOLS.map(sym=>(
+              <button key={sym} onClick={()=>onChange({...e,symbol:sym})}
+                style={{ fontSize:"1.2rem", width:32, height:32, background:e.symbol===sym?"rgba(109,40,217,0.4)":"rgba(15,23,42,0.5)", border:`1px solid ${e.symbol===sym?"#7c3aed":"#334155"}`, borderRadius:5, cursor:"pointer" }}>
+                {sym}
+              </button>
+            ))}
+          </div>
+        </Row>
+        <div style={{ marginTop:12, textAlign:"center" }}>
+          <div style={{ fontSize:"0.68rem", color:"#64748b", marginBottom:6 }}>Anteprima</div>
+          <GuildEmblemSVG emblem={e} size={90}/>
+        </div>
+      </div>
+    </div>
+  );
+}
 function useMobile() {
   const [mob, setMob] = useState(() => typeof window !== "undefined" && window.innerWidth <= 768);
   useEffect(() => {
@@ -1221,13 +1334,23 @@ async function dbGetMessages(partyCode) {
 }
 
 async function dbSavePartyState(partyCode, state) {
+  // Pack all extra state into the combat JSONB column using a versioned wrapper.
+  // v2 format: { __v:2, __combat, __masterBuffs, __rest, __persistentSpellSlots, __longRestSeed }
+  const wrapped = {
+    __v: 2,
+    __combat: state.combat || null,
+    __masterBuffs: state.masterBuffs || null,
+    __rest: state.rest || null,
+    __persistentSpellSlots: state.persistentSpellSlots || null,
+    __longRestSeed: state.longRestSeed || 0,
+  };
   const { error } = await supabase.from("party_state").upsert({
     party_code: partyCode,
     quest_id: state.currentId,
     quest_step: state.step,
     quest_active: state.active,
     quest_completed: state.completed,
-    combat: state.combat || null,
+    combat: wrapped,
     updated_at: new Date().toISOString(),
   });
   if (error) throw error;
@@ -1236,13 +1359,20 @@ async function dbSavePartyState(partyCode, state) {
 async function dbGetPartyState(partyCode) {
   const { data, error } = await supabase.from("party_state").select("*").eq("party_code", partyCode).maybeSingle();
   if (error) throw error;
-  if (!data) return { currentId: null, step: 0, active: false, completed: [], combat: null };
+  if (!data) return { currentId: null, step: 0, active: false, completed: [], combat: null, masterBuffs: null, rest: null, persistentSpellSlots: null, longRestSeed: 0 };
+  const raw = data.combat || {};
+  const isV2 = raw.__v === 2;
+  const combat = isV2 ? (raw.__combat || null) : (raw && Object.keys(raw).length ? raw : null);
   return {
     currentId: data.quest_id,
     step: data.quest_step || 0,
     active: data.quest_active || false,
     completed: data.quest_completed || [],
-    combat: data.combat || null,
+    combat,
+    masterBuffs: (isV2 ? raw.__masterBuffs : null) || null,
+    rest: (isV2 ? raw.__rest : null) || null,
+    persistentSpellSlots: (isV2 ? raw.__persistentSpellSlots : null) || null,
+    longRestSeed: (isV2 ? raw.__longRestSeed : 0) || 0,
   };
 }
 
@@ -3714,10 +3844,15 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [guildLoading, setGuildLoading] = useState(false);
   const [worldPlayers, setWorldPlayers] = useState([]);
   const [worldMeta, setWorldMeta] = useState({});
-  const [guildForm, setGuildForm] = useState({ name:"", emoji:"⚔️", desc:"" });
+  const [guildForm, setGuildForm] = useState({ name:"", emoji:"⚔️", desc:"", emblem:{...DEFAULT_EMBLEM} });
   const [guildDonate, setGuildDonate] = useState(100);
   const [warehouseItems, setWarehouseItems] = useState([]);
   const [warehouseOpen, setWarehouseOpen] = useState(false);
+  const [guildChatMessages, setGuildChatMessages] = useState([]);
+  const [guildChatInput, setGuildChatInput] = useState("");
+  const [guildMissionForm, setGuildMissionForm] = useState({ title:"", desc:"", goal:1, rewardGold:0, rewardXp:50 });
+  const [showMissionForm, setShowMissionForm] = useState(false);
+  const [turnTimeLeft, setTurnTimeLeft] = useState(null);
   const [selectedTarget, setSelectedTarget] = useState(null);
   const [restTimeLeft, setRestTimeLeft] = useState(null);
   const [pendingHealItem, setPendingHealItem] = useState(null);
@@ -3739,8 +3874,12 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [deathScene, setDeathScene] = useState(null);
   const msgEnd = useRef(null);
   const combatLogEndRef = useRef(null);
+  const guildChatEndRef = useRef(null);
   const inputRef = useRef(null);
   const subRef = useRef(null);
+  const guildChatSubRef = useRef(null);
+  const turnTimerRef = useRef(null);
+  const pendingLogRef = useRef(false);
   const itemMapRef = useRef(DEFAULT_ITEM_MAP);
   const startCombatStepRef = useRef(null);
   const monsterTickBusyRef = useRef(false);
@@ -3862,7 +4001,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       ]);
       setMessages(msgs);
       setPartyPlayers(players);
-      setQs({ currentId:null, step:0, active:false, completed:[], combat:null, ...state });
+      setQs({ currentId:null, step:0, active:false, completed:[], combat:null, masterBuffs:null, rest:null, persistentSpellSlots:null, longRestSeed:0, ...state });
       const freshMe = players.find(p=>p.id===myId);
       if(freshMe) setMeRaw(freshMe);
     } catch(e) {
@@ -3974,6 +4113,54 @@ function GameScreen({ myId, setScreen, authUser }) {
     const el = combatLogEndRef.current;
     if(el) { const p = el.parentElement; if(p) p.scrollTop = p.scrollHeight; }
   },[messages]);
+
+  // Guild chat subscription
+  const myGuildId = useMemo(() => getPlayerGuild(guilds, myId)?.id || null, [guilds, myId]);
+  useEffect(() => {
+    if (!myGuildId) { setGuildChatMessages([]); return; }
+    const fetchChat = async () => {
+      const msgs = await dbGetMessages("guild_" + myGuildId);
+      setGuildChatMessages(msgs);
+    };
+    fetchChat();
+    guildChatSubRef.current = supabase.channel("guild_chat_" + myGuildId)
+      .on("postgres_changes", { event:"INSERT", schema:"public", table:"messages", filter:`party_code=eq.guild_${myGuildId}` }, fetchChat)
+      .subscribe();
+    return () => { if(guildChatSubRef.current) supabase.removeChannel(guildChatSubRef.current); };
+  }, [myGuildId]);
+  useEffect(() => {
+    const el = guildChatEndRef.current;
+    if(el) { const p = el.parentElement; if(p) p.scrollTop = p.scrollHeight; }
+  }, [guildChatMessages]);
+
+  // Keep pendingLogRef current without triggering turn timer reset
+  useEffect(() => {
+    pendingLogRef.current = !!(qs?.combat?.pendingLog);
+  }, [qs?.combat?.pendingLog]);
+
+  // 30-second turn timer — auto-skips the active player if they do nothing
+  const TURN_TIMEOUT_S = 30;
+  useEffect(() => {
+    if(turnTimerRef.current) { clearInterval(turnTimerRef.current); turnTimerRef.current = null; }
+    const c = qs?.combat;
+    if(!c?.active) { setTurnTimeLeft(null); return; }
+    const actor = (c.combatants||[])[c.turn % Math.max(1,(c.combatants||[]).length)];
+    if(!actor?.isPlayer || c.pendingLog) { setTurnTimeLeft(null); return; }
+    let timeLeft = TURN_TIMEOUT_S;
+    setTurnTimeLeft(timeLeft);
+    turnTimerRef.current = setInterval(() => {
+      if(pendingLogRef.current) return; // freeze during log dismissal
+      timeLeft -= 1;
+      setTurnTimeLeft(timeLeft);
+      if(timeLeft <= 0) {
+        clearInterval(turnTimerRef.current);
+        turnTimerRef.current = null;
+        forceNextCombatTurn(); // guard inside blocks non-active players
+      }
+    }, 1000);
+    return () => { if(turnTimerRef.current) { clearInterval(turnTimerRef.current); turnTimerRef.current = null; } };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qs?.combat?.turn, qs?.combat?.round, qs?.combat?.active]);
 
   // Fallback poll — keeps the log alive if Supabase realtime silently drops
   useEffect(() => {
@@ -4114,11 +4301,11 @@ function GameScreen({ myId, setScreen, authUser }) {
     if(!guildForm.name.trim()){window.alert("Scegli un nome.");return;}
     if(getPlayerGuild(guilds,myId)){window.alert("Sei già in una gilda.");return;}
     const gId=`g_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
-    const newGuild={ id:gId, name:guildForm.name.trim(), emoji:guildForm.emoji||"⚔️", description:guildForm.desc.trim(), leaderId:myId, leaderName:me.name, level:1, xp:0, hallLevel:1, members:[{id:myId,name:me.name,role:"leader",joinedAt:new Date().toISOString()}], createdAt:new Date().toISOString() };
+    const newGuild={ id:gId, name:guildForm.name.trim(), emoji:guildForm.emoji||"⚔️", description:guildForm.desc.trim(), emblem:guildForm.emblem||DEFAULT_EMBLEM, leaderId:myId, leaderName:me.name, level:1, xp:0, hallLevel:1, members:[{id:myId,name:me.name,role:"leader",joinedAt:new Date().toISOString()}], missions:[], createdAt:new Date().toISOString() };
     const newGuilds={...guilds,[gId]:newGuild};
     await dbSaveAllGuilds(newGuilds);
     const upd={...me,gold:me.gold-1000}; await dbSavePlayer(upd); setMeRaw(upd);
-    setGuilds(newGuilds); setGuildForm({name:"",emoji:"⚔️",desc:""});
+    setGuilds(newGuilds); setGuildForm({name:"",emoji:"⚔️",desc:"",emblem:{...DEFAULT_EMBLEM}});
     await addMsg(`🏛️ **${me.name}** ha fondato la gilda **${newGuild.emoji} ${newGuild.name}**!`,"info","Sistema");
   }
 
@@ -4172,6 +4359,54 @@ function GameScreen({ myId, setScreen, authUser }) {
     const myGuild=getPlayerGuild(guilds,myId); if(!myGuild||amount<=0) return;
     const newXp=(myGuild.xp||0)+amount;
     const newG={...myGuild,xp:newXp,level:getGuildLevel(newXp)};
+    const newGuilds={...guilds,[myGuild.id]:newG};
+    await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
+  }
+
+  async function sendGuildChat() {
+    const myGuild=getPlayerGuild(guilds,myId);
+    if(!myGuild||!guildChatInput.trim()) return;
+    await dbSendMessage({ party_code:"guild_"+myGuild.id, author:me.name, content:guildChatInput.trim(), type:"guild_chat" });
+    setGuildChatInput("");
+  }
+
+  async function createGuildMission() {
+    const myGuild=getPlayerGuild(guilds,myId); if(!myGuild) return;
+    if(!guildMissionForm.title.trim()){window.alert("Inserisci un titolo.");return;}
+    const mission = { id:`gm_${Date.now()}`, title:guildMissionForm.title.trim(), desc:guildMissionForm.desc.trim(), goal:Math.max(1,guildMissionForm.goal), progress:0, rewardGold:Math.max(0,guildMissionForm.rewardGold), rewardXp:Math.max(0,guildMissionForm.rewardXp), completed:false, assignedBy:me.name, createdAt:new Date().toISOString() };
+    const newMissions=[...(myGuild.missions||[]),mission];
+    const newG={...myGuild,missions:newMissions};
+    const newGuilds={...guilds,[myGuild.id]:newG};
+    await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
+    setGuildMissionForm({title:"",desc:"",goal:1,rewardGold:0,rewardXp:50}); setShowMissionForm(false);
+  }
+
+  async function contributeGuildMission(missionId) {
+    const myGuild=getPlayerGuild(guilds,myId); if(!myGuild) return;
+    const wasCompleted=!!(myGuild.missions||[]).find(m=>m.id===missionId)?.completed;
+    const missions=(myGuild.missions||[]).map(m=>{
+      if(m.id!==missionId||m.completed) return m;
+      const newProgress=m.progress+1;
+      const completed=newProgress>=m.goal;
+      return {...m,progress:newProgress,completed,completedAt:completed?new Date().toISOString():undefined};
+    });
+    const justCompleted=!wasCompleted ? missions.find(m=>m.id===missionId&&m.completed) : null;
+    let newG={...myGuild,missions};
+    if(justCompleted) { const newXp=(myGuild.xp||0)+(justCompleted.rewardXp||0); newG={...newG,xp:newXp,level:getGuildLevel(newXp)}; }
+    const newGuilds={...guilds,[myGuild.id]:newG};
+    await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
+    if(justCompleted) {
+      if((justCompleted.rewardGold||0)>0) {
+        const upd={...me,gold:(me.gold||0)+justCompleted.rewardGold}; await dbSavePlayer(upd); setMeRaw(upd);
+      }
+      await addMsg(`🎯 **Missione di gilda completata!** "${justCompleted.title}" — +${justCompleted.rewardXp} XP gilda${justCompleted.rewardGold>0?` +${justCompleted.rewardGold}🪙`:""}!`,"info","Gilda");
+    }
+  }
+
+  async function deleteGuildMission(missionId) {
+    const myGuild=getPlayerGuild(guilds,myId); if(!myGuild) return;
+    const missions=(myGuild.missions||[]).filter(m=>m.id!==missionId);
+    const newG={...myGuild,missions};
     const newGuilds={...guilds,[myGuild.id]:newG};
     await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
   }
@@ -4403,6 +4638,14 @@ function GameScreen({ myId, setScreen, authUser }) {
       const combatants = [...(latestCombat.combatants || [])];
       if(!combatants.length) return;
       const actor = combatants[latestCombat.turn % combatants.length];
+      // Block: only the active player can skip their own turn.
+      // For monster turns, only the first alive player (leader) can advance.
+      if(actor?.isPlayer) {
+        if(actor.id !== myId) return; // not my turn — hard block
+      } else {
+        const firstAlive = combatants.find(c => c.isPlayer && !c.dead);
+        if(firstAlive?.id !== myId) return; // not the leader for monster turn
+      }
       if(actor && !actor.isPlayer && actor.hp > 0) {
         await doMonsterTurnRef.current?.();
         return;
@@ -5719,7 +5962,10 @@ ${stepText(step)}`, "quest","Master");
                 <div>
                   {/* Hall visual */}
                   <div style={{ background:`linear-gradient(135deg,rgba(30,10,60,0.85),rgba(10,22,40,0.9))`, border:"2px solid #7c3aed", borderRadius:14, padding:"1.2rem", marginBottom:"1rem", position:"relative", overflow:"hidden" }}>
-                    <div style={{ fontSize:"4rem", textAlign:"center", marginBottom:6 }}>{hallStage.emoji}</div>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:16, marginBottom:8 }}>
+                      <div style={{ fontSize:"3rem" }}>{hallStage.emoji}</div>
+                      <GuildEmblemSVG emblem={myGuild.emblem} size={80}/>
+                    </div>
                     <div style={{ textAlign:"center" }}>
                       <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.1rem" }}>{myGuild.emoji} {myGuild.name}</div>
                       <div style={{ color:"#a78bfa", fontSize:"0.8rem", marginTop:2 }}>{hallStage.name}</div>
@@ -5829,6 +6075,85 @@ ${stepText(step)}`, "quest","Master");
                   </div>
 
                   <SmallBtn red onClick={leaveGuild}>🚪 Lascia la gilda</SmallBtn>
+
+                  {/* Guild Missions */}
+                  <div style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:10, padding:"0.85rem", marginBottom:"1rem", marginTop:"1rem" }}>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+                      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8" }}>🎯 MISSIONI DI GILDA</div>
+                      {hasPerm(myMember,"events") && <SmallBtn onClick={()=>setShowMissionForm(v=>!v)}>{showMissionForm?"✕":"+ Nuova"}</SmallBtn>}
+                    </div>
+                    {showMissionForm && hasPerm(myMember,"events") && (
+                      <div style={{ background:"rgba(15,23,42,0.6)", border:"1px solid #334155", borderRadius:8, padding:"0.75rem", marginBottom:8 }}>
+                        <input value={guildMissionForm.title} onChange={e=>setGuildMissionForm(f=>({...f,title:e.target.value}))} placeholder="Titolo missione..."
+                          style={{ width:"100%", marginBottom:6, padding:"0.4rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.82rem" }}/>
+                        <textarea value={guildMissionForm.desc} onChange={e=>setGuildMissionForm(f=>({...f,desc:e.target.value}))} placeholder="Descrizione..." rows={2}
+                          style={{ width:"100%", marginBottom:6, padding:"0.4rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.78rem", resize:"none" }}/>
+                        <div style={{ display:"flex", gap:6, marginBottom:6 }}>
+                          <div style={{ flex:1 }}>
+                            <div style={{ fontSize:"0.65rem", color:"#64748b", marginBottom:3 }}>Obiettivo (contributi)</div>
+                            <input type="number" value={guildMissionForm.goal} min={1} onChange={e=>setGuildMissionForm(f=>({...f,goal:Number(e.target.value)}))}
+                              style={{ width:"100%", padding:"0.35rem 0.5rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.8rem" }}/>
+                          </div>
+                          <div style={{ flex:1 }}>
+                            <div style={{ fontSize:"0.65rem", color:"#64748b", marginBottom:3 }}>Ricompensa oro</div>
+                            <input type="number" value={guildMissionForm.rewardGold} min={0} onChange={e=>setGuildMissionForm(f=>({...f,rewardGold:Number(e.target.value)}))}
+                              style={{ width:"100%", padding:"0.35rem 0.5rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.8rem" }}/>
+                          </div>
+                          <div style={{ flex:1 }}>
+                            <div style={{ fontSize:"0.65rem", color:"#64748b", marginBottom:3 }}>XP gilda</div>
+                            <input type="number" value={guildMissionForm.rewardXp} min={0} onChange={e=>setGuildMissionForm(f=>({...f,rewardXp:Number(e.target.value)}))}
+                              style={{ width:"100%", padding:"0.35rem 0.5rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.8rem" }}/>
+                          </div>
+                        </div>
+                        <SmallBtn onClick={createGuildMission}>✓ Crea missione</SmallBtn>
+                      </div>
+                    )}
+                    {(myGuild.missions||[]).length===0 && <div style={{ fontSize:"0.75rem", color:"#4b5563" }}>Nessuna missione attiva.</div>}
+                    {(myGuild.missions||[]).map(m=>(
+                      <div key={m.id} style={{ background:"rgba(15,23,42,0.5)", border:`1px solid ${m.completed?"#166534":"#334155"}`, borderRadius:8, padding:"0.6rem 0.75rem", marginBottom:6 }}>
+                        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
+                          <div style={{ flex:1 }}>
+                            <div style={{ fontSize:"0.82rem", color:m.completed?"#4ade80":"#e2e8f0", fontWeight:600 }}>{m.completed?"✅ ":""}{m.title}</div>
+                            {m.desc&&<div style={{ fontSize:"0.7rem", color:"#64748b", marginTop:2 }}>{m.desc}</div>}
+                            <div style={{ fontSize:"0.68rem", color:"#94a3b8", marginTop:4 }}>da {m.assignedBy} · +{m.rewardXp} XP gilda{m.rewardGold>0?` +${m.rewardGold}🪙`:""}</div>
+                          </div>
+                          {hasPerm(myMember,"events") && <button onClick={()=>deleteGuildMission(m.id)} style={{ background:"none", border:"none", color:"#374151", fontSize:"0.7rem", cursor:"pointer", padding:"0 4px" }}>✕</button>}
+                        </div>
+                        {!m.completed && (
+                          <div style={{ marginTop:6 }}>
+                            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:4 }}>
+                              <div style={{ flex:1, height:5, background:"rgba(30,41,59,0.6)", borderRadius:3 }}>
+                                <div style={{ height:"100%", width:`${Math.min(100,Math.round((m.progress/m.goal)*100))}%`, background:"linear-gradient(90deg,#7c3aed,#a78bfa)", borderRadius:3, transition:"width .4s" }}/>
+                              </div>
+                              <span style={{ fontSize:"0.68rem", color:"#94a3b8", whiteSpace:"nowrap" }}>{m.progress}/{m.goal}</span>
+                            </div>
+                            <SmallBtn onClick={()=>contributeGuildMission(m.id)}>🎯 Contribuisci</SmallBtn>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Guild Chat */}
+                  <div style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:10, padding:"0.85rem", marginBottom:"1rem" }}>
+                    <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8", marginBottom:8 }}>💬 CHAT DI GILDA</div>
+                    <div style={{ height:200, overflowY:"auto", marginBottom:8, display:"flex", flexDirection:"column", gap:4 }}>
+                      {guildChatMessages.length===0 && <div style={{ color:"#4b5563", fontSize:"0.75rem" }}>Nessun messaggio.</div>}
+                      {guildChatMessages.map((msg,i)=>(
+                        <div key={msg.id||i} style={{ fontSize:"0.78rem", color:"#cbd5e1", lineHeight:1.4 }}>
+                          <span style={{ color:"#a78bfa", fontWeight:600 }}>{msg.author}: </span>{msg.content}
+                        </div>
+                      ))}
+                      <div ref={guildChatEndRef}/>
+                    </div>
+                    <div style={{ display:"flex", gap:6 }}>
+                      <input value={guildChatInput} onChange={e=>setGuildChatInput(e.target.value)}
+                        onKeyDown={e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendGuildChat();} }}
+                        placeholder="Scrivi alla gilda..."
+                        style={{ flex:1, padding:"0.4rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.8rem" }}/>
+                      <SmallBtn onClick={sendGuildChat}>Invia</SmallBtn>
+                    </div>
+                  </div>
                 </div>
               ) : (
                 <div>
@@ -5844,6 +6169,10 @@ ${stepText(step)}`, "quest","Master");
                       style={{ width:"100%", marginBottom:8, padding:"0.5rem 0.7rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.85rem" }} />
                     <textarea value={guildForm.desc} onChange={e=>setGuildForm(f=>({...f,desc:e.target.value}))} placeholder="Descrizione (opzionale)..." rows={2}
                       style={{ width:"100%", marginBottom:10, padding:"0.5rem 0.7rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.82rem", resize:"none" }} />
+                    <div style={{ marginBottom:10 }}>
+                      <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginBottom:6, fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>🛡️ Stemma araldico</div>
+                      <GuildEmblemEditor emblem={guildForm.emblem} onChange={emb=>setGuildForm(f=>({...f,emblem:emb}))}/>
+                    </div>
                     <BigBtn onClick={createGuild} gold icon="🏛️" disabled={(me?.gold||0)<1000}>Fonda ({me?.gold||0}/1000 🪙)</BigBtn>
                   </div>
 
@@ -5855,9 +6184,9 @@ ${stepText(step)}`, "quest","Master");
                         const hall=getGuildHallStage(g.level||1);
                         return (
                           <div key={g.id} style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:10, padding:"0.85rem", marginBottom:8, display:"flex", alignItems:"center", gap:12 }}>
-                            <span style={{ fontSize:"2rem" }}>{hall.emoji}</span>
+                            <GuildEmblemSVG emblem={g.emblem} size={52}/>
                             <div style={{ flex:1 }}>
-                              <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize:"0.88rem" }}>{g.emoji} {g.name}</div>
+                              <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize:"0.88rem" }}>{g.emoji} {g.name} <span style={{fontSize:"0.65rem",color:"#94a3b8"}}>{hall.emoji}</span></div>
                               <div style={{ fontSize:"0.7rem", color:"#94a3b8" }}>Lv.{g.level||1} · {g.members?.length||0} membri · {hall.name}</div>
                               {g.description&&<div style={{ fontSize:"0.7rem", color:"#64748b", fontStyle:"italic", marginTop:2 }}>{g.description}</div>}
                             </div>
@@ -5888,7 +6217,16 @@ ${stepText(step)}`, "quest","Master");
                     <h3 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fca5a5", margin:"0 0 0.35rem", fontSize:"1.5rem", letterSpacing:"0.04em" }}>⚔️ Battaglia</h3>
                     <div style={{ color:"#cbd5e1", fontSize:"0.9rem" }}>Round {combat.round} • {combat.combatants.length} partecipanti • il destino si decide ora</div>
                   </div>
-                  {myTurn&&<span style={{ padding:"0.45rem 0.95rem", background:"rgba(239,68,68,0.24)", border:"1px solid #ef4444", borderRadius:999, color:"#fee2e2", fontSize:"0.84rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>{myDeathTurn?"🕯️ SALVEZZA":"⚔️ TUO TURNO"}</span>}
+                  {myTurn&&(
+                    <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                      {turnTimeLeft!==null && (
+                        <span style={{ fontSize:turnTimeLeft<=5?"1.5rem":"1.1rem", fontWeight:900, color:turnTimeLeft<=5?"#ef4444":turnTimeLeft<=10?"#f97316":"#94a3b8", minWidth:44, textAlign:"center", transition:"all 0.3s", fontVariantNumeric:"tabular-nums" }}>
+                          {turnTimeLeft<=5&&"⚠️ "}{turnTimeLeft}s
+                        </span>
+                      )}
+                      <span style={{ padding:"0.45rem 0.95rem", background:"rgba(239,68,68,0.24)", border:"1px solid #ef4444", borderRadius:999, color:"#fee2e2", fontSize:"0.84rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>{myDeathTurn?"🕯️ SALVEZZA":"⚔️ TUO TURNO"}</span>
+                    </div>
+                  )}
                 </div>
 
                 <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1.7fr) minmax(320px,0.95fr)", gap:"1rem", alignItems:"start" }}>
@@ -5904,7 +6242,14 @@ ${stepText(step)}`, "quest","Master");
                             <div style={{ fontFamily:"'Cinzel',serif", color:c.isPlayer?"#ddd6fe":"#fecaca", fontSize:"0.98rem", fontWeight:700, marginBottom:2 }}>{c.name}{c.isBoss?" ⭐":""}</div>
                             <div style={{ fontSize:"0.75rem", color:"#94a3b8" }}>Iniziativa: {c.rollInit}</div>
                           </div>
-                          {isActive&&<span style={{ fontSize:"0.7rem", padding:"0.22rem 0.45rem", background:"#7f1d1d", borderRadius:999, color:"#fca5a5", fontFamily:"'Cinzel',serif" }}>ATTIVO</span>}
+                          {isActive&&(
+                            <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3 }}>
+                              <span style={{ fontSize:"0.7rem", padding:"0.22rem 0.45rem", background:"#7f1d1d", borderRadius:999, color:"#fca5a5", fontFamily:"'Cinzel',serif" }}>ATTIVO</span>
+                              {c.isPlayer && turnTimeLeft!==null && (
+                                <span style={{ fontSize:"0.78rem", fontWeight:700, color:turnTimeLeft<=5?"#ef4444":turnTimeLeft<=10?"#f97316":"#94a3b8", transition:"color 0.3s" }}>⏱ {turnTimeLeft}s</span>
+                              )}
+                            </div>
+                          )}
                         </div>
                         {(c.dying || c.stable || c.dead) && (
                           <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:8, fontSize:"0.68rem" }}>
@@ -6095,9 +6440,9 @@ ${stepText(step)}`, "quest","Master");
                           Turno di <strong style={{ color:"#f8fafc" }}>{activeCombatant?.name}</strong>...
                         </div>
                       )}
-                      {!combat.pendingLog && (
+                      {!combat.pendingLog && (myTurn || isLeaderForMonsterTurn) && (
                         <button onClick={forceNextCombatTurn} style={{ width:"100%", maxWidth:340, marginTop:"1rem", padding:"0.82rem 1rem", background:"rgba(30,41,59,0.78)", border:"1px solid rgba(148,163,184,0.36)", borderRadius:9, color:"#e2e8f0", fontFamily:"'Cinzel',serif", fontSize:"0.9rem", cursor:"pointer", letterSpacing:"0.06em" }}>
-                          Prossimo turno
+                          {myTurn ? "⏭️ Salta il mio turno" : "Prossimo turno"}
                         </button>
                       )}
                     </div>
