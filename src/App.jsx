@@ -2539,10 +2539,9 @@ function PlayersView({ authUser }) {
     const playerBuffs = currentBuffs[p.id] || {};
     const legendaryItem = turns > 0 ? { ...item, turnsLeft: turns } : null;
     const newState = { ...currentState, masterBuffs: { ...currentBuffs, [p.id]: { ...playerBuffs, legendaryItem } } };
-    if(turns > 0) await dbAddPlayerItem(p.id, item.id, 1);
     await dbSavePartyState(code, newState);
     setPartyStates(prev=>({...prev,[code]:newState}));
-    if(turns > 0) window.alert(`✅ ${item.emoji} ${item.name} donato a ${p.name}: ora è anche nell'inventario. (${turns} turni)`);
+    if(turns > 0) window.alert(`✅ ${item.emoji} ${item.name} donato a ${p.name} per ${turns} turni.`);
     else window.alert(`✅ Oggetto leggendario rimosso da ${p.name}`);
   }
   async function masterSetBuff(p, buffKey, turns) {
@@ -5193,20 +5192,41 @@ ${stepText(step)}`, "quest","Master");
             </div>
           </div>
         )}
-        {tab==="inventory" && (
-          <InventoryView
-            loading={inventoryLoading}
-            groups={inventoryGroups}
-            equipment={equipment}
-            selectedItem={selectedInventoryItem}
-            onSelectItem={handleInventorySelect}
-            onCloseItem={handleInventoryClose}
-            onEquip={equipItem}
-            onSell={handleInventorySell}
-            onUse={usePotion}
-            canUseConsumables={(me?.hp || 0) > 0 && !myCombatant?.dying && !myCombatant?.dead && !myCombatant?.stable}
-          />
-        )}
+        {tab==="inventory" && (() => {
+          const myLegBuff = qs?.masterBuffs?.[myId]?.legendaryItem;
+          return (
+            <div style={{ display:"flex", flexDirection:"column", flex:1, overflow:"hidden" }}>
+              {myLegBuff && myLegBuff.turnsLeft > 0 && (
+                <div style={{ margin:"0.75rem 1rem 0", padding:"0.75rem 1rem", background:"linear-gradient(135deg,rgba(76,29,149,0.35),rgba(109,40,217,0.2))", border:"1.5px solid #7c3aed", borderRadius:10, display:"flex", alignItems:"center", gap:12 }}>
+                  <span style={{ fontSize:"1.6rem" }}>{myLegBuff.emoji}</span>
+                  <div style={{ flex:1 }}>
+                    <div style={{ fontFamily:"'Cinzel',serif", fontWeight:700, color:"#c4b5fd", fontSize:"0.9rem" }}>{myLegBuff.name}</div>
+                    <div style={{ fontSize:"0.72rem", color:"#a78bfa", marginTop:2 }}>{myLegBuff.desc}</div>
+                    <div style={{ fontSize:"0.7rem", color:"#6d28d9", marginTop:3 }}>
+                      {myLegBuff.type === "weapon" && `⚔️ ${myLegBuff.weapon_die} +${myLegBuff.bonus_atk} ATK`}
+                      {myLegBuff.type === "armor" && `🛡️ +${myLegBuff.bonus_def} DEF`}
+                      {myLegBuff.type === "magic" && `✨ +${myLegBuff.bonus_mag} MAG`}
+                      <span style={{ marginLeft:8, color:"#fbbf24" }}>⏱ {myLegBuff.turnsLeft} turni rimasti</span>
+                    </div>
+                  </div>
+                  <div style={{ fontSize:"0.65rem", color:"#7c3aed", background:"rgba(109,40,217,0.2)", border:"1px solid #6d28d9", borderRadius:999, padding:"2px 8px", whiteSpace:"nowrap" }}>Dono del Master</div>
+                </div>
+              )}
+              <InventoryView
+                loading={inventoryLoading}
+                groups={inventoryGroups}
+                equipment={equipment}
+                selectedItem={selectedInventoryItem}
+                onSelectItem={handleInventorySelect}
+                onCloseItem={handleInventoryClose}
+                onEquip={equipItem}
+                onSell={handleInventorySell}
+                onUse={usePotion}
+                canUseConsumables={(me?.hp || 0) > 0 && !myCombatant?.dying && !myCombatant?.dead && !myCombatant?.stable}
+              />
+            </div>
+          );
+        })()}
         {tab==="trade" && (
           <PartyTradeView
             me={me}
