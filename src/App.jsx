@@ -22,15 +22,14 @@ import audioManager from "./utils/audioManager";
     @keyframes goldenGlow { 0%,100%{text-shadow:0 0 20px rgba(251,191,36,.5)} 50%{text-shadow:0 0 50px rgba(251,191,36,.9),0 0 100px rgba(245,158,11,.4)} }
     @keyframes legNotifIn { from{opacity:0;transform:translateY(-40px) scale(0.92)} to{opacity:1;transform:translateY(0) scale(1)} }
     @keyframes logAutoDismiss { from{width:100%} to{width:0%} }
-    @keyframes eyelidClose {
-      0%   { transform: translateY(-48px); }
-      20%  { transform: translateY(-48px); }
-      52%  { transform: translateY(68px); }
-      85%  { transform: translateY(68px); }
-      100% { transform: translateY(-48px); }
-    }
     @keyframes restOverlayIn { from{opacity:0} to{opacity:1} }
-    @keyframes restStarFloat { 0%{opacity:0;transform:translateY(0)} 50%{opacity:0.7} 100%{opacity:0;transform:translateY(-60px)} }
+    @keyframes restStarFloat { 0%{opacity:0;transform:translateY(0) scale(.7)} 45%{opacity:.85} 100%{opacity:0;transform:translateY(-70px) scale(1.1)} }
+    @keyframes restSigilPulse { 0%,100%{filter:drop-shadow(0 0 18px rgba(34,211,238,.3)) drop-shadow(0 0 42px rgba(251,191,36,.16));transform:scale(1)} 50%{filter:drop-shadow(0 0 32px rgba(34,211,238,.55)) drop-shadow(0 0 70px rgba(251,191,36,.28));transform:scale(1.015)} }
+    @keyframes restRuneSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    @keyframes restShortBlink { 0%,58%,74%,100%{transform:translateY(-92px)} 63%,68%{transform:translateY(78px)} }
+    @keyframes restLongClose { 0%{transform:translateY(-92px)} 48%{transform:translateY(-18px)} 100%{transform:translateY(78px)} }
+    @keyframes restGlowDrift { 0%,100%{opacity:.45;transform:translateY(0)} 50%{opacity:.85;transform:translateY(-5px)} }
+    @keyframes restMistSweep { 0%{transform:translateX(-26px);opacity:.18} 50%{opacity:.45} 100%{transform:translateX(26px);opacity:.18} }
     @keyframes legPulse { 0%,100%{box-shadow:0 0 18px rgba(109,40,217,0.5)} 50%{box-shadow:0 0 40px rgba(139,92,246,0.9),0 0 80px rgba(109,40,217,0.5)} }
 .msg-in   { animation: fadeUp 0.25s ease; }
     ::-webkit-scrollbar{width:5px}
@@ -5007,7 +5006,9 @@ function GameScreen({ myId, setScreen, authUser }) {
         }
       }
       const newLongRestSeed = type === "long" ? (latestQs.longRestSeed || 0) + 1 : (latestQs.longRestSeed || 0);
-      await saveQState({ ...latestQs, rest: null, persistentSpellSlots: newPersistentSlots, longRestSeed: newLongRestSeed });
+      const newCompleted = type === "long" ? [] : (latestQs.completed || []);
+      const newQuestDmgLog = type === "long" ? {} : (latestQs.questDmgLog || {});
+      await saveQState({ ...latestQs, rest: null, persistentSpellSlots: newPersistentSlots, longRestSeed: newLongRestSeed, completed: newCompleted, questDmgLog: newQuestDmgLog });
       const msg = type === "long"
         ? `🌅 **Riposo Lungo completato!** Il gruppo si risveglia completamente guarito. Tutti gli incantesimi sono ripristinati. Shop e missioni aggiornati!`
         : `☀️ **Riposo Breve completato!** Il gruppo recupera metà dei punti vita e metà degli incantesimi.`;
@@ -6868,14 +6869,102 @@ ${stepText(step)}`, "quest","Master");
 
       {/* ── Rest Overlay ── */}
       {!!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date()) && (
-        <div style={{ position:"fixed", inset:0, zIndex:10500, background:"linear-gradient(180deg,rgba(2,4,18,0.97),rgba(6,2,20,0.99))", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"1.5rem", animation:"restOverlayIn 1.2s ease" }}>
+        <div style={{ position:"fixed", inset:0, zIndex:10500, background:"radial-gradient(circle at 50% 35%,rgba(34,211,238,0.16),transparent 28%),radial-gradient(circle at 18% 18%,rgba(251,191,36,0.13),transparent 24%),linear-gradient(180deg,rgba(3,7,18,0.98),rgba(8,13,29,0.99) 54%,rgba(2,6,23,1))", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"1.25rem", padding:"1.25rem", overflow:"hidden", animation:"restOverlayIn 0.8s ease" }}>
           {/* Floating stars */}
           {[...Array(12)].map((_,i)=>(
             <div key={i} style={{ position:"absolute", left:`${8+i*7}%`, top:`${15+((i*37)%65)}%`, width:2+((i*3)%4), height:2+((i*3)%4), borderRadius:"50%", background:"#c4b5fd", opacity:0.5, animation:`restStarFloat ${3+(i%4)}s ${i*0.4}s ease-in-out infinite` }}/>
           ))}
 
+          <svg viewBox="0 0 320 220" width="min(370px,86vw)" height="auto" aria-hidden="true" style={{ overflow:"visible" }}>
+            <defs>
+              <clipPath id="restAstralEyeClip">
+                <path d="M36,110 C84,56 236,56 284,110 C236,164 84,164 36,110 Z"/>
+              </clipPath>
+              <radialGradient id="restAstralSigilGr" cx="50%" cy="45%" r="60%">
+                <stop offset="0%" stopColor="rgba(34,211,238,0.26)"/>
+                <stop offset="62%" stopColor="rgba(15,23,42,0.5)"/>
+                <stop offset="100%" stopColor="rgba(2,6,23,0)"/>
+              </radialGradient>
+              <radialGradient id="restAstralScleraGr" cx="38%" cy="33%" r="70%">
+                <stop offset="0%" stopColor="#f8fbff"/>
+                <stop offset="58%" stopColor="#dbeafe"/>
+                <stop offset="100%" stopColor="#93c5fd"/>
+              </radialGradient>
+              <radialGradient id="restAstralIrisGr" cx="38%" cy="34%" r="64%">
+                <stop offset="0%" stopColor="#fef3c7"/>
+                <stop offset="24%" stopColor="#67e8f9"/>
+                <stop offset="64%" stopColor="#2563eb"/>
+                <stop offset="100%" stopColor="#172554"/>
+              </radialGradient>
+              <linearGradient id="restAstralLidGr" x1="0" x2="0" y1="0" y2="1">
+                <stop offset="0%" stopColor="#020617"/>
+                <stop offset="55%" stopColor="#08111f"/>
+                <stop offset="100%" stopColor="#0f2438"/>
+              </linearGradient>
+              <linearGradient id="restAstralGoldGr" x1="0" x2="1" y1="0" y2="1">
+                <stop offset="0%" stopColor="#fef3c7"/>
+                <stop offset="45%" stopColor="#f59e0b"/>
+                <stop offset="100%" stopColor="#67e8f9"/>
+              </linearGradient>
+              <filter id="restAstralGlow" x="-40%" y="-40%" width="180%" height="180%">
+                <feGaussianBlur stdDeviation="4" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+            </defs>
+
+            <g style={{ transformOrigin:"160px 110px", animation:"restSigilPulse 5s ease-in-out infinite" }}>
+              <circle cx="160" cy="110" r="102" fill="url(#restAstralSigilGr)" stroke="rgba(103,232,249,0.28)" strokeWidth="1.2"/>
+              <circle cx="160" cy="110" r="82" fill="none" stroke="rgba(251,191,36,0.45)" strokeWidth="1"/>
+              <g style={{ transformOrigin:"160px 110px", animation:"restRuneSpin 34s linear infinite" }}>
+                <circle cx="160" cy="110" r="96" fill="none" stroke="rgba(103,232,249,0.36)" strokeWidth="1" strokeDasharray="12 18"/>
+                <circle cx="160" cy="110" r="68" fill="none" stroke="rgba(253,230,138,0.38)" strokeWidth="1" strokeDasharray="4 11"/>
+                {[0,45,90,135,180,225,270,315].map((angle)=>(
+                  <g key={angle} transform={`rotate(${angle} 160 110)`}>
+                    <path d="M160 8 L166 25 L160 34 L154 25 Z" fill="rgba(253,230,138,0.72)"/>
+                  </g>
+                ))}
+              </g>
+            </g>
+
+            <g filter="url(#restAstralGlow)">
+              <path d="M36,110 C84,56 236,56 284,110 C236,164 84,164 36,110 Z" fill="rgba(15,23,42,0.78)" stroke="url(#restAstralGoldGr)" strokeWidth="2.2"/>
+              <path d="M46,110 C90,68 230,68 274,110 C230,152 90,152 46,110 Z" fill="url(#restAstralScleraGr)" clipPath="url(#restAstralEyeClip)"/>
+              <g clipPath="url(#restAstralEyeClip)" style={{ animation:"restMistSweep 7s ease-in-out infinite" }}>
+                <path d="M36,135 C92,102 198,142 284,92" stroke="rgba(14,165,233,0.42)" strokeWidth="11" strokeLinecap="round" fill="none"/>
+              </g>
+              <circle cx="160" cy="110" r="34" fill="url(#restAstralIrisGr)" clipPath="url(#restAstralEyeClip)"/>
+              <circle cx="160" cy="110" r="43" fill="none" stroke="rgba(103,232,249,0.28)" strokeWidth="1.4" clipPath="url(#restAstralEyeClip)"/>
+              <circle cx="160" cy="110" r="24" fill="#020617" clipPath="url(#restAstralEyeClip)"/>
+              <circle cx="174" cy="94" r="7" fill="#f8fafc" opacity="0.76" clipPath="url(#restAstralEyeClip)"/>
+              <circle cx="150" cy="101" r="3.5" fill="#f8fafc" opacity="0.38" clipPath="url(#restAstralEyeClip)"/>
+              <g stroke="rgba(15,23,42,0.5)" strokeWidth="1" clipPath="url(#restAstralEyeClip)">
+                {[0,24,48,72,96,120,144,168,192,216,240,264,288,312,336].map((angle)=>(
+                  <line key={angle} x1="160" y1="110" x2={160 + Math.cos(angle * Math.PI / 180) * 34} y2={110 + Math.sin(angle * Math.PI / 180) * 34}/>
+                ))}
+              </g>
+            </g>
+
+            <path d="M36,110 C84,164 236,164 284,110 L284,238 L36,238 Z" fill="url(#restAstralLidGr)" opacity="0.76"/>
+            <path d="M36,110 C84,164 236,164 284,110" fill="none" stroke="rgba(253,230,138,0.48)" strokeWidth="1.7"/>
+            <g clipPath="url(#restAstralEyeClip)" style={{ animation:qs.rest.type === "short" ? "restShortBlink 7s ease-in-out infinite" : "restLongClose 2.8s cubic-bezier(.2,.8,.2,1) forwards" }}>
+              <path d="M36,110 C84,56 236,56 284,110 L284,-28 L36,-28 Z" fill="url(#restAstralLidGr)"/>
+              <path d="M36,110 C84,56 236,56 284,110" fill="none" stroke="rgba(253,230,138,0.72)" strokeWidth="2.2"/>
+              <path d="M63,88 C104,60 216,60 257,88" fill="none" stroke="rgba(103,232,249,0.3)" strokeWidth="1.1"/>
+            </g>
+
+            <g style={{ animation:"restGlowDrift 4.5s ease-in-out infinite" }}>
+              <circle cx="96" cy="48" r="2.6" fill="#fde68a"/>
+              <circle cx="231" cy="54" r="2.2" fill="#67e8f9"/>
+              <circle cx="69" cy="156" r="1.8" fill="#a7f3d0"/>
+              <circle cx="248" cy="148" r="1.9" fill="#fde68a"/>
+            </g>
+          </svg>
+
           {/* SVG Realistic Eye */}
-          <svg viewBox="0 0 260 120" width="min(320px,80vw)" height="auto" style={{ filter:"drop-shadow(0 0 32px rgba(139,92,246,0.6))", overflow:"visible" }}>
+          <svg viewBox="0 0 260 120" width="min(320px,80vw)" height="auto" style={{ display:"none" }}>
             <defs>
               <clipPath id="restEyeClip">
                 <path d="M8,60 Q65,12 130,12 Q195,12 252,60 Q195,108 130,108 Q65,108 8,60 Z"/>
@@ -6947,19 +7036,19 @@ ${stepText(step)}`, "quest","Master");
 
           {/* Info */}
           <div style={{ textAlign:"center" }}>
-            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#c4b5fd", fontSize:"clamp(1rem,4vw,1.4rem)", letterSpacing:"0.08em", marginBottom:8 }}>
-              {qs.rest.type === "short" ? "🌙 Riposo Breve" : "🌅 Riposo Lungo"}
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:qs.rest.type === "short" ? "#67e8f9" : "#fde68a", fontSize:"clamp(1rem,4vw,1.45rem)", letterSpacing:"0.1em", marginBottom:8, textShadow:"0 0 18px rgba(103,232,249,0.32)" }}>
+              {qs.rest.type === "short" ? "Riposo Breve" : "Riposo Lungo"}
             </div>
-            <div style={{ fontFamily:"'Cinzel',serif", color:"#7c3aed", fontSize:"2.2rem", fontWeight:900, letterSpacing:"0.04em", lineHeight:1, marginBottom:6, fontVariantNumeric:"tabular-nums" }}>
-              {restTimeLeft ? `${restTimeLeft.mm}:${String(restTimeLeft.ss).padStart(2,"0")}` : "…"}
+            <div style={{ fontFamily:"'Cinzel',serif", color:"#e0f2fe", fontSize:"2.35rem", fontWeight:900, letterSpacing:"0.04em", lineHeight:1, marginBottom:8, fontVariantNumeric:"tabular-nums", textShadow:"0 0 24px rgba(34,211,238,0.36)" }}>
+              {restTimeLeft ? `${restTimeLeft.mm}:${String(restTimeLeft.ss).padStart(2,"0")}` : "..."}
             </div>
-            <div style={{ color:"#64748b", fontSize:"0.78rem", fontFamily:"'Crimson Pro',Georgia,serif", fontStyle:"italic" }}>
-              {qs.rest.type === "short" ? "Il gruppo si accampa. Mezza cura al termine." : "Tutti dormono profondamente. Cura completa al termine."}
+            <div style={{ color:"#94a3b8", fontSize:"0.86rem", fontFamily:"'Crimson Pro',Georgia,serif", fontStyle:"italic", maxWidth:360, lineHeight:1.35 }}>
+              {qs.rest.type === "short" ? "Una veglia calma protegge il campo. Mezza cura al termine." : "Il sonno cala sul gruppo. Cura completa al termine."}
             </div>
           </div>
 
-          <button onClick={cancelRest} style={{ marginTop:8, padding:"0.6rem 1.6rem", background:"rgba(127,29,29,0.3)", border:"1px solid rgba(239,68,68,0.4)", borderRadius:8, color:"#f87171", cursor:"pointer", fontSize:"0.8rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>
-            ⚡ Interrompi riposo
+          <button onClick={cancelRest} style={{ marginTop:8, padding:"0.62rem 1.55rem", background:"rgba(127,29,29,0.28)", border:"1px solid rgba(248,113,113,0.45)", borderRadius:8, color:"#fecaca", cursor:"pointer", fontSize:"0.8rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.06em", boxShadow:"0 10px 28px rgba(0,0,0,0.28)" }}>
+            Interrompi riposo
           </button>
         </div>
       )}
