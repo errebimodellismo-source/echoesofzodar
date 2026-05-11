@@ -4405,8 +4405,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     const c = qs?.combat;
     if(!c?.active) { setTurnTimeLeft(null); return; }
     const actor = (c.combatants||[])[c.turn % Math.max(1,(c.combatants||[]).length)];
-    // Only start the timer on this player's own turn (not pendingLog, not other players)
-    if(!actor?.isPlayer || actor.id !== myId || c.pendingLog) { setTurnTimeLeft(null); return; }
+    if(!actor?.isPlayer || c.pendingLog) { setTurnTimeLeft(null); return; }
     let timeLeft = TURN_TIMEOUT_S;
     setTurnTimeLeft(timeLeft);
     turnTimerRef.current = setInterval(() => {
@@ -4420,7 +4419,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     }, 1000);
     return () => { if(turnTimerRef.current) { clearInterval(turnTimerRef.current); turnTimerRef.current = null; } };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qs?.combat?.turn, qs?.combat?.round, qs?.combat?.active, !!qs?.combat?.pendingLog, myId]);
+  }, [qs?.combat?.turn, qs?.combat?.round, qs?.combat?.active, !!qs?.combat?.pendingLog]);
 
   // Fallback poll — keeps the log alive if Supabase realtime silently drops
   useEffect(() => {
