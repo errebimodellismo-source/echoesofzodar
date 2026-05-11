@@ -4122,6 +4122,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const startCombatStepRef = useRef(null);
   const monsterTickBusyRef = useRef(false);
   const doMonsterTurnRef = useRef(null);
+  const forceNextTurnRef = useRef(null);
   const advanceTurnBusyRef = useRef(false);
 
     const diceRef = useRef(null);
@@ -4397,29 +4398,29 @@ function GameScreen({ myId, setScreen, authUser }) {
     if(!leg) prevLegItemRef.current = null;
   }, [qs?.masterBuffs?.[myId]?.legendaryItem?.name, myId]);
 
-  // 30-second turn timer — auto-skips the active player if they do nothing
+  // 30-second turn timer — only runs on the active player's client, uses ref to avoid stale closure
   const TURN_TIMEOUT_S = 30;
   useEffect(() => {
     if(turnTimerRef.current) { clearInterval(turnTimerRef.current); turnTimerRef.current = null; }
     const c = qs?.combat;
     if(!c?.active) { setTurnTimeLeft(null); return; }
     const actor = (c.combatants||[])[c.turn % Math.max(1,(c.combatants||[]).length)];
-    if(!actor?.isPlayer || c.pendingLog) { setTurnTimeLeft(null); return; }
+    // Only start the timer on this player's own turn (not pendingLog, not other players)
+    if(!actor?.isPlayer || actor.id !== myId || c.pendingLog) { setTurnTimeLeft(null); return; }
     let timeLeft = TURN_TIMEOUT_S;
     setTurnTimeLeft(timeLeft);
     turnTimerRef.current = setInterval(() => {
-      if(pendingLogRef.current) return; // freeze during log dismissal
       timeLeft -= 1;
       setTurnTimeLeft(timeLeft);
       if(timeLeft <= 0) {
         clearInterval(turnTimerRef.current);
         turnTimerRef.current = null;
-        forceNextCombatTurn(); // guard inside blocks non-active players
+        forceNextTurnRef.current?.(); // always calls the latest version, no stale closure
       }
     }, 1000);
     return () => { if(turnTimerRef.current) { clearInterval(turnTimerRef.current); turnTimerRef.current = null; } };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qs?.combat?.turn, qs?.combat?.round, qs?.combat?.active, !!qs?.combat?.pendingLog]);
+  }, [qs?.combat?.turn, qs?.combat?.round, qs?.combat?.active, !!qs?.combat?.pendingLog, myId]);
 
   // Fallback poll — keeps the log alive if Supabase realtime silently drops
   useEffect(() => {
@@ -4925,6 +4926,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       advanceTurnBusyRef.current = false;
     }
   }
+  forceNextTurnRef.current = forceNextCombatTurn;
 
   async function abandonQuest() {
     const escapeEntry = inventory.find(e => e.itemId === "potion_escape");
