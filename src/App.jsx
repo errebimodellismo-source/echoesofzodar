@@ -4878,8 +4878,8 @@ function GameScreen({ myId, setScreen, authUser }) {
     await refreshAll(code);
     await addMsg(
       tradePrice > 0
-        ? `ðŸ¤ **${me.name}** passa **${group.item.name}** a **${target.name}** per **${tradePrice} oro**.`
-        : `ðŸ¤ **${me.name}** regala **${group.item.name}** a **${target.name}**.`,
+        ? `🤝 **${me.name}** passa **${group.item.name}** a **${target.name}** per **${tradePrice} oro**.`
+        : `🤝 **${me.name}** regala **${group.item.name}** a **${target.name}**.`,
       "info",
       "Sistema"
       );
@@ -4937,9 +4937,13 @@ function GameScreen({ myId, setScreen, authUser }) {
       return;
     }
     const updated = result.player;
-    await dbSavePlayer(updated);
+    const { error: saveErr } = await dbSavePlayer(updated);
+    if(saveErr) {
+      window.alert(`Errore nel salvataggio livello: ${saveErr.message}`);
+      return;
+    }
     setMeRaw(updated);
-    await addMsg(`â­ **${me.name}** sale al **livello ${updated.level}**!\n${levelGainForClass(me.class).label}`, "info", "Sistema");
+    await addMsg(`⭐ **${me.name}** sale al **livello ${updated.level}**!\n${levelGainForClass(me.class).label}`, "info", "Sistema");
     await refreshAll(code);
   }
 
@@ -6040,7 +6044,7 @@ ${stepText(step)}`, "quest","Master");
         {tab==="level" && (
           <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(2,6,23,0.45)" }}>
             <div style={{ maxWidth:760, margin:"0 auto" }}>
-              <Card title="â­ Aumenta di Livello">
+              <Card title="⭐ Aumenta di Livello">
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:10, marginBottom:"1rem" }}>
                   <div style={{ background:"rgba(15,23,42,0.84)", border:"1px solid #334155", borderRadius:6, padding:"0.85rem" }}>
                     <div style={{ color:"#94a3b8", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>Livello attuale</div>
@@ -6072,13 +6076,33 @@ ${stepText(step)}`, "quest","Master");
                     ["ATK", me.atk, nextLevelPreview?.atk],
                     ["DEF", me.def, nextLevelPreview?.def],
                     ["MAG", me.mag, nextLevelPreview?.mag],
+                    ...(isCaster ? [["MANA", totalSlots(getSpellSlots(me.level)), totalSlots(getSpellSlots((me.level||1)+1))]] : []),
                   ].map(([label, current, next])=>(
-                    <div key={label} style={{ background:"rgba(2,6,23,0.58)", border:"1px solid #1e293b", borderRadius:6, padding:"0.75rem", textAlign:"center" }}>
-                      <div style={{ color:"#94a3b8", fontSize:"0.68rem", letterSpacing:"0.08em" }}>{label}</div>
-                      <div style={{ color:"#f8fafc", fontSize:"1rem", fontWeight:700 }}>{current} {canLevelUp && <span style={{ color:"#fbbf24" }}>â†’ {next}</span>}</div>
+                    <div key={label} style={{ background: label==="MANA" ? "rgba(76,29,149,0.25)" : "rgba(2,6,23,0.58)", border: label==="MANA" ? "1px solid #7c3aed" : "1px solid #1e293b", borderRadius:6, padding:"0.75rem", textAlign:"center" }}>
+                      <div style={{ color: label==="MANA" ? "#a78bfa" : "#94a3b8", fontSize:"0.68rem", letterSpacing:"0.08em" }}>{label==="MANA" ? "🔮 MANA" : label}</div>
+                      <div style={{ color:"#f8fafc", fontSize:"1rem", fontWeight:700 }}>{current} {canLevelUp && <span style={{ color:"#fbbf24" }}>→ {next}</span>}</div>
                     </div>
                   ))}
                 </div>
+                {isCaster && (() => {
+                  const slots = getSpellSlots(me.level || 1);
+                  const nextSlots = getSpellSlots((me.level||1)+1);
+                  return (
+                    <div style={{ background:"rgba(76,29,149,0.18)", border:"1px solid #7c3aed44", borderRadius:6, padding:"0.65rem 0.85rem", marginBottom:"1rem" }}>
+                      <div style={{ color:"#a78bfa", fontSize:"0.65rem", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>Slot incantesimo per livello</div>
+                      <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                        {[1,2,3,4,5].filter(t=>slots[t]>0||nextSlots[t]>0).map(t=>(
+                          <div key={t} style={{ background:"rgba(2,6,23,0.6)", border:"1px solid #4c1d95", borderRadius:4, padding:"4px 10px", textAlign:"center" }}>
+                            <div style={{ color:"#7c3aed", fontSize:"0.55rem", textTransform:"uppercase" }}>Tier {t}</div>
+                            <div style={{ color:"#e2e8f0", fontWeight:700, fontSize:"0.9rem" }}>
+                              {slots[t]}{canLevelUp && nextSlots[t]!==slots[t] && <span style={{ color:"#fbbf24" }}>→{nextSlots[t]}</span>}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
                 {/* D&D Ability Scores */}
                 {(() => {
                   const scores = getAbilityScores(me);
