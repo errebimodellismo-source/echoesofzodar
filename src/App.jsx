@@ -582,6 +582,11 @@ function hoursUntilMidnight() {
   return h > 0 ? `${h}h ${m}m` : `${m}m`;
 }
 
+function appendDiary(diary, entry) {
+  const e = { ts: Date.now(), date: new Date().toLocaleDateString('it-IT', { day:'2-digit', month:'long', year:'numeric' }), ...entry };
+  return [...(diary || []), e].slice(-60);
+}
+
 /* ----------------------------------------------
    LOCAL STORAGE HELPERS (per quests/monsters/meta)
 ---------------------------------------------- */
@@ -1356,6 +1361,7 @@ async function dbSavePartyState(partyCode, state) {
     __longRestSeed: state.longRestSeed || 0,
     __questLog: state.questLog || [],
     __questDmgLog: state.questDmgLog || {},
+    __partyDiary: state.partyDiary || [],
   };
   const { error } = await supabase.from("party_state").upsert({
     party_code: partyCode,
@@ -1372,7 +1378,7 @@ async function dbSavePartyState(partyCode, state) {
 async function dbGetPartyState(partyCode) {
   const { data, error } = await supabase.from("party_state").select("*").eq("party_code", partyCode).maybeSingle();
   if (error) throw error;
-  if (!data) return { currentId: null, step: 0, active: false, completed: [], combat: null, masterBuffs: null, rest: null, persistentSpellSlots: null, longRestSeed: 0, questLog: [], questDmgLog: {} };
+  if (!data) return { currentId: null, step: 0, active: false, completed: [], combat: null, masterBuffs: null, rest: null, persistentSpellSlots: null, longRestSeed: 0, questLog: [], questDmgLog: {}, partyDiary: [] };
   const raw = data.combat || {};
   const isV2 = raw.__v === 2;
   const combat = isV2 ? (raw.__combat || null) : (raw && Object.keys(raw).length ? raw : null);
@@ -1388,6 +1394,7 @@ async function dbGetPartyState(partyCode) {
     longRestSeed: (isV2 ? raw.__longRestSeed : 0) || 0,
     questLog: (isV2 ? raw.__questLog : null) || [],
     questDmgLog: (isV2 ? raw.__questDmgLog : null) || {},
+    partyDiary: (isV2 ? raw.__partyDiary : null) || [],
   };
 }
 
@@ -4195,8 +4202,9 @@ function GameScreen({ myId, setScreen, authUser }) {
       await dbSavePlayer(fallenPlayer);
       setMeRaw(fallenPlayer);
       if(code) {
-        await dbSavePartyState(code, { ...qs, combat:null });
-        setQs(prev => ({ ...prev, combat:null }));
+        const deathDiary = appendDiary(qs.partyDiary, { type:'death', icon:'💀', text:`${finalName || me?.name || 'Un eroe'} è caduto/a in battaglia. Il coraggio non è mancato, ma il destino ha deciso altrimenti.`, players:[finalName || me?.name || ''] });
+        await dbSavePartyState(code, { ...qs, combat:null, partyDiary: deathDiary });
+        setQs(prev => ({ ...prev, combat:null, partyDiary: deathDiary }));
       }
     } catch(e) {
       console.error("Errore durante la morte definitiva:", e);
@@ -5008,7 +5016,11 @@ function GameScreen({ myId, setScreen, authUser }) {
       const newLongRestSeed = type === "long" ? (latestQs.longRestSeed || 0) + 1 : (latestQs.longRestSeed || 0);
       const newCompleted = type === "long" ? [] : (latestQs.completed || []);
       const newQuestDmgLog = type === "long" ? {} : (latestQs.questDmgLog || {});
-      await saveQState({ ...latestQs, rest: null, persistentSpellSlots: newPersistentSlots, longRestSeed: newLongRestSeed, completed: newCompleted, questDmgLog: newQuestDmgLog });
+      const restDiaryText = type === "long"
+        ? `Il party si accampa per la notte. Al sorgere del sole forze e incantesimi sono completamente ripristinati, e nuove avventure attendono.`
+        : `Il party si concede un breve riposo. Metà dei punti vita e degli incantesimi vengono recuperati.`;
+      const newDiaryRest = appendDiary(latestQs.partyDiary, { type:'rest', icon: type==='long'?'🌙':'☀️', text: restDiaryText, players: allPlayers.map(p=>p.name) });
+      await saveQState({ ...latestQs, rest: null, persistentSpellSlots: newPersistentSlots, longRestSeed: newLongRestSeed, completed: newCompleted, questDmgLog: newQuestDmgLog, partyDiary: newDiaryRest });
       const msg = type === "long"
         ? `🌅 **Riposo Lungo completato!** Il gruppo si risveglia completamente guarito. Tutti gli incantesimi sono ripristinati. Shop e missioni aggiornati!`
         : `☀️ **Riposo Breve completato!** Il gruppo recupera metà dei punti vita e metà degli incantesimi.`;
@@ -5290,7 +5302,13 @@ function GameScreen({ myId, setScreen, authUser }) {
     // Persist remaining spell slots so they carry over between combats
     const usedSlots = latestCombat?.spellSlots || {};
     const newPersistentSlots = { ...(latestQs.persistentSpellSlots || {}), ...usedSlots };
-    const newQs = { ...latestQs, combat: newCombat, persistentSpellSlots: newPersistentSlots };
+    const currentQuestForDiary = latestQs?.active ? getQuests().find(q => q.id === latestQs.currentId) : null;
+    const slainNames = slain.map(m => `${m.emoji} ${m.name}`).join(', ');
+    const diaryText = currentQuestForDiary
+      ? `Combattimento durante «${currentQuestForDiary.title}»: ${slainNames || 'nessun nemico'} sconfitti. +${xpEach} XP e +${goldEach} 💰 a testa.`
+      : `${slainNames || 'Nemici'} sconfitti in battaglia! +${xpEach} XP e +${goldEach} 💰 a testa.`;
+    const newDiaryCombat = appendDiary(latestQs.partyDiary, { type:'combat', icon:'⚔️', text: diaryText, players: rewardPlayers.map(p => p.name) });
+    const newQs = { ...latestQs, combat: newCombat, persistentSpellSlots: newPersistentSlots, partyDiary: newDiaryCombat };
     await dbSavePartyState(code, newQs);
     setQs(prev => ({ ...prev, combat: newCombat }));
     // Guild: bonus oro e XP gilda per vittoria
@@ -5378,7 +5396,9 @@ ${stepText(step)}`, "quest","Master");
       players: Object.entries(dmgLog).map(([, d]) => ({ name: d.name, dmg: d.dmg })).sort((a,b) => b.dmg - a.dmg),
     };
     const newQuestLog = [...(qs.questLog || []).filter(e => e.date === today), logEntry];
-    const newQs={...qs,active:false,step:0,currentId:null,completed:[...(qs.completed||[]),q.id],questDmgLog:{},questLog:newQuestLog};
+    const diffLabel = q.difficulty==="difficile"?"difficile":q.difficulty==="facile"?"facile":"media";
+    const newDiaryQuest = appendDiary(qs.partyDiary, { type:'quest', icon:'📜', text:`«${q.title}» completata! Missione di difficoltà ${diffLabel}. Ricompensa: +${xpE} XP e +${goldE} 💰 a testa.`, players: partyPlayers.map(p=>p.name) });
+    const newQs={...qs,active:false,step:0,currentId:null,completed:[...(qs.completed||[]),q.id],questDmgLog:{},questLog:newQuestLog,partyDiary:newDiaryQuest};
     await saveQState(newQs);
     const guildXp = q.difficulty==="difficile"?120:q.difficulty==="facile"?40:70;
     if(myGuild) await addGuildXP(guildXp);
@@ -5783,7 +5803,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["trade","🤝 Scambi"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["guild","🏛️ Gilda"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["trade","🤝 Scambi"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["guild","🏛️ Gilda"],["diary","📖 Diario"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
@@ -6542,6 +6562,54 @@ ${stepText(step)}`, "quest","Master");
                   )}
                 </div>
               )}
+            </div>
+          );
+        })()}
+
+        {tab==="diary" && (() => {
+          const diary = [...(qs?.partyDiary || [])].reverse();
+          // Group by date
+          const grouped = [];
+          for(const entry of diary) {
+            const last = grouped[grouped.length - 1];
+            if(last && last.date === entry.date) last.entries.push(entry);
+            else grouped.push({ date: entry.date, entries: [entry] });
+          }
+          const typeColor = { quest:'rgba(251,191,36,0.12)', combat:'rgba(239,68,68,0.1)', death:'rgba(100,0,0,0.18)', rest:'rgba(30,64,120,0.15)', default:'rgba(30,41,59,0.3)' };
+          const typeBorder = { quest:'rgba(251,191,36,0.35)', combat:'rgba(239,68,68,0.3)', death:'rgba(153,27,27,0.5)', rest:'rgba(59,130,246,0.3)', default:'rgba(51,65,85,0.4)' };
+          return (
+            <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.5)" }}>
+              <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>📖 Diario del Party</h3>
+              {diary.length === 0 && (
+                <div style={{ color:"#4b5563", textAlign:"center", padding:"3rem 1rem", border:"1px dashed #1f2937", borderRadius:8, fontSize:"0.85rem" }}>
+                  Il diario è vuoto. Completate missioni, combattimenti e riposi per riempirlo di storie.
+                </div>
+              )}
+              {grouped.map((group, gi) => (
+                <div key={gi} style={{ marginBottom:"1.5rem" }}>
+                  <div style={{ fontSize:"0.68rem", color:"#64748b", fontFamily:"'Cinzel',serif", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:8, paddingBottom:4, borderBottom:"1px solid rgba(51,65,85,0.4)" }}>
+                    {group.date}
+                  </div>
+                  {group.entries.map((entry, ei) => (
+                    <div key={ei} style={{ background: typeColor[entry.type] || typeColor.default, border:`1px solid ${typeBorder[entry.type] || typeBorder.default}`, borderRadius:8, padding:"0.75rem 0.9rem", marginBottom:8 }}>
+                      <div style={{ display:"flex", gap:10, alignItems:"flex-start" }}>
+                        <span style={{ fontSize:"1.2rem", flexShrink:0, lineHeight:1.3 }}>{entry.icon}</span>
+                        <div style={{ flex:1 }}>
+                          <p style={{ margin:"0 0 5px", color:"#e2e8f0", fontSize:"0.84rem", lineHeight:1.5 }}>{entry.text}</p>
+                          {entry.players?.length > 0 && (
+                            <div style={{ fontSize:"0.68rem", color:"#64748b" }}>
+                              {entry.players.filter(Boolean).join(' · ')}
+                            </div>
+                          )}
+                        </div>
+                        <span style={{ fontSize:"0.65rem", color:"#374151", flexShrink:0, whiteSpace:"nowrap" }}>
+                          {new Date(entry.ts).toLocaleTimeString('it-IT', { hour:'2-digit', minute:'2-digit' })}
+                        </span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ))}
             </div>
           );
         })()}
