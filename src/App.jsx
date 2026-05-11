@@ -5244,9 +5244,10 @@ function GameScreen({ myId, setScreen, authUser }) {
     if(!combat?.active || combat.pendingLog) return;
     const _computed = getSpellSlots(me.level || 1);
     const _stored = (combat.spellSlots||{})[myId];
-    const slots = _stored
-      ? Object.fromEntries([1,2,3,4,5].map(k => [k, _stored[k] !== undefined ? _stored[k] : (_computed[k] ?? 0)]))
-      : _computed;
+    const _isStale = _stored && [2,3,4,5].every(k=>(_stored[k]??0)===0) && [2,3,4,5].some(k=>(_computed[k]??0)>0);
+    const slots = !_stored ? _computed
+      : _isStale ? { ..._computed }
+      : Object.fromEntries([1,2,3,4,5].map(k => [k, _stored[k] !== undefined ? _stored[k] : (_computed[k] ?? 0)]));
     const cost = spell.slots || 0;
     if(cost > 0 && (slots[cost]||0) <= 0) {
       await addMsg("🔮 Non hai più slot incantesimo di quel livello per questa battaglia.", "system","Sistema");
@@ -5716,8 +5717,16 @@ ${stepText(step)}`, "quest","Master");
   const isCaster = MAGIC_CLASSES.includes(me?.class);
   const spellSlots = (() => {
     const computed = getSpellSlots(me?.level || 1);
-    const fillMissing = (stored) =>
-      Object.fromEntries([1,2,3,4,5].map(k => [k, stored[k] !== undefined ? stored[k] : (computed[k] ?? 0)]));
+    // Detect stale level-1 data: all higher tiers are 0 but computed has slots there
+    const isStale = (stored) => {
+      const higherAllZero = [2,3,4,5].every(k => (stored[k] ?? 0) === 0);
+      const computedHasHigher = [2,3,4,5].some(k => (computed[k] ?? 0) > 0);
+      return higherAllZero && computedHasHigher;
+    };
+    const fillMissing = (stored) => {
+      if(isStale(stored)) return { ...computed };
+      return Object.fromEntries([1,2,3,4,5].map(k => [k, stored[k] !== undefined ? stored[k] : (computed[k] ?? 0)]));
+    };
     const inCombat = combat?.spellSlots?.[myId];
     if(inCombat) return fillMissing(inCombat);
     const persisted = qs?.persistentSpellSlots?.[myId];
