@@ -5682,7 +5682,14 @@ ${stepText(step)}`, "quest","Master");
   const myTurn = combat?.active && activeCombatant?.id===myId;
   const myDeathTurn = myTurn && isDyingCombatant(activeCombatant);
   const isCaster = MAGIC_CLASSES.includes(me?.class);
-  const spellSlots = combat?.spellSlots?.[myId] || (qs?.persistentSpellSlots?.[myId]) || getSpellSlots(me?.level);
+  const spellSlots = (() => {
+    const computed = getSpellSlots(me?.level || 1);
+    const inCombat = combat?.spellSlots?.[myId];
+    if(inCombat) return inCombat;
+    const persisted = qs?.persistentSpellSlots?.[myId];
+    if(!persisted) return computed;
+    return Object.fromEntries([1,2,3,4,5].map(k => [k, Math.max(persisted[k] ?? 0, computed[k] ?? 0)]));
+  })();
   const availableSpells = isCaster ? availableSpellsFor(me?.class, me?.level) : [];
   const maxPreparedSpells = maxPreparedSpellsForLevel(me?.level || 1);
   const preparedNormalSpellCount = availableSpells.filter(spell => spell.slots > 0 && preparedSpellIds.includes(spell.id)).length;
