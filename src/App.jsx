@@ -1355,6 +1355,8 @@ async function dbSavePartyState(partyCode, state) {
     __rest: state.rest || null,
     __persistentSpellSlots: state.persistentSpellSlots || null,
     __longRestSeed: state.longRestSeed || 0,
+    __questLog: state.questLog || [],
+    __questDmgLog: state.questDmgLog || {},
   };
   const { error } = await supabase.from("party_state").upsert({
     party_code: partyCode,
@@ -1371,7 +1373,7 @@ async function dbSavePartyState(partyCode, state) {
 async function dbGetPartyState(partyCode) {
   const { data, error } = await supabase.from("party_state").select("*").eq("party_code", partyCode).maybeSingle();
   if (error) throw error;
-  if (!data) return { currentId: null, step: 0, active: false, completed: [], combat: null, masterBuffs: null, rest: null, persistentSpellSlots: null, longRestSeed: 0 };
+  if (!data) return { currentId: null, step: 0, active: false, completed: [], combat: null, masterBuffs: null, rest: null, persistentSpellSlots: null, longRestSeed: 0, questLog: [], questDmgLog: {} };
   const raw = data.combat || {};
   const isV2 = raw.__v === 2;
   const combat = isV2 ? (raw.__combat || null) : (raw && Object.keys(raw).length ? raw : null);
@@ -1385,6 +1387,8 @@ async function dbGetPartyState(partyCode) {
     rest: (isV2 ? raw.__rest : null) || null,
     persistentSpellSlots: (isV2 ? raw.__persistentSpellSlots : null) || null,
     longRestSeed: (isV2 ? raw.__longRestSeed : 0) || 0,
+    questLog: (isV2 ? raw.__questLog : null) || [],
+    questDmgLog: (isV2 ? raw.__questDmgLog : null) || {},
   };
 }
 
@@ -5127,10 +5131,12 @@ function GameScreen({ myId, setScreen, authUser }) {
         : "";
       if(legLine) log += "\n" + legLine;
     }
+    const newQuestDmgLog = { ...(latestBuffState.questDmgLog || {}) };
+    newQuestDmgLog[myId] = { name: me?.name || attacker.name, dmg: (newQuestDmgLog[myId]?.dmg || 0) + dmg };
     const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
     const allDead = combatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
-    if(allDead) { await endCombat({...latestBuffState, masterBuffs: newMasterBuffs, combat:{...combat, combatants}}); return; }
-    await saveQState({ ...latestBuffState, masterBuffs: newMasterBuffs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
+    if(allDead) { await endCombat({...latestBuffState, masterBuffs: newMasterBuffs, questDmgLog: newQuestDmgLog, combat:{...combat, combatants}}); return; }
+    await saveQState({ ...latestBuffState, masterBuffs: newMasterBuffs, questDmgLog: newQuestDmgLog, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
   }
   doAttackRef.current = doAttack;
 
@@ -5165,6 +5171,7 @@ function GameScreen({ myId, setScreen, authUser }) {
 
     let log = `🔮 **${attacker.name}** lancia **${spell.name}**!\n`;
     let newCombatants = combatants;
+    let spellDmgToLog = 0;
 
     if(spell.type === "damage") {
       const base = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), notation:spell.dmg, label:`Danno ${spell.dmg}`, themeColor:"#a855f7" });
@@ -5176,6 +5183,7 @@ function GameScreen({ myId, setScreen, authUser }) {
         newSpellMasterBuffs = { ...spellMasterBuffs, [myId]: { ...spellMyBuffs, crit: spellMyBuffs.crit - 1 } };
       }
       const dmg = Math.max(1, effectiveBase + bonus - Math.floor(target.def/2));
+      spellDmgToLog = dmg;
       const tidx = newCombatants.findIndex(c=>c.id===target.id);
       newCombatants[tidx] = {...target, hp:Math.max(0,target.hp-dmg)};
       const bonusLabel = magLegBonus > 0 ? `+${Math.floor((attacker.mag||0)/2)} +${magLegBonus}(leg)` : `+${bonus}`;
@@ -5226,10 +5234,14 @@ function GameScreen({ myId, setScreen, authUser }) {
       return;
     }
 
+    const newSpellQuestDmgLog = { ...(latestSpellBuffState.questDmgLog || {}) };
+    if(spellDmgToLog > 0) {
+      newSpellQuestDmgLog[myId] = { name: me?.name || attacker.name, dmg: (newSpellQuestDmgLog[myId]?.dmg || 0) + spellDmgToLog };
+    }
     const allDead = newCombatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
     setSpellMenu(false);
-    if(allDead) { await endCombat({...latestSpellBuffState, masterBuffs: newSpellMasterBuffs, combat:{...combat, combatants:newCombatants, spellSlots:nextSlots}}); return; }
-    await saveQState({ ...latestSpellBuffState, masterBuffs: newSpellMasterBuffs, combat: { ...combat, combatants:newCombatants, turn:nextTurn, round:nextRound, spellSlots:nextSlots, pendingLog: log } });
+    if(allDead) { await endCombat({...latestSpellBuffState, masterBuffs: newSpellMasterBuffs, questDmgLog: newSpellQuestDmgLog, combat:{...combat, combatants:newCombatants, spellSlots:nextSlots}}); return; }
+    await saveQState({ ...latestSpellBuffState, masterBuffs: newSpellMasterBuffs, questDmgLog: newSpellQuestDmgLog, combat: { ...combat, combatants:newCombatants, turn:nextTurn, round:nextRound, spellSlots:nextSlots, pendingLog: log } });
   }
 
   async function endCombat(preloadedQs) {
@@ -5298,7 +5310,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       setSpecialQuestError("Questa missione richiede una password.");
       return;
     }
-    const newQs = { currentId:q.id, step:0, active:true, combat:null, completed:qs?.completed||[] };
+    const newQs = { currentId:q.id, step:0, active:true, combat:null, completed:qs?.completed||[], questDmgLog:{} };
     await saveQState(newQs);
     await addMsg(`📜 **MISSIONE: ${q.title}**
 
@@ -5353,7 +5365,16 @@ ${stepText(step)}`, "quest","Master");
       await dbSavePlayer(up);
       if(up.id===myId) setMeRaw(up);
     }
-    const newQs={...qs,active:false,step:0,currentId:null,completed:[...(qs.completed||[]),q.id]};
+    const today = new Date().toLocaleDateString('en-CA');
+    const dmgLog = qs.questDmgLog || {};
+    const logEntry = {
+      id: q.id, title: q.title,
+      completedAt: new Date().toISOString(), date: today,
+      xpEach: xpE, goldEach: goldE,
+      players: Object.entries(dmgLog).map(([, d]) => ({ name: d.name, dmg: d.dmg })).sort((a,b) => b.dmg - a.dmg),
+    };
+    const newQuestLog = [...(qs.questLog || []).filter(e => e.date === today), logEntry];
+    const newQs={...qs,active:false,step:0,currentId:null,completed:[...(qs.completed||[]),q.id],questDmgLog:{},questLog:newQuestLog};
     await saveQState(newQs);
     const guildXp = q.difficulty==="difficile"?120:q.difficulty==="facile"?40:70;
     if(myGuild) await addGuildXP(guildXp);
@@ -6199,6 +6220,51 @@ ${stepText(step)}`, "quest","Master");
                 </div>
               </div>
             ))}
+            {(() => {
+              const today = new Date().toLocaleDateString('en-CA');
+              const todayLog = (qs?.questLog || []).filter(e => e.date === today);
+              if(!todayLog.length) return null;
+              return (
+                <div style={{ marginTop:20 }}>
+                  <div style={{ display:"flex", alignItems:"center", marginBottom:12, padding:"0.45rem 0.75rem", background:"rgba(15,118,110,0.12)", border:"1px solid rgba(20,184,166,0.3)", borderRadius:6 }}>
+                    <span style={{ color:"#2dd4bf", fontSize:"0.76rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>📋 Cronaca del Giorno</span>
+                    <span style={{ color:"#6b7280", fontSize:"0.71rem", marginLeft:"auto" }}>{todayLog.length} {todayLog.length===1?"missione":"missioni"} completate</span>
+                  </div>
+                  {[...todayLog].reverse().map((entry, i) => (
+                    <div key={i} style={{ background:"rgba(15,118,110,0.08)", border:"1px solid rgba(20,184,166,0.22)", borderRadius:8, padding:"0.85rem", marginBottom:8 }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6 }}>
+                        <span style={{ fontFamily:"'Cinzel',serif", color:"#2dd4bf", fontWeight:700, fontSize:"0.88rem" }}>✅ {entry.title}</span>
+                        <span style={{ marginLeft:"auto", fontSize:"0.68rem", color:"#64748b" }}>{new Date(entry.completedAt).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</span>
+                      </div>
+                      <div style={{ display:"flex", gap:14, fontSize:"0.72rem", color:"#94a3b8", marginBottom:entry.players?.length?10:0 }}>
+                        <span>⭐ +{entry.xpEach} XP</span>
+                        <span>💰 +{entry.goldEach} oro</span>
+                        <span style={{ color:"#475569" }}>a testa</span>
+                      </div>
+                      {entry.players && entry.players.length > 0 && (
+                        <div style={{ marginTop:8, paddingTop:8, borderTop:"1px solid rgba(20,184,166,0.15)" }}>
+                          <div style={{ fontSize:"0.65rem", color:"#64748b", marginBottom:6, letterSpacing:"0.07em" }}>DANNI INFLITTI</div>
+                          {entry.players.map((p, pi) => {
+                            const maxDmg = entry.players[0]?.dmg || 1;
+                            const pct = Math.round(p.dmg / maxDmg * 100);
+                            return (
+                              <div key={pi} style={{ display:"flex", alignItems:"center", gap:7, marginBottom:5 }}>
+                                <span style={{ fontSize:"0.82rem", minWidth:18, textAlign:"center" }}>{pi===0?"🥇":pi===1?"🥈":pi===2?"🥉":"•"}</span>
+                                <span style={{ fontSize:"0.78rem", color:"#e2e8f0", flex:1, minWidth:0, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</span>
+                                <span style={{ fontSize:"0.78rem", color:"#ef4444", fontWeight:700, minWidth:48, textAlign:"right" }}>{p.dmg} dmg</span>
+                                <div style={{ width:52, height:5, background:"rgba(30,41,59,0.8)", borderRadius:3, overflow:"hidden", flexShrink:0 }}>
+                                  <div style={{ height:"100%", background:"linear-gradient(90deg,#ef4444,#f97316)", width:`${pct}%`, transition:"width 0.4s" }} />
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
           </div>
         )}
 
