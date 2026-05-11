@@ -1405,6 +1405,7 @@ async function dbSavePartyState(partyCode, state) {
     __questLog: state.questLog || [],
     __questDmgLog: state.questDmgLog || {},
     __partyDiary: state.partyDiary || [],
+    __battleChat: state.battleChat || [],
   };
   const { error } = await supabase.from("party_state").upsert({
     party_code: partyCode,
@@ -1421,7 +1422,7 @@ async function dbSavePartyState(partyCode, state) {
 async function dbGetPartyState(partyCode) {
   const { data, error } = await supabase.from("party_state").select("*").eq("party_code", partyCode).maybeSingle();
   if (error) throw error;
-  if (!data) return { currentId: null, step: 0, active: false, completed: [], combat: null, masterBuffs: null, rest: null, persistentSpellSlots: null, longRestSeed: 0, questLog: [], questDmgLog: {}, partyDiary: [] };
+  if (!data) return { currentId: null, step: 0, active: false, completed: [], combat: null, masterBuffs: null, rest: null, persistentSpellSlots: null, longRestSeed: 0, questLog: [], questDmgLog: {}, partyDiary: [], battleChat: [] };
   const raw = data.combat || {};
   const isV2 = raw.__v === 2;
   const combat = isV2 ? (raw.__combat || null) : (raw && Object.keys(raw).length ? raw : null);
@@ -1438,6 +1439,7 @@ async function dbGetPartyState(partyCode) {
     questLog: (isV2 ? raw.__questLog : null) || [],
     questDmgLog: (isV2 ? raw.__questDmgLog : null) || {},
     partyDiary: (isV2 ? raw.__partyDiary : null) || [],
+    battleChat: (isV2 ? raw.__battleChat : null) || [],
   };
 }
 
@@ -4147,6 +4149,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [restTimeLeft, setRestTimeLeft] = useState(null);
   const [pendingHealItem, setPendingHealItem] = useState(null);
   const [selectedAllyTarget, setSelectedAllyTarget] = useState(null);
+  const [battleChatInput, setBattleChatInput] = useState("");
   const [tab, setTab] = useState("quest");
   const [dismissedVictoryTs, setDismissedVictoryTs] = useState(null);
   const [achievementNotif, setAchievementNotif] = useState([]);
@@ -4943,6 +4946,15 @@ function GameScreen({ myId, setScreen, authUser }) {
   async function dismissCombatLog() {
     if(!qs?.combat?.pendingLog) return;
     await saveQState({ ...qs, combat: { ...qs.combat, pendingLog: null } });
+  }
+
+  async function sendBattleChat(text) {
+    const trimmed = text?.trim();
+    if(!trimmed || !combat?.active) return;
+    const entry = { id: Date.now(), author: me?.name || "Eroe", class: me?.class || "warrior", text: trimmed, ts: Date.now() };
+    const newChat = [...(qs.battleChat || []), entry].slice(-40);
+    await saveQState({ ...qs, battleChat: newChat });
+    setBattleChatInput("");
   }
 
   async function forceNextCombatTurn() {
@@ -7081,6 +7093,45 @@ ${stepText(step)}`, "quest","Master");
                     </div>
                   </div>
                 </div>
+
+                {/* ── Battle Chat ── */}
+                {(() => {
+                  const chatMessages = qs?.battleChat || [];
+                  const CLASS_COLORS = { warrior:"#f87171", mage:"#a78bfa", healer:"#34d399", ranger:"#fb923c", rogue:"#fbbf24", paladin:"#60a5fa", sorcerer:"#c084fc", druid:"#86efac", bard:"#f472b6" };
+                  return (
+                    <div style={{ marginTop:"1rem", background:"rgba(8,14,28,0.88)", border:"1px solid rgba(148,163,184,0.18)", borderRadius:12, overflow:"hidden" }}>
+                      <div style={{ padding:"0.55rem 1rem", borderBottom:"1px solid rgba(148,163,184,0.1)", fontSize:"0.72rem", color:"#64748b", fontFamily:"'Cinzel',serif", letterSpacing:"0.1em" }}>
+                        💬 CHAT DI BATTAGLIA
+                      </div>
+                      <div style={{ maxHeight:160, overflowY:"auto", padding:"0.5rem 0.85rem", display:"flex", flexDirection:"column", gap:4 }}>
+                        {chatMessages.length === 0
+                          ? <div style={{ color:"#334155", fontSize:"0.72rem", textAlign:"center", padding:"0.5rem" }}>Nessun messaggio ancora…</div>
+                          : chatMessages.map(m => (
+                              <div key={m.id} style={{ fontSize:"0.78rem", lineHeight:1.4 }}>
+                                <span style={{ color: CLASS_COLORS[m.class] || "#94a3b8", fontWeight:700, marginRight:4 }}>{m.author}:</span>
+                                <span style={{ color:"#e2e8f0" }}>{m.text}</span>
+                              </div>
+                            ))
+                        }
+                      </div>
+                      <div style={{ display:"flex", gap:6, padding:"0.5rem 0.75rem", borderTop:"1px solid rgba(148,163,184,0.1)" }}>
+                        <input
+                          value={battleChatInput}
+                          onChange={e => setBattleChatInput(e.target.value)}
+                          onKeyDown={e => { if(e.key==="Enter" && battleChatInput.trim()) { sendBattleChat(battleChatInput); e.preventDefault(); } }}
+                          placeholder="Scrivi agli alleati…"
+                          maxLength={120}
+                          style={{ flex:1, background:"rgba(15,23,42,0.7)", border:"1px solid #1e293b", borderRadius:7, padding:"0.4rem 0.65rem", color:"#e2e8f0", fontSize:"0.8rem", fontFamily:"inherit", outline:"none" }}
+                        />
+                        <button
+                          onClick={() => { if(battleChatInput.trim()) sendBattleChat(battleChatInput); }}
+                          style={{ padding:"0.4rem 0.75rem", background:"rgba(99,102,241,0.25)", border:"1px solid #4338ca", borderRadius:7, color:"#a5b4fc", fontSize:"0.8rem", cursor:"pointer", flexShrink:0 }}>
+                          Invia
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </div>
