@@ -4943,6 +4943,13 @@ function GameScreen({ myId, setScreen, authUser }) {
       return;
     }
     setMeRaw(updated);
+    // Clear stale spell slots so the new level's full slots are used immediately
+    if(code) {
+      const freshQs = await dbGetPartyState(code);
+      const newPersist = { ...(freshQs?.persistentSpellSlots || {}) };
+      delete newPersist[me.id];
+      await saveQState({ ...freshQs, persistentSpellSlots: newPersist });
+    }
     await addMsg(`⭐ **${me.name}** sale al **livello ${updated.level}**!\n${levelGainForClass(me.class).label}`, "info", "Sistema");
     await refreshAll(code);
   }
@@ -5236,7 +5243,11 @@ function GameScreen({ myId, setScreen, authUser }) {
 
   async function castSpell(spell, allyTargetId = null) {
     if(!combat?.active || combat.pendingLog) return;
-    const slots = (combat.spellSlots||{})[myId] || getSpellSlots(me.level);
+    const _computed = getSpellSlots(me.level || 1);
+    const _stored = (combat.spellSlots||{})[myId];
+    const slots = _stored
+      ? Object.fromEntries([1,2,3,4,5].map(k => [k, _stored[k] !== undefined ? _stored[k] : (_computed[k] ?? 0)]))
+      : _computed;
     const cost = spell.slots || 0;
     if(cost > 0 && (slots[cost]||0) <= 0) {
       await addMsg("🔮 Non hai più slot incantesimo di quel livello per questa battaglia.", "system","Sistema");
@@ -5395,8 +5406,14 @@ function GameScreen({ myId, setScreen, authUser }) {
     })();
     const newCombat = { active: false, won: !!onQuestCombat, victoryData };
     // Persist remaining spell slots so they carry over between combats
-    const usedSlots = latestCombat?.spellSlots || {};
-    const newPersistentSlots = { ...(latestQs.persistentSpellSlots || {}), ...usedSlots };
+    // Merge with computed so all tiers are always present in the saved state
+    const rawUsedSlots = latestCombat?.spellSlots || {};
+    const newPersistentSlots = { ...(latestQs.persistentSpellSlots || {}) };
+    for(const [pid, stored] of Object.entries(rawUsedSlots)) {
+      const player = rewardPlayers.find(p => p.id === pid);
+      const comp = getSpellSlots(player?.level || 1);
+      newPersistentSlots[pid] = Object.fromEntries([1,2,3,4,5].map(k => [k, stored[k] !== undefined ? stored[k] : (comp[k] ?? 0)]));
+    }
     const currentQuestForDiary = latestQs?.active ? getQuests().find(q => q.id === latestQs.currentId) : null;
     const slainNames = slain.map(m => `${m.emoji} ${m.name}`).join(', ');
     const diaryText = currentQuestForDiary
@@ -5700,8 +5717,10 @@ ${stepText(step)}`, "quest","Master");
   const isCaster = MAGIC_CLASSES.includes(me?.class);
   const spellSlots = (() => {
     const computed = getSpellSlots(me?.level || 1);
+    const fillMissing = (stored) =>
+      Object.fromEntries([1,2,3,4,5].map(k => [k, stored[k] !== undefined ? stored[k] : (computed[k] ?? 0)]));
     const inCombat = combat?.spellSlots?.[myId];
-    if(inCombat) return inCombat;
+    if(inCombat) return fillMissing(inCombat);
     const persisted = qs?.persistentSpellSlots?.[myId];
     if(!persisted) return computed;
     return Object.fromEntries([1,2,3,4,5].map(k => [k, Math.max(persisted[k] ?? 0, computed[k] ?? 0)]));
