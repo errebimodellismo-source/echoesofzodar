@@ -6886,11 +6886,13 @@ ${stepText(step)}`, "quest","Master");
                         )}
                         <HpBar cur={c.hp} max={c.maxHp} red={!c.isPlayer} />
                         {c.isPlayer && MAGIC_CLASSES.includes(c.class) && (() => {
-                          const curSlots = combat?.spellSlots?.[c.id] || qs?.persistentSpellSlots?.[c.id] || getSpellSlots(c.level||1);
-                          const maxSlots = getSpellSlots(c.level||1);
-                          const cur = totalSlots(curSlots);
+                          const playerLvl = partyPlayers.find(p=>p.id===c.id)?.level || c.level || 1;
+                          const maxSlots = getSpellSlots(playerLvl);
                           const max = totalSlots(maxSlots);
                           if(max <= 0) return null;
+                          const rawStored = combat?.spellSlots?.[c.id] || qs?.persistentSpellSlots?.[c.id];
+                          const curSlots = rawStored ? Object.fromEntries([1,2,3,4,5].map(k=>[k, rawStored[k]!==undefined?rawStored[k]:(maxSlots[k]??0)])) : maxSlots;
+                          const cur = totalSlots(curSlots);
                           const pct = Math.min(100, Math.round((cur/max)*100));
                           return (
                             <div style={{ marginTop:5 }}>
@@ -6899,7 +6901,7 @@ ${stepText(step)}`, "quest","Master");
                               </div>
                               <div style={{ display:"flex", justifyContent:"space-between", marginTop:2, fontSize:"0.62rem", color:"#a78bfa" }}>
                                 <span>✨ Mana</span>
-                                <span>{cur}/{max}</span>
+                                <span>{cur}</span>
                               </div>
                             </div>
                           );
