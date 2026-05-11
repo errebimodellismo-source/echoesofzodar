@@ -28,6 +28,10 @@ import audioManager from "./utils/audioManager";
     @keyframes restRuneSpin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
     @keyframes restShortBlink { 0%,58%,74%,100%{transform:translateY(-92px)} 63%,68%{transform:translateY(78px)} }
     @keyframes restLongClose { 0%{transform:translateY(-92px)} 48%{transform:translateY(-18px)} 100%{transform:translateY(78px)} }
+    @keyframes restUpperLidShort { 0%,56%,76%,100%{transform:translateY(-82px)} 62%,68%{transform:translateY(0)} }
+    @keyframes restLowerLidShort { 0%,56%,76%,100%{transform:translateY(82px)} 62%,68%{transform:translateY(0)} }
+    @keyframes restUpperLidLong { 0%{transform:translateY(-82px)} 48%{transform:translateY(-22px)} 100%{transform:translateY(0)} }
+    @keyframes restLowerLidLong { 0%{transform:translateY(82px)} 48%{transform:translateY(22px)} 100%{transform:translateY(0)} }
     @keyframes restGlowDrift { 0%,100%{opacity:.45;transform:translateY(0)} 50%{opacity:.85;transform:translateY(-5px)} }
     @keyframes restMistSweep { 0%{transform:translateX(-26px);opacity:.18} 50%{opacity:.45} 100%{transform:translateX(26px);opacity:.18} }
     @keyframes legPulse { 0%,100%{box-shadow:0 0 18px rgba(109,40,217,0.5)} 50%{box-shadow:0 0 40px rgba(139,92,246,0.9),0 0 80px rgba(109,40,217,0.5)} }
@@ -103,6 +107,42 @@ const LEGENDARY_ITEMS = [
 
 const XP_TABLE = [0,0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000];
 function xpForLevel(l){ const lv = Math.max(1,Math.min(20,l)); return XP_TABLE[lv] ?? XP_TABLE[20]; }
+
+const ACHIEVEMENTS = [
+  { id:'first_blood',   tier:1, icon:'🩸', title:'Primo Sangue',      desc:'Uccidi il tuo primo mostro in battaglia',            check:(s)=>s.monstersKilled>=1 },
+  { id:'adventurer',    tier:1, icon:'📜', title:'Avventuriero',      desc:'Completa la tua prima missione',                     check:(s)=>s.questsCompleted>=1 },
+  { id:'slayer',        tier:2, icon:'⚔️', title:'Cacciatore',        desc:'Sconfiggi 10 mostri',                                check:(s)=>s.monstersKilled>=10 },
+  { id:'veteran',       tier:2, icon:'🌟', title:'Veterano',          desc:'Completa 10 missioni',                               check:(s)=>s.questsCompleted>=10 },
+  { id:'destroyer',     tier:2, icon:'🔥', title:'Distruttore',       desc:'Infliggi 1.000 danni totali',                        check:(s)=>s.totalDamage>=1000 },
+  { id:'crit_master',   tier:2, icon:'🎯', title:'Colpo Preciso',     desc:'Esegui 10 colpi critici',                            check:(s)=>s.criticalHits>=10 },
+  { id:'level5',        tier:2, icon:'⭐', title:'Combattente',       desc:'Raggiungi il livello 5',                             check:(s,p)=>(p?.level||1)>=5 },
+  { id:'near_death',    tier:2, icon:'👻', title:'Sfidatore del Fato',desc:'Sopravvivi a un tiro salvezza contro la morte',      check:(s)=>s.deathSavesSurvived>=1 },
+  { id:'rich',          tier:2, icon:'💰', title:'Tesoro di Guerra',  desc:'Accumula 1.000 monete d\'oro',                       check:(s,p)=>(p?.gold||0)>=1000 },
+  { id:'exterminator',  tier:3, icon:'💀', title:'Sterminatore',      desc:'Sconfiggi 50 mostri',                                check:(s)=>s.monstersKilled>=50 },
+  { id:'scourge',       tier:3, icon:'💥', title:'Flagello',          desc:'Infliggi 10.000 danni totali',                       check:(s)=>s.totalDamage>=10000 },
+  { id:'quest_hero',    tier:3, icon:'🏆', title:'Eroe delle Terre',  desc:'Completa 25 missioni',                               check:(s)=>s.questsCompleted>=25 },
+  { id:'level10',       tier:3, icon:'🌙', title:'Guerriero Scelto',  desc:'Raggiungi il livello 10',                            check:(s,p)=>(p?.level||1)>=10 },
+  { id:'unkillable',    tier:3, icon:'💎', title:'Indistruttibile',   desc:'Sopravvivi a 5 tiri salvezza contro la morte',       check:(s)=>s.deathSavesSurvived>=5 },
+  { id:'wealthy',       tier:3, icon:'🏅', title:'Magnate',           desc:'Accumula 5.000 monete d\'oro',                       check:(s,p)=>(p?.gold||0)>=5000 },
+  { id:'death_angel',   tier:4, icon:'☠️', title:'Angelo della Morte',desc:'Sconfiggi 100 mostri',                               check:(s)=>s.monstersKilled>=100 },
+  { id:'cataclysm',     tier:4, icon:'🌋', title:'Cataclisma',        desc:'Infliggi 50.000 danni totali',                       check:(s)=>s.totalDamage>=50000 },
+  { id:'legend',        tier:4, icon:'👑', title:'Leggenda Vivente',  desc:'Raggiungi il livello 20',                            check:(s,p)=>(p?.level||1)>=20 },
+];
+function checkNewAchievements(stats, player) {
+  const current = new Set(stats?.achievements || []);
+  const newlyUnlocked = [];
+  for(const a of ACHIEVEMENTS) {
+    if(!current.has(a.id) && a.check(stats || {}, player)) { current.add(a.id); newlyUnlocked.push(a); }
+  }
+  return { achievements:[...current], newlyUnlocked };
+}
+function getPlayerTitle(stats) {
+  const unlocked = stats?.achievements || [];
+  for(let i = ACHIEVEMENTS.length - 1; i >= 0; i--) {
+    if(unlocked.includes(ACHIEVEMENTS[i].id)) return ACHIEVEMENTS[i];
+  }
+  return null;
+}
 
 /* Guild system */
 const GUILD_REGISTRY_CODE = "__world_guilds__";
@@ -854,7 +894,7 @@ function resolveWeaponAttack(attacker, target, weaponDie) {
   const attackBonus = getCombatAttackBonus(attacker);
   const attackTotal = hitRoll + attackBonus;
   const targetCa = Math.max(8, target?.def || 10);
-  const hit = isCrit || attackTotal >= targetCa;
+  const hit = hitRoll !== 1 && (isCrit || attackTotal >= targetCa);
   const damageRoll = hit ? rollDice(weaponDie || "1d6") : 0;
   const damage = hit ? damageRoll + (isCrit ? damageRoll : 0) : 0;
   return { hitRoll, isCrit, attackBonus, attackTotal, targetCa, hit, damageRoll, damage, weaponDie: weaponDie || "1d6" };
@@ -1312,6 +1352,7 @@ async function dbSavePlayer(p) {
     updated_at: new Date().toISOString(),
   };
   if(p.accountId) payload.account_id = p.accountId;
+  payload.avatar_config = { gender: p.gender || 'male', stats: p.stats || {} };
   const { data, error } = await supabase.from("players").upsert(payload).select("id,account_id,dead").single();
   return { data, error };
 }
@@ -1324,6 +1365,7 @@ async function dbGetPlayers(partyCode) {
     id: r?.id, name: r?.name, partyCode: r?.party_code,
     accountId: r?.account_id || null,
     gender: getStoredCharacterGender(r?.id, typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male')),
+    stats: (r?.avatar_config && typeof r.avatar_config === 'object') ? (r.avatar_config.stats || {}) : {},
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
     mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
@@ -1336,6 +1378,7 @@ async function dbGetAccountCharacters(accountId) {
     id: r?.id, name: r?.name, partyCode: r?.party_code,
     accountId: r?.account_id || null,
     gender: getStoredCharacterGender(r?.id, typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male')),
+    stats: (r?.avatar_config && typeof r.avatar_config === 'object') ? (r.avatar_config.stats || {}) : {},
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
     mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
@@ -4106,6 +4149,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [selectedAllyTarget, setSelectedAllyTarget] = useState(null);
   const [tab, setTab] = useState("quest");
   const [dismissedVictoryTs, setDismissedVictoryTs] = useState(null);
+  const [achievementNotif, setAchievementNotif] = useState([]);
   const isMobile = useMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [lootedStepKey, setLootedStepKey] = useState(null);
@@ -4179,7 +4223,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     const attackTotal = hitRoll + attackBonus;
     const targetCa = Math.max(8, target?.def || 10);
     const isCrit = hitRoll === 20;
-    const hit = isCrit || attackTotal >= targetCa;
+    const hit = hitRoll !== 1 && (isCrit || attackTotal >= targetCa);
 
     // Ability modifier for damage (players only)
     const profile = attacker.isPlayer ? weaponAttackProfile(weapon, attacker) : null;
@@ -4410,14 +4454,16 @@ function GameScreen({ myId, setScreen, authUser }) {
     if(!leg) prevLegItemRef.current = null;
   }, [qs?.masterBuffs?.[myId]?.legendaryItem?.name, myId]);
 
-  // 30-second turn timer — only runs on the active player's client, uses ref to avoid stale closure
+  // 30-second turn timer — shows countdown for any player's turn; auto-acts on expiry
   const TURN_TIMEOUT_S = 30;
+  const currentActorIdRef = useRef(null);
   useEffect(() => {
     if(turnTimerRef.current) { clearInterval(turnTimerRef.current); turnTimerRef.current = null; }
     const c = qs?.combat;
     if(!c?.active) { setTurnTimeLeft(null); return; }
     const actor = (c.combatants||[])[c.turn % Math.max(1,(c.combatants||[]).length)];
     if(!actor?.isPlayer || c.pendingLog) { setTurnTimeLeft(null); return; }
+    currentActorIdRef.current = actor.id;
     let timeLeft = TURN_TIMEOUT_S;
     setTurnTimeLeft(timeLeft);
     turnTimerRef.current = setInterval(() => {
@@ -4426,7 +4472,12 @@ function GameScreen({ myId, setScreen, authUser }) {
       if(timeLeft <= 0) {
         clearInterval(turnTimerRef.current);
         turnTimerRef.current = null;
-        doAttackRef.current?.(); // auto-attack on timeout (latest ref, no stale closure)
+        // If it's my turn → auto-attack; otherwise leader forces the turn to advance
+        if(currentActorIdRef.current === myId) {
+          doAttackRef.current?.();
+        } else {
+          forceNextTurnRef.current?.();
+        }
       }
     }, 1000);
     return () => { if(turnTimerRef.current) { clearInterval(turnTimerRef.current); turnTimerRef.current = null; } };
@@ -4993,8 +5044,8 @@ function GameScreen({ myId, setScreen, authUser }) {
       for(const p of allPlayers) {
         const maxSlots = getSpellSlots(p.level || 1);
         if(type === "long") {
-          const fullHp = p.max_hp || p.maxHp || p.hp;
-          const updated = { ...p, hp: fullHp, dead: false };
+          const fullHp = p.maxHp || getBaseStats(p).maxHp || 1;
+          const updated = { ...p, hp: fullHp, maxHp: fullHp, dead: false };
           await dbSavePlayer(updated);
           if(p.id === myId) setMeRaw(updated);
           newPersistentSlots[p.id] = { ...maxSlots };
@@ -5084,7 +5135,16 @@ function GameScreen({ myId, setScreen, authUser }) {
       const deathSave = resolveDeathSave(attacker, deathSaveRoll);
       const idx = combatants.findIndex(c => c.id === attacker.id);
       combatants[idx] = deathSave.nextCombatant;
-      const updatedPlayer = { ...me, hp: deathSave.nextCombatant.hp, dead: !!deathSave.nextCombatant.dead };
+      const survived = deathSave.result === "nat20" || deathSave.result === "revived";
+      let updatedPlayer = { ...me, hp: deathSave.nextCombatant.hp, dead: !!deathSave.nextCombatant.dead };
+      if(survived) {
+        const oldStats = me.stats || {};
+        const newStats = { ...oldStats, deathSavesSurvived: (oldStats.deathSavesSurvived || 0) + 1 };
+        const { achievements: newAchievements, newlyUnlocked } = checkNewAchievements(newStats, updatedPlayer);
+        newStats.achievements = newAchievements;
+        updatedPlayer = { ...updatedPlayer, stats: newStats };
+        if(newlyUnlocked.length > 0) setAchievementNotif(newlyUnlocked);
+      }
       await dbSavePlayer(updatedPlayer);
       setMeRaw(updatedPlayer);
       const activeCombatPlayerCount = combatants.filter(c => c?.isPlayer).length;
@@ -5145,7 +5205,12 @@ function GameScreen({ myId, setScreen, authUser }) {
       if(legLine) log += "\n" + legLine;
     }
     const newQuestDmgLog = { ...(latestBuffState.questDmgLog || {}) };
-    newQuestDmgLog[myId] = { name: me?.name || attacker.name, dmg: (newQuestDmgLog[myId]?.dmg || 0) + dmg };
+    const prevEntry = newQuestDmgLog[myId] || {};
+    newQuestDmgLog[myId] = {
+      name: me?.name || attacker.name,
+      dmg: (prevEntry.dmg || 0) + dmg,
+      crits: (prevEntry.crits || 0) + (effectiveResolved.isCrit ? 1 : 0),
+    };
     const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
     const allDead = combatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
     if(allDead) { await endCombat({...latestBuffState, masterBuffs: newMasterBuffs, questDmgLog: newQuestDmgLog, combat:{...combat, combatants}}); return; }
@@ -5203,7 +5268,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       log += `💥 Tiro danno: **${spell.dmg} = ${base}**\n✨ Bonus magia: **${bonusLabel}**\n🛡️ Riduzione bersaglio: **-${Math.floor(target.def/2)}**\n🔥 Danno finale: **${dmg}**\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`;
     } else if(spell.type === "heal") {
       // Heal target: ally if selected, otherwise self
-      const healCombatant = (allyTargetId && allyTargetId !== attacker.id)
+      const healCombatant = allyTargetId
         ? newCombatants.find(c => c.isPlayer && c.id === allyTargetId && !c.dead)
         : attacker;
       const healTarget = healCombatant || attacker;
@@ -5276,13 +5341,29 @@ function GameScreen({ myId, setScreen, authUser }) {
     const xpEach = Math.floor(totalXp / partyCount);
     const goldEach = Math.floor(totalGold / partyCount);
 
+    const combatDmgLog = latestQs.questDmgLog || {};
     const playerResults = [];
     for (const p of rewardPlayers) {
       const beforeXp = p.xp || 0;
       const beforeLevel = p.level || 1;
-      let up = { ...p, xp: beforeXp + xpEach, gold: (p.gold || 0) + goldEach };
+      const pDmgEntry = combatDmgLog[p.id] || {};
+      const oldStats = p.stats || {};
+      const newStats = {
+        ...oldStats,
+        monstersKilled: (oldStats.monstersKilled || 0) + slain.length,
+        totalDamage: (oldStats.totalDamage || 0) + (pDmgEntry.dmg || 0),
+        criticalHits: (oldStats.criticalHits || 0) + (pDmgEntry.crits || 0),
+        questsCompleted: oldStats.questsCompleted || 0,
+        deathSavesSurvived: oldStats.deathSavesSurvived || 0,
+      };
+      const { achievements: newAchievements, newlyUnlocked } = checkNewAchievements(newStats, p);
+      newStats.achievements = newAchievements;
+      let up = { ...p, xp: beforeXp + xpEach, gold: (p.gold || 0) + goldEach, stats: newStats };
       await dbSavePlayer(up);
-      if (up.id === myId) setMeRaw(up);
+      if (up.id === myId) {
+        setMeRaw(up);
+        if (newlyUnlocked.length > 0) setAchievementNotif(newlyUnlocked);
+      }
       playerResults.push({
         id: p.id, name: p.name,
         beforeXp, beforeLevel, xpThreshold: xpForLevel(beforeLevel),
@@ -5291,8 +5372,6 @@ function GameScreen({ myId, setScreen, authUser }) {
         canLevelUp: up.xp >= xpForLevel(up.level),
       });
     }
-
-    const combatDmgLog = latestQs.questDmgLog || {};
     const victoryData = { slain, xpEach, goldEach, totalXp, totalGold, playerResults, combatDmgLog, ts: Date.now() };
     const onQuestCombat = latestQs?.active && latestQs?.currentId && (() => {
       const q = getQuests().find(x => x.id === latestQs.currentId);
@@ -5383,9 +5462,24 @@ ${stepText(step)}`, "quest","Master");
     const xpE = Math.floor(q.xpReward/Math.max(partyPlayers.length,1));
     const goldE = Math.floor((q.goldReward/Math.max(partyPlayers.length,1)) * goldMult);
     for(const p of partyPlayers) {
-      let up={...p,xp:p.xp+xpE,gold:p.gold+goldE};
+      const oldStats = p.stats || {};
+      const newStats = {
+        ...oldStats,
+        questsCompleted: (oldStats.questsCompleted || 0) + 1,
+        monstersKilled: oldStats.monstersKilled || 0,
+        totalDamage: oldStats.totalDamage || 0,
+        criticalHits: oldStats.criticalHits || 0,
+        deathSavesSurvived: oldStats.deathSavesSurvived || 0,
+      };
+      const newGold = (p.gold || 0) + goldE;
+      const { achievements: newAchievements, newlyUnlocked } = checkNewAchievements(newStats, { ...p, gold: newGold });
+      newStats.achievements = newAchievements;
+      let up = { ...p, xp: (p.xp || 0) + xpE, gold: newGold, stats: newStats };
       await dbSavePlayer(up);
-      if(up.id===myId) setMeRaw(up);
+      if(up.id === myId) {
+        setMeRaw(up);
+        if(newlyUnlocked.length > 0) setAchievementNotif(newlyUnlocked);
+      }
     }
     const today = new Date().toLocaleDateString('en-CA');
     const dmgLog = qs.questDmgLog || {};
@@ -5436,8 +5530,12 @@ ${stepText(step)}`, "quest","Master");
     const allCombatants = [...players,...monsters].map(c=>({...c, rollInit:(c.init||1)+roll(20)}));
     allCombatants.sort((a,b)=>b.rollInit-a.rollInit);
     const spellSlots = Object.fromEntries(players.map(p=>{
+      const computed = getSpellSlots(p.level || 1);
       const persisted = (qs.persistentSpellSlots || {})[p.id];
-      return [p.id, persisted || getSpellSlots(p.level||1)];
+      // Always use at least the computed slots for the player's current level
+      const merged = {};
+      for(const k of [1,2,3,4,5]) merged[k] = Math.max((persisted?.[k] ?? computed[k]), computed[k]);
+      return [p.id, merged];
     }));
     const newCombat = { active:true, combatants:allCombatants, turn:0, round:1, spellSlots };
     const newQs = {...qs, combat:newCombat};
@@ -5696,6 +5794,7 @@ ${stepText(step)}`, "quest","Master");
             <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontFamily:"'Cinzel',serif", color:"#f9fafb", fontSize:"0.82rem", fontWeight:700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{me?.name}</div>
               <div style={{ color:"#94a3b8", fontSize:"0.62rem" }}>{RACES[me?.race]?.name} {CLASSES[me?.class]?.name}</div>
+              {(() => { const t = getPlayerTitle(me?.stats); return t ? <div style={{ fontSize:"0.6rem", color: t.tier===4?"#fbbf24":t.tier===3?"#a855f7":t.tier===2?"#22c55e":"#94a3b8", fontStyle:"italic" }}>{t.icon} {t.title}</div> : null; })()}
             </div>
             <span style={{ padding:"1px 5px", background:"#3b0764", borderRadius:3, fontSize:"0.62rem", color:"#a78bfa", flexShrink:0 }}>Lv.{me.level}</span>
           </div>
@@ -5990,6 +6089,50 @@ ${stepText(step)}`, "quest","Master");
                   );
                 })()}
                 <BigBtn onClick={handleLevelUp} gold disabled={!canLevelUp}>Aumenta di livello</BigBtn>
+              </Card>
+
+              {/* ── Achievements ── */}
+              <Card title="🏆 Achievement">
+                {(() => {
+                  const stats = me?.stats || {};
+                  const unlocked = new Set(stats.achievements || []);
+                  const TIER_COLORS = { 1:"#94a3b8", 2:"#22c55e", 3:"#a855f7", 4:"#fbbf24" };
+                  const TIER_LABELS = { 1:"Comune", 2:"Non comune", 3:"Raro", 4:"Leggendario" };
+                  const tiers = [4,3,2,1];
+                  return (
+                    <div>
+                      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:6, marginBottom:"0.75rem" }}>
+                        {[["Mostri abbattuti", stats.monstersKilled||0,"💀"],["Missioni completate",stats.questsCompleted||0,"📜"],["Danni totali",stats.totalDamage||0,"⚔️"],["Critici",stats.criticalHits||0,"🎯"],["Death save superati",stats.deathSavesSurvived||0,"👻"]].map(([label,val,icon])=>(
+                          <div key={label} style={{ background:"rgba(15,23,42,0.7)", border:"1px solid #1e293b", borderRadius:6, padding:"0.6rem 0.75rem", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                            <span style={{ color:"#94a3b8", fontSize:"0.7rem" }}>{icon} {label}</span>
+                            <span style={{ color:"#f8fafc", fontWeight:700, fontSize:"0.88rem" }}>{val.toLocaleString()}</span>
+                          </div>
+                        ))}
+                      </div>
+                      {tiers.map(tier => {
+                        const tierAchs = ACHIEVEMENTS.filter(a => a.tier === tier);
+                        return (
+                          <div key={tier} style={{ marginBottom:"0.75rem" }}>
+                            <div style={{ fontSize:"0.65rem", color: TIER_COLORS[tier], textTransform:"uppercase", letterSpacing:"0.1em", fontFamily:"'Cinzel',serif", marginBottom:5, borderBottom:`1px solid ${TIER_COLORS[tier]}33`, paddingBottom:3 }}>{TIER_LABELS[tier]}</div>
+                            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(170px,1fr))", gap:5 }}>
+                              {tierAchs.map(a => {
+                                const done = unlocked.has(a.id);
+                                return (
+                                  <div key={a.id} style={{ background: done ? `rgba(${tier===4?"251,191,36":tier===3?"168,85,247":tier===2?"34,197,94":"148,163,184"},0.08)` : "rgba(15,23,42,0.6)", border:`1px solid ${done ? TIER_COLORS[tier] : "#1e293b"}`, borderRadius:7, padding:"0.55rem 0.7rem", opacity: done ? 1 : 0.45, transition:"opacity 0.3s" }}>
+                                    <div style={{ fontSize:"1.4rem", marginBottom:2 }}>{a.icon}</div>
+                                    <div style={{ color: done ? TIER_COLORS[tier] : "#64748b", fontFamily:"'Cinzel',serif", fontSize:"0.72rem", fontWeight:700 }}>{a.title}</div>
+                                    <div style={{ color:"#475569", fontSize:"0.63rem", marginTop:2, lineHeight:1.3 }}>{a.desc}</div>
+                                    {done && <div style={{ fontSize:"0.6rem", color: TIER_COLORS[tier], marginTop:3, fontStyle:"italic" }}>✓ Sbloccato</div>}
+                                  </div>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  );
+                })()}
               </Card>
             </div>
           </div>
@@ -6753,22 +6896,25 @@ ${stepText(step)}`, "quest","Master");
                               })()}
                               {/* Bersaglio alleato (per magie curative) */}
                               {(() => {
-                                const allies = combat.combatants.filter(c=>c.isPlayer&&!c.dead&&c.hp<c.maxHp);
                                 const hasHealSpell = preparedSpells.some(s=>s.type==="heal");
-                                if(!hasHealSpell || allies.length <= 1) return null;
+                                const healTargets = combat.combatants.filter(c=>c.isPlayer&&!c.dead);
+                                const hasOtherAlly = healTargets.some(c=>c.id!==myId);
+                                if(!hasHealSpell || !hasOtherAlly) return null;
                                 return (
                                   <div style={{ width:"100%", marginBottom:4 }}>
-                                    <div style={{ fontSize:"0.7rem", color:"#4ade80", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>💚 Cura alleato (opzionale)</div>
+                                    <div style={{ fontSize:"0.7rem", color:"#4ade80", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>💚 Bersaglio cura</div>
                                     <div style={{ display:"grid", gap:5 }}>
-                                      {allies.map(a=>{
+                                      {healTargets.map(a=>{
                                         const isSel = selectedAllyTarget===a.id;
+                                        const isSelf = a.id===myId;
+                                        const isFullHp = a.hp>=a.maxHp;
                                         return (
                                           <button key={a.id} onClick={()=>setSelectedAllyTarget(isSel?null:a.id)}
-                                            style={{ display:"flex", alignItems:"center", gap:7, padding:"0.45rem 0.6rem", background:isSel?"rgba(34,197,94,0.2)":"rgba(20,83,45,0.18)", border:`2px solid ${isSel?"#22c55e":"#166534"}`, borderRadius:7, cursor:"pointer", textAlign:"left" }}>
+                                            style={{ display:"flex", alignItems:"center", gap:7, padding:"0.45rem 0.6rem", background:isSel?"rgba(34,197,94,0.2)":"rgba(20,83,45,0.18)", border:`2px solid ${isSel?"#22c55e":"#166534"}`, borderRadius:7, cursor:"pointer", textAlign:"left", opacity: isFullHp?0.6:1 }}>
                                             <span style={{ fontSize:"0.9rem" }}>{CLASSES[a.class||"warrior"]?.emoji||"⚔️"}</span>
                                             <div style={{ flex:1, minWidth:0 }}>
-                                              <div style={{ fontSize:"0.78rem", color:isSel?"#bbf7d0":"#86efac", fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{a.name}</div>
-                                              <div style={{ fontSize:"0.65rem", color:"#94a3b8" }}>{a.hp}/{a.maxHp} HP</div>
+                                              <div style={{ fontSize:"0.78rem", color:isSel?"#bbf7d0":"#86efac", fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{a.name}{isSelf?" (tu)":""}</div>
+                                              <div style={{ fontSize:"0.65rem", color: isFullHp?"#4ade80":"#94a3b8" }}>{a.hp}/{a.maxHp} HP{isFullHp?" ✓":""}</div>
                                             </div>
                                             {isSel && <span style={{ fontSize:"0.68rem", color:"#22c55e" }}>✓</span>}
                                           </button>
@@ -7017,7 +7163,18 @@ ${stepText(step)}`, "quest","Master");
 
             <path d="M36,110 C84,164 236,164 284,110 L284,238 L36,238 Z" fill="url(#restAstralLidGr)" opacity="0.76"/>
             <path d="M36,110 C84,164 236,164 284,110" fill="none" stroke="rgba(253,230,138,0.48)" strokeWidth="1.7"/>
-            <g clipPath="url(#restAstralEyeClip)" style={{ animation:qs.rest.type === "short" ? "restShortBlink 7s ease-in-out infinite" : "restLongClose 2.8s cubic-bezier(.2,.8,.2,1) forwards" }}>
+            <g clipPath="url(#restAstralEyeClip)">
+              <g style={{ animation:qs.rest.type === "short" ? "restUpperLidShort 7s ease-in-out infinite" : "restUpperLidLong 2.8s cubic-bezier(.2,.8,.2,1) forwards" }}>
+                <path d="M20,110 C78,62 242,62 300,110 L300,18 L20,18 Z" fill="url(#restAstralLidGr)" opacity="0.98"/>
+                <path d="M36,110 C84,56 236,56 284,110" fill="none" stroke="rgba(253,230,138,0.78)" strokeWidth="2.2"/>
+                <path d="M64,90 C104,68 216,68 256,90" fill="none" stroke="rgba(103,232,249,0.28)" strokeWidth="1.1"/>
+              </g>
+              <g style={{ animation:qs.rest.type === "short" ? "restLowerLidShort 7s ease-in-out infinite" : "restLowerLidLong 2.8s cubic-bezier(.2,.8,.2,1) forwards" }}>
+                <path d="M20,110 C78,158 242,158 300,110 L300,202 L20,202 Z" fill="url(#restAstralLidGr)" opacity="0.98"/>
+                <path d="M36,110 C84,164 236,164 284,110" fill="none" stroke="rgba(253,230,138,0.62)" strokeWidth="1.9"/>
+              </g>
+            </g>
+            <g clipPath="url(#restAstralEyeClip)" style={{ display:"none" }}>
               <path d="M36,110 C84,56 236,56 284,110 L284,-28 L36,-28 Z" fill="url(#restAstralLidGr)"/>
               <path d="M36,110 C84,56 236,56 284,110" fill="none" stroke="rgba(253,230,138,0.72)" strokeWidth="2.2"/>
               <path d="M63,88 C104,60 216,60 257,88" fill="none" stroke="rgba(103,232,249,0.3)" strokeWidth="1.1"/>
@@ -7288,6 +7445,33 @@ ${stepText(step)}`, "quest","Master");
 
               <button onClick={dismiss} style={{ width:"100%", padding:"0.9rem 1.4rem", background:"linear-gradient(135deg,#14532d,#16a34a)", border:"2px solid #22c55e", borderRadius:12, color:"#dcfce7", fontFamily:"'Cinzel Decorative',serif", fontSize:"1rem", cursor:"pointer", letterSpacing:"0.08em", boxShadow:"0 8px 20px rgba(34,197,94,0.2)" }}>
                 Continua →
+              </button>
+            </div>
+          </div>
+        );
+      })()}
+
+      {/* ── Achievement Notification Overlay ── */}
+      {achievementNotif.length > 0 && (() => {
+        const TIER_COLORS = { 1:"#94a3b8", 2:"#22c55e", 3:"#a855f7", 4:"#fbbf24" };
+        const TIER_LABELS = { 1:"Comune", 2:"Non comune", 3:"Raro", 4:"Leggendario" };
+        return (
+          <div
+            onClick={() => setAchievementNotif([])}
+            style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.7)", zIndex:10100, display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem", cursor:"pointer" }}
+          >
+            <div onClick={e => e.stopPropagation()} style={{ background:"linear-gradient(180deg,#0d1b0d,#0a1628)", border:"2px solid #fbbf24", borderRadius:18, padding:"1.6rem 1.8rem", maxWidth:380, width:"100%", textAlign:"center", boxShadow:"0 0 60px rgba(251,191,36,0.3)" }}>
+              <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"1.2rem", color:"#fbbf24", marginBottom:"0.4rem" }}>🏆 ACHIEVEMENT SBLOCCATO!</div>
+              {achievementNotif.map(a => (
+                <div key={a.id} style={{ margin:"0.8rem 0", padding:"0.9rem 1rem", background:"rgba(0,0,0,0.4)", border:`2px solid ${TIER_COLORS[a.tier] || "#94a3b8"}`, borderRadius:12 }}>
+                  <div style={{ fontSize:"2.5rem", marginBottom:"0.3rem" }}>{a.icon}</div>
+                  <div style={{ fontFamily:"'Cinzel',serif", color: TIER_COLORS[a.tier] || "#e2e8f0", fontSize:"1rem", fontWeight:700 }}>{a.title}</div>
+                  <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginTop:"0.2rem" }}>{a.desc}</div>
+                  <div style={{ fontSize:"0.63rem", color: TIER_COLORS[a.tier] || "#64748b", marginTop:"0.3rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em" }}>{TIER_LABELS[a.tier] || ""}</div>
+                </div>
+              ))}
+              <button onClick={() => setAchievementNotif([])} style={{ marginTop:"0.6rem", width:"100%", padding:"0.7rem", background:"linear-gradient(135deg,#92400e,#d97706)", border:"2px solid #fbbf24", borderRadius:10, color:"#fff7ed", fontFamily:"'Cinzel Decorative',serif", fontSize:"0.9rem", cursor:"pointer" }}>
+                Fantastico!
               </button>
             </div>
           </div>
