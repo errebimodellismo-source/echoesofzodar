@@ -4123,6 +4123,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const monsterTickBusyRef = useRef(false);
   const doMonsterTurnRef = useRef(null);
   const forceNextTurnRef = useRef(null);
+  const doAttackRef = useRef(null);
   const advanceTurnBusyRef = useRef(false);
 
     const diceRef = useRef(null);
@@ -4414,7 +4415,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       if(timeLeft <= 0) {
         clearInterval(turnTimerRef.current);
         turnTimerRef.current = null;
-        forceNextTurnRef.current?.(); // always calls the latest version, no stale closure
+        doAttackRef.current?.(); // auto-attack on timeout (latest ref, no stale closure)
       }
     }, 1000);
     return () => { if(turnTimerRef.current) { clearInterval(turnTimerRef.current); turnTimerRef.current = null; } };
@@ -5131,6 +5132,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     if(allDead) { await endCombat({...latestBuffState, masterBuffs: newMasterBuffs, combat:{...combat, combatants}}); return; }
     await saveQState({ ...latestBuffState, masterBuffs: newMasterBuffs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
   }
+  doAttackRef.current = doAttack;
 
   async function castSpell(spell, allyTargetId = null) {
     if(!combat?.active || combat.pendingLog) return;
