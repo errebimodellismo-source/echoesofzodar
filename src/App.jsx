@@ -4961,13 +4961,13 @@ function GameScreen({ myId, setScreen, authUser }) {
       const combatants = [...(latestCombat.combatants || [])];
       if(!combatants.length) return;
       const actor = combatants[latestCombat.turn % combatants.length];
-      // Block: only the active player can skip their own turn.
-      // For monster turns, only the first alive player (leader) can advance.
+      // Active player skips own turn; leader can force-advance any AFK player; leader handles monster turns.
+      const firstAlive = combatants.find(c => c.isPlayer && !c.dead);
+      const amLeader = firstAlive?.id === myId;
       if(actor?.isPlayer) {
-        if(actor.id !== myId) return; // not my turn — hard block
+        if(actor.id !== myId && !amLeader) return; // not my turn and not the leader
       } else {
-        const firstAlive = combatants.find(c => c.isPlayer && !c.dead);
-        if(firstAlive?.id !== myId) return; // not the leader for monster turn
+        if(!amLeader) return; // only leader handles monster turns
       }
       if(actor && !actor.isPlayer && actor.hp > 0) {
         await doMonsterTurnRef.current?.();
