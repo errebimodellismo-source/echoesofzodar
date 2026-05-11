@@ -21,6 +21,16 @@ import audioManager from "./utils/audioManager";
     @keyframes fadeUp   { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
     @keyframes goldenGlow { 0%,100%{text-shadow:0 0 20px rgba(251,191,36,.5)} 50%{text-shadow:0 0 50px rgba(251,191,36,.9),0 0 100px rgba(245,158,11,.4)} }
     @keyframes legNotifIn { from{opacity:0;transform:translateY(-40px) scale(0.92)} to{opacity:1;transform:translateY(0) scale(1)} }
+    @keyframes logAutoDismiss { from{width:100%} to{width:0%} }
+    @keyframes eyelidClose {
+      0%   { transform: translateY(-48px); }
+      20%  { transform: translateY(-48px); }
+      52%  { transform: translateY(68px); }
+      85%  { transform: translateY(68px); }
+      100% { transform: translateY(-48px); }
+    }
+    @keyframes restOverlayIn { from{opacity:0} to{opacity:1} }
+    @keyframes restStarFloat { 0%{opacity:0;transform:translateY(0)} 50%{opacity:0.7} 100%{opacity:0;transform:translateY(-60px)} }
     @keyframes legPulse { 0%,100%{box-shadow:0 0 18px rgba(109,40,217,0.5)} 50%{box-shadow:0 0 40px rgba(139,92,246,0.9),0 0 80px rgba(109,40,217,0.5)} }
 .msg-in   { animation: fadeUp 0.25s ease; }
     ::-webkit-scrollbar{width:5px}
@@ -2002,7 +2012,8 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
 
   async function handleDeleteCharacter(character) {
     if(!character?.id) return;
-    if(!window.confirm(`Eliminare definitivamente ${character.name}?`)) return;
+    if(!window.confirm(`Vuoi eliminare ${character.name}?\n\nQuesta azione è irreversibile.`)) return;
+    if(!window.confirm(`⚠️ Sei sicuro?\n\n"${character.name}" verrà cancellato definitivamente insieme a tutti i suoi oggetti e progressi.`)) return;
     await dbDeleteCharacter(character.id);
     localStorage.removeItem(equipmentKey(character.id));
     if((localStorage.getItem("eoz_myId") || "").trim() === character.id) localStorage.removeItem("eoz_myId");
@@ -2068,9 +2079,9 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
                     <span>💰 {ch.gold || 0} oro</span>
                     <span>👥 {ch.partyCode || "-"}</span>
                   </div>
-                  <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
                     {!dead && <BigBtn onClick={()=>goGame(ch)} gold icon="⚔️">Gioca</BigBtn>}
-                    {dead && <SmallBtn red onClick={()=>handleDeleteCharacter(ch)}>Elimina</SmallBtn>}
+                    <SmallBtn red onClick={()=>handleDeleteCharacter(ch)}>🗑️ Elimina</SmallBtn>
                   </div>
                 </div>
               );
@@ -2293,6 +2304,24 @@ function MasterPanel({ setScreen, authUser }) {
   const [questDifficultyFilter, setQuestDifficultyFilter] = useState("all");
   const [monsterSearch, setMonsterSearch] = useState("");
   const [monsterTierFilter, setMonsterTierFilter] = useState("all");
+  const [refreshingQuests, setRefreshingQuests] = useState(false);
+
+  async function refreshAllQuestSeeds() {
+    if(refreshingQuests) return;
+    if(!window.confirm("Aggiornare la rotazione missioni per tutti i party attivi?\n\nI giocatori vedranno un nuovo set di missioni giornaliere.")) return;
+    setRefreshingQuests(true);
+    try {
+      const { data } = await supabase.from("party_state").select("*");
+      for(const row of (data || [])) {
+        const state = await dbGetPartyState(row.party_code);
+        await dbSavePartyState(row.party_code, { ...state, longRestSeed: (state.longRestSeed || 0) + 1 });
+      }
+    } catch(e) {
+      alert("Errore aggiornamento missioni: " + (e?.message || e));
+    } finally {
+      setRefreshingQuests(false);
+    }
+  }
 
   function saveAll() {
     saveMeta(meta); saveQuests(quests); saveMonsters(monsters);
@@ -2380,7 +2409,7 @@ function MasterPanel({ setScreen, authUser }) {
     return ()=>{ alive = false; clearInterval(timer); };
   }, [tab]);
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"📊 Report"}];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"guilds",l:"🏛️ Gilde"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"📊 Report"}];
   const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
   const visibleQuests = quests.filter(q => {
     const term = questSearch.trim().toLowerCase();
@@ -2439,6 +2468,17 @@ function MasterPanel({ setScreen, authUser }) {
                 </label>
                 {meta.logo && <button onClick={()=>setMeta(m=>({...m,logo:null}))} style={{ marginLeft:8, padding:"0.5rem 0.8rem", background:"rgba(239,68,68,0.15)", border:"1px solid #ef4444", borderRadius:4, color:"#fca5a5", cursor:"pointer", fontSize:"0.8rem" }}>🗑️ Rimuovi</button>}
               </div>
+            </div>
+          </Card>
+          <Card title="🎲 Missioni Giornaliere">
+            <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 1rem" }}>
+              Le missioni giornaliere ruotano in base alla data + un seme interno. Se i giocatori le esauriscono durante i test, premi qui per caricare un nuovo set senza aspettare il giorno dopo.
+            </p>
+            <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+              <BigBtn onClick={refreshAllQuestSeeds} gold icon="🔄" disabled={refreshingQuests}>
+                {refreshingQuests ? "Aggiornamento…" : "Aggiorna Missioni"}
+              </BigBtn>
+              <span style={{ color:"#64748b", fontSize:"0.75rem" }}>Aggiorna la rotazione per tutti i party attivi.</span>
             </div>
           </Card>
         </div>
@@ -2511,9 +2551,11 @@ function MasterPanel({ setScreen, authUser }) {
                       {!q.active && <span style={{ fontSize:"0.65rem", color:"#94a3b8", border:"1px solid #1f2937", borderRadius:3, padding:"1px 5px" }}>PAUSA</span>}
                     </div>
                     <p style={{ color:"#94a3b8", fontSize:"0.8rem", margin:"0 0 6px" }}>{q.desc||"Nessuna descrizione."}</p>
-                    <div style={{ display:"flex", gap:14, fontSize:"0.72rem", color:"#94a3b8" }}>
+                    <div style={{ display:"flex", gap:14, fontSize:"0.72rem", color:"#94a3b8", flexWrap:"wrap" }}>
                       <span>⭐ {q.xpReward} XP</span><span>💰 {q.goldReward} oro</span>
                       <span>🎭 {q.steps.length} scene</span><span>👾 {q.enemies.length} nemici</span>
+                      {q.minLevel > 1 && <span>🔒 Lv.{q.minLevel}+</span>}
+                      {q.location && <span>📍 {q.location}</span>}
                     </div>
                   </div>
                   <div style={{ display:"flex", gap:6, flexShrink:0 }}>
@@ -2537,32 +2579,68 @@ function MasterPanel({ setScreen, authUser }) {
           </div>
           <Card title="📋 Informazioni Base">
             <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-              <div><label style={labelStyle}>Titolo</label><input style={inputStyle} value={editQ.title} onChange={e=>setEditQ(q=>({...q,title:e.target.value}))} /></div>
-              <div><label style={labelStyle}>Difficolt�</label>
+              <div>
+                <label style={labelStyle}>Titolo</label>
+                <div style={{ color:"#64748b", fontSize:"0.7rem", marginBottom:4 }}>Il nome della missione visibile nella lista dei giocatori.</div>
+                <input style={inputStyle} value={editQ.title} onChange={e=>setEditQ(q=>({...q,title:e.target.value}))} />
+              </div>
+              <div>
+                <label style={labelStyle}>Difficoltà</label>
+                <div style={{ color:"#64748b", fontSize:"0.7rem", marginBottom:4 }}>Facile/Medio/Difficile → rotazione giornaliera pubblica. <span style={{color:"#a78bfa"}}>Speciale</span> → solo con password.</div>
                 <select style={{...inputStyle,cursor:"pointer"}} value={normalizeMissionDifficulty(editQ.difficulty)} onChange={e=>setEditQ(q=>({...q,difficulty:e.target.value}))}>
                   <option value="facile">Facile</option>
                   <option value="medio">Medio</option>
                   <option value="difficile">Difficile</option>
-                  <option value="speciale">Speciale</option>
+                  <option value="speciale">Speciale (solo password)</option>
                 </select>
               </div>
-              <div><label style={labelStyle}>XP</label><input style={inputStyle} type="number" value={editQ.xpReward} onChange={e=>setEditQ(q=>({...q,xpReward:+e.target.value}))} /></div>
-              <div><label style={labelStyle}>Oro</label><input style={inputStyle} type="number" value={editQ.goldReward} onChange={e=>setEditQ(q=>({...q,goldReward:+e.target.value}))} /></div>
+              <div>
+                <label style={labelStyle}>Ricompensa XP</label>
+                <div style={{ color:"#64748b", fontSize:"0.7rem", marginBottom:4 }}>Esperienza data a ogni giocatore al completamento.</div>
+                <input style={inputStyle} type="number" value={editQ.xpReward} onChange={e=>setEditQ(q=>({...q,xpReward:+e.target.value}))} />
+              </div>
+              <div>
+                <label style={labelStyle}>Ricompensa Oro</label>
+                <div style={{ color:"#64748b", fontSize:"0.7rem", marginBottom:4 }}>Oro aggiunto automaticamente all'inventario di ogni giocatore.</div>
+                <input style={inputStyle} type="number" value={editQ.goldReward} onChange={e=>setEditQ(q=>({...q,goldReward:+e.target.value}))} />
+              </div>
+              <div>
+                <label style={labelStyle}>Livello minimo</label>
+                <div style={{ color:"#64748b", fontSize:"0.7rem", marginBottom:4 }}>Chi è sotto questo livello non vede la missione. Usa 1 per tutti.</div>
+                <input style={inputStyle} type="number" min="1" max="20" value={editQ.minLevel || 1} onChange={e=>setEditQ(q=>({...q,minLevel:Math.max(1,+e.target.value)}))} />
+              </div>
+              <div>
+                <label style={labelStyle}>Luogo / Ambientazione</label>
+                <div style={{ color:"#64748b", fontSize:"0.7rem", marginBottom:4 }}>Tag geografico mostrato nella scheda. Es: "Foresta di Zodar".</div>
+                <input style={inputStyle} value={editQ.location || ""} onChange={e=>setEditQ(q=>({...q,location:e.target.value}))} placeholder="es. Rovine di Drakmoor…" />
+              </div>
             </div>
-            <label style={{...labelStyle,marginTop:10}}>Password speciale</label>
-            <input
-              style={inputStyle}
-              value={editQ.specialPassword || ""}
-              onChange={e=>setEditQ(q=>({...q,specialPassword:e.target.value.trim()}))}
-              placeholder="Lascia vuoto per missione pubblica. Compila per renderla sbloccabile."
-            />
-            <label style={{...labelStyle,marginTop:10}}>Descrizione</label>
-            <textarea style={{...inputStyle,height:75,resize:"vertical"}} value={editQ.desc} onChange={e=>setEditQ(q=>({...q,desc:e.target.value}))} placeholder="Descrivi la missione..." />
-            <label style={{...labelStyle,marginTop:10}}>Citazione narrativa</label>
-            <textarea style={{...inputStyle,height:52,resize:"vertical"}} value={editQ.flavor} onChange={e=>setEditQ(q=>({...q,flavor:e.target.value}))} placeholder="�Una frase epica...�" />
+
+            <div style={{ margin:"14px 0 4px", padding:"10px 12px", background:"rgba(109,40,217,0.12)", border:"1px solid rgba(124,58,237,0.35)", borderRadius:8 }}>
+              <label style={{...labelStyle, color:"#c4b5fd"}}>🔐 Password di sblocco</label>
+              <div style={{ color:"#94a3b8", fontSize:"0.72rem", margin:"4px 0 8px", lineHeight:1.5 }}>
+                Se compilata, la missione <strong>non appare nella lista pubblica</strong>. I giocatori digitano questa parola nel campo «Sblocca missione speciale» nella scheda Missioni. Perfetto per eventi segreti o sessioni speciali. Lascia vuoto per una missione normale.
+              </div>
+              <input
+                style={inputStyle}
+                value={editQ.specialPassword || ""}
+                onChange={e=>setEditQ(q=>({...q,specialPassword:e.target.value.trim()}))}
+                placeholder="es. dragodifuoco2025 — senza spazi, non sensibile alle maiuscole"
+              />
+            </div>
+
+            <label style={{...labelStyle,marginTop:12}}>Descrizione breve</label>
+            <div style={{ color:"#64748b", fontSize:"0.7rem", marginBottom:4 }}>Appare sotto il titolo nella lista missioni. Deve incuriosire i giocatori (2-3 righe).</div>
+            <textarea style={{...inputStyle,height:75,resize:"vertical"}} value={editQ.desc} onChange={e=>setEditQ(q=>({...q,desc:e.target.value}))} placeholder="Un antico male risvegliato nei sotterranei della città. Qualcuno deve indagare prima che sia troppo tardi…" />
+
+            <label style={{...labelStyle,marginTop:12}}>Citazione narrativa (flavor text)</label>
+            <div style={{ color:"#64748b", fontSize:"0.7rem", marginBottom:4 }}>Frase in corsivo mostrata prima delle scene. Crea atmosfera — una profezia, un detto locale, un grido di battaglia.</div>
+            <textarea style={{...inputStyle,height:52,resize:"vertical"}} value={editQ.flavor} onChange={e=>setEditQ(q=>({...q,flavor:e.target.value}))} placeholder="«Nessuno torna dalle Rovine di Drakmoor. Non ancora.»" />
           </Card>
           <Card title="🎭 Scene della Missione">
-            <p style={{ color:"#94a3b8", fontSize:"0.75rem", marginBottom:10 }}>Ogni scena viene narrata quando i giocatori digitano <strong style={{color:"#a78bfa"}}>avanza</strong>. Puoi usare **grassetto** e *corsivo*.</p>
+            <div style={{ color:"#94a3b8", fontSize:"0.75rem", marginBottom:10, lineHeight:1.6 }}>
+              Le scene sono i capitoli della missione. I giocatori digitano <strong style={{color:"#a78bfa"}}>avanza</strong> nella chat per passare alla scena successiva. Ogni scena può avere 3 scelte (buona/media/sbagliata) con XP e oro aggiuntivi — oppure nessuna scelta, solo narrazione pura. Le scelte compaiono come bottoni nella chat dei giocatori.
+            </div>
             {editQ.steps.map((s,i)=>{
               const step = typeof s === "string" ? { text: s } : (s || { text: "" });
               const choices = step.choices || {};
@@ -2715,8 +2793,152 @@ function MasterPanel({ setScreen, authUser }) {
 
       {tab==="players" && <PlayersView authUser={authUser} />}
       {tab==="party" && <PartiesView authUser={authUser} />}
+      {tab==="guilds" && <MasterGuildsView />}
       {tab==="market" && <MarketView />}
       {tab==="users" && <UsersView authUser={authUser} />}
+    </div>
+  );
+}
+
+function MasterGuildsView() {
+  const [guilds, setGuilds] = useState({});
+  const [loading, setLoading] = useState(true);
+
+  async function reload() {
+    setLoading(true);
+    try { setGuilds(await dbGetAllGuilds()); } finally { setLoading(false); }
+  }
+  useEffect(() => { reload(); }, []);
+
+  async function handleDeleteGuild(guildId, guildName) {
+    if(!window.confirm(`Eliminare la gilda "${guildName}"?\nTutti i membri verranno rimossi dalla gilda.`)) return;
+    const next = { ...guilds };
+    delete next[guildId];
+    await dbSaveAllGuilds(next);
+    setGuilds(next);
+  }
+
+  async function handleGuildXp(guildId, guild, sign) {
+    const amt = parseInt(window.prompt(`${sign > 0 ? "Aggiungi" : "Rimuovi"} XP alla gilda "${guild.name}":`, "100"), 10);
+    if(!amt || isNaN(amt)) return;
+    const newXp = Math.max(0, (guild.xp || 0) + sign * amt);
+    const updated = { ...guild, xp: newXp, level: getGuildLevel(newXp) };
+    const next = { ...guilds, [guildId]: updated };
+    await dbSaveAllGuilds(next);
+    setGuilds(next);
+  }
+
+  async function handleRemoveMember(guildId, guild, memberId) {
+    const member = (guild.members || []).find(m => m.id === memberId);
+    if(!member) return;
+    if(!window.confirm(`Rimuovere ${member.name} dalla gilda "${guild.name}"?`)) return;
+    const newMembers = (guild.members || []).filter(m => m.id !== memberId);
+    const updated = { ...guild, members: newMembers };
+    if(updated.leaderId === memberId) updated.leaderId = newMembers[0]?.id || null;
+    const next = { ...guilds, [guildId]: updated };
+    await dbSaveAllGuilds(next);
+    setGuilds(next);
+  }
+
+  async function handleDeleteMission(guildId, guild, missionId) {
+    if(!window.confirm("Eliminare questa missione di gilda?")) return;
+    const updated = { ...guild, missions: (guild.missions || []).filter(m => m.id !== missionId) };
+    const next = { ...guilds, [guildId]: updated };
+    await dbSaveAllGuilds(next);
+    setGuilds(next);
+  }
+
+  async function handleCompleteMission(guildId, guild, missionId) {
+    const mission = (guild.missions || []).find(m => m.id === missionId);
+    if(!mission) return;
+    const newXp = (guild.xp || 0) + (mission.rewardXp || 0);
+    const updated = { ...guild, xp: newXp, level: getGuildLevel(newXp), missions: (guild.missions || []).map(m => m.id === missionId ? { ...m, completed: true, progress: m.goal } : m) };
+    const next = { ...guilds, [guildId]: updated };
+    await dbSaveAllGuilds(next);
+    setGuilds(next);
+    window.alert(`✅ Missione completata! +${mission.rewardXp} XP alla gilda.`);
+  }
+
+  const guildList = Object.values(guilds);
+
+  if(loading) return <div style={{ color:"#94a3b8", padding:"2rem" }}>Caricamento gilde...</div>;
+
+  return (
+    <div>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
+        <p style={{ color:"#94a3b8", fontSize:"0.85rem", margin:0 }}>{guildList.length} gilde nel mondo</p>
+        <SmallBtn onClick={reload}>🔄 Aggiorna</SmallBtn>
+      </div>
+      {!guildList.length && (
+        <div style={{ color:"#94a3b8", textAlign:"center", padding:"3rem", border:"1px dashed #374151", borderRadius:6 }}>Nessuna gilda ancora.</div>
+      )}
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))", gap:14 }}>
+        {guildList.map(guild => {
+          const members = guild.members || [];
+          const missions = guild.missions || [];
+          return (
+            <div key={guild.id} style={{ background:"rgba(15,23,42,0.88)", border:"1px solid rgba(109,40,217,0.35)", borderRadius:10, padding:"1rem" }}>
+              {/* Header */}
+              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+                <span style={{ fontSize:"1.8rem" }}>{guild.emoji || "⚔️"}</span>
+                <div style={{ flex:1 }}>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontWeight:700, fontSize:"1rem" }}>{guild.name}</div>
+                  <div style={{ fontSize:"0.7rem", color:"#7c3aed" }}>Livello {guild.level || 1} · {guild.xp || 0} XP</div>
+                  <div style={{ fontSize:"0.65rem", color:"#64748b" }}>Fondatore: {guild.leaderName || "—"}</div>
+                </div>
+                <SmallBtn red onClick={() => handleDeleteGuild(guild.id, guild.name)}>✕ Elimina</SmallBtn>
+              </div>
+
+              {/* XP bar */}
+              <div style={{ height:4, background:"rgba(30,41,59,0.7)", borderRadius:2, overflow:"hidden", marginBottom:8 }}>
+                <div style={{ height:"100%", width:`${Math.min(100, ((guild.xp||0) % 500) / 5)}%`, background:"linear-gradient(90deg,#6d28d9,#a78bfa)", borderRadius:2 }} />
+              </div>
+
+              {/* XP controls */}
+              <div style={{ display:"flex", gap:5, marginBottom:10 }}>
+                <SmallBtn onClick={() => handleGuildXp(guild.id, guild, 1)}>+ XP</SmallBtn>
+                <SmallBtn red onClick={() => handleGuildXp(guild.id, guild, -1)}>- XP</SmallBtn>
+              </div>
+
+              {/* Members */}
+              <div style={{ marginBottom:8 }}>
+                <div style={{ fontSize:"0.65rem", color:"#a78bfa", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:5 }}>👥 Membri ({members.length})</div>
+                {members.map(m => (
+                  <div key={m.id} style={{ display:"flex", alignItems:"center", gap:6, padding:"3px 6px", borderRadius:4, background:"rgba(30,41,59,0.5)", marginBottom:3 }}>
+                    <span style={{ fontSize:"0.75rem", color: m.id === guild.leaderId ? "#fbbf24" : "#e2e8f0", flex:1 }}>
+                      {m.id === guild.leaderId ? "👑 " : ""}{m.name}
+                      <span style={{ color:"#64748b", marginLeft:4, fontSize:"0.65rem" }}>({m.role || "member"})</span>
+                    </span>
+                    {m.id !== guild.leaderId && (
+                      <SmallBtn red onClick={() => handleRemoveMember(guild.id, guild, m.id)} style={{ fontSize:"0.55rem", padding:"1px 5px" }}>✕</SmallBtn>
+                    )}
+                  </div>
+                ))}
+                {!members.length && <div style={{ fontSize:"0.7rem", color:"#4b5563" }}>Nessun membro</div>}
+              </div>
+
+              {/* Missions */}
+              {missions.length > 0 && (
+                <div>
+                  <div style={{ fontSize:"0.65rem", color:"#a78bfa", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:5 }}>📋 Missioni ({missions.length})</div>
+                  {missions.map(m => (
+                    <div key={m.id} style={{ background:"rgba(30,41,59,0.5)", borderRadius:4, padding:"5px 8px", marginBottom:4, border:`1px solid ${m.completed ? "rgba(34,197,94,0.3)" : "rgba(75,85,99,0.4)"}` }}>
+                      <div style={{ display:"flex", alignItems:"center", gap:6 }}>
+                        <span style={{ fontSize:"0.75rem", color: m.completed ? "#4ade80" : "#e2e8f0", flex:1, fontWeight:600 }}>{m.title}</span>
+                        <span style={{ fontSize:"0.62rem", color:"#94a3b8" }}>{m.progress||0}/{m.goal} · +{m.rewardXp}XP</span>
+                      </div>
+                      <div style={{ display:"flex", gap:4, marginTop:4 }}>
+                        {!m.completed && <SmallBtn onClick={() => handleCompleteMission(guild.id, guild, m.id)} style={{ fontSize:"0.6rem", padding:"1px 6px" }}>✅ Completa</SmallBtn>}
+                        <SmallBtn red onClick={() => handleDeleteMission(guild.id, guild, m.id)} style={{ fontSize:"0.6rem", padding:"1px 6px" }}>✕</SmallBtn>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -2885,11 +3107,23 @@ function PlayersView({ authUser }) {
                   if(!add||isNaN(add)) return;
                   await masterUpdate(p.id, { gold:(p.gold||0)+add }, { gold:(p.gold||0)+add });
                 }}>💰 Dai oro</SmallBtn>
+                <SmallBtn disabled={isBusy} red onClick={async()=>{
+                  const rem = parseInt(window.prompt(`Quanto oro togliere a ${p.name}?`, "50"),10);
+                  if(!rem||isNaN(rem)) return;
+                  const newGold = Math.max(0,(p.gold||0)-rem);
+                  await masterUpdate(p.id, { gold:newGold }, { gold:newGold });
+                }}>- Oro</SmallBtn>
                 <SmallBtn disabled={isBusy} onClick={async()=>{
                   const add = parseInt(window.prompt(`Quanta XP a ${p.name}?`, "50"),10);
                   if(!add||isNaN(add)) return;
                   await masterUpdate(p.id, { xp:(p.xp||0)+add }, { xp:(p.xp||0)+add });
                 }}>⭐ Dai XP</SmallBtn>
+                <SmallBtn disabled={isBusy} red onClick={async()=>{
+                  const rem = parseInt(window.prompt(`Quanta XP togliere a ${p.name}?`, "50"),10);
+                  if(!rem||isNaN(rem)) return;
+                  const newXp = Math.max(0,(p.xp||0)-rem);
+                  await masterUpdate(p.id, { xp:newXp }, { xp:newXp });
+                }}>- XP</SmallBtn>
               </div>
 
               {/* Poteri divini */}
@@ -4142,6 +4376,14 @@ function GameScreen({ myId, setScreen, authUser }) {
     pendingLogRef.current = !!(qs?.combat?.pendingLog);
   }, [qs?.combat?.pendingLog]);
 
+  // Auto-dismiss combat log after 3.5s so players don't need to click "Prossimo turno"
+  useEffect(() => {
+    if (!qs?.combat?.pendingLog) return;
+    const t = setTimeout(() => dismissCombatLog(), 3500);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [qs?.combat?.pendingLog]);
+
   // Notify player when master grants a legendary item
   useEffect(() => {
     const leg = qs?.masterBuffs?.[myId]?.legendaryItem;
@@ -4177,7 +4419,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     }, 1000);
     return () => { if(turnTimerRef.current) { clearInterval(turnTimerRef.current); turnTimerRef.current = null; } };
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [qs?.combat?.turn, qs?.combat?.round, qs?.combat?.active]);
+  }, [qs?.combat?.turn, qs?.combat?.round, qs?.combat?.active, !!qs?.combat?.pendingLog]);
 
   // Fallback poll — keeps the log alive if Supabase realtime silently drops
   useEffect(() => {
@@ -4205,8 +4447,9 @@ function GameScreen({ myId, setScreen, authUser }) {
     if (latestCombat.pendingLog) return;
     const latestCombatants = [...latestCombat.combatants];
     const actor = latestCombatants[latestCombat.turn % latestCombatants.length];
-    if (!actor || actor.isPlayer || actor.hp <= 0) {
-      // Dead or skipped slot — advance turn without attacking
+    if (actor?.isPlayer) return; // turn already advanced to a player — do nothing
+    if (!actor || actor.hp <= 0) {
+      // Dead monster slot — advance turn without attacking
       const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
       const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound };
       await dbSavePartyState(code, { ...latestQs, combat: newCombat });
@@ -4286,8 +4529,8 @@ function GameScreen({ myId, setScreen, authUser }) {
     const activeCombatantNow = combatants[qs?.combat?.turn % combatants.length];
     if (!activeCombatantNow || activeCombatantNow.isPlayer) return; // only arm for monster turns
     const isLeader = combatants.find(c => c.isPlayer && !c.dead)?.id === myId;
-    // Leader fires at 8s; fallback clients fire at 18-28s to avoid double-attack race
-    const delay = isLeader ? 8000 : 18000 + Math.floor(Math.random() * 10000);
+    // Leader fires immediately (800ms safety buffer); fallback clients fire at 8-12s
+    const delay = isLeader ? 800 : 8000 + Math.floor(Math.random() * 4000);
     const timer = setTimeout(() => { doMonsterTurnRef.current?.(); }, delay);
     return () => clearTimeout(timer);
   }, [qs?.combat?.turn, qs?.combat?.active, !!qs?.combat?.pendingLog, myId, code, spellMenu]);
@@ -4314,14 +4557,14 @@ function GameScreen({ myId, setScreen, authUser }) {
   }
 
   async function createGuild() {
-    if(!me||me.gold<1000){window.alert("Servono 1000 oro per fondare una gilda.");return;}
+    if(!me||me.gold<10000){window.alert("Servono 10000 oro per fondare una gilda.");return;}
     if(!guildForm.name.trim()){window.alert("Scegli un nome.");return;}
     if(getPlayerGuild(guilds,myId)){window.alert("Sei già in una gilda.");return;}
     const gId=`g_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
     const newGuild={ id:gId, name:guildForm.name.trim(), emoji:guildForm.emoji||"⚔️", description:guildForm.desc.trim(), emblem:guildForm.emblem||DEFAULT_EMBLEM, leaderId:myId, leaderName:me.name, level:1, xp:0, hallLevel:1, members:[{id:myId,name:me.name,role:"leader",joinedAt:new Date().toISOString()}], missions:[], createdAt:new Date().toISOString() };
     const newGuilds={...guilds,[gId]:newGuild};
     await dbSaveAllGuilds(newGuilds);
-    const upd={...me,gold:me.gold-1000}; await dbSavePlayer(upd); setMeRaw(upd);
+    const upd={...me,gold:me.gold-10000}; await dbSavePlayer(upd); setMeRaw(upd);
     setGuilds(newGuilds); setGuildForm({name:"",emoji:"⚔️",desc:"",emblem:{...DEFAULT_EMBLEM}});
     await addMsg(`🏛️ **${me.name}** ha fondato la gilda **${newGuild.emoji} ${newGuild.name}**!`,"info","Sistema");
   }
@@ -4873,7 +5116,15 @@ function GameScreen({ myId, setScreen, authUser }) {
     const dmg = effectiveResolved.damage;
     const tidx = combatants.findIndex(c=>c.id===target.id);
     combatants[tidx] = {...target, hp:Math.max(0,target.hp-dmg)};
-    const log = formatWeaponAttackLog(attacker, target, effectiveResolved, weapon.name, combatants[tidx].hp, target.maxHp);
+    let log = formatWeaponAttackLog(attacker, target, effectiveResolved, weapon.name, combatants[tidx].hp, target.maxHp);
+    if(myPreBuff) {
+      const newTurnsAfter = (myBuffs.legendaryItem?.turnsLeft || 0) - 1;
+      const legLine = myPreBuff.type==="weapon" ? `🏆 **${myPreBuff.name}** (${myPreBuff.weapon_die} +${myPreBuff.bonus_atk} ATK) — ${Math.max(0,newTurnsAfter)} turni rimasti`
+        : myPreBuff.type==="armor" ? `🏆 **${myPreBuff.name}** (+${myPreBuff.bonus_def} DEF) attivo — ${Math.max(0,newTurnsAfter)} turni rimasti`
+        : myPreBuff.type==="magic" ? `🏆 **${myPreBuff.name}** (+${myPreBuff.bonus_mag} MAG) attivo — ${Math.max(0,newTurnsAfter)} turni rimasti`
+        : "";
+      if(legLine) log += "\n" + legLine;
+    }
     const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
     const allDead = combatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
     if(allDead) { await endCombat({...latestBuffState, masterBuffs: newMasterBuffs, combat:{...combat, combatants}}); return; }
@@ -4955,6 +5206,11 @@ function GameScreen({ myId, setScreen, authUser }) {
     if(spellMyBuffs.legendaryItem?.turnsLeft > 0) {
       const newTurns = spellMyBuffs.legendaryItem.turnsLeft - 1;
       newSpellMasterBuffs = { ...newSpellMasterBuffs, [myId]: { ...(newSpellMasterBuffs[myId] || spellMyBuffs), legendaryItem: newTurns > 0 ? { ...spellMyBuffs.legendaryItem, turnsLeft: newTurns } : null } };
+      const spellLeg = spellMyBuffs.legendaryItem;
+      const spellLegLine = spellLeg.type==="magic" ? `\n🏆 **${spellLeg.name}** (+${spellLeg.bonus_mag} MAG) attivo — ${Math.max(0,newTurns)} turni rimasti`
+        : spellLeg.bonus_mag ? `\n🏆 **${spellLeg.name}** (+${spellLeg.bonus_mag} MAG) attivo — ${Math.max(0,newTurns)} turni rimasti`
+        : `\n🏆 **${spellLeg.name}** attivo — ${Math.max(0,newTurns)} turni rimasti`;
+      log += spellLegLine;
     }
     const nextSlots = { ...(combat.spellSlots||{}), [myId]: { ...(slots||{}) } };
     if(cost > 0) nextSlots[myId][cost] = Math.max(0, (nextSlots[myId][cost]||0) - 1);
@@ -5248,7 +5504,7 @@ ${stepText(step)}`, "quest","Master");
     else if(c==="stato") { if(me) await addMsg(`${CLASSES[me?.class||'warrior']?.emoji} **${me.name}** � ${RACES[me?.race||'human']?.name} ${CLASSES[me?.class||'warrior']?.name} � Lv.${me.level}\n❤️${me.hp||0}/${me.maxHp||0} ⚔️${me.atk||0} 🛡️${me.def||0} ✨${me.mag||0}\n⭐XP ${me.xp||0}/${xpForLevel(me.level||1)} | 💰${me.gold||0} oro`,`info`,me.name); }
     else if(c==="party") { const lines=partyPlayers.map(p=>`${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} ❤️${p?.hp||0}/${p?.maxHp||0}`); await addMsg(`⚔️ **Party [${code}]**\n${lines.join("\n")}`,"info","Master"); }
     else if(c==="classifica") { const sorted=[...partyPlayers].sort((a,b)=>b.level-a.level); await addMsg(`⚔️ **Classifica**\n${sorted.map((p,i)=>`${["⭐","⭐","⭐"][i]||"  "} ${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} � ${p.xp||0}XP`).join("\n")}`,"info","Master"); }
-    else await addMsg(raw, "chat", me?.name);
+    else { await addMsg(raw, "chat", me?.name); await refreshAll(code); }
     inputRef.current?.focus();
   }
 
@@ -5300,7 +5556,7 @@ ${stepText(step)}`, "quest","Master");
     return acc;
   }, {});
   const currentQ = qs?.active ? getQuests().find(x=>x.id===qs.currentId) : null;
-  const allActiveQuests = getQuests().filter(q => q.active);
+  const allActiveQuests = getQuests().filter(q => q.active && (!q.minLevel || (me?.level || 1) >= q.minLevel));
   const dailyQuestIds = new Set(getDailyQuests(allActiveQuests.filter(q => !q.specialPassword), undefined, qs?.longRestSeed || 0).map(q => q.id));
   const publicDailyQuests = allActiveQuests.filter(q => dailyQuestIds.has(q.id));
   const unlockedSpecialQuests = allActiveQuests.filter(q => q.specialPassword && unlockedSpecialQuestIds.includes(q.id));
@@ -5470,6 +5726,7 @@ ${stepText(step)}`, "quest","Master");
             <div style={{ background:"rgba(76,29,149,0.3)", border:"1px solid #7c3aed", borderRadius:4, padding:"0.4rem 0.5rem" }}>
               <div style={{ fontSize:"0.58rem", color:"#a78bfa", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:2 }}>🏆 Oggetto Leggendario</div>
               <div style={{ fontSize:"0.72rem", color:"#c4b5fd", fontWeight:700 }}>{myLeg.emoji} {myLeg.name}</div>
+              <div style={{ fontSize:"0.6rem", color:"#a78bfa", marginTop:1 }}>✅ Si applica automaticamente</div>
               <div style={{ fontSize:"0.6rem", color:"#7c3aed", marginTop:1 }}>{myLeg.turnsLeft} turni rimasti</div>
             </div>
           );
@@ -5505,10 +5762,12 @@ ${stepText(step)}`, "quest","Master");
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
           {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["trade","🤝 Scambi"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["guild","🏛️ Gilda"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+            const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
+            const locked = combatLocked || isResting;
             return (
-            <button key={k} onClick={()=>{ if(!combatLocked){ setTab(k); if(isMobile) setSidebarOpen(false); if(k==="guild") refreshGuilds(); } }} title={combatLocked?"Non disponibile durante il combattimento":undefined}
-              style={{ flexShrink:0, padding: isMobile?"0.6rem 0.8rem":"0.6rem 1.2rem", background:tab===k?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k?"2px solid #7c3aed":"2px solid transparent", color:combatLocked?"#334155":tab===k?"#c4b5fd":"#94a3b8", cursor:combatLocked?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize: isMobile?"0.7rem":"0.78rem", letterSpacing:"0.05em", opacity:combatLocked?0.4:1, whiteSpace:"nowrap" }}>
+            <button key={k} onClick={()=>{ if(!locked){ setTab(k); if(isMobile) setSidebarOpen(false); if(k==="guild") refreshGuilds(); } }} title={isResting?"Riposo in corso…":combatLocked?"Non disponibile durante il combattimento":undefined}
+              style={{ flexShrink:0, padding: isMobile?"0.6rem 0.8rem":"0.6rem 1.2rem", background:tab===k&&!isResting?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k&&!isResting?"2px solid #7c3aed":"2px solid transparent", color:locked?"#2d3748":tab===k?"#c4b5fd":"#94a3b8", cursor:locked?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize: isMobile?"0.7rem":"0.78rem", letterSpacing:"0.05em", opacity:locked?0.35:1, whiteSpace:"nowrap", filter:isResting?"grayscale(1)":"none" }}>
               {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}
             </button>);
           })}
@@ -5890,8 +6149,9 @@ ${stepText(step)}`, "quest","Master");
                           </div>
                           <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
                           {q.flavor&&<p style={{ color:"#94a3b8", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{q.flavor}</p>}
-                          <div style={{ display:"flex", gap:14, fontSize:"0.73rem", color:"#94a3b8" }}>
+                          <div style={{ display:"flex", gap:14, fontSize:"0.73rem", color:"#94a3b8", flexWrap:"wrap" }}>
                             <span>⭐ {q.xpReward} XP</span><span>💰 {q.goldReward} oro</span><span>🎭 {q.steps.length} scene</span>
+                            {q.location && <span>📍 {q.location}</span>}
                           </div>
                         </div>
                         {!qs?.active&&<BigBtn onClick={()=>acceptQuest(q)} gold icon="⭐">Accetta</BigBtn>}
@@ -6190,7 +6450,7 @@ ${stepText(step)}`, "quest","Master");
                       <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginBottom:6, fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>🛡️ Stemma araldico</div>
                       <GuildEmblemEditor emblem={guildForm.emblem} onChange={emb=>setGuildForm(f=>({...f,emblem:emb}))}/>
                     </div>
-                    <BigBtn onClick={createGuild} gold icon="🏛️" disabled={(me?.gold||0)<1000}>Fonda ({me?.gold||0}/1000 🪙)</BigBtn>
+                    <BigBtn onClick={createGuild} gold icon="🏛️" disabled={(me?.gold||0)<10000}>Fonda ({me?.gold||0}/10000 🪙)</BigBtn>
                   </div>
 
                   {/* Join existing guilds */}
@@ -6309,10 +6569,10 @@ ${stepText(step)}`, "quest","Master");
                   <div style={{ display:"grid", gap:"1rem", position: isMobile ? "relative" : "sticky", top:0, order: isMobile ? -1 : 0 }}>
                     {combat.pendingLog && (
                       <div style={{ padding:"1.1rem 1.2rem", background:"linear-gradient(180deg,rgba(10,20,10,0.97),rgba(15,23,42,0.97))", border:"1px solid rgba(34,197,94,0.35)", borderRadius:12, boxShadow:"0 8px 24px rgba(0,0,0,0.4)" }}>
-                        <div style={{ fontSize:"0.82rem", color:"#a3e8b0", lineHeight:1.75, whiteSpace:"pre-line", marginBottom:"1rem", fontFamily:"'Crimson Pro',Georgia,serif" }} dangerouslySetInnerHTML={{ __html: fmt(combat.pendingLog) }} />
-                        <button onClick={dismissCombatLog} style={{ width:"100%", padding:"0.85rem 1.2rem", background:"linear-gradient(135deg,#14532d,#16a34a)", border:"2px solid #22c55e", borderRadius:10, color:"#dcfce7", fontFamily:"'Cinzel Decorative',serif", fontSize:"1rem", cursor:"pointer", letterSpacing:"0.08em" }}>
-                          Prossimo turno
-                        </button>
+                        <div style={{ fontSize:"0.82rem", color:"#a3e8b0", lineHeight:1.75, whiteSpace:"pre-line", marginBottom:"0.75rem", fontFamily:"'Crimson Pro',Georgia,serif" }} dangerouslySetInnerHTML={{ __html: fmt(combat.pendingLog) }} />
+                        <div style={{ height:3, background:"rgba(34,197,94,0.15)", borderRadius:2, overflow:"hidden" }}>
+                          <div style={{ height:"100%", width:"100%", background:"rgba(34,197,94,0.5)", borderRadius:2, animation:"logAutoDismiss 3.5s linear forwards" }}/>
+                        </div>
                       </div>
                     )}
                     <div style={{ textAlign:"center", padding:"1.35rem 1.1rem", background:"linear-gradient(180deg, rgba(24,10,10,0.92), rgba(15,23,42,0.94))", border:"1px solid rgba(239,68,68,0.26)", borderRadius:12, boxShadow:"0 18px 40px rgba(0,0,0,0.22)" }}>
@@ -6420,6 +6680,20 @@ ${stepText(step)}`, "quest","Master");
                             </div>
                           ) : (
                             <>
+                              {/* Countdown turno */}
+                              {turnTimeLeft !== null && (
+                                <div style={{ marginBottom:10 }}>
+                                  <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
+                                    <span style={{ fontSize:"0.65rem", color:"#64748b", textTransform:"uppercase", letterSpacing:"0.08em" }}>⏱ Tempo rimasto</span>
+                                    <span style={{ fontSize:"0.95rem", fontWeight:900, color:turnTimeLeft<=5?"#ef4444":turnTimeLeft<=10?"#f97316":"#4ade80", fontVariantNumeric:"tabular-nums", transition:"color 0.3s" }}>
+                                      {turnTimeLeft<=5&&"⚠️ "}{turnTimeLeft}s
+                                    </span>
+                                  </div>
+                                  <div style={{ height:5, background:"rgba(30,41,59,0.7)", borderRadius:3, overflow:"hidden" }}>
+                                    <div style={{ height:"100%", width:`${(turnTimeLeft/30)*100}%`, background:turnTimeLeft<=5?"#ef4444":turnTimeLeft<=10?"#f97316":"#22c55e", borderRadius:3, transition:"width 1s linear, background 0.3s" }}/>
+                                  </div>
+                                </div>
+                              )}
                               {/* Selezione bersaglio */}
                               {(() => {
                                 const liveEnemies = combat.combatants.filter(c=>!c.isPlayer&&c.hp>0);
@@ -6447,6 +6721,23 @@ ${stepText(step)}`, "quest","Master");
                                   </div>
                                 );
                               })()}
+                              {(() => {
+                                const activeLeg = qs?.masterBuffs?.[myId]?.legendaryItem;
+                                if(!activeLeg || activeLeg.turnsLeft <= 0) return null;
+                                const bonusLine = activeLeg.type==="weapon" ? `⚔️ ${activeLeg.weapon_die} +${activeLeg.bonus_atk} ATK`
+                                  : activeLeg.type==="armor" ? `🛡️ +${activeLeg.bonus_def} DEF`
+                                  : activeLeg.type==="magic" ? `✨ +${activeLeg.bonus_mag} MAG` : "";
+                                return (
+                                  <div style={{ background:"rgba(76,29,149,0.28)", border:"1px solid #7c3aed", borderRadius:8, padding:"0.45rem 0.7rem", marginBottom:6, display:"flex", alignItems:"center", gap:8 }}>
+                                    <span style={{ fontSize:"1.2rem", lineHeight:1 }}>{activeLeg.emoji}</span>
+                                    <div style={{ flex:1, minWidth:0 }}>
+                                      <div style={{ fontSize:"0.7rem", color:"#c4b5fd", fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{activeLeg.name}</div>
+                                      <div style={{ fontSize:"0.6rem", color:"#a78bfa" }}>{bonusLine} · si applica automaticamente · {activeLeg.turnsLeft}t rimasti</div>
+                                    </div>
+                                    <span style={{ fontSize:"0.55rem", color:"#c4b5fd", background:"rgba(109,40,217,0.3)", border:"1px solid #6d28d9", borderRadius:999, padding:"1px 6px", whiteSpace:"nowrap", flexShrink:0 }}>Passivo</span>
+                                  </div>
+                                );
+                              })()}
                               <div style={{ display:"grid", gap:10 }}>
                                 <button onClick={doAttack} style={{ width:"100%", padding:"1rem 1.4rem", background:"linear-gradient(135deg,#7f1d1d,#dc2626)", border:"2px solid #ef4444", borderRadius:10, color:"#fee2e2", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.1rem", cursor:"pointer", letterSpacing:"0.08em", boxShadow:"0 14px 28px rgba(127,29,29,0.24)" }}>
                                   <span className={diceAnim?"dice-spin":""} style={{ display:"inline-block", marginRight:8 }}>🎲</span>
@@ -6462,23 +6753,17 @@ ${stepText(step)}`, "quest","Master");
                             </>
                           )}
                         </>
-                      ) : isLeaderForMonsterTurn ? (
-                        <div style={{ display:"flex", flexDirection:"column", gap:"0.75rem", alignItems:"center" }}>
-                          <p style={{ color:"#fca5a5", fontFamily:"'Cinzel Decorative',serif", fontSize:"1rem", letterSpacing:"0.04em", margin:0 }}>
-                            ⚔️ Turno di <strong>{activeCombatant?.name}</strong>
-                          </p>
-                          <button onClick={() => doMonsterTurnRef.current?.()} style={{ width:"100%", maxWidth:340, padding:"1rem 1.4rem", background:"linear-gradient(135deg,#431407,#9a3412)", border:"2px solid #ea580c", borderRadius:10, color:"#ffedd5", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.06rem", cursor:"pointer", letterSpacing:"0.08em", boxShadow:"0 14px 28px rgba(127,29,29,0.24)" }}>
-                            Avanti → (il nemico attacca)
-                          </button>
-                        </div>
                       ) : (
                         <div style={{ color:"#94a3b8", fontSize:"0.9rem", lineHeight:1.6, textAlign:"center" }}>
-                          Turno di <strong style={{ color:"#f8fafc" }}>{activeCombatant?.name}</strong>...
+                          {isLeaderForMonsterTurn
+                            ? <span style={{ color:"#fca5a5", fontFamily:"'Cinzel',serif" }}>⚔️ <strong>{activeCombatant?.name}</strong> sta attaccando…</span>
+                            : <>Turno di <strong style={{ color:"#f8fafc" }}>{activeCombatant?.name}</strong>…</>
+                          }
                         </div>
                       )}
-                      {!combat.pendingLog && (myTurn || isLeaderForMonsterTurn) && (
-                        <button onClick={forceNextCombatTurn} style={{ width:"100%", maxWidth:340, marginTop:"1rem", padding:"0.82rem 1rem", background:"rgba(30,41,59,0.78)", border:"1px solid rgba(148,163,184,0.36)", borderRadius:9, color:"#e2e8f0", fontFamily:"'Cinzel',serif", fontSize:"0.9rem", cursor:"pointer", letterSpacing:"0.06em" }}>
-                          {myTurn ? "⏭️ Salta il mio turno" : "Prossimo turno"}
+                      {!combat.pendingLog && myTurn && (
+                        <button onClick={forceNextCombatTurn} style={{ width:"100%", maxWidth:340, marginTop:"0.75rem", padding:"0.6rem 1rem", background:"rgba(30,41,59,0.6)", border:"1px solid rgba(148,163,184,0.25)", borderRadius:8, color:"#64748b", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", cursor:"pointer", letterSpacing:"0.05em" }}>
+                          ⏭️ Salta il mio turno
                         </button>
                       )}
                     </div>
@@ -6514,6 +6799,104 @@ ${stepText(step)}`, "quest","Master");
         )}
       </main>
       <DiceRoller ref={diceRef} />
+
+      {/* ── Rest Overlay ── */}
+      {!!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date()) && (
+        <div style={{ position:"fixed", inset:0, zIndex:10500, background:"linear-gradient(180deg,rgba(2,4,18,0.97),rgba(6,2,20,0.99))", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"1.5rem", animation:"restOverlayIn 1.2s ease" }}>
+          {/* Floating stars */}
+          {[...Array(12)].map((_,i)=>(
+            <div key={i} style={{ position:"absolute", left:`${8+i*7}%`, top:`${15+((i*37)%65)}%`, width:2+((i*3)%4), height:2+((i*3)%4), borderRadius:"50%", background:"#c4b5fd", opacity:0.5, animation:`restStarFloat ${3+(i%4)}s ${i*0.4}s ease-in-out infinite` }}/>
+          ))}
+
+          {/* SVG Realistic Eye */}
+          <svg viewBox="0 0 260 120" width="min(320px,80vw)" height="auto" style={{ filter:"drop-shadow(0 0 32px rgba(139,92,246,0.6))", overflow:"visible" }}>
+            <defs>
+              <clipPath id="restEyeClip">
+                <path d="M8,60 Q65,12 130,12 Q195,12 252,60 Q195,108 130,108 Q65,108 8,60 Z"/>
+              </clipPath>
+              <radialGradient id="restIrisGr" cx="38%" cy="35%" r="60%">
+                <stop offset="0%" stopColor="#8ab4f8"/>
+                <stop offset="35%" stopColor="#3a78e0"/>
+                <stop offset="70%" stopColor="#1a3fa0"/>
+                <stop offset="100%" stopColor="#0a1e5c"/>
+              </radialGradient>
+              <radialGradient id="restScleraGr" cx="30%" cy="28%">
+                <stop offset="0%" stopColor="#fffdf0"/>
+                <stop offset="100%" stopColor="#ddd5c0"/>
+              </radialGradient>
+            </defs>
+
+            {/* Skin around eye */}
+            <ellipse cx="130" cy="60" rx="135" ry="70" fill="#c49070"/>
+
+            {/* Sclera */}
+            <path d="M8,60 Q65,12 130,12 Q195,12 252,60 Q195,108 130,108 Q65,108 8,60 Z" fill="url(#restScleraGr)"/>
+
+            {/* Iris */}
+            <circle cx="130" cy="60" r="36" fill="url(#restIrisGr)" clipPath="url(#restEyeClip)"/>
+            {/* Iris texture rings */}
+            <circle cx="130" cy="60" r="36" fill="none" stroke="#2a60c8" strokeWidth="1" opacity="0.25" clipPath="url(#restEyeClip)"/>
+            <circle cx="130" cy="60" r="28" fill="none" stroke="#4a8ae8" strokeWidth="0.6" opacity="0.3" clipPath="url(#restEyeClip)"/>
+
+            {/* Pupil */}
+            <circle cx="130" cy="60" r="18" fill="#050516" clipPath="url(#restEyeClip)"/>
+
+            {/* Highlights */}
+            <circle cx="143" cy="49" r="7" fill="white" opacity="0.55" clipPath="url(#restEyeClip)"/>
+            <circle cx="124" cy="55" r="3.5" fill="white" opacity="0.3" clipPath="url(#restEyeClip)"/>
+
+            {/* Lower eyelid (static) */}
+            <path d="M8,60 Q65,108 130,108 Q195,108 252,60 L252,130 L8,130 Z" fill="#c49070"/>
+            <path d="M8,60 Q65,108 130,108 Q195,108 252,60" stroke="#9a6040" strokeWidth="1.5" fill="none"/>
+            {/* Lower lashes */}
+            <g stroke="#3a1808" strokeWidth="1" strokeLinecap="round" opacity="0.6">
+              <line x1="48" y1="88" x2="44" y2="100"/>
+              <line x1="78" y1="100" x2="76" y2="113"/>
+              <line x1="110" y1="106" x2="110" y2="119"/>
+              <line x1="130" y1="108" x2="130" y2="121"/>
+              <line x1="152" y1="106" x2="152" y2="119"/>
+              <line x1="183" y1="100" x2="185" y2="113"/>
+              <line x1="212" y1="88" x2="216" y2="100"/>
+            </g>
+
+            {/* Upper eyelid — animates to close */}
+            <g style={{ animation:"eyelidClose 4s ease-in-out infinite" }}>
+              <path d="M8,60 Q65,12 130,12 Q195,12 252,60 L252,-48 L8,-48 Z" fill="#c49070"/>
+              <path d="M8,60 Q65,12 130,12 Q195,12 252,60" stroke="#9a6040" strokeWidth="2" fill="none"/>
+              {/* Upper lashes */}
+              <g stroke="#2a1005" strokeWidth="1.8" strokeLinecap="round">
+                <line x1="42" y1="36" x2="34" y2="18"/>
+                <line x1="70" y1="22" x2="66" y2="4"/>
+                <line x1="100" y1="14" x2="98" y2="-4"/>
+                <line x1="130" y1="12" x2="130" y2="-7"/>
+                <line x1="160" y1="14" x2="162" y2="-4"/>
+                <line x1="190" y1="22" x2="194" y2="4"/>
+                <line x1="218" y1="36" x2="226" y2="18"/>
+              </g>
+            </g>
+
+            {/* Eye outline */}
+            <path d="M8,60 Q65,12 130,12 Q195,12 252,60 Q195,108 130,108 Q65,108 8,60 Z" stroke="#7a3e18" strokeWidth="2" fill="none"/>
+          </svg>
+
+          {/* Info */}
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#c4b5fd", fontSize:"clamp(1rem,4vw,1.4rem)", letterSpacing:"0.08em", marginBottom:8 }}>
+              {qs.rest.type === "short" ? "🌙 Riposo Breve" : "🌅 Riposo Lungo"}
+            </div>
+            <div style={{ fontFamily:"'Cinzel',serif", color:"#7c3aed", fontSize:"2.2rem", fontWeight:900, letterSpacing:"0.04em", lineHeight:1, marginBottom:6, fontVariantNumeric:"tabular-nums" }}>
+              {restTimeLeft ? `${restTimeLeft.mm}:${String(restTimeLeft.ss).padStart(2,"0")}` : "…"}
+            </div>
+            <div style={{ color:"#64748b", fontSize:"0.78rem", fontFamily:"'Crimson Pro',Georgia,serif", fontStyle:"italic" }}>
+              {qs.rest.type === "short" ? "Il gruppo si accampa. Mezza cura al termine." : "Tutti dormono profondamente. Cura completa al termine."}
+            </div>
+          </div>
+
+          <button onClick={cancelRest} style={{ marginTop:8, padding:"0.6rem 1.6rem", background:"rgba(127,29,29,0.3)", border:"1px solid rgba(239,68,68,0.4)", borderRadius:8, color:"#f87171", cursor:"pointer", fontSize:"0.8rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>
+            ⚡ Interrompi riposo
+          </button>
+        </div>
+      )}
 
       {/* ── Legendary Item Notification ── */}
       {legNotif && (

@@ -82,6 +82,11 @@ export const SPELLS = {
     ],
   },
   cleric:{
+    0:[
+      {id:"cl01",name:"Fiamma Sacra",emoji:"🕯️",dmg:"1d8",type:"damage",slots:0,desc:"Getto di fuoco divino gratuito ogni turno"},
+      {id:"cl02",name:"Raggio Sacro",emoji:"⚡",dmg:"1d6",type:"damage",slots:0,desc:"Raggio di energia divina gratuito ogni turno"},
+      {id:"cl03",name:"Cura Minima",emoji:"💊",dmg:"-1d4",type:"heal",slots:0,desc:"Piccola cura divina gratuita ogni turno, ripristina 1d4 HP"},
+    ],
     1:[
       {id:"cl11",name:"Cura Ferite",emoji:"💚",dmg:"-2d8",type:"heal",slots:1,desc:"Cura 2d8+3 HP a te o a un alleato"},
       {id:"cl12",name:"Parola Sacra",emoji:"✨",dmg:"2d6",type:"damage",slots:1,desc:"Parola divina che brucia i non-morti (+50% danni)"},
@@ -115,6 +120,10 @@ export const SPELLS = {
     ],
   },
   druid:{
+    0:[
+      {id:"dr01",name:"Produzione di Fiamme",emoji:"🔥",dmg:"1d8",type:"damage",slots:0,desc:"Fiamma naturale gratuita ogni turno"},
+      {id:"dr02",name:"Veleno Minore",emoji:"☠️",dmg:"1d6",type:"damage",slots:0,desc:"Veleno naturale debole, gratuito ogni turno"},
+    ],
     1:[
       {id:"dr11",name:"Avviluppo",emoji:"🌿",dmg:"0",type:"control",slots:1,desc:"Radici magiche intrappolano il nemico (salta turno)"},
       {id:"dr12",name:"Guarire Ferite",emoji:"💚",dmg:"-2d8",type:"heal",slots:1,desc:"Cura 2d8+3 HP con energia naturale"},
