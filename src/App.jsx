@@ -1352,7 +1352,6 @@ async function dbSavePlayer(p) {
     updated_at: new Date().toISOString(),
   };
   if(p.accountId) payload.account_id = p.accountId;
-  payload.avatar_config = { gender: p.gender || 'male', stats: p.stats || {} };
   const { data, error } = await supabase.from("players").upsert(payload).select("id,account_id,dead").single();
   return { data, error };
 }
