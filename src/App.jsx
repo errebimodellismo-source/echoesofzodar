@@ -4099,7 +4099,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [pendingHealItem, setPendingHealItem] = useState(null);
   const [selectedAllyTarget, setSelectedAllyTarget] = useState(null);
   const [tab, setTab] = useState("quest");
-  const [victoryScreen, setVictoryScreen] = useState(null);
+  const [dismissedVictoryTs, setDismissedVictoryTs] = useState(null);
   const isMobile = useMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [lootedStepKey, setLootedStepKey] = useState(null);
@@ -5256,7 +5256,9 @@ function GameScreen({ myId, setScreen, authUser }) {
     const totalXp = slain.reduce((s, m) => s + m.xp, 0);
     const totalGold = slain.reduce((s, m) => s + m.gold, 0);
     const combatPlayerIds = new Set((latestCombat?.combatants || []).filter(c => c?.isPlayer).map(c => c.id));
-    const rewardPlayers = partyPlayers.filter(p => combatPlayerIds.has(p.id));
+    // Fetch fresh player data so XP/gold always go to all combat participants
+    const freshPlayers = await dbGetPlayers(code);
+    const rewardPlayers = freshPlayers.filter(p => combatPlayerIds.has(p.id));
     const partyCount = Math.max(rewardPlayers.length, 1);
     const xpEach = Math.floor(totalXp / partyCount);
     const goldEach = Math.floor(totalGold / partyCount);
@@ -5277,7 +5279,8 @@ function GameScreen({ myId, setScreen, authUser }) {
       });
     }
 
-    const victoryData = { slain, xpEach, goldEach, totalXp, totalGold, playerResults, ts: Date.now() };
+    const combatDmgLog = latestQs.questDmgLog || {};
+    const victoryData = { slain, xpEach, goldEach, totalXp, totalGold, playerResults, combatDmgLog, ts: Date.now() };
     const onQuestCombat = latestQs?.active && latestQs?.currentId && (() => {
       const q = getQuests().find(x => x.id === latestQs.currentId);
       return q && isCombatStep(q.steps[latestQs.step]);
@@ -5427,15 +5430,9 @@ ${stepText(step)}`, "quest","Master");
   }
   startCombatStepRef.current = startCombatStep;
 
-  // Show victory overlay when combat ends (all clients see it via shared combat.victoryData.ts)
-  const shownVictoryRef = useRef(null);
-  useEffect(() => {
-    const vd = qs?.combat?.victoryData;
-    if (!vd || shownVictoryRef.current === vd.ts) return;
-    shownVictoryRef.current = vd.ts;
-    setVictoryScreen(vd);
-    setTab("quest");
-  }, [qs?.combat?.victoryData?.ts]);
+  // Victory data comes from shared DB state — all clients see it as soon as qs updates
+  const currentVictoryData = qs?.combat?.victoryData;
+  const showVictory = !!(currentVictoryData && currentVictoryData.ts !== dismissedVictoryTs);
 
   async function advanceQuest() {
     const quests = getQuests();
@@ -7026,90 +7023,113 @@ ${stepText(step)}`, "quest","Master");
         </div>
       )}
 
-      {/* ── Victory Screen Overlay ── */}
-      {victoryScreen && (() => {
-        const vd = victoryScreen;
+      {/* ── Victory Screen Overlay ── shown to all combat participants via shared DB state */}
+      {showVictory && (() => {
+        const vd = currentVictoryData;
+        const dismiss = () => setDismissedVictoryTs(vd.ts);
         const myResult = vd.playerResults?.find(r => r.id === myId);
         const xpBefore = myResult?.beforeXp ?? 0;
         const xpAfter  = myResult?.afterXp  ?? 0;
         const lvBefore = myResult?.beforeLevel ?? 1;
         const lvAfter  = myResult?.afterLevel  ?? lvBefore;
-        const threshold = myResult?.xpThreshold ?? xpForLevel(lvBefore);
-        const leveledUp = myResult?.leveledUpTo?.length > 0;
-        const barPct = Math.min(100, Math.round((xpBefore / threshold) * 100));
-        const barPctAfter = Math.min(100, Math.round((xpAfter / xpForLevel(lvAfter)) * 100));
+        const barPct      = Math.min(100, Math.round((xpBefore / xpForLevel(lvBefore)) * 100));
+        const barPctAfter = Math.min(100, Math.round((xpAfter  / xpForLevel(lvAfter))  * 100));
+        const leveledUp = xpAfter >= xpForLevel(lvBefore) && lvAfter > lvBefore;
+        // Build per-player row: merge playerResults with combatDmgLog
+        const dmgLog = vd.combatDmgLog || {};
+        const playerRows = (vd.playerResults || []).map(r => ({
+          ...r,
+          dmg: dmgLog[r.id]?.dmg || 0,
+          isMe: r.id === myId,
+        })).sort((a,b) => b.dmg - a.dmg);
+        const maxDmg = Math.max(...playerRows.map(r => r.dmg), 1);
         return (
-          <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.82)", zIndex:10050, display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
-            <div style={{ background:"linear-gradient(180deg,#0d1b0d,#0a1628)", border:"2px solid #fbbf24", borderRadius:18, padding:"2rem 2.2rem", maxWidth:520, width:"100%", boxShadow:"0 0 60px rgba(251,191,36,0.25), 0 24px 48px rgba(0,0,0,0.6)", textAlign:"center", maxHeight:"90vh", overflowY:"auto" }}>
-
+          <div
+            onClick={dismiss}
+            style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.85)", zIndex:10050, display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem", cursor:"pointer" }}
+          >
+            <div
+              onClick={e => e.stopPropagation()}
+              style={{ background:"linear-gradient(180deg,#0d1b0d,#0a1628)", border:"2px solid #fbbf24", borderRadius:18, padding:"1.6rem 1.8rem", maxWidth:500, width:"100%", boxShadow:"0 0 60px rgba(251,191,36,0.25), 0 24px 48px rgba(0,0,0,0.6)", textAlign:"center", maxHeight:"90vh", overflowY:"auto", cursor:"default" }}
+            >
               {/* Header */}
-              <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(1.6rem,5vw,2.4rem)", background:"linear-gradient(135deg,#fbbf24,#f59e0b,#b45309)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", letterSpacing:"0.08em", marginBottom:"0.3rem" }}>⚔ VITTORIA! ⚔</div>
-              <div style={{ color:"#86efac", fontSize:"0.82rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.15em", marginBottom:"1.5rem" }}>BATTAGLIA VINTA</div>
+              <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(1.5rem,5vw,2.2rem)", background:"linear-gradient(135deg,#fbbf24,#f59e0b,#b45309)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", letterSpacing:"0.08em", marginBottom:"0.2rem" }}>⚔ VITTORIA! ⚔</div>
+              <div style={{ color:"#86efac", fontSize:"0.78rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.15em", marginBottom:"1.2rem" }}>BATTAGLIA VINTA — tocca fuori o clicca Continua</div>
 
               {/* Slain monsters */}
               {vd.slain?.length > 0 && (
-                <div style={{ background:"rgba(0,0,0,0.35)", border:"1px solid rgba(127,29,29,0.4)", borderRadius:10, padding:"0.9rem 1rem", marginBottom:"1.2rem", textAlign:"left" }}>
-                  <div style={{ fontFamily:"'Cinzel',serif", color:"#f87171", fontSize:"0.72rem", letterSpacing:"0.12em", marginBottom:"0.6rem" }}>NEMICI SCONFITTI</div>
+                <div style={{ background:"rgba(0,0,0,0.35)", border:"1px solid rgba(127,29,29,0.4)", borderRadius:10, padding:"0.75rem 1rem", marginBottom:"1rem", textAlign:"left" }}>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#f87171", fontSize:"0.68rem", letterSpacing:"0.12em", marginBottom:"0.5rem" }}>NEMICI SCONFITTI</div>
                   {vd.slain.map((m, i) => (
-                    <div key={i} style={{ display:"flex", justifyContent:"space-between", color:"#fecaca", fontSize:"0.85rem", padding:"2px 0" }}>
+                    <div key={i} style={{ display:"flex", justifyContent:"space-between", color:"#fecaca", fontSize:"0.82rem", padding:"2px 0" }}>
                       <span>{m.emoji} {m.name}</span>
-                      <span style={{ color:"#fbbf24" }}>+{m.xp} XP</span>
+                      <span style={{ color:"#94a3b8", fontSize:"0.75rem" }}>+{m.xp} XP · +{m.gold} oro</span>
                     </div>
                   ))}
+                  <div style={{ borderTop:"1px solid rgba(127,29,29,0.3)", marginTop:8, paddingTop:8, display:"flex", justifyContent:"space-between", fontSize:"0.8rem" }}>
+                    <span style={{ color:"#f87171", fontWeight:600 }}>Totale bottino</span>
+                    <span style={{ color:"#fbbf24", fontWeight:700 }}>+{vd.totalXp} XP · +{vd.totalGold} oro</span>
+                  </div>
                 </div>
               )}
 
-              {/* Loot summary */}
-              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:"1.4rem" }}>
-                <div style={{ background:"rgba(91,33,182,0.25)", border:"1px solid rgba(139,92,246,0.35)", borderRadius:10, padding:"0.8rem" }}>
-                  <div style={{ fontSize:"1.4rem", marginBottom:4 }}>⭐</div>
-                  <div style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontSize:"0.7rem", letterSpacing:"0.1em" }}>XP GUADAGNATA</div>
-                  <div style={{ color:"#e9d5ff", fontSize:"1.4rem", fontWeight:700, fontFamily:"'Cinzel Decorative',serif" }}>+{vd.xpEach}</div>
+              {/* Reward per combatant — big and clear */}
+              <div style={{ background:"rgba(20,83,45,0.2)", border:"1px solid rgba(34,197,94,0.3)", borderRadius:10, padding:"0.85rem 1rem", marginBottom:"1rem", textAlign:"left" }}>
+                <div style={{ fontFamily:"'Cinzel',serif", color:"#86efac", fontSize:"0.68rem", letterSpacing:"0.12em", marginBottom:"0.7rem" }}>RICOMPENSE A TESTA</div>
+                <div style={{ display:"flex", gap:16, justifyContent:"center", marginBottom:playerRows.length > 1 ? 12 : 0 }}>
+                  <div style={{ textAlign:"center" }}>
+                    <div style={{ fontSize:"1.8rem" }}>⭐</div>
+                    <div style={{ color:"#c4b5fd", fontSize:"0.68rem", fontFamily:"'Cinzel',serif" }}>XP</div>
+                    <div style={{ color:"#e9d5ff", fontSize:"1.5rem", fontWeight:700, fontFamily:"'Cinzel Decorative',serif" }}>+{vd.xpEach}</div>
+                  </div>
+                  <div style={{ width:1, background:"rgba(255,255,255,0.08)" }} />
+                  <div style={{ textAlign:"center" }}>
+                    <div style={{ fontSize:"1.8rem" }}>💰</div>
+                    <div style={{ color:"#fcd34d", fontSize:"0.68rem", fontFamily:"'Cinzel',serif" }}>ORO</div>
+                    <div style={{ color:"#fde68a", fontSize:"1.5rem", fontWeight:700, fontFamily:"'Cinzel Decorative',serif" }}>+{vd.goldEach}</div>
+                  </div>
                 </div>
-                <div style={{ background:"rgba(161,120,0,0.2)", border:"1px solid rgba(251,191,36,0.35)", borderRadius:10, padding:"0.8rem" }}>
-                  <div style={{ fontSize:"1.4rem", marginBottom:4 }}>💰</div>
-                  <div style={{ fontFamily:"'Cinzel',serif", color:"#fcd34d", fontSize:"0.7rem", letterSpacing:"0.1em" }}>ORO GUADAGNATO</div>
-                  <div style={{ color:"#fde68a", fontSize:"1.4rem", fontWeight:700, fontFamily:"'Cinzel Decorative',serif" }}>+{vd.goldEach}</div>
-                </div>
+                {/* Per-player rows with damage */}
+                {playerRows.length > 0 && (
+                  <div style={{ borderTop:"1px solid rgba(34,197,94,0.2)", paddingTop:10 }}>
+                    <div style={{ fontSize:"0.65rem", color:"#64748b", letterSpacing:"0.07em", marginBottom:6 }}>DANNI INFLITTI IN BATTAGLIA</div>
+                    {playerRows.map((r, ri) => (
+                      <div key={r.id} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6, padding:"4px 6px", background: r.isMe ? "rgba(251,191,36,0.08)" : "transparent", borderRadius:6, border: r.isMe ? "1px solid rgba(251,191,36,0.2)" : "1px solid transparent" }}>
+                        <span style={{ fontSize:"0.88rem", minWidth:20, textAlign:"center" }}>{ri===0?"🥇":ri===1?"🥈":ri===2?"🥉":"•"}</span>
+                        <span style={{ flex:1, fontSize:"0.8rem", color: r.isMe ? "#fbbf24" : "#e2e8f0", fontWeight: r.isMe ? 700 : 400, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                          {r.name}{r.isMe ? " (tu)" : ""}
+                        </span>
+                        <span style={{ fontSize:"0.78rem", color:"#ef4444", fontWeight:700, minWidth:52, textAlign:"right" }}>{r.dmg > 0 ? `${r.dmg} dmg` : "—"}</span>
+                        <div style={{ width:48, height:5, background:"rgba(30,41,59,0.8)", borderRadius:3, overflow:"hidden", flexShrink:0 }}>
+                          <div style={{ height:"100%", background:"linear-gradient(90deg,#ef4444,#f97316)", width: r.dmg > 0 ? `${Math.round(r.dmg/maxDmg*100)}%` : "0%", transition:"width 0.5s" }} />
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
 
-              {/* XP Progress bar for this player */}
+              {/* Personal XP bar */}
               {myResult && (
-                <div style={{ background:"rgba(0,0,0,0.35)", border:"1px solid rgba(148,163,184,0.18)", borderRadius:10, padding:"1rem", marginBottom:"1.2rem", textAlign:"left" }}>
-                  <div style={{ fontFamily:"'Cinzel',serif", color:"#94a3b8", fontSize:"0.72rem", letterSpacing:"0.12em", marginBottom:"0.7rem" }}>AVANZAMENTO ESPERIENZA</div>
-                  <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.78rem", color:"#cbd5e1", marginBottom:6 }}>
-                    <span>Lv. {lvBefore}</span>
-                    <span style={{ color:"#fbbf24" }}>{xpBefore} → {xpAfter} / {xpForLevel(lvAfter)} XP</span>
-                    <span>Lv. {lvAfter}</span>
+                <div style={{ background:"rgba(0,0,0,0.3)", border:"1px solid rgba(148,163,184,0.15)", borderRadius:10, padding:"0.85rem 1rem", marginBottom:"1rem", textAlign:"left" }}>
+                  <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.75rem", color:"#cbd5e1", marginBottom:5 }}>
+                    <span style={{ fontFamily:"'Cinzel',serif", color:"#94a3b8", fontSize:"0.68rem", letterSpacing:"0.1em" }}>IL TUO AVANZAMENTO</span>
+                    <span style={{ color:"#fbbf24" }}>Lv.{lvBefore} → Lv.{lvAfter}</span>
                   </div>
-                  {/* Before bar (grey) */}
-                  <div style={{ position:"relative", height:14, background:"rgba(255,255,255,0.08)", borderRadius:999, overflow:"hidden", marginBottom:4 }}>
-                    <div style={{ position:"absolute", left:0, top:0, height:"100%", width:`${barPct}%`, background:"rgba(148,163,184,0.4)", borderRadius:999, transition:"width 0.6s ease" }} />
-                    <div style={{ position:"absolute", left:0, top:0, height:"100%", width:`${barPctAfter}%`, background:"linear-gradient(90deg,#7c3aed,#a855f7,#c084fc)", borderRadius:999, transition:"width 0.8s ease 0.3s", boxShadow:"0 0 8px rgba(168,85,247,0.6)" }} />
+                  <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginBottom:6, textAlign:"right" }}>{xpBefore} → {xpAfter} / {xpForLevel(lvAfter)} XP</div>
+                  <div style={{ position:"relative", height:12, background:"rgba(255,255,255,0.07)", borderRadius:999, overflow:"hidden" }}>
+                    <div style={{ position:"absolute", left:0, top:0, height:"100%", width:`${barPct}%`, background:"rgba(148,163,184,0.3)", borderRadius:999 }} />
+                    <div style={{ position:"absolute", left:0, top:0, height:"100%", width:`${barPctAfter}%`, background:"linear-gradient(90deg,#7c3aed,#a855f7,#c084fc)", borderRadius:999, boxShadow:"0 0 8px rgba(168,85,247,0.5)", transition:"width 0.8s ease 0.2s" }} />
                   </div>
-                  <div style={{ fontSize:"0.7rem", color:"#6b7280", textAlign:"right" }}>{xpAfter} / {xpForLevel(lvAfter)} XP per Lv. {lvAfter + 1}</div>
                   {leveledUp && (
-                    <div style={{ marginTop:"0.7rem", padding:"0.5rem 0.8rem", background:"linear-gradient(135deg,rgba(251,191,36,0.2),rgba(245,158,11,0.15))", border:"1px solid #fbbf24", borderRadius:8, color:"#fde68a", fontFamily:"'Cinzel Decorative',serif", fontSize:"0.92rem", textAlign:"center", letterSpacing:"0.06em" }}>
-                      ⬆️ LIVELLO {lvAfter}! Sei più forte ora.
+                    <div style={{ marginTop:"0.6rem", padding:"0.45rem 0.75rem", background:"linear-gradient(135deg,rgba(251,191,36,0.2),rgba(245,158,11,0.1))", border:"1px solid #fbbf24", borderRadius:8, color:"#fde68a", fontFamily:"'Cinzel Decorative',serif", fontSize:"0.88rem", textAlign:"center" }}>
+                      ⬆️ LIVELLO {lvAfter}! Sei più forte.
                     </div>
                   )}
                 </div>
               )}
 
-              {/* Party members summary (if multiplayer) */}
-              {vd.playerResults?.length > 1 && (
-                <div style={{ marginBottom:"1.2rem", textAlign:"left" }}>
-                  <div style={{ fontFamily:"'Cinzel',serif", color:"#94a3b8", fontSize:"0.72rem", letterSpacing:"0.12em", marginBottom:"0.5rem" }}>PARTY</div>
-                  {vd.playerResults.map(r => (
-                    <div key={r.id} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"4px 0", color:"#cbd5e1", fontSize:"0.82rem", borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
-                      <span>{r.id === myId ? "⭐ " : ""}{r.name}</span>
-                      <span style={{ color:"#a78bfa", fontSize:"0.76rem" }}>Lv.{r.afterLevel}{r.leveledUpTo?.length > 0 ? " ⬆️" : ""}</span>
-                    </div>
-                  ))}
-                </div>
-              )}
-
-              <button onClick={() => setVictoryScreen(null)} style={{ width:"100%", padding:"1rem 1.4rem", background:"linear-gradient(135deg,#14532d,#16a34a)", border:"2px solid #22c55e", borderRadius:12, color:"#dcfce7", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.05rem", cursor:"pointer", letterSpacing:"0.08em", boxShadow:"0 8px 20px rgba(34,197,94,0.2)" }}>
+              <button onClick={dismiss} style={{ width:"100%", padding:"0.9rem 1.4rem", background:"linear-gradient(135deg,#14532d,#16a34a)", border:"2px solid #22c55e", borderRadius:12, color:"#dcfce7", fontFamily:"'Cinzel Decorative',serif", fontSize:"1rem", cursor:"pointer", letterSpacing:"0.08em", boxShadow:"0 8px 20px rgba(34,197,94,0.2)" }}>
                 Continua →
               </button>
             </div>
