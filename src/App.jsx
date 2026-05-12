@@ -5171,6 +5171,98 @@ function SpellbookView({ spellsByLevel, preparedSpellIds, preparedCount, maxPrep
 }
 
 /* ----------------------------------------------
+   BATTLE INCOMING BANNER
+---------------------------------------------- */
+function BattleBanner({ onEnter, startedAt }) {
+  const COUNTDOWN = 30;
+  const elapsed = Math.floor((Date.now() - (startedAt || Date.now())) / 1000);
+  const [secs, setSecs] = useState(Math.max(0, COUNTDOWN - elapsed));
+  const [dismissed, setDismissed] = useState(false);
+
+  useEffect(() => {
+    if(dismissed) return;
+    const t = setInterval(() => {
+      setSecs(s => {
+        if(s <= 1) { clearInterval(t); return 0; }
+        return s - 1;
+      });
+    }, 1000);
+    return () => clearInterval(t);
+  }, [dismissed]);
+
+  if(dismissed) return null;
+
+  const pct = Math.max(0, (secs / COUNTDOWN) * 100);
+  const urgent = secs <= 10;
+
+  return (
+    <div style={{
+      position: "fixed",
+      bottom: 24,
+      left: "50%",
+      transform: "translateX(-50%)",
+      zIndex: 9500,
+      background: "linear-gradient(135deg, rgba(40,8,8,0.97), rgba(15,23,42,0.97))",
+      border: `2px solid ${urgent ? "#ef4444" : "#7f1d1d"}`,
+      borderRadius: 16,
+      boxShadow: `0 8px 40px rgba(${urgent ? "239,68,68" : "127,29,29"},0.45), 0 2px 12px rgba(0,0,0,0.6)`,
+      padding: "1rem 1.4rem",
+      minWidth: 300,
+      maxWidth: "min(420px, 92vw)",
+      animation: "battleBannerIn 0.4s cubic-bezier(0.34,1.56,0.64,1)",
+    }}>
+      <style>{`
+        @keyframes battleBannerIn {
+          from { opacity:0; transform:translateX(-50%) translateY(40px) scale(0.9); }
+          to   { opacity:1; transform:translateX(-50%) translateY(0) scale(1); }
+        }
+        @keyframes battlePulse {
+          0%,100% { opacity:1; } 50% { opacity:0.6; }
+        }
+      `}</style>
+      <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:10 }}>
+        <span style={{ fontSize:"1.8rem", animation: urgent ? "battlePulse 0.7s ease infinite" : "none" }}>⚔️</span>
+        <div style={{ flex:1 }}>
+          <div style={{ fontFamily:"'Cinzel Decorative',serif", color: urgent ? "#fca5a5" : "#fecaca", fontSize:"0.95rem", fontWeight:700, letterSpacing:"0.04em" }}>
+            Battaglia in corso!
+          </div>
+          <div style={{ color:"#94a3b8", fontSize:"0.73rem", marginTop:2 }}>
+            {secs > 0 ? `Puoi entrare entro ${secs}s` : "Battaglia iniziata — entra quando vuoi"}
+          </div>
+        </div>
+        <button onClick={() => setDismissed(true)} style={{ background:"transparent", border:"none", color:"#4b5563", cursor:"pointer", fontSize:"1.1rem", padding:4, lineHeight:1 }}>✕</button>
+      </div>
+      {/* Countdown bar */}
+      {secs > 0 && (
+        <div style={{ height:4, background:"rgba(127,29,29,0.35)", borderRadius:2, marginBottom:12, overflow:"hidden" }}>
+          <div style={{ height:"100%", width:`${pct}%`, background: urgent ? "#ef4444" : "#dc2626", borderRadius:2, transition:"width 1s linear" }} />
+        </div>
+      )}
+      <button
+        onClick={() => { onEnter(); setDismissed(true); }}
+        style={{
+          width:"100%",
+          padding:"0.75rem",
+          background: urgent ? "linear-gradient(135deg,#7f1d1d,#b91c1c)" : "linear-gradient(135deg,#450a0a,#7f1d1d)",
+          border: `2px solid ${urgent ? "#ef4444" : "#dc2626"}`,
+          borderRadius:10,
+          color:"#fee2e2",
+          fontFamily:"'Cinzel Decorative',serif",
+          fontSize:"0.95rem",
+          cursor:"pointer",
+          letterSpacing:"0.06em",
+          fontWeight:700,
+          boxShadow: urgent ? "0 0 18px rgba(239,68,68,0.4)" : "none",
+          transition:"all 0.2s",
+        }}
+      >
+        ⚔️ Entra in Battaglia
+      </button>
+    </div>
+  );
+}
+
+/* ----------------------------------------------
    GLOBAL LEADERBOARD VIEW
 ---------------------------------------------- */
 function GlobalLeaderboardView({ myId, partyCode }) {
@@ -5853,11 +5945,17 @@ function GameScreen({ myId, setScreen, authUser }) {
   }
 
   useEffect(() => {
-    if(!isSummonTurn || !isLeaderForSummonTurn) return;
+    const c = qs?.combat;
+    if(!c?.active || c.pendingLog) return;
+    const combatants = c.combatants || [];
+    const actor = combatants[c.turn % Math.max(1, combatants.length)];
+    if(!actor?.isSummon) return;
+    const isLeader = partyPlayers.length === 0 || partyPlayers[0]?.id === myId;
+    if(!isLeader) return;
     const t = setTimeout(() => { doSummonTurn(); }, 1200);
     return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isSummonTurn, isLeaderForSummonTurn, qs?.combat?.turn, qs?.combat?.active]);
+  }, [qs?.combat?.turn, qs?.combat?.active, qs?.combat?.pendingLog]);
 
   // Fallback timer — fires if player doesn't press the button within 8s.
   // Also re-triggers when pendingLog clears (fixes the freeze-after-dismiss bug).
@@ -7104,7 +7202,7 @@ ${stepText(step)}`, "quest","Master");
     if(absentPlayers.length) {
       await addMsg(`Non partecipano perche offline: ${absentPlayers.map(p => p.name).join(", ")}.`, "system", "Sistema");
     }
-    setTab("combat");
+    // Don't auto-switch tab — show floating battle banner instead
   }
   startCombatStepRef.current = startCombatStep;
 
@@ -8809,6 +8907,11 @@ ${stepText(step)}`, "quest","Master");
         )}
       </main>
       <DiceRoller ref={diceRef} />
+
+      {/* ── Battle Incoming Banner ── */}
+      {combat?.active && tab !== "combat" && (
+        <BattleBanner onEnter={() => setTab("combat")} startedAt={combat.startedAt} />
+      )}
 
       {/* ── Rest Overlay ── */}
       {!!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date() && qs.rest.startedBy === myId) && (
