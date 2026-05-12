@@ -1180,7 +1180,7 @@ function applyEquipmentToPlayer(player, equipment, itemMap) {
     mag: base.mag + bonus.mag,
     init: base.init + bonus.init,
     maxHp,
-    hp: Math.min(maxHp, Math.max(0, Number(player.hp) || maxHp)),
+    hp: player.hp != null ? Math.min(maxHp, Math.max(0, Number(player.hp))) : maxHp,
   };
 }
 function normalizeQuestChoices(choices) {
@@ -5931,6 +5931,7 @@ function GlobalLeaderboardView({ myId, partyCode }) {
 ---------------------------------------------- */
 function GameScreen({ myId, setScreen, authUser }) {
   const [me, setMeRaw] = useState(null);
+  const latestMeRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [partyPlayers, setPartyPlayers] = useState([]);
   const [qs, setQs] = useState({ currentId:null, step:0, active:false, completed:[], combat:null });
@@ -6000,6 +6001,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const doAttackRef = useRef(null);
   const advanceTurnBusyRef = useRef(false);
   const combatRef = useRef(null); // always-current combat snapshot for use inside timers
+  latestMeRef.current = me; // kept in sync every render so subscriptions never capture stale HP
 
     const diceRef = useRef(null);
 
@@ -6209,7 +6211,7 @@ function GameScreen({ myId, setScreen, authUser }) {
           .on("postgres_changes", { event:"*", schema:"public", table:"players", filter:`party_code=eq.${p.partyCode}` },
             () => refreshAll(p.partyCode))
           .on("postgres_changes", { event:"*", schema:"public", table:"player_items" },
-            () => refreshInventory(p))
+            () => refreshInventory(latestMeRef.current))
           .on("postgres_changes", { event:"*", schema:"public", table:"party_state", filter:`party_code=eq.${p.partyCode}` },
             () => refreshAll(p.partyCode))
           .subscribe();
@@ -6258,8 +6260,8 @@ function GameScreen({ myId, setScreen, authUser }) {
   useEffect(() => {
     if (!qs?.combat?.pendingLog) return;
     const combatants = qs?.combat?.combatants || [];
-    const isLeader = combatants.find(c => c.isPlayer && !c.dead)?.id === myId
-      || !combatants.some(c => c.isPlayer && !c.dead); // fallback if all dead
+    const isLeader = combatants.find(c => c.isPlayer && !c.isSummon && !c.dead)?.id === myId
+      || !combatants.some(c => c.isPlayer && !c.isSummon && !c.dead); // fallback if all dead
     if (!isLeader) return;
     const t = setTimeout(() => dismissCombatLog(), 3500);
     return () => clearTimeout(t);
@@ -6303,7 +6305,7 @@ function GameScreen({ myId, setScreen, authUser }) {
         } else {
           // Another player's turn timed out — only leader forces it forward
           const cbs = combatRef.current?.combatants || [];
-          const amLeaderNow = cbs.find(c => c.isPlayer && !c.dead)?.id === myId;
+          const amLeaderNow = cbs.find(c => c.isPlayer && !c.isSummon && !c.dead)?.id === myId;
           if(amLeaderNow) forceNextTurnRef.current?.();
         }
       }
@@ -6605,7 +6607,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     const combatants = qs?.combat?.combatants || [];
     const activeCombatantNow = combatants[qs?.combat?.turn % combatants.length];
     if (!activeCombatantNow || activeCombatantNow.isPlayer) return; // only arm for monster turns
-    const isLeader = combatants.find(c => c.isPlayer && !c.dead)?.id === myId;
+    const isLeader = combatants.find(c => c.isPlayer && !c.isSummon && !c.dead)?.id === myId;
     // Leader fires immediately (800ms safety buffer); fallback clients fire at 8-12s
     const delay = isLeader ? 800 : 8000 + Math.floor(Math.random() * 4000);
     const timer = setTimeout(() => { doMonsterTurnRef.current?.(); }, delay);
@@ -7304,7 +7306,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       if(!combatants.length) return;
       const actor = combatants[latestCombat.turn % combatants.length];
       // Active player skips own turn; leader can force-advance any AFK player; leader handles monster turns.
-      const firstAlive = combatants.find(c => c.isPlayer && !c.dead);
+      const firstAlive = combatants.find(c => c.isPlayer && !c.isSummon && !c.dead);
       const amLeader = firstAlive?.id === myId;
       if(actor?.isPlayer) {
         if(actor.id !== myId && !amLeader) return; // not my turn and not the leader
