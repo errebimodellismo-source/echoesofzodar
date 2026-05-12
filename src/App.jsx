@@ -6,6 +6,7 @@ import { DEFAULT_QUESTS } from "./data/questsData";
 import { DEFAULT_MONSTERS } from "./data/monstersData";
 import { DEFAULT_ITEMS, DEFAULT_WEAPON } from "./data/itemsData";
 import DiceRoller from "./components/DiceRoller";
+import ParticleBackground from "./components/ParticleBackground";
 import audioManager from "./utils/audioManager";
 
 /* ----------------------------------------------
@@ -8096,6 +8097,7 @@ ${stepText(step)}`, "quest","Master");
 
   return (
     <div style={{ display:"flex", height:"100vh", overflow:"hidden", position:"relative", zIndex:1 }}>
+      <ParticleBackground />
       <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg, rgba(2,6,23,0.38) 0%, rgba(2,6,23,0.32) 45%, rgba(2,6,23,0.42) 100%)", pointerEvents:"none" }} />
       {/* Mobile overlay backdrop */}
       {isMobile && sidebarOpen && (
