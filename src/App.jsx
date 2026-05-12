@@ -6012,6 +6012,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const itemMapRef = useRef(DEFAULT_ITEM_MAP);
   const startCombatStepRef = useRef(null);
   const monsterTickBusyRef = useRef(false);
+  const playerAttackBusyRef = useRef(false);
   const doMonsterTurnRef = useRef(null);
   const forceNextTurnRef = useRef(null);
   const doAttackRef = useRef(null);
@@ -7454,7 +7455,12 @@ function GameScreen({ myId, setScreen, authUser }) {
 
   // -- COMBATTIMENTO --
   async function doAttack() {
-    const combat = qs.combat;
+    if(playerAttackBusyRef.current) return;
+    playerAttackBusyRef.current = true;
+    try {
+    // Always re-fetch from DB to avoid stale local state causing duplicate turns
+    const freshQs = await dbGetPartyState(code);
+    const combat = freshQs?.combat;
     if(!combat?.active || combat.pendingLog) return;
     const combatants = [...combat.combatants];
     const turn = combat.turn % combatants.length;
@@ -7462,7 +7468,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     if(!attacker?.isPlayer || attacker.id!==myId) return;
     if(attacker.dead || attacker.stable) {
       const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
-      await saveQState({ ...qs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: null } });
+      await saveQState({ ...freshQs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: null } });
       return;
     }
     // Process status effects at turn start (stun/death → advance turn; damage only → prepend to attack log)
@@ -7472,7 +7478,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       combatants[turn] = sfx.combatant;
       if (sfx.skipTurn || sfx.died) {
         const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
-        await saveQState({ ...qs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: sfx.log } });
+        await saveQState({ ...freshQs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: sfx.log } });
         return;
       }
       statusPrefixLog = sfx.log;
@@ -7602,6 +7608,9 @@ function GameScreen({ myId, setScreen, authUser }) {
     const allDead = combatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
     if(allDead) { await endCombat({...latestBuffState, masterBuffs: newMasterBuffs, questDmgLog: newQuestDmgLog, combat:{...combat, combatants}}); return; }
     await saveQState({ ...latestBuffState, masterBuffs: newMasterBuffs, questDmgLog: newQuestDmgLog, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
+    } finally {
+      playerAttackBusyRef.current = false;
+    }
   }
   doAttackRef.current = doAttack;
 
