@@ -6036,6 +6036,16 @@ function GameScreen({ myId, setScreen, authUser }) {
   }, [qs?.combat?.turn, qs?.combat?.round, qs?.combat?.active, !!qs?.combat?.pendingLog]);
 
   // Push notification when it becomes my turn
+  // Auto-switch to quest tab when combat ends
+  const prevCombatActiveRef = useRef(false);
+  useEffect(() => {
+    const isActive = !!qs?.combat?.active;
+    if(prevCombatActiveRef.current && !isActive) {
+      setTimeout(() => setTab("quest"), 800);
+    }
+    prevCombatActiveRef.current = isActive;
+  }, [!!qs?.combat?.active]);
+
   const prevMyTurnRef = useRef(false);
   // Request notification permission as soon as combat starts
   useEffect(() => {
