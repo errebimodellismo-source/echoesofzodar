@@ -646,8 +646,11 @@ function _buildDungeonRoom(type, idx, theme, rng, partyLevel) {
   if (type === 'combat') {
     const pool = DEFAULT_MONSTERS.filter(m => m.tier <= monTier + 1 && m.tier >= Math.max(1, monTier - 1));
     const base = pool.length ? pool : DEFAULT_MONSTERS.filter(m => m.tier <= 2);
-    const count = 1 + Math.floor(rng() * 2) + (partyLevel >= 5 ? 1 : 0);
-    return { id:`r${idx}`, type, idx, title:`Sala ${cap(adj)}`, desc:`Una stanza ${adj} brulicante di nemici. Prepararsi al combattimento.`, monsters: Array.from({length:count}, ()=>{ const m = _dpick(base, rng); return {...m}; }), cleared:false };
+    const count = 1 + Math.floor(rng() * 2) + (partyLevel >= 5 ? 1 : 0) + (partyLevel >= 9 ? 1 : 0);
+    // Scale HP and ATK with party level so monsters stay threatening at high levels
+    const hpMult = 1 + (partyLevel - 1) * 0.13;
+    const atkAdd = Math.floor(partyLevel * 0.35);
+    return { id:`r${idx}`, type, idx, title:`Sala ${cap(adj)}`, desc:`Una stanza ${adj} brulicante di nemici. Prepararsi al combattimento.`, monsters: Array.from({length:count}, ()=>{ const m = _dpick(base, rng); const scaledHp = Math.floor((m.hp||10) * hpMult); return {...m, hp:scaledHp, maxHp:scaledHp, atk:(m.atk||5)+atkAdd}; }), cleared:false };
   }
   if (type === 'trap') {
     const ts = _dpick(DUNGEON_TRAP_SKILLS, rng);
@@ -682,7 +685,7 @@ function _buildDungeonRoom(type, idx, theme, rng, partyLevel) {
 function generateDungeon({ roomCount=5, themeId='crypt', partyLevel=1, difficulty='normal', seed=Date.now() }) {
   const theme = DUNGEON_THEMES.find(t => t.id === themeId) || DUNGEON_THEMES[0];
   const rng = _makeRng(typeof seed === 'number' ? seed : _dateToSeed(String(seed)));
-  const diffMult = { easy:0.7, normal:1, hard:1.4, deadly:1.8 }[difficulty] || 1;
+  const diffMult = { easy:0.7, normal:1, hard:1.6, deadly:2.4 }[difficulty] || 1;
   const adjPartyLevel = Math.max(1, Math.round(partyLevel * diffMult));
   const typePool = [];
   const W = difficulty === 'deadly'
@@ -697,7 +700,7 @@ function generateDungeon({ roomCount=5, themeId='crypt', partyLevel=1, difficult
   const bossPool = DEFAULT_MONSTERS.filter(m => m.tier >= monTier);
   const bossBase = bossPool.length ? bossPool : DEFAULT_MONSTERS;
   const boss = _dpick(bossBase, rng);
-  const bossHpMult = difficulty === 'deadly' ? 2.5 : difficulty === 'hard' ? 2 : 1.5;
+  const bossHpMult = difficulty === 'deadly' ? 3.5 : difficulty === 'hard' ? 2.5 : 1.5;
   const bossHp = Math.floor((boss.hp||20) * bossHpMult);
   rooms.push({ id:`r${roomCount-1}`, type:'boss', idx:roomCount-1, title:`Sala di ${boss.name||'Boss'}`, desc:`Il culmine del dungeon. ${boss.name||'Il boss'} vi attende.`, monsters:[{...boss, hp:bossHp, maxHp:bossHp}], gold:Math.floor((100+adjPartyLevel*30)*(0.9+rng()*0.2)), cleared:false });
   return { active:true, name:theme.name, themeId:theme.id, emoji:theme.emoji, difficulty, rooms, currentRoom:0, pendingCombatRoom:null, startedAt:new Date().toISOString(), completedAt:null, seed };
@@ -6048,9 +6051,9 @@ function GameScreen({ myId, setScreen, authUser }) {
     const isCrit = hitRoll === 20;
     const hit = hitRoll !== 1 && (isCrit || attackTotal >= targetCa);
 
-    // Ability modifier for damage (players only)
+    // Ability modifier for damage: players use weapon profile, monsters add ATK/4
     const profile = attacker.isPlayer ? weaponAttackProfile(weapon, attacker) : null;
-    const damageMod = profile ? profile.mod : 0;
+    const damageMod = profile ? profile.mod : Math.floor((attacker.atk || 0) / 4);
     const damageAbility = profile ? profile.ability : null;
 
     let damageRoll = 0;
