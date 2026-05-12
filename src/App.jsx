@@ -4879,7 +4879,8 @@ function GameScreen({ myId, setScreen, authUser }) {
   // Push notification when it becomes my turn
   const prevMyTurnRef = useRef(false);
   useEffect(() => {
-    const isNowMyTurn = !!(combat?.active && !combat.pendingLog && combat.combatants?.[combat.turn % Math.max(1, combat.combatants.length)]?.id === myId);
+    const c = qs?.combat;
+    const isNowMyTurn = !!(c?.active && !c.pendingLog && c.combatants?.[c.turn % Math.max(1, c.combatants.length)]?.id === myId);
     if (isNowMyTurn && !prevMyTurnRef.current) {
       if (document.hidden && "Notification" in window) {
         if (Notification.permission === "granted") {
@@ -4890,8 +4891,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       }
     }
     prevMyTurnRef.current = isNowMyTurn;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [combat?.turn, combat?.round, combat?.active, combat?.pendingLog]);
+  }, [qs?.combat?.turn, qs?.combat?.round, qs?.combat?.active, qs?.combat?.pendingLog]);
 
   // Fallback poll — keeps the log alive if Supabase realtime silently drops
   useEffect(() => {
