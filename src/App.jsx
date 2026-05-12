@@ -6147,9 +6147,10 @@ function GameScreen({ myId, setScreen, authUser }) {
 
   async function inviteByCode() {
     const myGuild=getPlayerGuild(guilds,myId); if(!myGuild) return;
-    const code=guildInviteCode.trim().toUpperCase();
-    if(!code){window.alert("Inserisci un party code.");return;}
-    const target=worldPlayers.find(p=>p.partyCode===code||p.id===code);
+    const raw=guildInviteCode.trim();
+    if(!raw){window.alert("Inserisci un codice o seleziona dalla lista.");return;}
+    const codeLower=raw.toLowerCase(); const codeUpper=raw.toUpperCase();
+    const target=worldPlayers.find(p=>p.partyCode===codeUpper||p.id===codeLower||p.id===raw);
     if(!target){window.alert("Nessun giocatore trovato con questo codice.");return;}
     if(myGuild.members.find(m=>m.id===target.id)){window.alert(`${target.name} è già nella gilda.`);return;}
     if(getPlayerGuild(guilds,target.id)){window.alert(`${target.name} è già in un'altra gilda.`);return;}
