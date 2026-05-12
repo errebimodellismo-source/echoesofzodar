@@ -8254,6 +8254,7 @@ ${stepText(step)}`, "quest","Master");
           })}
         </div>
 
+        <div key={tab} style={{ flex:1, display:"contents", animation:"tabFadeIn 0.18s ease" }}>
         {tab==="chat" && (
           <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
 
@@ -9704,6 +9705,7 @@ ${stepText(step)}`, "quest","Master");
             )}
           </div>
         )}
+        </div>{/* end TabPane */}
       </main>
       <DiceRoller ref={diceRef} />
 

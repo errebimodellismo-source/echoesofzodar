@@ -18,6 +18,11 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+@keyframes tabFadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
 @keyframes pulse {
   0%, 100% { opacity: 1; box-shadow: 0 0 6px #ef4444; }
   50% { opacity: 0.4; box-shadow: 0 0 2px #ef4444; }
