@@ -1618,21 +1618,24 @@ function parseUserMasterMeta(msg) {
       email: String(parsed.email || "").trim().toLowerCase(),
       registeredAt: parsed.registeredAt || msg.created_at || "",
       lastSeenAt: parsed.lastSeenAt || msg.created_at || "",
+      activeCharacterId: parsed.activeCharacterId || null,
     };
   } catch {
     return null;
   }
 }
 
-async function dbSaveUserMasterMeta(user, registeredAt) {
+async function dbSaveUserMasterMeta(user, registeredAt, activeCharacterId) {
   if(!user?.id || !user?.email) return;
   const now = new Date().toISOString();
-  const content = JSON.stringify({
+  const payload = {
     userId: user.id,
     email: user.email,
     registeredAt: registeredAt || user.created_at || now,
     lastSeenAt: now,
-  });
+  };
+  if(activeCharacterId) payload.activeCharacterId = activeCharacterId;
+  const content = JSON.stringify(payload);
   const { error } = await supabase.from("messages").insert({
     party_code: "__users",
     author: `user_meta:${user.id}`,
@@ -1665,7 +1668,11 @@ function isRecentlyOnline(lastSeenAt, nowMs = Date.now()) {
 
 function isPartyPlayerOnline(player, userMetaById, nowMs = Date.now()) {
   if(!player?.accountId) return false;
-  return isRecentlyOnline(userMetaById?.[player.accountId]?.lastSeenAt, nowMs);
+  const meta = userMetaById?.[player.accountId];
+  if(!isRecentlyOnline(meta?.lastSeenAt, nowMs)) return false;
+  // If the user has set an active character and it's NOT this one, they're offline here
+  if(meta?.activeCharacterId && meta.activeCharacterId !== player.id) return false;
+  return true;
 }
 
 async function dbSavePlayerMasterMeta({ playerId, partyCode, heroName, realPlayerName }) {
@@ -2016,10 +2023,11 @@ export default function App() {
 
   useEffect(() => {
     if(!authUser) return;
-    dbSaveUserMasterMeta(authUser);
-    const timer = setInterval(() => dbSaveUserMasterMeta(authUser), USER_HEARTBEAT_MS);
+    const activeId = myId || null;
+    dbSaveUserMasterMeta(authUser, null, activeId);
+    const timer = setInterval(() => dbSaveUserMasterMeta(authUser, null, activeId), USER_HEARTBEAT_MS);
     return () => clearInterval(timer);
-  }, [authUser]);
+  }, [authUser, myId]);
 
   async function goGame(characterOrId) {
     const selectedCharacter = characterOrId && typeof characterOrId === "object" ? characterOrId : null;
@@ -8122,7 +8130,7 @@ ${stepText(step)}`, "quest","Master");
                 {guildLoading && <div style={{ color:"#4b5563", fontSize:"0.78rem" }}>Caricamento...</div>}
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:6 }}>
                   {worldPlayers.map(p=>{
-                    const online = isRecentlyOnline(worldMeta[p.accountId]?.lastSeenAt, nowMs);
+                    const online = isPartyPlayerOnline(p, worldMeta, nowMs);
                     const pg = getPlayerGuild(guilds, p.id);
                     return (
                       <div key={p.id} style={{ display:"flex", alignItems:"center", gap:7, padding:"0.4rem 0.6rem", background:"rgba(15,23,42,0.6)", border:`1px solid ${online?"rgba(34,197,94,0.3)":"rgba(30,41,59,0.6)"}`, borderRadius:7 }}>
@@ -8226,7 +8234,8 @@ ${stepText(step)}`, "quest","Master");
                     {(myGuild.members||[]).map(m=>{
                       const role = m.role==="leader" ? "Maestro di Gilda" : (m.customRole||DEFAULT_ROLE);
                       const rd = GUILD_ROLES[role]||GUILD_ROLES[DEFAULT_ROLE];
-                      const online = isRecentlyOnline(worldMeta[worldPlayers.find(p=>p.id===m.id)?.accountId]?.lastSeenAt, nowMs);
+                      const memberPlayer = worldPlayers.find(p=>p.id===m.id);
+                      const online = memberPlayer ? isPartyPlayerOnline(memberPlayer, worldMeta, nowMs) : false;
                       return (
                         <div key={m.id} style={{ display:"flex", alignItems:"center", gap:8, padding:"0.5rem 0.6rem", background:"rgba(15,23,42,0.5)", border:"1px solid rgba(30,41,59,0.7)", borderRadius:7, marginBottom:5 }}>
                           <span style={{ fontSize:"0.7rem", color:online?"#22c55e":"#374151" }}>●</span>
