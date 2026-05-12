@@ -5380,24 +5380,17 @@ function SpellbookView({ spellsByLevel, preparedSpellIds, preparedCount, maxPrep
 /* ----------------------------------------------
    BATTLE INCOMING BANNER
 ---------------------------------------------- */
-function BattleBanner({ onEnter, startedAt }) {
+function BattleBanner({ onEnter, onDecline, startedAt }) {
   const COUNTDOWN = 30;
   const elapsed = Math.floor((Date.now() - (startedAt || Date.now())) / 1000);
   const [secs, setSecs] = useState(Math.max(0, COUNTDOWN - elapsed));
-  const [dismissed, setDismissed] = useState(false);
 
   useEffect(() => {
-    if(dismissed) return;
     const t = setInterval(() => {
-      setSecs(s => {
-        if(s <= 1) { clearInterval(t); return 0; }
-        return s - 1;
-      });
+      setSecs(s => Math.max(0, s - 1));
     }, 1000);
     return () => clearInterval(t);
-  }, [dismissed]);
-
-  if(dismissed) return null;
+  }, []);
 
   const pct = Math.max(0, (secs / COUNTDOWN) * 100);
   const urgent = secs <= 10;
@@ -5434,37 +5427,50 @@ function BattleBanner({ onEnter, startedAt }) {
             Battaglia in corso!
           </div>
           <div style={{ color:"#94a3b8", fontSize:"0.73rem", marginTop:2 }}>
-            {secs > 0 ? `Puoi entrare entro ${secs}s` : "Battaglia iniziata — entra quando vuoi"}
+            {secs > 0 ? `Hai ${secs}s per decidere` : "Battaglia iniziata"}
           </div>
         </div>
-        <button onClick={() => setDismissed(true)} style={{ background:"transparent", border:"none", color:"#4b5563", cursor:"pointer", fontSize:"1.1rem", padding:4, lineHeight:1 }}>✕</button>
       </div>
-      {/* Countdown bar */}
       {secs > 0 && (
         <div style={{ height:4, background:"rgba(127,29,29,0.35)", borderRadius:2, marginBottom:12, overflow:"hidden" }}>
           <div style={{ height:"100%", width:`${pct}%`, background: urgent ? "#ef4444" : "#dc2626", borderRadius:2, transition:"width 1s linear" }} />
         </div>
       )}
-      <button
-        onClick={() => { onEnter(); setDismissed(true); }}
-        style={{
-          width:"100%",
-          padding:"0.75rem",
-          background: urgent ? "linear-gradient(135deg,#7f1d1d,#b91c1c)" : "linear-gradient(135deg,#450a0a,#7f1d1d)",
-          border: `2px solid ${urgent ? "#ef4444" : "#dc2626"}`,
-          borderRadius:10,
-          color:"#fee2e2",
-          fontFamily:"'Cinzel Decorative',serif",
-          fontSize:"0.95rem",
-          cursor:"pointer",
-          letterSpacing:"0.06em",
-          fontWeight:700,
-          boxShadow: urgent ? "0 0 18px rgba(239,68,68,0.4)" : "none",
-          transition:"all 0.2s",
-        }}
-      >
-        ⚔️ Entra in Battaglia
-      </button>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+        <button
+          onClick={onDecline}
+          style={{
+            padding:"0.7rem",
+            background:"rgba(15,23,42,0.9)",
+            border:"1px solid #334155",
+            borderRadius:10,
+            color:"#94a3b8",
+            fontFamily:"'Cinzel',serif",
+            fontSize:"0.88rem",
+            cursor:"pointer",
+            fontWeight:700,
+          }}
+        >
+          ✕ Rifiuta
+        </button>
+        <button
+          onClick={onEnter}
+          style={{
+            padding:"0.7rem",
+            background: urgent ? "linear-gradient(135deg,#7f1d1d,#b91c1c)" : "linear-gradient(135deg,#450a0a,#7f1d1d)",
+            border: `2px solid ${urgent ? "#ef4444" : "#dc2626"}`,
+            borderRadius:10,
+            color:"#fee2e2",
+            fontFamily:"'Cinzel',serif",
+            fontSize:"0.88rem",
+            cursor:"pointer",
+            fontWeight:700,
+            boxShadow: urgent ? "0 0 14px rgba(239,68,68,0.4)" : "none",
+          }}
+        >
+          ⚔️ Accetta
+        </button>
+      </div>
     </div>
   );
 }
@@ -5888,6 +5894,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [battleChatInput, setBattleChatInput] = useState("");
   const [tab, setTab] = useState("quest");
   const [dismissedVictoryTs, setDismissedVictoryTs] = useState(null);
+  const [declinedCombatAt, setDeclinedCombatAt] = useState(null);
   const [achievementNotif, setAchievementNotif] = useState([]);
   const [showSubclassModal, setShowSubclassModal] = useState(false);
   const isMobile = useMobile();
@@ -6229,6 +6236,9 @@ function GameScreen({ myId, setScreen, authUser }) {
   const prevCombatActiveRef = useRef(false);
   useEffect(() => {
     const isActive = !!qs?.combat?.active;
+    if(!prevCombatActiveRef.current && isActive) {
+      setDeclinedCombatAt(null); // new combat started — reset decline
+    }
     if(prevCombatActiveRef.current && !isActive) {
       setTimeout(() => setTab("quest"), 800);
     }
@@ -6416,8 +6426,9 @@ function GameScreen({ myId, setScreen, authUser }) {
     const combatants = c.combatants || [];
     const actor = combatants[c.turn % Math.max(1, combatants.length)];
     if(!actor?.isSummon) return;
-    const isLeader = partyPlayers.length === 0 || partyPlayers[0]?.id === myId;
-    if(!isLeader) return;
+    // Summon owner handles their own summon; fallback to party leader if owner unknown
+    const isOwner = actor.summonOwner === myId || (!actor.summonOwner && (partyPlayers.length === 0 || partyPlayers[0]?.id === myId));
+    if(!isOwner) return;
     const t = setTimeout(() => { doSummonTurn(); }, 1200);
     return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -7998,7 +8009,7 @@ ${stepText(step)}`, "quest","Master");
   const isMonsterTurn = combat?.active && activeCombatant && !activeCombatant.isPlayer;
   const isLeaderForMonsterTurn = isMonsterTurn && combat.combatants.find(c => c.isPlayer && !c.isSummon && !c.dead)?.id === myId;
   const isSummonTurn = !!(combat?.active && !combat.pendingLog && activeCombatant?.isSummon);
-  const isLeaderForSummonTurn = isSummonTurn && (partyPlayers[0]?.id === myId || partyPlayers.length === 0);
+  const isLeaderForSummonTurn = isSummonTurn && (activeCombatant?.summonOwner === myId || (!activeCombatant?.summonOwner && (partyPlayers[0]?.id === myId || partyPlayers.length === 0)));
   const equippedItems = {
     weapon: itemMap.get(equipment.weapon) || null,
     armor: itemMap.get(equipment.armor) || null,
@@ -9657,8 +9668,12 @@ ${stepText(step)}`, "quest","Master");
       <DiceRoller ref={diceRef} />
 
       {/* ── Battle Incoming Banner ── */}
-      {combat?.active && tab !== "combat" && (
-        <BattleBanner onEnter={() => setTab("combat")} startedAt={combat.startedAt} />
+      {combat?.active && tab !== "combat" && declinedCombatAt !== combat.startedAt && (
+        <BattleBanner
+          onEnter={() => setTab("combat")}
+          onDecline={() => setDeclinedCombatAt(combat.startedAt)}
+          startedAt={combat.startedAt}
+        />
       )}
 
       {/* ── Rest Overlay ── */}
