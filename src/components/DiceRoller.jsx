@@ -8,10 +8,10 @@ function getDiceConfig() {
   const w = window.innerWidth;
   const isMobile = w <= 768;
   return {
-    scale: isMobile ? 5 : 4,
+    scale: isMobile ? 6 : 6,
     spinForce: isMobile ? 7 : 5,
     throwForce: isMobile ? 5.5 : 3.5,
-    startingHeight: isMobile ? 12 : 8,
+    startingHeight: isMobile ? 12 : 10,
   };
 }
 
@@ -124,8 +124,8 @@ const DiceRoller = forwardRef(({ onRollComplete }, ref) => {
         ref={containerRef}
         style={{
           position: 'relative',
-          width: isMobile ? '100vw' : 'min(600px, 90vw)',
-          height: isMobile ? '100vh' : 'min(420px, 70vh)',
+          width: isMobile ? '100vw' : 'min(1200px, 90vw)',
+          height: isMobile ? '100vh' : 'min(840px, 80vh)',
           overflow: 'hidden',
           borderRadius: isMobile ? 0 : 18,
           pointerEvents: 'none',
