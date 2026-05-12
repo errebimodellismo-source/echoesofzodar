@@ -8434,7 +8434,9 @@ ${stepText(step)}`, "quest","Master");
                               {rd.perms.length===0
                                 ? <span style={{ fontSize:"0.6rem", color:"#4b5563" }}>solo combattente</span>
                                 : rd.perms.map(p=>(
-                                    <span key={p} style={{ fontSize:"0.58rem", padding:"1px 5px", background:"rgba(109,40,217,0.2)", border:"1px solid #4c1d95", borderRadius:4, color:"#c4b5fd" }}>{p}</span>
+                                    <span key={p} style={{ fontSize:"0.58rem", padding:"1px 5px", background:"rgba(109,40,217,0.2)", border:"1px solid #4c1d95", borderRadius:4, color:"#c4b5fd" }}>
+                                      {{"invite":"Invita","kick":"Espelli","war":"Guerra","bank":"Magazzino","events":"Eventi","bulletin":"Bacheca","promote":"Promuovi","roles":"Ruoli"}[p]||p}
+                                    </span>
                                   ))
                               }
                             </div>
