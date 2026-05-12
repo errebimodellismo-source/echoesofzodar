@@ -5935,6 +5935,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const forceNextTurnRef = useRef(null);
   const doAttackRef = useRef(null);
   const advanceTurnBusyRef = useRef(false);
+  const combatRef = useRef(null); // always-current combat snapshot for use inside timers
 
     const diceRef = useRef(null);
 
@@ -6189,9 +6190,13 @@ function GameScreen({ myId, setScreen, authUser }) {
     pendingLogRef.current = !!(qs?.combat?.pendingLog);
   }, [qs?.combat?.pendingLog]);
 
-  // Auto-dismiss combat log after 3.5s so players don't need to click "Prossimo turno"
+  // Auto-dismiss combat log after 3.5s — only the leader writes to DB to avoid concurrent overwrites
   useEffect(() => {
     if (!qs?.combat?.pendingLog) return;
+    const combatants = qs?.combat?.combatants || [];
+    const isLeader = combatants.find(c => c.isPlayer && !c.dead)?.id === myId
+      || !combatants.some(c => c.isPlayer && !c.dead); // fallback if all dead
+    if (!isLeader) return;
     const t = setTimeout(() => dismissCombatLog(), 3500);
     return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -6228,11 +6233,14 @@ function GameScreen({ myId, setScreen, authUser }) {
       if(timeLeft <= 0) {
         clearInterval(turnTimerRef.current);
         turnTimerRef.current = null;
-        // If it's my turn → auto-attack; otherwise leader forces the turn to advance
         if(currentActorIdRef.current === myId) {
+          // My turn timed out → auto-attack
           doAttackRef.current?.();
         } else {
-          forceNextTurnRef.current?.();
+          // Another player's turn timed out — only leader forces it forward
+          const cbs = combatRef.current?.combatants || [];
+          const amLeaderNow = cbs.find(c => c.isPlayer && !c.dead)?.id === myId;
+          if(amLeaderNow) forceNextTurnRef.current?.();
         }
       }
     }, 1000);
@@ -7166,8 +7174,11 @@ function GameScreen({ myId, setScreen, authUser }) {
   }
 
   async function dismissCombatLog() {
-    if(!qs?.combat?.pendingLog) return;
-    await saveQState({ ...qs, combat: { ...qs.combat, pendingLog: null } });
+    // Always re-fetch — closure qs may be stale and overwrite a newer turn state
+    const latestQs = await dbGetPartyState(code);
+    if(!latestQs?.combat?.pendingLog) return;
+    await dbSavePartyState(code, { ...latestQs, combat: { ...latestQs.combat, pendingLog: null } });
+    setQs(prev => ({ ...prev, combat: { ...prev.combat, pendingLog: null } }));
   }
 
   async function sendBattleChat(text) {
@@ -8036,6 +8047,7 @@ ${stepText(step)}`, "quest","Master");
   if(!me || !me.class) return <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", color:"#f3f4f6", fontFamily:"'Cinzel',serif", fontSize:"1.2rem" }}>Caricamento personaggio...</div>;
 
   const combat = qs?.combat;
+  combatRef.current = combat;
   const activeCombatant = combat?.active ? combat.combatants?.[combat.turn%combat.combatants.length] : null;
   const myCombatant = combat?.combatants?.find(c => c.id === myId) || null;
   const myTurn = combat?.active && activeCombatant?.id===myId;
