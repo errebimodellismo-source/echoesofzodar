@@ -1814,6 +1814,7 @@ async function dbSavePartyState(partyCode, state) {
     __partyDiary: state.partyDiary || [],
     __battleChat: state.battleChat || [],
     __questHistory: state.questHistory || [],
+    __lastDailyReset: state.lastDailyReset || null,
   };
   const { error } = await supabase.from("party_state").upsert({
     party_code: partyCode,
@@ -1849,7 +1850,14 @@ async function dbGetPartyState(partyCode) {
     partyDiary: (isV2 ? raw.__partyDiary : null) || [],
     battleChat: (isV2 ? raw.__battleChat : null) || [],
     questHistory: (isV2 ? raw.__questHistory : null) || [],
+    lastDailyReset: (isV2 ? raw.__lastDailyReset : null) || null,
   };
+}
+
+function getDailyResetSlot() {
+  const now = new Date();
+  const date = now.toLocaleDateString('en-CA');
+  return now.getHours() >= 12 ? `${date}_noon` : `${date}_midnight`;
 }
 
 // Items / Shop
@@ -6244,6 +6252,38 @@ function GameScreen({ myId, setScreen, authUser }) {
     }
     prevCombatActiveRef.current = isActive;
   }, [!!qs?.combat?.active]);
+
+  // ── Daily reset at 12:00 and 00:00 ──
+  const dailyResetRunningRef = useRef(false);
+  useEffect(() => {
+    async function checkDailyReset() {
+      if(dailyResetRunningRef.current) return;
+      const latestQs = await dbGetPartyState(code);
+      const slot = getDailyResetSlot();
+      if(latestQs.lastDailyReset === slot) return; // already done for this slot
+      if(latestQs.combat?.active) return; // never interrupt combat
+      dailyResetRunningRef.current = true;
+      try {
+        // Heal all players in the party to full HP
+        const players = await dbGetPlayers(code);
+        await Promise.all(players.filter(p => !p.dead).map(p =>
+          supabase.from("players").update({ hp: p.maxHp, updated_at: new Date().toISOString() }).eq("id", p.id)
+        ));
+        // Rotate shop and quests by bumping longRestSeed
+        const newSeed = (latestQs.longRestSeed || 0) + 1;
+        const resetSlotLabel = slot.endsWith('_noon') ? 'mezzogiorno' : 'mezzanotte';
+        const diaryEntry = { type:'rest', icon:'🌅', text:`Reset giornaliero delle ${resetSlotLabel}: tutti i PG sono stati curati, negozio e missioni aggiornati.`, players:[] };
+        const newDiary = [diaryEntry, ...(latestQs.partyDiary || [])].slice(0, 80);
+        await saveQState({ ...latestQs, longRestSeed: newSeed, lastDailyReset: slot, partyDiary: newDiary });
+      } finally {
+        dailyResetRunningRef.current = false;
+      }
+    }
+    checkDailyReset();
+    const interval = setInterval(checkDailyReset, 60_000);
+    return () => clearInterval(interval);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code]);
 
   const prevMyTurnRef = useRef(false);
   // Request notification permission as soon as combat starts
