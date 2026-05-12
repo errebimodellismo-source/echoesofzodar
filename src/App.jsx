@@ -5820,6 +5820,37 @@ function GameScreen({ myId, setScreen, authUser }) {
   }
   doMonsterTurnRef.current = doMonsterTurn;
 
+  // Auto-resolve summon turns (skeleton, animal, etc.)
+  async function doSummonTurn() {
+    const latestQs = await dbGetPartyState(code);
+    const latestCombat = latestQs?.combat;
+    if(!latestCombat?.active || latestCombat.pendingLog) return;
+    const combatants = [...latestCombat.combatants];
+    const turn = latestCombat.turn % combatants.length;
+    const summon = combatants[turn];
+    if(!summon?.isSummon) return;
+    const enemies = combatants.filter(c => !c.isPlayer && c.hp > 0);
+    if(!enemies.length) { await endCombat(latestQs); return; }
+    const target = enemies[Math.floor(Math.random() * enemies.length)];
+    const atkRoll = parseDice("1d20") + Math.floor((summon.atk || 0) / 2);
+    const rawDmg = parseDice(summon.dmgDie || "1d8");
+    const dmg = Math.max(1, rawDmg + Math.floor((summon.atk || 0) / 2) - Math.floor((target.def || 0) / 2));
+    const tidx = combatants.findIndex(c => c.id === target.id);
+    combatants[tidx] = { ...target, hp: Math.max(0, target.hp - dmg) };
+    const log = `${summon.emoji} **${summon.name}** (evocato) attacca **${target.name}**!\n⚔️ Tiro: ${atkRoll}\n💥 Danno: **${dmg}**\n❤️ ${target.name}: ${combatants[tidx].hp}/${target.maxHp} HP`;
+    const { nextTurn, nextRound } = getNextCombatTurn(combatants, latestCombat.turn, latestCombat.round);
+    const allDead = combatants.filter(c => !c.isPlayer).every(c => c.hp <= 0);
+    if(allDead) { await endCombat({ ...latestQs, combat: { ...latestCombat, combatants } }); return; }
+    await saveQState({ ...latestQs, combat: { ...latestCombat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
+  }
+
+  useEffect(() => {
+    if(!isSummonTurn || !isLeaderForSummonTurn) return;
+    const t = setTimeout(() => { doSummonTurn(); }, 1200);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isSummonTurn, isLeaderForSummonTurn, qs?.combat?.turn, qs?.combat?.active]);
+
   // Fallback timer — fires if player doesn't press the button within 8s.
   // Also re-triggers when pendingLog clears (fixes the freeze-after-dismiss bug).
   // Paused while spellMenu is open so players can read spells without time pressure.
@@ -6746,6 +6777,31 @@ function GameScreen({ myId, setScreen, authUser }) {
         if(healTarget.id === myId) setMeRaw(updated);
       }
       setSelectedAllyTarget(null);
+    } else if(spell.type === "summon" && spell.summon) {
+      // Remove any existing summon by this player
+      newCombatants = newCombatants.filter(c => !(c.isSummon && c.summonOwner === myId));
+      const s = spell.summon;
+      const levelScale = Math.max(1, Math.floor((me.level || 1) / 2));
+      const summonHp = s.hp + levelScale * 4;
+      const summonAtk = s.atk + levelScale * 2;
+      const summonDef = s.def + levelScale;
+      // Insert after current attacker in initiative
+      const summonCombatant = {
+        id: `summon_${myId}_${Date.now()}`,
+        name: s.name,
+        emoji: s.emoji,
+        hp: summonHp, maxHp: summonHp,
+        atk: summonAtk, def: summonDef,
+        dmgDie: s.dmgDie || "1d8",
+        rollInit: (attacker.rollInit || 10) - 0.5,
+        isPlayer: true,
+        isSummon: true,
+        summonOwner: myId,
+        level: me.level || 1,
+      };
+      const attackerIdx = newCombatants.findIndex(c => c.id === attacker.id);
+      newCombatants.splice(attackerIdx + 1, 0, summonCombatant);
+      log += `💀 **${s.name}** (Lv.${me.level||1}) evocato al fianco di ${attacker.name}!\n❤️ ${summonHp} HP · ⚔️ ${summonAtk} ATK · 🛡️ ${summonDef} DEF\nAttaccherà automaticamente ogni turno.`;
     } else {
       log += `${spell.desc || "Effetto speciale"}`;
     }
@@ -7221,7 +7277,9 @@ ${stepText(step)}`, "quest","Master");
   const equippedWeapon = getEquippedWeapon(equipment, itemMap);
   const combatMode = tab==="combat" && combat?.active;
   const isMonsterTurn = combat?.active && activeCombatant && !activeCombatant.isPlayer;
-  const isLeaderForMonsterTurn = isMonsterTurn && combat.combatants.find(c => c.isPlayer && !c.dead)?.id === myId;
+  const isLeaderForMonsterTurn = isMonsterTurn && combat.combatants.find(c => c.isPlayer && !c.isSummon && !c.dead)?.id === myId;
+  const isSummonTurn = !!(combat?.active && !combat.pendingLog && activeCombatant?.isSummon);
+  const isLeaderForSummonTurn = isSummonTurn && (partyPlayers[0]?.id === myId || partyPlayers.length === 0);
   const equippedItems = {
     weapon: itemMap.get(equipment.weapon) || null,
     armor: itemMap.get(equipment.armor) || null,
@@ -8406,7 +8464,7 @@ ${stepText(step)}`, "quest","Master");
                   {combat.combatants.map((c,i)=>{
                     const isActive = i===combat.turn%combat.combatants.length;
                     return (
-                      <div key={c.id||i} style={{ background:isActive?"linear-gradient(135deg, rgba(127,29,29,0.34), rgba(15,23,42,0.9))":"rgba(15,23,42,0.82)", border:`2px solid ${isActive?"#ef4444":c.isPlayer?"#6d28d9":"#7f1d1d"}`, borderRadius:12, padding:"0.95rem", opacity:c.hp<=0?0.45:1, boxShadow:isActive?"0 16px 36px rgba(127,29,29,0.24)":"0 12px 30px rgba(0,0,0,0.16)" }}>
+                      <div key={c.id||i} style={{ background:isActive?"linear-gradient(135deg, rgba(127,29,29,0.34), rgba(15,23,42,0.9))":c.isSummon?"rgba(10,40,20,0.82)":"rgba(15,23,42,0.82)", border:`2px solid ${isActive?"#ef4444":c.isSummon?"#22c55e":c.isPlayer?"#6d28d9":"#7f1d1d"}`, borderRadius:12, padding:"0.95rem", opacity:c.hp<=0?0.45:1, boxShadow:isActive?"0 16px 36px rgba(127,29,29,0.24)":"0 12px 30px rgba(0,0,0,0.16)" }}>
                         <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:8 }}>
                           <ArtThumb src={c.isPlayer ? getPlayerPortrait(c) : getMonsterImage(c)} alt={c.name} size={70} radius={16} />
                           <div style={{ flex:1 }}>
@@ -8458,7 +8516,7 @@ ${stepText(step)}`, "quest","Master");
                           );
                         })()}
                         <div style={{ display:"flex", justifyContent:"space-between", marginTop:6, fontSize:"0.74rem" }}>
-                          <span style={{ color:c.isPlayer?"#c4b5fd":"#fca5a5" }}>{c.isPlayer?"Alleato":"Nemico"}</span>
+                          <span style={{ color:c.isSummon?"#4ade80":c.isPlayer?"#c4b5fd":"#fca5a5" }}>{c.isSummon?"🔮 Evocato":c.isPlayer?"Alleato":"Nemico"}</span>
                           <span style={{ color:"#e2e8f0", fontWeight:700 }}>{c.hp}/{c.maxHp} HP</span>
                         </div>
                       </div>

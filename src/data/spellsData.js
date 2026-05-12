@@ -122,7 +122,7 @@ export const SPELLS = {
     3:[
       {id:"cl31",name:"Cura di Massa",emoji:"💚",dmg:"-3d8",type:"heal",slots:3,desc:"Cura 3d8 HP a TUTTI gli alleati contemporaneamente"},
       {id:"cl32",name:"Colpo Radioso",emoji:"✨",dmg:"6d8",type:"damage",slots:3,desc:"Esplosione di luce sacra devastante"},
-      {id:"cl33",name:"Animare Morti",emoji:"💀",dmg:"0",type:"utility",slots:3,desc:"Evoca uno scheletro alleato per combattere"},
+      {id:"cl33",name:"Animare Morti",emoji:"💀",dmg:"0",type:"summon",slots:3,desc:"Evoca uno scheletro alleato per combattere",summon:{name:"Scheletro",emoji:"💀",hp:28,atk:14,def:10,dmgDie:"1d8"}},
       {id:"cl34",name:"Rimuovi Malediz.",emoji:"🌟",dmg:"0",type:"utility",slots:3,desc:"Rimuovi tutti gli effetti negativi dal party"},
     ],
     4:[
@@ -153,7 +153,7 @@ export const SPELLS = {
       {id:"dr21",name:"Pelle Corticosa",emoji:"🌳",dmg:"0",type:"defense",slots:2,desc:"+5 DEF — la tua pelle diventa dura come corteccia"},
       {id:"dr22",name:"Lama di Vento",emoji:"🌪️",dmg:"3d10",type:"damage",slots:2,desc:"Fendente di vento tagliente che colpisce tutti"},
       {id:"dr23",name:"Sciame d'Insetti",emoji:"🐝",dmg:"2d6",type:"damage",slots:2,desc:"Nuvola di vespe che attacca per 2 round di fila"},
-      {id:"dr24",name:"Chiamata Animale",emoji:"🦁",dmg:"2d8",type:"utility",slots:2,desc:"Evoca un animale alleato per aiutarti in battaglia"},
+      {id:"dr24",name:"Chiamata Animale",emoji:"🦁",dmg:"2d8",type:"summon",slots:2,desc:"Evoca un animale alleato per aiutarti in battaglia",summon:{name:"Lupo della Natura",emoji:"🐺",hp:22,atk:12,def:8,dmgDie:"2d6"}},
     ],
     3:[
       {id:"dr31",name:"Colpo del Vento",emoji:"💨",dmg:"6d8",type:"damage",slots:3,desc:"Vento devastante che travolge tutti i nemici"},
