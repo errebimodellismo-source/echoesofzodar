@@ -6037,20 +6037,27 @@ function GameScreen({ myId, setScreen, authUser }) {
 
   // Push notification when it becomes my turn
   const prevMyTurnRef = useRef(false);
+  // Request notification permission as soon as combat starts
+  useEffect(() => {
+    if(qs?.combat?.active && "Notification" in window && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+  }, [!!qs?.combat?.active]);
+
   useEffect(() => {
     const c = qs?.combat;
     const isNowMyTurn = !!(c?.active && !c.pendingLog && c.combatants?.[c.turn % Math.max(1, c.combatants.length)]?.id === myId);
     if (isNowMyTurn && !prevMyTurnRef.current) {
-      if (document.hidden && "Notification" in window) {
+      // Notify whenever the user is not watching the combat tab
+      const awayFromCombat = document.hidden || tab !== "combat";
+      if (awayFromCombat && "Notification" in window) {
         if (Notification.permission === "granted") {
-          new Notification("Echoes of Zodar ⚔️", { body: `È il tuo turno, ${me?.name || "Eroe"}!`, icon: "/favicon.ico", tag: "my-turn", renotify: true });
-        } else if (Notification.permission === "default") {
-          Notification.requestPermission();
+          new Notification("Echoes of Zodar ⚔️", { body: `⚔️ È il tuo turno, ${me?.name || "Eroe"}! Hai 30 secondi.`, icon: "/favicon.ico", tag: "my-turn", renotify: true });
         }
       }
     }
     prevMyTurnRef.current = isNowMyTurn;
-  }, [qs?.combat?.turn, qs?.combat?.round, qs?.combat?.active, qs?.combat?.pendingLog]);
+  }, [qs?.combat?.turn, qs?.combat?.round, qs?.combat?.active, qs?.combat?.pendingLog, tab]);
 
   // Fallback poll — keeps the log alive if Supabase realtime silently drops
   useEffect(() => {
@@ -7893,7 +7900,7 @@ ${stepText(step)}`, "quest","Master");
             return (
             <button key={k} onClick={()=>{ if(!locked){ setTab(k); if(isMobile) setSidebarOpen(false); if(k==="guild") refreshGuilds(); } }} title={isResting?"Riposo in corso…":combatLocked?"Non disponibile durante il combattimento":undefined}
               style={{ flexShrink:0, padding: isMobile?"0.6rem 0.8rem":"0.6rem 1.2rem", background:tab===k&&!isResting?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k&&!isResting?"2px solid #7c3aed":"2px solid transparent", color:locked?"#2d3748":tab===k?"#c4b5fd":"#94a3b8", cursor:locked?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize: isMobile?"0.7rem":"0.78rem", letterSpacing:"0.05em", opacity:locked?0.35:1, whiteSpace:"nowrap", filter:isResting?"grayscale(1)":"none" }}>
-              {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}{k==="dungeon"&&qs?.dungeon?.active&&!qs?.dungeon?.completedAt&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#701a75", borderRadius:10, fontSize:"0.62rem", color:"#e879f9" }}>LIVE</span>}
+              {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}{k==="combat"&&combat?.active&&!combat?.pendingLog&&combat?.combatants?.[combat.turn%Math.max(1,combat.combatants.length)]?.id===myId&&tab!=="combat"&&<span style={{ marginLeft:4, display:"inline-block", width:8, height:8, borderRadius:"50%", background:"#ef4444", boxShadow:"0 0 6px #ef4444", animation:"pulse 1s infinite" }} />}{k==="dungeon"&&qs?.dungeon?.active&&!qs?.dungeon?.completedAt&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#701a75", borderRadius:10, fontSize:"0.62rem", color:"#e879f9" }}>LIVE</span>}
             </button>);
           })}
         </div>
@@ -8957,6 +8964,11 @@ ${stepText(step)}`, "quest","Master");
                   <div>
                     <h3 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fca5a5", margin:"0 0 0.35rem", fontSize:"1.5rem", letterSpacing:"0.04em" }}>⚔️ Battaglia</h3>
                     <div style={{ color:"#cbd5e1", fontSize:"0.9rem" }}>Round {combat.round} • {combat.combatants.length} partecipanti • il destino si decide ora</div>
+                    {"Notification" in window && Notification.permission !== "granted" && (
+                      <button onClick={()=>Notification.requestPermission()} style={{ marginTop:6, padding:"0.25rem 0.7rem", background:"rgba(109,40,217,0.2)", border:"1px solid #7c3aed", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontSize:"0.68rem" }}>
+                        🔔 Abilita notifiche turno
+                      </button>
+                    )}
                   </div>
                   {myTurn&&(
                     <div style={{ display:"flex", alignItems:"center", gap:8 }}>
