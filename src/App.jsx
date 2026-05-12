@@ -1659,13 +1659,14 @@ function parseUserMasterMeta(msg) {
       registeredAt: parsed.registeredAt || msg.created_at || "",
       lastSeenAt: parsed.lastSeenAt || msg.created_at || "",
       activeCharacterId: parsed.activeCharacterId || null,
+      afk: parsed.afk || false,
     };
   } catch {
     return null;
   }
 }
 
-async function dbSaveUserMasterMeta(user, registeredAt, activeCharacterId) {
+async function dbSaveUserMasterMeta(user, registeredAt, activeCharacterId, afk = false) {
   if(!user?.id || !user?.email) return;
   const now = new Date().toISOString();
   const payload = {
@@ -1673,6 +1674,7 @@ async function dbSaveUserMasterMeta(user, registeredAt, activeCharacterId) {
     email: user.email,
     registeredAt: registeredAt || user.created_at || now,
     lastSeenAt: now,
+    afk: afk || false,
   };
   if(activeCharacterId) payload.activeCharacterId = activeCharacterId;
   const content = JSON.stringify(payload);
@@ -1712,6 +1714,8 @@ function isPartyPlayerOnline(player, userMetaById, nowMs = Date.now()) {
   if(!isRecentlyOnline(meta?.lastSeenAt, nowMs)) return false;
   // If the user has set an active character and it's NOT this one, they're offline here
   if(meta?.activeCharacterId && meta.activeCharacterId !== player.id) return false;
+  // AFK players are excluded from combat even if online
+  if(meta?.afk) return false;
   return true;
 }
 
@@ -2093,8 +2097,9 @@ export default function App() {
   useEffect(() => {
     if(!authUser) return;
     const activeId = myId || null;
-    dbSaveUserMasterMeta(authUser, null, activeId);
-    const timer = setInterval(() => dbSaveUserMasterMeta(authUser, null, activeId), USER_HEARTBEAT_MS);
+    const readAfk = () => activeId ? localStorage.getItem(`afk_${activeId}`) === '1' : false;
+    dbSaveUserMasterMeta(authUser, null, activeId, readAfk());
+    const timer = setInterval(() => dbSaveUserMasterMeta(authUser, null, activeId, readAfk()), USER_HEARTBEAT_MS);
     return () => clearInterval(timer);
   }, [authUser, myId]);
 
@@ -5935,6 +5940,14 @@ function GlobalLeaderboardView({ myId, partyCode }) {
 function GameScreen({ myId, setScreen, authUser }) {
   const [me, setMeRaw] = useState(null);
   const latestMeRef = useRef(null);
+  const [isAfk, setIsAfkState] = useState(() => myId ? localStorage.getItem(`afk_${myId}`) === '1' : false);
+  function toggleAfk() {
+    setIsAfkState(prev => {
+      const next = !prev;
+      if(myId) localStorage.setItem(`afk_${myId}`, next ? '1' : '0');
+      return next;
+    });
+  }
   const [messages, setMessages] = useState([]);
   const [partyPlayers, setPartyPlayers] = useState([]);
   const [qs, setQs] = useState({ currentId:null, step:0, active:false, completed:[], combat:null });
@@ -8304,6 +8317,9 @@ ${stepText(step)}`, "quest","Master");
             <span style={{ fontSize:"0.58rem", color:"#92400e", textTransform:"uppercase", letterSpacing:"0.08em" }}>Tesoro</span>
             <span style={{ fontSize:"0.74rem", color:"#fbbf24", fontWeight:700 }}>💰 {me.gold || 0} oro</span>
           </div>
+          <button onClick={toggleAfk} title={isAfk ? "Sei in modalità AFK — non partecipi alle battaglie. Clicca per tornare attivo." : "Sei attivo — clicca per passare in modalità AFK e non essere incluso nelle battaglie."} style={{ marginTop:6, width:"100%", padding:"0.3rem 0.4rem", background: isAfk ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.1)", border:`1px solid ${isAfk ? "#7f1d1d" : "#14532d"}`, borderRadius:4, color: isAfk ? "#f87171" : "#4ade80", fontSize:"0.62rem", cursor:"pointer", letterSpacing:"0.06em", textAlign:"center" }}>
+            {isAfk ? "⏸ AFK — Non in battaglia" : "✅ Attivo — Pronto a combattere"}
+          </button>
         </div>
 
         <div style={{ background:PANEL_BG_SOFT, border:`1px solid ${PANEL_BORDER}`, borderRadius:4, padding:"0.5rem" }}>
