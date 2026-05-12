@@ -3199,14 +3199,29 @@ function MasterPanel({ setScreen, authUser }) {
 }
 
 function MasterDungeonView() {
-  const [parties, setParties] = useState([]);
-  const [selectedParty, setSelectedParty] = useState('');
-  const [roomCount, setRoomCount] = useState(5);
-  const [themeId, setThemeId] = useState('crypt');
+  const IS = { padding:'0.38rem 0.7rem', background:'rgba(15,23,42,0.8)', border:'1px solid #1e3a5f', borderRadius:6, color:'#e2d9c5', fontSize:'0.83rem', width:'100%', boxSizing:'border-box' };
+  const TA = { ...IS, resize:'vertical', minHeight:56, fontFamily:'inherit' };
+  const Btn = ({ children, onClick, disabled, color='#7c3aed', bg='rgba(109,40,217,0.18)' }) => (
+    <button onClick={onClick} disabled={disabled} style={{ padding:'0.42rem 1rem', background:bg, border:`1px solid ${color}`, borderRadius:7, color, cursor:disabled?'not-allowed':'pointer', fontFamily:"'Cinzel',serif", fontSize:'0.8rem', opacity:disabled?0.45:1, flexShrink:0 }}>{children}</button>
+  );
+
+  const [parties, setParties]       = useState([]);
+  const [target, setTarget]         = useState('all');     // 'all' | 'party'
+  const [selParty, setSelParty]     = useState('');
+  const [mode, setMode]             = useState('proc');    // 'proc' | 'manual'
+  // procedural
+  const [roomCount, setRoomCount]   = useState(5);
+  const [themeId, setThemeId]       = useState('crypt');
   const [partyLevel, setPartyLevel] = useState(3);
-  const [preview, setPreview] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [status, setStatus] = useState('');
+  // manual
+  const [dungeonName, setDungeonName] = useState('Il Dungeon Oscuro');
+  const [manTheme, setManTheme]     = useState('crypt');
+  const [manRooms, setManRooms]     = useState([]);
+  const [monSearch, setMonSearch]   = useState('');
+  // shared
+  const [preview, setPreview]       = useState(null);
+  const [loading, setLoading]       = useState(false);
+  const [status, setStatus]         = useState('');
 
   useEffect(() => {
     supabase.from('party_state').select('party_code').then(({ data }) => {
@@ -3214,97 +3229,328 @@ function MasterDungeonView() {
     });
   }, []);
 
+  // ── Room helpers ──
+  function newRoom(type) {
+    const id = `r${Date.now()}`;
+    const base = { id, type, idx:0, title: DUNGEON_ROOM_CFG[type]?.label || type, desc:'', cleared:false };
+    if (type === 'combat' || type === 'boss') return { ...base, monsters:[] };
+    if (type === 'trap')     return { ...base, skill:'ATK', skillLabel:'Forza', skillStat:'atk', dc:13, failDmg:10 };
+    if (type === 'treasure') return { ...base, gold:100 };
+    if (type === 'rest')     return { ...base, healPct:25 };
+    if (type === 'choice')   return { ...base, options:[{ label:'🛡️ Via Sicura', desc:'Percorso sicuro.', effect:'gold', effectValue:50 },{ label:'⚔️ Via Rischiosa', desc:'Percorso pericoloso.', effect:'gold_big', effectValue:150 }] };
+    return base;
+  }
+  function updateRoom(id, patch) { setManRooms(rs => rs.map(r => r.id === id ? { ...r, ...patch } : r)); }
+  function moveRoom(idx, dir) {
+    setManRooms(rs => {
+      const a = [...rs]; const b = idx + dir;
+      if (b < 0 || b >= a.length) return a;
+      [a[idx], a[b]] = [a[b], a[idx]];
+      return a.map((r, i) => ({ ...r, idx:i }));
+    });
+  }
+  function removeRoom(id) { setManRooms(rs => rs.filter(r => r.id !== id).map((r,i) => ({ ...r, idx:i }))); }
+  function addMonsterToRoom(roomId, monster) {
+    setManRooms(rs => rs.map(r => r.id === roomId ? { ...r, monsters:[...(r.monsters||[]), { ...monster }] } : r));
+  }
+  function removeMonsterFromRoom(roomId, monIdx) {
+    setManRooms(rs => rs.map(r => r.id === roomId ? { ...r, monsters:(r.monsters||[]).filter((_,i)=>i!==monIdx) } : r));
+  }
+
+  // ── Procedural generate ──
   function handleGenerate() {
-    const seed = Date.now();
-    const dungeon = generateDungeon({ roomCount, themeId, partyLevel, seed });
-    setPreview(dungeon);
+    setPreview(generateDungeon({ roomCount, themeId, partyLevel, seed:Date.now() }));
     setStatus('');
   }
 
+  // ── Build dungeon from manual rooms ──
+  function handleBuildManual() {
+    if (!manRooms.length) { setStatus('⚠️ Aggiungi almeno una stanza.'); return; }
+    const theme = DUNGEON_THEMES.find(t => t.id === manTheme) || DUNGEON_THEMES[0];
+    const dungeon = {
+      active:true, name: dungeonName || theme.name, themeId:manTheme, emoji:theme.emoji,
+      rooms: manRooms.map((r,i) => ({ ...r, idx:i })),
+      currentRoom:0, pendingCombatRoom:null,
+      startedAt: new Date().toISOString(), completedAt:null, seed: Date.now(),
+    };
+    setPreview(dungeon); setStatus('');
+  }
+
+  // ── Launch / Stop ──
+  async function getTargetParties() {
+    if (target === 'all') return parties;
+    return selParty ? [selParty] : [];
+  }
   async function handleLaunch() {
-    if (!selectedParty || !preview) return;
-    setLoading(true);
-    setStatus('');
+    if (!preview) { setStatus('⚠️ Prima genera o costruisci il dungeon.'); return; }
+    const targets = await getTargetParties();
+    if (!targets.length) { setStatus('⚠️ Seleziona almeno un party.'); return; }
+    setLoading(true); setStatus('');
     try {
-      const state = await dbGetPartyState(selectedParty);
-      await dbSavePartyState(selectedParty, { ...state, dungeon: { ...preview, active:true } });
-      setStatus(`✅ Dungeon "${preview.name}" avviato per ${selectedParty}!`);
-    } catch(e) {
-      setStatus('❌ Errore: ' + (e?.message || e));
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleStop() {
-    if (!selectedParty) return;
-    if (!window.confirm('Terminare il dungeon attivo?')) return;
-    setLoading(true);
-    try {
-      const state = await dbGetPartyState(selectedParty);
-      await dbSavePartyState(selectedParty, { ...state, dungeon: null });
-      setStatus('🛑 Dungeon terminato.');
-      setPreview(null);
+      for (const pc of targets) {
+        const state = await dbGetPartyState(pc);
+        await dbSavePartyState(pc, { ...state, dungeon: { ...preview, active:true, currentRoom:0, pendingCombatRoom:null, startedAt:new Date().toISOString(), completedAt:null, rooms:preview.rooms.map(r=>({...r,cleared:false})) } });
+      }
+      setStatus(`✅ Dungeon "${preview.name}" avviato su ${targets.length === parties.length ? 'tutti i party' : targets.join(', ')}!`);
     } catch(e) { setStatus('❌ ' + (e?.message || e)); }
     finally { setLoading(false); }
   }
+  async function handleStop() {
+    const targets = await getTargetParties();
+    if (!targets.length) { setStatus('⚠️ Seleziona almeno un party.'); return; }
+    if (!window.confirm(`Terminare il dungeon su ${targets.length} party?`)) return;
+    setLoading(true);
+    try {
+      for (const pc of targets) {
+        const state = await dbGetPartyState(pc);
+        await dbSavePartyState(pc, { ...state, dungeon:null });
+      }
+      setStatus(`🛑 Dungeon terminato su ${targets.length} party.`); setPreview(null);
+    } catch(e) { setStatus('❌ ' + (e?.message||e)); }
+    finally { setLoading(false); }
+  }
 
-  const inputStyle = { padding:'0.4rem 0.7rem', background:'rgba(15,23,42,0.8)', border:'1px solid #1e3a5f', borderRadius:6, color:'#e2d9c5', fontSize:'0.85rem', width:'100%' };
+  const filteredMonsters = DEFAULT_MONSTERS.filter(m =>
+    !monSearch || m.name.toLowerCase().includes(monSearch.toLowerCase())
+  );
+  const trapSkills = [
+    { skill:'ATK', skillLabel:'Forza',    skillStat:'atk' },
+    { skill:'DEF', skillLabel:'Riflessi', skillStat:'def' },
+    { skill:'MAG', skillLabel:'Magia',    skillStat:'mag' },
+  ];
+
   return (
-    <div style={{ padding:'1.5rem', maxWidth:700 }}>
-      <h3 style={{ fontFamily:"'Cinzel',serif", color:'#fbbf24', marginBottom:'1.2rem' }}>🗺️ Generatore di Dungeon</h3>
+    <div style={{ padding:'1.2rem', maxWidth:820, overflowY:'auto', maxHeight:'calc(100vh - 120px)' }}>
+      <h3 style={{ fontFamily:"'Cinzel',serif", color:'#fbbf24', marginBottom:'1rem', fontSize:'1.1rem' }}>🗺️ Creatore di Dungeon</h3>
 
-      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:'1rem' }}>
-        <div>
-          <label style={{ color:'#94a3b8', fontSize:'0.78rem', display:'block', marginBottom:4 }}>Party</label>
-          <select value={selectedParty} onChange={e=>setSelectedParty(e.target.value)} style={inputStyle}>
-            <option value=''>— Seleziona party —</option>
-            {parties.map(p => <option key={p} value={p}>{p}</option>)}
-          </select>
+      {/* ── Target ── */}
+      <section style={{ background:'rgba(15,23,42,0.7)', border:'1px solid #1e3a5f', borderRadius:10, padding:'1rem', marginBottom:'1rem' }}>
+        <div style={{ color:'#94a3b8', fontSize:'0.78rem', marginBottom:8, fontFamily:"'Cinzel',serif", letterSpacing:'0.05em' }}>DESTINATARI</div>
+        <div style={{ display:'flex', gap:16, flexWrap:'wrap', alignItems:'center' }}>
+          <label style={{ display:'flex', gap:6, alignItems:'center', color:'#e2d9c5', cursor:'pointer', fontSize:'0.85rem' }}>
+            <input type='radio' checked={target==='all'} onChange={()=>setTarget('all')} /> Tutti i party ({parties.length})
+          </label>
+          <label style={{ display:'flex', gap:6, alignItems:'center', color:'#e2d9c5', cursor:'pointer', fontSize:'0.85rem' }}>
+            <input type='radio' checked={target==='party'} onChange={()=>setTarget('party')} /> Party specifico
+          </label>
+          {target==='party' && (
+            <select value={selParty} onChange={e=>setSelParty(e.target.value)} style={{ ...IS, width:'auto' }}>
+              <option value=''>— Seleziona —</option>
+              {parties.map(p => <option key={p} value={p}>{p}</option>)}
+            </select>
+          )}
         </div>
-        <div>
-          <label style={{ color:'#94a3b8', fontSize:'0.78rem', display:'block', marginBottom:4 }}>Tema</label>
-          <select value={themeId} onChange={e=>setThemeId(e.target.value)} style={inputStyle}>
-            {DUNGEON_THEMES.map(t => <option key={t.id} value={t.id}>{t.emoji} {t.name}</option>)}
-          </select>
-        </div>
-        <div>
-          <label style={{ color:'#94a3b8', fontSize:'0.78rem', display:'block', marginBottom:4 }}>Stanze: {roomCount}</label>
-          <input type='range' min={3} max={10} value={roomCount} onChange={e=>setRoomCount(Number(e.target.value))} style={{ width:'100%' }} />
-        </div>
-        <div>
-          <label style={{ color:'#94a3b8', fontSize:'0.78rem', display:'block', marginBottom:4 }}>Livello party: {partyLevel}</label>
-          <input type='range' min={1} max={20} value={partyLevel} onChange={e=>setPartyLevel(Number(e.target.value))} style={{ width:'100%' }} />
-        </div>
+      </section>
+
+      {/* ── Mode tabs ── */}
+      <div style={{ display:'flex', gap:0, marginBottom:'1rem', borderRadius:8, overflow:'hidden', border:'1px solid #1e3a5f' }}>
+        {[['proc','🎲 Procedurale'],['manual','✏️ Manuale']].map(([k,l]) => (
+          <button key={k} onClick={()=>setMode(k)} style={{ flex:1, padding:'0.5rem', background:mode===k?'rgba(109,40,217,0.25)':'rgba(15,23,42,0.6)', border:'none', color:mode===k?'#c4b5fd':'#64748b', fontFamily:"'Cinzel',serif", fontSize:'0.82rem', cursor:'pointer', borderRight:k==='proc'?'1px solid #1e3a5f':'none' }}>{l}</button>
+        ))}
       </div>
 
-      <div style={{ display:'flex', gap:10, marginBottom:'1.2rem', flexWrap:'wrap' }}>
-        <button onClick={handleGenerate} style={{ padding:'0.5rem 1.2rem', background:'rgba(109,40,217,0.2)', border:'1px solid #7c3aed', borderRadius:8, color:'#c4b5fd', cursor:'pointer', fontFamily:"'Cinzel',serif", fontSize:'0.85rem' }}>🎲 Genera Anteprima</button>
-        <button onClick={handleLaunch} disabled={!preview||!selectedParty||loading} style={{ padding:'0.5rem 1.2rem', background:'rgba(34,197,94,0.15)', border:'1px solid #16a34a', borderRadius:8, color:'#6ee7b7', cursor:'pointer', fontFamily:"'Cinzel',serif", fontSize:'0.85rem', opacity:(!preview||!selectedParty)?0.4:1 }}>🚀 Avvia Dungeon</button>
-        <button onClick={handleStop} disabled={!selectedParty||loading} style={{ padding:'0.5rem 1.2rem', background:'rgba(127,29,29,0.2)', border:'1px solid #7f1d1d', borderRadius:8, color:'#fca5a5', cursor:'pointer', fontFamily:"'Cinzel',serif", fontSize:'0.85rem', opacity:!selectedParty?0.4:1 }}>🛑 Termina Dungeon</button>
-      </div>
+      {/* ── Procedural ── */}
+      {mode==='proc' && (
+        <section style={{ background:'rgba(15,23,42,0.7)', border:'1px solid #1e3a5f', borderRadius:10, padding:'1rem', marginBottom:'1rem' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12 }}>
+            <div>
+              <label style={{ color:'#94a3b8', fontSize:'0.75rem', display:'block', marginBottom:4 }}>Tema</label>
+              <select value={themeId} onChange={e=>setThemeId(e.target.value)} style={IS}>
+                {DUNGEON_THEMES.map(t => <option key={t.id} value={t.id}>{t.emoji} {t.name}</option>)}
+              </select>
+            </div>
+            <div>
+              <label style={{ color:'#94a3b8', fontSize:'0.75rem', display:'block', marginBottom:4 }}>Stanze: {roomCount}</label>
+              <input type='range' min={3} max={10} value={roomCount} onChange={e=>setRoomCount(+e.target.value)} style={{ width:'100%', marginTop:6 }} />
+            </div>
+            <div>
+              <label style={{ color:'#94a3b8', fontSize:'0.75rem', display:'block', marginBottom:4 }}>Livello party: {partyLevel}</label>
+              <input type='range' min={1} max={20} value={partyLevel} onChange={e=>setPartyLevel(+e.target.value)} style={{ width:'100%', marginTop:6 }} />
+            </div>
+          </div>
+          <div style={{ marginTop:12 }}>
+            <Btn onClick={handleGenerate}>🎲 Genera Anteprima</Btn>
+          </div>
+        </section>
+      )}
 
-      {status && <div style={{ padding:'0.6rem 1rem', background:'rgba(15,23,42,0.7)', border:'1px solid #1e3a5f', borderRadius:8, color:'#e2d9c5', fontSize:'0.85rem', marginBottom:'1rem' }}>{status}</div>}
+      {/* ── Manual builder ── */}
+      {mode==='manual' && (
+        <section style={{ background:'rgba(15,23,42,0.7)', border:'1px solid #1e3a5f', borderRadius:10, padding:'1rem', marginBottom:'1rem' }}>
+          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:'1rem' }}>
+            <div>
+              <label style={{ color:'#94a3b8', fontSize:'0.75rem', display:'block', marginBottom:4 }}>Nome dungeon</label>
+              <input value={dungeonName} onChange={e=>setDungeonName(e.target.value)} style={IS} placeholder='Es. Cripta dei Traditori' />
+            </div>
+            <div>
+              <label style={{ color:'#94a3b8', fontSize:'0.75rem', display:'block', marginBottom:4 }}>Tema</label>
+              <select value={manTheme} onChange={e=>setManTheme(e.target.value)} style={IS}>
+                {DUNGEON_THEMES.map(t => <option key={t.id} value={t.id}>{t.emoji} {t.name}</option>)}
+              </select>
+            </div>
+          </div>
 
+          {/* Rooms list */}
+          {manRooms.length === 0 && (
+            <div style={{ textAlign:'center', padding:'1.5rem', color:'#475569', fontSize:'0.83rem', border:'1px dashed #1e3a5f', borderRadius:8, marginBottom:'0.8rem' }}>Nessuna stanza. Aggiungine una.</div>
+          )}
+          <div style={{ display:'flex', flexDirection:'column', gap:10, marginBottom:'0.8rem' }}>
+            {manRooms.map((room, idx) => {
+              const cfg = DUNGEON_ROOM_CFG[room.type];
+              return (
+                <div key={room.id} style={{ background:'rgba(0,0,0,0.35)', border:`1px solid ${cfg.color}55`, borderRadius:10, padding:'0.85rem' }}>
+                  {/* Room header */}
+                  <div style={{ display:'flex', gap:8, alignItems:'center', marginBottom:'0.7rem', flexWrap:'wrap' }}>
+                    <span style={{ fontSize:'1.2rem' }}>{cfg.emoji}</span>
+                    <select value={room.type} onChange={e=>updateRoom(room.id,{...newRoom(e.target.value), id:room.id, idx})} style={{ ...IS, width:'auto', flex:'0 0 auto' }}>
+                      {Object.entries(DUNGEON_ROOM_CFG).map(([k,v]) => <option key={k} value={k}>{v.emoji} {v.label}</option>)}
+                    </select>
+                    <input value={room.title} onChange={e=>updateRoom(room.id,{title:e.target.value})} style={{ ...IS, flex:1, minWidth:120 }} placeholder='Titolo stanza' />
+                    <div style={{ display:'flex', gap:4 }}>
+                      <button onClick={()=>moveRoom(idx,-1)} disabled={idx===0} style={{ padding:'2px 7px', background:'rgba(15,23,42,0.8)', border:'1px solid #334155', borderRadius:5, color:'#94a3b8', cursor:'pointer', fontSize:'0.8rem' }}>↑</button>
+                      <button onClick={()=>moveRoom(idx,1)} disabled={idx===manRooms.length-1} style={{ padding:'2px 7px', background:'rgba(15,23,42,0.8)', border:'1px solid #334155', borderRadius:5, color:'#94a3b8', cursor:'pointer', fontSize:'0.8rem' }}>↓</button>
+                      <button onClick={()=>removeRoom(room.id)} style={{ padding:'2px 7px', background:'rgba(127,29,29,0.3)', border:'1px solid #7f1d1d', borderRadius:5, color:'#fca5a5', cursor:'pointer', fontSize:'0.8rem' }}>🗑️</button>
+                    </div>
+                  </div>
+
+                  {/* Description */}
+                  <textarea value={room.desc} onChange={e=>updateRoom(room.id,{desc:e.target.value})} style={{ ...TA, marginBottom:'0.6rem' }} placeholder='Descrizione della stanza (opzionale)' rows={2} />
+
+                  {/* Type-specific fields */}
+                  {(room.type==='combat'||room.type==='boss') && (
+                    <div>
+                      <div style={{ color:'#94a3b8', fontSize:'0.75rem', marginBottom:6 }}>Mostri in questa stanza:</div>
+                      {(room.monsters||[]).length === 0 && <div style={{ color:'#475569', fontSize:'0.75rem', marginBottom:6 }}>Nessun mostro aggiunto.</div>}
+                      <div style={{ display:'flex', flexWrap:'wrap', gap:6, marginBottom:8 }}>
+                        {(room.monsters||[]).map((m, mi) => (
+                          <span key={mi} style={{ display:'flex', alignItems:'center', gap:4, padding:'2px 8px', background:'rgba(239,68,68,0.12)', border:'1px solid #7f1d1d', borderRadius:20, fontSize:'0.75rem', color:'#fca5a5' }}>
+                            {m.emoji||'👾'} {m.name}
+                            <button onClick={()=>removeMonsterFromRoom(room.id,mi)} style={{ background:'none', border:'none', color:'#fca5a5', cursor:'pointer', padding:0, fontSize:'0.8rem', lineHeight:1 }}>✕</button>
+                          </span>
+                        ))}
+                      </div>
+                      <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
+                        <input value={monSearch} onChange={e=>setMonSearch(e.target.value)} style={{ ...IS, width:160 }} placeholder='Cerca mostro…' />
+                        <div style={{ display:'flex', flexWrap:'wrap', gap:4, maxHeight:90, overflowY:'auto' }}>
+                          {filteredMonsters.slice(0,30).map(m => (
+                            <button key={m.id} onClick={()=>{ addMonsterToRoom(room.id, m); setMonSearch(''); }}
+                              style={{ padding:'2px 8px', background:'rgba(15,23,42,0.8)', border:'1px solid #334155', borderRadius:20, color:'#94a3b8', cursor:'pointer', fontSize:'0.72rem', whiteSpace:'nowrap' }}>
+                              {m.emoji||'👾'} {m.name} (T{m.tier})
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {room.type==='trap' && (
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+                      <div>
+                        <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>Abilità richiesta</label>
+                        <select value={room.skill} onChange={e=>{ const s=trapSkills.find(t=>t.skill===e.target.value)||trapSkills[0]; updateRoom(room.id,{skill:s.skill,skillLabel:s.skillLabel,skillStat:s.skillStat}); }} style={IS}>
+                          {trapSkills.map(s=><option key={s.skill} value={s.skill}>{s.skillLabel} ({s.skill})</option>)}
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>DC</label>
+                        <input type='number' value={room.dc} onChange={e=>updateRoom(room.id,{dc:+e.target.value})} style={IS} min={5} max={30} />
+                      </div>
+                      <div>
+                        <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>Danno se fallisce</label>
+                        <input type='number' value={room.failDmg} onChange={e=>updateRoom(room.id,{failDmg:+e.target.value})} style={IS} min={0} max={100} />
+                      </div>
+                    </div>
+                  )}
+
+                  {room.type==='treasure' && (
+                    <div>
+                      <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>Oro totale (diviso tra i giocatori presenti)</label>
+                      <input type='number' value={room.gold} onChange={e=>updateRoom(room.id,{gold:+e.target.value})} style={{ ...IS, width:120 }} min={0} />
+                    </div>
+                  )}
+
+                  {room.type==='rest' && (
+                    <div>
+                      <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>% HP massimi recuperati: {room.healPct}%</label>
+                      <input type='range' value={room.healPct} onChange={e=>updateRoom(room.id,{healPct:+e.target.value})} style={{ width:'100%' }} min={5} max={100} />
+                    </div>
+                  )}
+
+                  {room.type==='choice' && (
+                    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                      {(room.options||[]).map((opt, oi) => (
+                        <div key={oi} style={{ padding:'0.6rem', background:'rgba(15,23,42,0.6)', border:'1px solid #1e3a5f', borderRadius:8 }}>
+                          <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:6, marginBottom:4 }}>
+                            <input value={opt.label} onChange={e=>updateRoom(room.id,{options:room.options.map((o,i)=>i===oi?{...o,label:e.target.value}:o)})} style={IS} placeholder='Etichetta scelta' />
+                            <input value={opt.desc} onChange={e=>updateRoom(room.id,{options:room.options.map((o,i)=>i===oi?{...o,desc:e.target.value}:o)})} style={IS} placeholder='Descrizione breve' />
+                          </div>
+                          <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                            <label style={{ color:'#64748b', fontSize:'0.72rem' }}>Effetto:</label>
+                            <select value={opt.effect} onChange={e=>updateRoom(room.id,{options:room.options.map((o,i)=>i===oi?{...o,effect:e.target.value}:o)})} style={{ ...IS, width:'auto' }}>
+                              <option value='gold'>Oro</option>
+                              <option value='gold_big'>Oro (grande)</option>
+                              <option value='heal_pct'>Cura HP</option>
+                            </select>
+                            <input type='number' value={opt.effectValue} onChange={e=>updateRoom(room.id,{options:room.options.map((o,i)=>i===oi?{...o,effectValue:+e.target.value}:o)})} style={{ ...IS, width:80 }} placeholder='Valore' />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          {/* Add room buttons */}
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap', marginBottom:'1rem' }}>
+            <span style={{ color:'#64748b', fontSize:'0.75rem', alignSelf:'center' }}>+ Aggiungi:</span>
+            {Object.entries(DUNGEON_ROOM_CFG).map(([k,v]) => (
+              <button key={k} onClick={()=>setManRooms(rs=>[...rs, {...newRoom(k), idx:rs.length}])}
+                style={{ padding:'3px 10px', background:`${v.color}18`, border:`1px solid ${v.color}66`, borderRadius:20, color:v.color, cursor:'pointer', fontSize:'0.75rem' }}>
+                {v.emoji} {v.label}
+              </button>
+            ))}
+          </div>
+
+          <Btn onClick={handleBuildManual}>👁️ Anteprima Dungeon</Btn>
+        </section>
+      )}
+
+      {/* ── Preview ── */}
       {preview && (
-        <div style={{ background:'rgba(15,23,42,0.7)', border:'1px solid #1e3a5f', borderRadius:10, padding:'1rem' }}>
-          <div style={{ fontFamily:"'Cinzel',serif", color:'#fbbf24', marginBottom:'0.8rem' }}>{preview.emoji} {preview.name} — {preview.rooms.length} stanze</div>
-          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
-            {preview.rooms.map((r, i) => {
+        <section style={{ background:'rgba(15,23,42,0.7)', border:'1px solid #1e3a5f', borderRadius:10, padding:'1rem', marginBottom:'1rem' }}>
+          <div style={{ fontFamily:"'Cinzel',serif", color:'#fbbf24', marginBottom:'0.8rem', fontSize:'0.95rem' }}>{preview.emoji} {preview.name} — {preview.rooms.length} stanze</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+            {preview.rooms.map((r,i) => {
               const c = DUNGEON_ROOM_CFG[r.type];
               return (
-                <div key={r.id} style={{ display:'flex', gap:10, alignItems:'flex-start', padding:'0.6rem 0.8rem', background:'rgba(0,0,0,0.3)', borderRadius:8, border:`1px solid ${c.color}33` }}>
-                  <span style={{ flexShrink:0, fontSize:'1.2rem' }}>{c.emoji}</span>
-                  <div>
-                    <div style={{ color:c.color, fontWeight:700, fontSize:'0.85rem' }}>{i+1}. {r.title}</div>
-                    <div style={{ color:'#64748b', fontSize:'0.75rem', marginTop:2 }}>{r.desc?.slice(0,100)}…</div>
+                <div key={r.id||i} style={{ display:'flex', gap:10, alignItems:'flex-start', padding:'0.55rem 0.8rem', background:'rgba(0,0,0,0.28)', borderRadius:8, border:`1px solid ${c.color}33` }}>
+                  <span style={{ flexShrink:0, fontSize:'1.1rem' }}>{c.emoji}</span>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ color:c.color, fontWeight:700, fontSize:'0.82rem' }}>{i+1}. {r.title}</div>
+                    {(r.type==='combat'||r.type==='boss') && r.monsters?.length > 0 && (
+                      <div style={{ color:'#64748b', fontSize:'0.72rem' }}>Mostri: {r.monsters.map(m=>`${m.emoji||'👾'} ${m.name}`).join(', ')}</div>
+                    )}
+                    {r.type==='trap' && <div style={{ color:'#64748b', fontSize:'0.72rem' }}>DC {r.dc} {r.skillLabel} — fallimento -{r.failDmg} HP</div>}
+                    {r.type==='treasure' && <div style={{ color:'#64748b', fontSize:'0.72rem' }}>💰 {r.gold} oro</div>}
+                    {r.type==='rest' && <div style={{ color:'#64748b', fontSize:'0.72rem' }}>🔥 +{r.healPct}% HP</div>}
+                    {r.type==='choice' && <div style={{ color:'#64748b', fontSize:'0.72rem' }}>Scelte: {r.options?.map(o=>o.label).join(' / ')}</div>}
+                    {r.desc && <div style={{ color:'#475569', fontSize:'0.7rem', marginTop:2 }}>{r.desc.slice(0,80)}{r.desc.length>80?'…':''}</div>}
                   </div>
                 </div>
               );
             })}
           </div>
-        </div>
+        </section>
       )}
+
+      {/* ── Status & Actions ── */}
+      {status && <div style={{ padding:'0.6rem 1rem', background:'rgba(15,23,42,0.8)', border:'1px solid #1e3a5f', borderRadius:8, color:'#e2d9c5', fontSize:'0.82rem', marginBottom:'0.8rem' }}>{status}</div>}
+      <div style={{ display:'flex', gap:10, flexWrap:'wrap' }}>
+        <Btn onClick={handleLaunch} disabled={!preview||loading} color='#22c55e' bg='rgba(34,197,94,0.15)'>🚀 Avvia Dungeon</Btn>
+        <Btn onClick={handleStop} disabled={loading} color='#ef4444' bg='rgba(127,29,29,0.2)'>🛑 Termina Dungeon</Btn>
+      </div>
     </div>
   );
 }
