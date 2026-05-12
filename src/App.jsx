@@ -197,17 +197,73 @@ function hasPerm(member, perm) {
 }
 
 /* ── Stemma araldico ── */
-const EMBLEM_SHAPES = ["classic","heater","round","gothic","banner"];
+const EMBLEM_SHAPES = [
+  // Scudi
+  { id:"classic",    label:"Classico",    group:"scudo" },
+  { id:"heater",     label:"Triangolare", group:"scudo" },
+  { id:"round",      label:"Arrotondato", group:"scudo" },
+  { id:"gothic",     label:"Gotico",      group:"scudo" },
+  { id:"banner",     label:"Stendardo",   group:"scudo" },
+  // Geometrici
+  { id:"circle",     label:"Cerchio",     group:"geo" },
+  { id:"square",     label:"Quadrato",    group:"geo" },
+  { id:"roundsq",    label:"Morbido",     group:"geo" },
+  { id:"diamond",    label:"Diamante",    group:"geo" },
+  { id:"hexagon",    label:"Esagono",     group:"geo" },
+  // Fantasia
+  { id:"star",       label:"Stella",      group:"fantasy" },
+  { id:"cross",      label:"Croce",       group:"fantasy" },
+  { id:"arch",       label:"Arco",        group:"fantasy" },
+  { id:"scroll",     label:"Pergamena",   group:"fantasy" },
+  { id:"wings",      label:"Ali",         group:"fantasy" },
+];
 const EMBLEM_PATTERNS = ["solid","pale","fess","quarterly","chevron","bend","saltire"];
-const EMBLEM_SYMBOLS = ["⚔️","🛡️","🐉","🦅","👑","🌙","☀️","⚡","🔥","❄️","🌿","💀","🔮","🏹","⚖️","🌌","✨","🦁","🐺","🦊","🐻","🦋","🌹","⭐","💎","🗡️","🏰","🌊","🍃","🔱"];
+const EMBLEM_SYMBOLS = ["⚔️","🛡️","🐉","🦅","👑","🌙","☀️","⚡","🔥","❄️","🌿","💀","🔮","🏹","⚖️","🌌","✨","🦁","🐺","🦊","🐻","🦋","🌹","⭐","💎","🗡️","🏰","🌊","🍃","🔱","🦄","🐍","🦂","🕷️","🦇","🌑","🌸","🍄","🐲","🗺️","🌋","🦴","👁️","🧿","⚜️","🌀","🪄","🏺","🌾","🍷"];
 const EMBLEM_COLORS = [
-  {id:"gold",   label:"Oro",     hex:"#fbbf24"}, {id:"silver", label:"Argento", hex:"#e2e8f0"},
-  {id:"gules",  label:"Rosso",   hex:"#ef4444"}, {id:"azure",  label:"Azzurro", hex:"#3b82f6"},
-  {id:"sable",  label:"Nero",    hex:"#1e293b"}, {id:"vert",   label:"Verde",   hex:"#22c55e"},
-  {id:"purple", label:"Viola",   hex:"#7c3aed"}, {id:"orange", label:"Arancio", hex:"#f97316"},
-  {id:"teal",   label:"Teal",    hex:"#14b8a6"}, {id:"crimson",label:"Cremisi", hex:"#be123c"},
+  {id:"gold",     label:"Oro",         hex:"#fbbf24"},
+  {id:"silver",   label:"Argento",     hex:"#cbd5e1"},
+  {id:"white",    label:"Bianco",      hex:"#f8fafc"},
+  {id:"sable",    label:"Nero",        hex:"#0f172a"},
+  {id:"gules",    label:"Rosso",       hex:"#ef4444"},
+  {id:"crimson",  label:"Cremisi",     hex:"#be123c"},
+  {id:"azure",    label:"Azzurro",     hex:"#3b82f6"},
+  {id:"navy",     label:"Blu Notte",   hex:"#1e3a8a"},
+  {id:"vert",     label:"Verde",       hex:"#22c55e"},
+  {id:"forest",   label:"Verde Bosco", hex:"#166534"},
+  {id:"purple",   label:"Viola",       hex:"#7c3aed"},
+  {id:"indigo",   label:"Indaco",      hex:"#4338ca"},
+  {id:"orange",   label:"Arancio",     hex:"#f97316"},
+  {id:"amber",    label:"Ambra",       hex:"#d97706"},
+  {id:"teal",     label:"Teal",        hex:"#14b8a6"},
+  {id:"rose",     label:"Rosa",        hex:"#f472b6"},
+  {id:"sand",     label:"Sabbia",      hex:"#d4b483"},
+  {id:"bone",     label:"Avorio",      hex:"#e8dcc8"},
 ];
 const DEFAULT_EMBLEM = { shape:"classic", pattern:"solid", color1:"purple", color2:"gold", symbol:"⚔️", border:"gold" };
+
+function _emblemShapePath(shapeId, w, h) {
+  const s = {
+    // Scudi
+    classic:  `M${w*.1},${h*.08} L${w*.9},${h*.08} L${w*.9},${h*.65} Q${w*.5},${h*1.0} ${w*.1},${h*.65} Z`,
+    heater:   `M${w*.1},${h*.08} L${w*.9},${h*.08} L${w*.9},${h*.55} Q${w*.5},${h*.92} ${w*.1},${h*.55} Z`,
+    round:    `M${w*.1},${h*.08} L${w*.9},${h*.08} L${w*.9},${h*.7} Q${w*.5},${h*.95} ${w*.1},${h*.7} Z`,
+    gothic:   `M${w*.1},${h*.08} L${w*.5},${h*.02} L${w*.9},${h*.08} L${w*.9},${h*.62} Q${w*.5},${h*.98} ${w*.1},${h*.62} Z`,
+    banner:   `M${w*.1},${h*.08} L${w*.9},${h*.08} L${w*.9},${h*.78} L${w*.5},${h*.92} L${w*.1},${h*.78} Z`,
+    // Geometrici
+    circle:   `M${w*.5},${h*.05} C${w*.97},${h*.05} ${w*.97},${h*.95} ${w*.5},${h*.95} C${w*.03},${h*.95} ${w*.03},${h*.05} ${w*.5},${h*.05} Z`,
+    square:   `M${w*.07},${h*.07} L${w*.93},${h*.07} L${w*.93},${h*.93} L${w*.07},${h*.93} Z`,
+    roundsq:  `M${w*.2},${h*.07} Q${w*.07},${h*.07} ${w*.07},${h*.2} L${w*.07},${h*.8} Q${w*.07},${h*.93} ${w*.2},${h*.93} L${w*.8},${h*.93} Q${w*.93},${h*.93} ${w*.93},${h*.8} L${w*.93},${h*.2} Q${w*.93},${h*.07} ${w*.8},${h*.07} Z`,
+    diamond:  `M${w*.5},${h*.04} L${w*.96},${h*.5} L${w*.5},${h*.96} L${w*.04},${h*.5} Z`,
+    hexagon:  `M${w*.89},${h*.725} L${w*.5},${h*.95} L${w*.11},${h*.725} L${w*.11},${h*.275} L${w*.5},${h*.05} L${w*.89},${h*.275} Z`,
+    // Fantasia
+    star:     `M${w*.5},${h*.04} L${w*.612},${h*.346} L${w*.937},${h*.358} L${w*.681},${h*.559} L${w*.77},${h*.872} L${w*.5},${h*.69} L${w*.23},${h*.872} L${w*.319},${h*.559} L${w*.063},${h*.358} L${w*.388},${h*.346} Z`,
+    cross:    `M${w*.36},${h*.06} L${w*.64},${h*.06} L${w*.64},${h*.36} L${w*.94},${h*.36} L${w*.94},${h*.64} L${w*.64},${h*.64} L${w*.64},${h*.94} L${w*.36},${h*.94} L${w*.36},${h*.64} L${w*.06},${h*.64} L${w*.06},${h*.36} L${w*.36},${h*.36} Z`,
+    arch:     `M${w*.1},${h*.95} L${w*.1},${h*.42} Q${w*.1},${h*.05} ${w*.5},${h*.05} Q${w*.9},${h*.05} ${w*.9},${h*.42} L${w*.9},${h*.95} Z`,
+    scroll:   `M${w*.5},${h*.04} C${w*.85},${h*.04} ${w*.92},${h*.18} ${w*.92},${h*.5} C${w*.92},${h*.82} ${w*.85},${h*.96} ${w*.5},${h*.96} C${w*.15},${h*.96} ${w*.08},${h*.82} ${w*.08},${h*.5} C${w*.08},${h*.18} ${w*.15},${h*.04} ${w*.5},${h*.04} Z`,
+    wings:    `M${w*.5},${h*.45} C${w*.5},${h*.3} ${w*.3},${h*.1} ${w*.05},${h*.2} C${w*.1},${h*.4} ${w*.25},${h*.5} ${w*.5},${h*.45} Z M${w*.5},${h*.45} C${w*.5},${h*.3} ${w*.7},${h*.1} ${w*.95},${h*.2} C${w*.9},${h*.4} ${w*.75},${h*.5} ${w*.5},${h*.45} Z M${w*.38},${h*.45} L${w*.5},${h*.96} L${w*.62},${h*.45} Q${w*.5},${h*.55} ${w*.38},${h*.45} Z`,
+  };
+  return s[shapeId] || s.classic;
+}
 
 function GuildEmblemSVG({ emblem={}, size=80 }) {
   const e = { ...DEFAULT_EMBLEM, ...emblem };
@@ -215,33 +271,28 @@ function GuildEmblemSVG({ emblem={}, size=80 }) {
   const c2 = EMBLEM_COLORS.find(c=>c.id===e.color2)?.hex || "#fbbf24";
   const bd = EMBLEM_COLORS.find(c=>c.id===e.border)?.hex  || "#fbbf24";
   const w=size, h=size;
-  // Shield paths for each shape
-  const paths = {
-    classic: `M${w*.1},${h*.08} L${w*.9},${h*.08} L${w*.9},${h*.65} Q${w*.5},${h*1.0} ${w*.1},${h*.65} Z`,
-    heater:  `M${w*.1},${h*.08} L${w*.9},${h*.08} L${w*.9},${h*.55} Q${w*.5},${h*.92} ${w*.1},${h*.55} Z`,
-    round:   `M${w*.1},${h*.08} L${w*.9},${h*.08} L${w*.9},${h*.7} Q${w*.5},${h*.95} ${w*.1},${h*.7} Z`,
-    gothic:  `M${w*.1},${h*.08} L${w*.5},${h*.02} L${w*.9},${h*.08} L${w*.9},${h*.62} Q${w*.5},${h*.98} ${w*.1},${h*.62} Z`,
-    banner:  `M${w*.1},${h*.08} L${w*.9},${h*.08} L${w*.9},${h*.78} L${w*.5},${h*.92} L${w*.1},${h*.78} Z`,
-  };
-  const clipId = `clip_${Math.random().toString(36).substr(2,6)}`;
-  const shPath = paths[e.shape] || paths.classic;
-  // Pattern fills
+  const clipId = `clip_${e.shape}_${size}_${e.color1}`;
+  const shPath = _emblemShapePath(e.shape, w, h);
+  const textY = ["wings"].includes(e.shape) ? h*.38 : h*.62;
   const patternFill = () => {
-    if(e.pattern==="solid") return <path d={shPath} fill={c1}/>;
-    if(e.pattern==="pale")  return <><path d={shPath} fill={c1}/><clipPath id={clipId}><path d={shPath}/></clipPath><rect x={w*.5} y="0" width={w*.5} height={h} fill={c2} clipPath={`url(#${clipId})`}/></>;
-    if(e.pattern==="fess")  return <><path d={shPath} fill={c1}/><clipPath id={clipId}><path d={shPath}/></clipPath><rect x="0" y={h*.5} width={w} height={h*.5} fill={c2} clipPath={`url(#${clipId})`}/></>;
-    if(e.pattern==="quarterly") return <><path d={shPath} fill={c1}/><clipPath id={clipId}><path d={shPath}/></clipPath><rect x={w*.5} y="0" width={w*.5} height={h*.5} fill={c2} clipPath={`url(#${clipId})`}/><rect x="0" y={h*.5} width={w*.5} height={h*.5} fill={c2} clipPath={`url(#${clipId})`}/></>;
-    if(e.pattern==="chevron") return <><path d={shPath} fill={c1}/><clipPath id={clipId}><path d={shPath}/></clipPath><polygon points={`0,${h*1} ${w*.5},${h*.35} ${w},${h*1}`} fill={c2} clipPath={`url(#${clipId})`}/></>;
-    if(e.pattern==="bend")  return <><path d={shPath} fill={c1}/><clipPath id={clipId}><path d={shPath}/></clipPath><polygon points={`0,0 ${w},0 ${w},${h*.45} 0,${h*.45}`} fill={c2} clipPath={`url(#${clipId})`}/></>;
-    if(e.pattern==="saltire") return <><path d={shPath} fill={c1}/><clipPath id={clipId}><path d={shPath}/></clipPath><polygon points={`0,0 ${w*.15},0 ${w*.5},${h*.38} ${w*.85},0 ${w},0 ${w},${h*.15} ${w*.62},${h*.5} ${w},${h*.85} ${w},${h} ${w*.85},${h} ${w*.5},${h*.62} ${w*.15},${h} 0,${h} 0,${h*.85} ${w*.38},${h*.5} 0,${h*.15}`} fill={c2} clipPath={`url(#${clipId})`}/></>;
-    return <path d={shPath} fill={c1}/>;
+    const base = <path d={shPath} fill={c1}/>;
+    const clip = <clipPath id={clipId}><path d={shPath}/></clipPath>;
+    const cp = `url(#${clipId})`;
+    if(e.pattern==="solid")     return base;
+    if(e.pattern==="pale")      return <>{base}{clip}<rect x={w*.5} y="0" width={w*.5} height={h} fill={c2} clipPath={cp}/></>;
+    if(e.pattern==="fess")      return <>{base}{clip}<rect x="0" y={h*.5} width={w} height={h*.5} fill={c2} clipPath={cp}/></>;
+    if(e.pattern==="quarterly") return <>{base}{clip}<rect x={w*.5} y="0" width={w*.5} height={h*.5} fill={c2} clipPath={cp}/><rect x="0" y={h*.5} width={w*.5} height={h*.5} fill={c2} clipPath={cp}/></>;
+    if(e.pattern==="chevron")   return <>{base}{clip}<polygon points={`0,${h} ${w*.5},${h*.35} ${w},${h}`} fill={c2} clipPath={cp}/></>;
+    if(e.pattern==="bend")      return <>{base}{clip}<polygon points={`0,0 ${w},0 ${w},${h*.45} 0,${h*.45}`} fill={c2} clipPath={cp}/></>;
+    if(e.pattern==="saltire")   return <>{base}{clip}<polygon points={`0,0 ${w*.15},0 ${w*.5},${h*.38} ${w*.85},0 ${w},0 ${w},${h*.15} ${w*.62},${h*.5} ${w},${h*.85} ${w},${h} ${w*.85},${h} ${w*.5},${h*.62} ${w*.15},${h} 0,${h} 0,${h*.85} ${w*.38},${h*.5} 0,${h*.15}`} fill={c2} clipPath={cp}/></>;
+    return base;
   };
   return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ filter:`drop-shadow(0 2px 8px rgba(0,0,0,0.5))` }}>
+    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} style={{ filter:`drop-shadow(0 2px 8px rgba(0,0,0,0.5))`, overflow:"visible" }}>
       <defs><clipPath id={clipId}><path d={shPath}/></clipPath></defs>
       {patternFill()}
       <path d={shPath} fill="none" stroke={bd} strokeWidth={w*0.045}/>
-      <text x={w*.5} y={h*.62} textAnchor="middle" fontSize={w*.38} dominantBaseline="middle">{e.symbol}</text>
+      <text x={w*.5} y={textY} textAnchor="middle" fontSize={w*.38} dominantBaseline="middle">{e.symbol}</text>
     </svg>
   );
 }
@@ -250,7 +301,7 @@ function GuildEmblemEditor({ emblem, onChange }) {
   const e = { ...DEFAULT_EMBLEM, ...emblem };
   const Row = ({ label, children }) => (
     <div style={{ marginBottom:10 }}>
-      <div style={{ fontSize:"0.68rem", color:"#64748b", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:4 }}>{label}</div>
+      <div style={{ fontSize:"0.68rem", color:"#64748b", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:5 }}>{label}</div>
       {children}
     </div>
   );
@@ -258,29 +309,46 @@ function GuildEmblemEditor({ emblem, onChange }) {
     <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
       {EMBLEM_COLORS.map(c=>(
         <button key={c.id} onClick={()=>onChange({...e,[field]:c.id})} title={c.label}
-          style={{ width:22, height:22, borderRadius:"50%", background:c.hex, border:`2px solid ${e[field]===c.id?"#fff":"transparent"}`, cursor:"pointer", outline:"none" }}/>
+          style={{ width:22, height:22, borderRadius:"50%", background:c.hex, border:`2px solid ${e[field]===c.id?"#fff":"transparent"}`, cursor:"pointer", outline:"none", flexShrink:0 }}/>
       ))}
     </div>
   );
+  const shapeGroups = [
+    { key:"scudo",   label:"🛡️ Scudi" },
+    { key:"geo",     label:"🔵 Geometrici" },
+    { key:"fantasy", label:"✨ Fantasia" },
+  ];
+  const patternLabels = { solid:"Pieno", pale:"Pale", fess:"Fascia", quarterly:"Quarti", chevron:"Chevron", bend:"Banda", saltire:"Croce X" };
   return (
-    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:12 }}>
+    <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:14 }}>
       <div>
-        <Row label="Forma scudo">
-          <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
-            {EMBLEM_SHAPES.map(s=>(
-              <button key={s} onClick={()=>onChange({...e,shape:s})}
-                style={{ padding:"3px 8px", background:e.shape===s?"rgba(109,40,217,0.4)":"rgba(15,23,42,0.5)", border:`1px solid ${e.shape===s?"#7c3aed":"#334155"}`, borderRadius:4, color:e.shape===s?"#c4b5fd":"#64748b", cursor:"pointer", fontSize:"0.65rem" }}>
-                {s}
-              </button>
-            ))}
-          </div>
+        <Row label="Forma logo">
+          {shapeGroups.map(grp => (
+            <div key={grp.key} style={{ marginBottom:8 }}>
+              <div style={{ fontSize:"0.6rem", color:"#475569", marginBottom:4, letterSpacing:"0.06em" }}>{grp.label}</div>
+              <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
+                {EMBLEM_SHAPES.filter(s=>s.group===grp.key).map(s => {
+                  const sel = e.shape === s.id;
+                  return (
+                    <button key={s.id} onClick={()=>onChange({...e,shape:s.id})} title={s.label}
+                      style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:3, padding:"5px 6px", background:sel?"rgba(109,40,217,0.35)":"rgba(15,23,42,0.5)", border:`1px solid ${sel?"#7c3aed":"#334155"}`, borderRadius:7, cursor:"pointer", minWidth:44 }}>
+                      <svg width={28} height={28} viewBox="0 0 100 100" style={{ display:"block" }}>
+                        <path d={_emblemShapePath(s.id,100,100)} fill={sel?"#7c3aed":"#334155"} stroke={sel?"#c4b5fd":"#64748b"} strokeWidth={4}/>
+                      </svg>
+                      <span style={{ fontSize:"0.55rem", color:sel?"#c4b5fd":"#64748b", whiteSpace:"nowrap" }}>{s.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
         </Row>
         <Row label="Partizione">
           <div style={{ display:"flex", gap:5, flexWrap:"wrap" }}>
             {EMBLEM_PATTERNS.map(p=>(
               <button key={p} onClick={()=>onChange({...e,pattern:p})}
-                style={{ padding:"3px 8px", background:e.pattern===p?"rgba(109,40,217,0.4)":"rgba(15,23,42,0.5)", border:`1px solid ${e.pattern===p?"#7c3aed":"#334155"}`, borderRadius:4, color:e.pattern===p?"#c4b5fd":"#64748b", cursor:"pointer", fontSize:"0.65rem" }}>
-                {p}
+                style={{ padding:"3px 8px", background:e.pattern===p?"rgba(109,40,217,0.4)":"rgba(15,23,42,0.5)", border:`1px solid ${e.pattern===p?"#7c3aed":"#334155"}`, borderRadius:4, color:e.pattern===p?"#c4b5fd":"#64748b", cursor:"pointer", fontSize:"0.63rem" }}>
+                {patternLabels[p]||p}
               </button>
             ))}
           </div>
@@ -291,18 +359,21 @@ function GuildEmblemEditor({ emblem, onChange }) {
       </div>
       <div>
         <Row label="Simbolo">
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:4, maxHeight:160, overflowY:"auto" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(6,1fr)", gap:4, maxHeight:200, overflowY:"auto" }}>
             {EMBLEM_SYMBOLS.map(sym=>(
               <button key={sym} onClick={()=>onChange({...e,symbol:sym})}
-                style={{ fontSize:"1.2rem", width:32, height:32, background:e.symbol===sym?"rgba(109,40,217,0.4)":"rgba(15,23,42,0.5)", border:`1px solid ${e.symbol===sym?"#7c3aed":"#334155"}`, borderRadius:5, cursor:"pointer" }}>
+                style={{ fontSize:"1.15rem", width:32, height:32, background:e.symbol===sym?"rgba(109,40,217,0.4)":"rgba(15,23,42,0.5)", border:`1px solid ${e.symbol===sym?"#7c3aed":"#334155"}`, borderRadius:5, cursor:"pointer" }}>
                 {sym}
               </button>
             ))}
           </div>
         </Row>
-        <div style={{ marginTop:12, textAlign:"center" }}>
-          <div style={{ fontSize:"0.68rem", color:"#64748b", marginBottom:6 }}>Anteprima</div>
-          <GuildEmblemSVG emblem={e} size={90}/>
+        <div style={{ marginTop:14, textAlign:"center" }}>
+          <div style={{ fontSize:"0.68rem", color:"#64748b", marginBottom:8, fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>Anteprima</div>
+          <GuildEmblemSVG emblem={e} size={100}/>
+          <div style={{ marginTop:6, fontSize:"0.62rem", color:"#475569" }}>
+            {EMBLEM_SHAPES.find(s=>s.id===e.shape)?.label} · {patternLabels[e.pattern]||e.pattern}
+          </div>
         </div>
       </div>
     </div>
