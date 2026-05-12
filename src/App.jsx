@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
+﻿import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "./supabase";
 import { CLASSES, RACES } from "./data/characterData";
 import { SPELL_SLOTS, SPELLS } from "./data/spellsData";
@@ -4913,23 +4913,25 @@ function GameScreen({ myId, setScreen, authUser }) {
   // Only the first alive player in initiative order executes to prevent race conditions.
   async function doMonsterTurn() {
     if (monsterTickBusyRef.current) return;
-    const latestQs = await dbGetPartyState(code);
-    const latestCombat = latestQs?.combat;
-    if (!latestCombat?.active) return;
-    if (latestCombat.pendingLog) return;
-    const latestCombatants = [...latestCombat.combatants];
-    const actor = latestCombatants[latestCombat.turn % latestCombatants.length];
-    if (actor?.isPlayer) return; // turn already advanced to a player — do nothing
-    if (!actor || actor.hp <= 0) {
-      // Dead monster slot — advance turn without attacking
-      const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
-      const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound };
-      await dbSavePartyState(code, { ...latestQs, combat: newCombat });
-      setQs(prev => ({ ...prev, combat: newCombat }));
-      return;
-    }
     monsterTickBusyRef.current = true;
     try {
+      const latestQs = await dbGetPartyState(code);
+      const latestCombat = latestQs?.combat;
+      if (!latestCombat?.active) return;
+      if (latestCombat.pendingLog) return;
+      const latestCombatants = [...latestCombat.combatants];
+      // Guard: all monsters already dead (race condition — endCombat ran concurrently)
+      if (latestCombatants.filter(c => !c.isPlayer).every(c => c.hp <= 0)) return;
+      const actor = latestCombatants[latestCombat.turn % latestCombatants.length];
+      if (actor?.isPlayer) return; // turn already advanced to a player — do nothing
+      if (!actor || actor.hp <= 0) {
+        // Dead monster slot — advance turn without attacking
+        const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
+        const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound };
+        await dbSavePartyState(code, { ...latestQs, combat: newCombat });
+        setQs(prev => ({ ...prev, combat: newCombat }));
+        return;
+      }
       // Process status effects on monster at turn start
       let monsterStatusLog = null;
       if ((actor.statusEffects || []).length > 0) {
