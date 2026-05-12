@@ -6456,6 +6456,24 @@ function GameScreen({ myId, setScreen, authUser }) {
   }
   doMonsterTurnRef.current = doMonsterTurn;
 
+  async function leaveCombat() {
+    const latestQs = await dbGetPartyState(code);
+    const c = latestQs?.combat;
+    if (!c?.active) return;
+    const myIdx = c.combatants.findIndex(x => x.id === myId);
+    if (myIdx === -1) return; // not in combat
+    const newCombatants = c.combatants.filter(x => x.id !== myId);
+    if (!newCombatants.length) return; // last player — don't leave
+    // Fix turn index after removal
+    let newTurn = c.turn;
+    if (myIdx < c.turn) newTurn = c.turn - 1;
+    else if (myIdx === c.turn) newTurn = c.turn % newCombatants.length; // advance to next
+    newTurn = Math.max(0, Math.min(newTurn, newCombatants.length - 1));
+    const log = `🚪 **${c.combatants[myIdx].name}** ha abbandonato la battaglia.`;
+    await saveQState({ ...latestQs, combat: { ...c, combatants: newCombatants, turn: newTurn, pendingLog: log } });
+    await addMsg(log, "combat", "Sistema");
+  }
+
   // Auto-resolve summon turns (skeleton, animal, etc.)
   async function doSummonTurn() {
     const latestQs = await dbGetPartyState(code);
@@ -9732,10 +9750,10 @@ ${stepText(step)}`, "quest","Master");
       <DiceRoller ref={diceRef} />
 
       {/* ── Battle Incoming Banner ── */}
-      {combat?.active && tab !== "combat" && declinedCombatAt !== combat.startedAt && (
+      {combat?.active && tab !== "combat" && declinedCombatAt !== combat.startedAt && combat.combatants?.some(c => c.id === myId) && (
         <BattleBanner
           onEnter={() => setTab("combat")}
-          onDecline={() => setDeclinedCombatAt(combat.startedAt)}
+          onDecline={async () => { setDeclinedCombatAt(combat.startedAt); await leaveCombat(); }}
           startedAt={combat.startedAt}
         />
       )}
