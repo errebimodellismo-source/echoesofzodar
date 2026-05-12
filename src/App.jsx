@@ -146,6 +146,15 @@ function getPlayerTitle(stats) {
 
 /* Guild system */
 const GUILD_REGISTRY_CODE = "__world_guilds__";
+const WORLD_EVENT_CODE = "__world_events__";
+
+const MEGA_BOSSES = [
+  { id:"zarath",  name:"Zarath il Distruttore",    emoji:"🐉", hp:50000,  atk:35, def:18, dmgDie:"3d12", isBoss:true, desc:"Un antico drago oscuro risvegliato dalle profondità di Zodar. La sua fiamma corrompe tutto ciò che tocca.", rewards:{ xp:2000, gold:1500 } },
+  { id:"lich",    name:"Il Lich di Malachar",       emoji:"💀", hp:35000,  atk:28, def:14, dmgDie:"4d8",  isBoss:true, desc:"Un potente negromante che ha trasceso la morte. Comanda legioni di non-morti e non conosce pietà.",     rewards:{ xp:1500, gold:1200 } },
+  { id:"titan",   name:"Titano delle Rovine",       emoji:"🗿", hp:60000,  atk:40, def:22, dmgDie:"2d20", isBoss:true, desc:"Un costrutto antico alto come una torre, costruito per difendere una civiltà ormai dimenticata.",       rewards:{ xp:2500, gold:2000 } },
+  { id:"spider",  name:"Arachne la Tessitrice",     emoji:"🕷️", hp:28000,  atk:24, def:12, dmgDie:"3d8",  isBoss:true, desc:"Regina dei ragni giganti, intrappolata nelle caverne di Zodar per secoli. La sua vendetta è spietata.", rewards:{ xp:1200, gold:900 } },
+  { id:"demon",   name:"Malphas Signore del Caos",  emoji:"😈", hp:45000,  atk:32, def:16, dmgDie:"4d10", isBoss:true, desc:"Un demone primordiale evocato da un culto folle. Distorce la realtà intorno a sé.",                    rewards:{ xp:1800, gold:1400 } },
+];
 const GUILD_XP_TABLE = [0,0,500,1500,3000,5000,8000,12000,17000,23000,30000,40000,52000,66000,82000,100000,120000,143000,168000,196000,228000];
 const GUILD_EMOJIS = ["⚔️","🛡️","🏹","🔮","🐉","🦅","🌙","☀️","⚡","🔥","❄️","🌿","💀","👑","🌌"];
 function getGuildLevel(xp) {
@@ -1931,6 +1940,14 @@ async function dbSaveAllGuilds(guilds) {
   const { error } = await supabase.from("party_state").upsert({ party_code: GUILD_REGISTRY_CODE, combat: { guilds }, updated_at: new Date().toISOString() });
   if(error) throw error;
 }
+async function dbGetWorldEvent() {
+  const { data } = await supabase.from("party_state").select("combat").eq("party_code", WORLD_EVENT_CODE).maybeSingle();
+  return data?.combat?.event || null;
+}
+async function dbSaveWorldEvent(event) {
+  const { error } = await supabase.from("party_state").upsert({ party_code: WORLD_EVENT_CODE, combat: { event }, updated_at: new Date().toISOString() });
+  if(error) throw error;
+}
 async function dbGetGuildWarehouse(guildId) {
   const virtualId = "guild_" + guildId;
   const rows = await dbGetPlayerItems(virtualId);
@@ -2880,7 +2897,7 @@ function MasterPanel({ setScreen, authUser }) {
     return ()=>{ alive = false; clearInterval(timer); };
   }, [tab]);
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"📊 Report"}];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"📊 Report"}];
   const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
   const visibleQuests = quests.filter(q => {
     const term = questSearch.trim().toLowerCase();
@@ -3274,6 +3291,7 @@ function MasterPanel({ setScreen, authUser }) {
       {tab==="users" && <UsersView authUser={authUser} />}
       {tab==="dungeon" && <MasterDungeonView />}
       {tab==="leaderboard" && <GlobalLeaderboardView />}
+      {tab==="worldevent" && <MasterWorldEventView />}
     </div>
   );
 }
@@ -5263,6 +5281,243 @@ function BattleBanner({ onEnter, startedAt }) {
 }
 
 /* ----------------------------------------------
+   PLAYER WORLD EVENT VIEW
+----------------------------------------------*/
+function PlayerWorldEventView({ me, myId }) {
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [attacking, setAttacking] = useState(false);
+  const [lastHit, setLastHit] = useState(null);
+
+  useEffect(() => {
+    dbGetWorldEvent().then(e => { setEvent(e); setLoading(false); });
+  }, []);
+
+  async function attackBoss() {
+    if(!event?.active || !me) return;
+    setAttacking(true);
+    setLastHit(null);
+    // Roll damage based on player stats
+    const atkStat = me.atk || 10;
+    const die = 12;
+    const dmg = Math.max(1, Math.floor(Math.random() * die) + 1 + Math.floor(atkStat / 4));
+    const fresh = await dbGetWorldEvent();
+    if(!fresh?.active) { setEvent(fresh); setAttacking(false); return; }
+    const prevContrib = fresh.contributors?.[myId] || { name: me.name, dmg: 0, hits: 0 };
+    const newContribs = { ...fresh.contributors, [myId]: { name: me.name, dmg: prevContrib.dmg + dmg, hits: prevContrib.hits + 1 } };
+    const newHp = Math.max(0, fresh.hp - dmg);
+    const beaten = newHp <= 0;
+    const updated = { ...fresh, hp: newHp, contributors: newContribs, active: !beaten, beatenAt: beaten ? new Date().toISOString() : undefined };
+    await dbSaveWorldEvent(updated);
+    setEvent(updated);
+    setLastHit(dmg);
+    setAttacking(false);
+    if(beaten) {
+      // Reward all contributors
+      window.alert(`💥 Il Mega Boss è stato sconfitto! Riceverai ${fresh.rewards?.xp} XP e ${fresh.rewards?.gold}🪙 al prossimo login!`);
+    }
+  }
+
+  if(loading) return <div style={{ padding:"2rem", textAlign:"center", color:"#6b7280" }}>⏳ Caricamento evento…</div>;
+
+  const PANEL_BG2 = "rgba(15,23,42,0.85)";
+  const hpPct = event ? Math.max(0, Math.round((event.hp / event.maxHp) * 100)) : 0;
+  const contribs = event ? Object.values(event.contributors || {}).sort((a,b)=>b.dmg-a.dmg) : [];
+  const myContrib = event?.contributors?.[myId];
+  const timeLeft = event?.endsAt ? Math.max(0, Math.round((new Date(event.endsAt) - Date.now()) / 3600000)) : 0;
+  const beaten = event && !event.active && event.beatenAt;
+
+  if(!event || (!event.active && !beaten)) return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.5)", display:"flex", alignItems:"center", justifyContent:"center" }}>
+      <div style={{ textAlign:"center", color:"#4b5563" }}>
+        <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>🌙</div>
+        <div style={{ fontFamily:"'Cinzel',serif", color:"#475569", fontSize:"0.9rem" }}>Nessun evento mondiale attivo.</div>
+        <div style={{ color:"#374151", fontSize:"0.75rem", marginTop:6 }}>Il Master lancerà il prossimo evento a sorpresa.</div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.5)" }}>
+      <h3 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#ef4444", marginBottom:"0.3rem", textAlign:"center", fontSize:"1.1rem" }}>🌋 EVENTO MONDIALE</h3>
+      <p style={{ color:"#6b7280", fontSize:"0.7rem", textAlign:"center", marginBottom:"1rem" }}>
+        {beaten ? "⚔️ Battaglia conclusa — il boss è stato sconfitto!" : `⏱ ${timeLeft}h rimanenti · ${contribs.length} eroi coinvolti`}
+      </p>
+
+      {/* Boss card */}
+      <div style={{ background:"linear-gradient(135deg,rgba(60,10,10,0.9),rgba(20,10,40,0.9))", border:`2px solid ${beaten?"#4ade80":"#dc2626"}`, borderRadius:14, padding:"1.2rem", marginBottom:"1rem", textAlign:"center" }}>
+        <div style={{ fontSize:"4rem", marginBottom:6, filter: beaten ? "grayscale(1) opacity(0.5)" : "drop-shadow(0 0 16px rgba(239,68,68,0.6))", transition:"all 0.5s" }}>{event.emoji}</div>
+        <div style={{ fontFamily:"'Cinzel Decorative',serif", color: beaten ? "#4ade80" : "#fbbf24", fontSize:"1rem", marginBottom:4 }}>{beaten ? "💀 SCONFITTO" : event.name}</div>
+        <div style={{ color:"#94a3b8", fontSize:"0.73rem", fontStyle:"italic", marginBottom:12 }}>{event.desc}</div>
+        <div style={{ marginBottom:8 }}>
+          <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.7rem", color:"#94a3b8", marginBottom:4 }}>
+            <span>❤️ HP del Boss</span><span>{event.hp.toLocaleString("it-IT")} / {event.maxHp.toLocaleString("it-IT")}</span>
+          </div>
+          <div style={{ height:18, background:"rgba(30,41,59,0.8)", borderRadius:9, overflow:"hidden" }}>
+            <div style={{ height:"100%", width:`${hpPct}%`, background:`linear-gradient(90deg,${hpPct>50?"#dc2626":"#7f1d1d"},${hpPct>25?"#ef4444":"#450a0a"})`, borderRadius:9, transition:"width .6s" }} />
+          </div>
+        </div>
+        <div style={{ fontSize:"0.72rem", color:"#4ade80" }}>🏆 Ricompense: +{event.rewards?.xp} XP · +{event.rewards?.gold} 🪙 per tutti i partecipanti</div>
+      </div>
+
+      {/* Attack button */}
+      {event.active && (
+        <div style={{ textAlign:"center", marginBottom:"1rem" }}>
+          {lastHit !== null && (
+            <div style={{ fontSize:"1.4rem", fontWeight:900, color:"#ef4444", fontFamily:"'Cinzel Decorative',serif", marginBottom:8, animation:"none" }}>
+              -{lastHit} DANNI!
+            </div>
+          )}
+          <button onClick={attackBoss} disabled={attacking}
+            style={{ padding:"0.9rem 2.5rem", background:attacking?"rgba(30,10,10,0.6)":"linear-gradient(135deg,#7f1d1d,#991b1b)", border:"2px solid #ef4444", borderRadius:12, color:"#fee2e2", fontFamily:"'Cinzel Decorative',serif", fontSize:"1rem", cursor:attacking?"not-allowed":"pointer", opacity:attacking?0.6:1, boxShadow:"0 0 20px rgba(239,68,68,0.3)", transition:"all 0.2s", letterSpacing:"0.05em" }}>
+            {attacking ? "⚔️ Attacco…" : "⚔️ ATTACCA IL BOSS!"}
+          </button>
+          {myContrib && (
+            <div style={{ marginTop:8, fontSize:"0.72rem", color:"#94a3b8" }}>
+              I tuoi danni: <span style={{ color:"#f87171", fontWeight:700 }}>{myContrib.dmg.toLocaleString("it-IT")}</span> in {myContrib.hits} colpi
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Leaderboard contributi */}
+      <div style={{ background:PANEL_BG2, border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, padding:"1rem" }}>
+        <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8", marginBottom:8 }}>🗡️ EROI IN BATTAGLIA</div>
+        {contribs.length === 0 && <div style={{ color:"#4b5563", fontSize:"0.75rem" }}>Sii il primo ad attaccare!</div>}
+        {contribs.map((c,i) => (
+          <div key={c.name+i} style={{ display:"flex", gap:8, alignItems:"center", padding:"0.4rem 0.6rem", background: c.name===me?.name ? "rgba(109,40,217,0.15)" : "rgba(15,23,42,0.4)", border: c.name===me?.name ? "1px solid rgba(196,181,253,0.2)" : "1px solid transparent", borderRadius:6, marginBottom:4 }}>
+            <span style={{ color:"#fbbf24", fontWeight:700, minWidth:24, fontSize:"0.8rem" }}>{["🥇","🥈","🥉"][i]||`#${i+1}`}</span>
+            <div style={{ flex:1, fontSize:"0.8rem", color: c.name===me?.name ? "#c4b5fd" : "#e2e8f0" }}>{c.name}{c.name===me?.name&&" (tu)"}</div>
+            <span style={{ color:"#f87171", fontWeight:700, fontSize:"0.78rem" }}>{c.dmg.toLocaleString("it-IT")} dmg</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ----------------------------------------------
+   MASTER WORLD EVENT VIEW
+----------------------------------------------*/
+function MasterWorldEventView() {
+  const [event, setEvent] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [selectedBoss, setSelectedBoss] = useState(MEGA_BOSSES[0].id);
+  const [durationDays, setDurationDays] = useState(7);
+
+  useEffect(() => {
+    dbGetWorldEvent().then(e => { setEvent(e); setLoading(false); });
+  }, []);
+
+  async function startEvent() {
+    const boss = MEGA_BOSSES.find(b => b.id === selectedBoss);
+    if(!boss) return;
+    const endsAt = new Date(Date.now() + durationDays * 86400000).toISOString();
+    const newEvent = { id:`we_${Date.now()}`, bossId:boss.id, name:boss.name, emoji:boss.emoji, desc:boss.desc, hp:boss.hp, maxHp:boss.hp, rewards:boss.rewards, endsAt, active:true, contributors:{}, createdAt:new Date().toISOString() };
+    setSaving(true);
+    await dbSaveWorldEvent(newEvent);
+    setEvent(newEvent);
+    setSaving(false);
+  }
+
+  async function endEvent() {
+    if(!event) return;
+    if(!window.confirm("Terminare l'evento mondiale anticipatamente?")) return;
+    const updated = { ...event, active:false };
+    setSaving(true);
+    await dbSaveWorldEvent(updated);
+    setEvent(updated);
+    setSaving(false);
+  }
+
+  const PANEL = { background:"rgba(3,7,18,0.85)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, padding:"1rem", marginBottom:"1rem" };
+  const IS = { padding:"0.4rem 0.6rem", background:"rgba(15,23,42,0.8)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.82rem" };
+
+  if(loading) return <div style={{ padding:"2rem", textAlign:"center", color:"#6b7280" }}>⏳ Caricamento…</div>;
+
+  const boss = event ? MEGA_BOSSES.find(b => b.id === event.bossId) : null;
+  const hpPct = event ? Math.max(0, Math.round((event.hp / event.maxHp) * 100)) : 0;
+  const contribs = event ? Object.values(event.contributors || {}).sort((a,b)=>b.dmg-a.dmg) : [];
+  const timeLeft = event?.endsAt ? Math.max(0, Math.round((new Date(event.endsAt) - Date.now()) / 3600000)) : 0;
+
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.5)" }}>
+      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🌋 Evento Mondiale</h3>
+
+      {event?.active ? (
+        <>
+          <div style={{ ...PANEL, border:"2px solid #dc2626", background:"linear-gradient(135deg,rgba(60,10,10,0.9),rgba(15,23,42,0.9))" }}>
+            <div style={{ display:"flex", gap:12, alignItems:"center", marginBottom:12 }}>
+              <span style={{ fontSize:"3.5rem" }}>{event.emoji}</span>
+              <div>
+                <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.05rem" }}>{event.name}</div>
+                <div style={{ color:"#94a3b8", fontSize:"0.75rem", marginTop:3 }}>{event.desc}</div>
+                <div style={{ color:"#ef4444", fontSize:"0.7rem", marginTop:4 }}>⏱ {timeLeft}h rimanenti · {contribs.length} avventurieri coinvolti</div>
+              </div>
+            </div>
+            <div style={{ marginBottom:8 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.72rem", color:"#94a3b8", marginBottom:4 }}>
+                <span>HP Mega Boss</span><span>{event.hp.toLocaleString("it-IT")} / {event.maxHp.toLocaleString("it-IT")}</span>
+              </div>
+              <div style={{ height:14, background:"rgba(30,41,59,0.8)", borderRadius:7, overflow:"hidden" }}>
+                <div style={{ height:"100%", width:`${hpPct}%`, background:`linear-gradient(90deg,${hpPct>50?"#dc2626":"#7f1d1d"},#ef4444)`, borderRadius:7, transition:"width .5s" }} />
+              </div>
+            </div>
+            <div style={{ fontSize:"0.72rem", color:"#4ade80" }}>🏆 Ricompensa: +{event.rewards?.xp} XP · +{event.rewards?.gold} 🪙</div>
+          </div>
+
+          <div style={PANEL}>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8", marginBottom:8 }}>🗡️ CONTRIBUTI DANNI</div>
+            {contribs.length === 0 && <div style={{ color:"#4b5563", fontSize:"0.75rem" }}>Nessun attacco ancora.</div>}
+            {contribs.map((c,i) => (
+              <div key={c.name} style={{ display:"flex", gap:8, alignItems:"center", padding:"0.4rem 0.6rem", background:"rgba(15,23,42,0.5)", borderRadius:6, marginBottom:4 }}>
+                <span style={{ color:"#fbbf24", fontWeight:700, minWidth:24, fontSize:"0.8rem" }}>#{i+1}</span>
+                <div style={{ flex:1, fontSize:"0.8rem", color:"#e2e8f0" }}>{c.name}</div>
+                <span style={{ color:"#f87171", fontWeight:700, fontSize:"0.78rem" }}>{c.dmg.toLocaleString("it-IT")} dmg</span>
+                <span style={{ color:"#64748b", fontSize:"0.7rem" }}>{c.hits} colpi</span>
+              </div>
+            ))}
+          </div>
+
+          <button onClick={endEvent} disabled={saving} style={{ padding:"0.5rem 1.2rem", background:"rgba(127,29,29,0.3)", border:"1px solid #dc2626", borderRadius:7, color:"#f87171", cursor:"pointer", fontSize:"0.8rem" }}>
+            ✕ Termina evento anticipatamente
+          </button>
+        </>
+      ) : (
+        <div style={PANEL}>
+          <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8", marginBottom:12 }}>
+            {event && !event.active ? "⚔️ Evento precedente terminato. Crea un nuovo evento:" : "Nessun evento attivo. Crea un evento mondiale:"}
+          </div>
+          <div style={{ marginBottom:10 }}>
+            <div style={{ fontSize:"0.65rem", color:"#64748b", marginBottom:5 }}>Scegli il Mega Boss:</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+              {MEGA_BOSSES.map(b => (
+                <div key={b.id} onClick={() => setSelectedBoss(b.id)} style={{ display:"flex", gap:10, alignItems:"flex-start", padding:"0.6rem 0.8rem", background:selectedBoss===b.id?"rgba(109,40,217,0.2)":"rgba(15,23,42,0.5)", border:`1px solid ${selectedBoss===b.id?"#7c3aed":"#334155"}`, borderRadius:8, cursor:"pointer" }}>
+                  <span style={{ fontSize:"1.8rem", flexShrink:0 }}>{b.emoji}</span>
+                  <div>
+                    <div style={{ color:selectedBoss===b.id?"#c4b5fd":"#e2e8f0", fontWeight:700, fontSize:"0.82rem" }}>{b.name}</div>
+                    <div style={{ color:"#64748b", fontSize:"0.68rem", marginTop:2 }}>{b.hp.toLocaleString("it-IT")} HP · +{b.rewards.xp} XP · +{b.rewards.gold}🪙</div>
+                    <div style={{ color:"#475569", fontSize:"0.65rem", marginTop:2, fontStyle:"italic" }}>{b.desc}</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:12 }}>
+            <label style={{ fontSize:"0.72rem", color:"#94a3b8" }}>Durata (giorni):</label>
+            <input type="number" value={durationDays} min={1} max={30} onChange={e=>setDurationDays(Number(e.target.value))} style={{ ...IS, width:70 }} />
+          </div>
+          <button onClick={startEvent} disabled={saving} style={{ padding:"0.55rem 1.4rem", background:"linear-gradient(135deg,rgba(127,29,29,0.6),rgba(109,40,217,0.3))", border:"2px solid #dc2626", borderRadius:8, color:"#fca5a5", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.85rem", fontWeight:700 }}>
+            🌋 Lancia Evento Mondiale
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+/* ----------------------------------------------
    GLOBAL LEADERBOARD VIEW
 ---------------------------------------------- */
 function GlobalLeaderboardView({ myId, partyCode }) {
@@ -5276,7 +5531,7 @@ function GlobalLeaderboardView({ myId, partyCode }) {
       setLoading(true);
       const { data: players } = await supabase
         .from("players")
-        .select("id,name,class,race,level,xp,gold,party_code,stats,avatar_config")
+        .select("id,name,class,race,level,xp,gold,party_code,avatar_config")
         .order("xp", { ascending: false });
       if (!alive) return;
 
@@ -5289,7 +5544,7 @@ function GlobalLeaderboardView({ myId, partyCode }) {
         g.players.push(p);
         g.totalXp += p.xp || 0;
         g.totalGold += p.gold || 0;
-        const s = p.stats || p.avatar_config?.stats || {};
+        const s = (p.avatar_config && typeof p.avatar_config === 'object') ? (p.avatar_config.stats || {}) : {};
         g.totalQuests += s.questsCompleted || 0;
         g.totalMonsters += s.monstersKilled || 0;
         g.totalDamage += s.totalDamage || 0;
@@ -5305,10 +5560,10 @@ function GlobalLeaderboardView({ myId, partyCode }) {
 
   const CATS = [
     { k: "xp",       l: "⭐ XP",            pKey: "xp",           gKey: "totalXp",       fmt: v => `${v.toLocaleString("it-IT")} XP` },
-    { k: "quests",   l: "📜 Missioni",       pKey: null,           gKey: "totalQuests",   fmt: v => `${v} completate`, pFn: p => (p.stats||p.avatar_config?.stats||{}).questsCompleted||0 },
-    { k: "monsters", l: "💀 Mostri",         pKey: null,           gKey: "totalMonsters", fmt: v => `${v} uccisi`, pFn: p => (p.stats||p.avatar_config?.stats||{}).monstersKilled||0 },
+    { k: "quests",   l: "📜 Missioni",       pKey: null,           gKey: "totalQuests",   fmt: v => `${v} completate`, pFn: p => ((p.avatar_config&&typeof p.avatar_config==='object')?p.avatar_config.stats||{}:{}).questsCompleted||0 },
+    { k: "monsters", l: "💀 Mostri",         pKey: null,           gKey: "totalMonsters", fmt: v => `${v} uccisi`, pFn: p => ((p.avatar_config&&typeof p.avatar_config==='object')?p.avatar_config.stats||{}:{}).monstersKilled||0 },
     { k: "gold",     l: "💰 Oro",            pKey: "gold",         gKey: "totalGold",     fmt: v => `${v.toLocaleString("it-IT")} 💰` },
-    { k: "damage",   l: "🔥 Danno",          pKey: null,           gKey: "totalDamage",   fmt: v => `${v.toLocaleString("it-IT")} dmg`, pFn: p => (p.stats||p.avatar_config?.stats||{}).totalDamage||0 },
+    { k: "damage",   l: "🔥 Danno",          pKey: null,           gKey: "totalDamage",   fmt: v => `${v.toLocaleString("it-IT")} dmg`, pFn: p => ((p.avatar_config&&typeof p.avatar_config==='object')?p.avatar_config.stats||{}:{}).totalDamage||0 },
   ];
   const catCfg = CATS.find(c => c.k === cat);
 
@@ -7631,7 +7886,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["trade","🤝 Scambi"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["leaderboard","🏆 Classifiche"],["diary","📖 Diario"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["trade","🤝 Scambi"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["diary","📖 Diario"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
@@ -8030,6 +8285,10 @@ ${stepText(step)}`, "quest","Master");
 
         {tab==="leaderboard" && (
           <GlobalLeaderboardView myId={myId} partyCode={code} />
+        )}
+
+        {tab==="worldevent" && (
+          <PlayerWorldEventView me={me} myId={myId} />
         )}
 
         {tab==="quest" && (
