@@ -5758,7 +5758,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     const c = qs?.combat;
     if(!c?.active) { setTurnTimeLeft(null); return; }
     const actor = (c.combatants||[])[c.turn % Math.max(1,(c.combatants||[]).length)];
-    if(!actor?.isPlayer || c.pendingLog) { setTurnTimeLeft(null); return; }
+    if(!actor?.isPlayer || actor?.isSummon || c.pendingLog) { setTurnTimeLeft(null); return; }
     currentActorIdRef.current = actor.id;
     let timeLeft = TURN_TIMEOUT_S;
     setTurnTimeLeft(timeLeft);
