@@ -2801,7 +2801,7 @@ function MasterPanel({ setScreen, authUser }) {
     return ()=>{ alive = false; clearInterval(timer); };
   }, [tab]);
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"📊 Report"}];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"📊 Report"}];
   const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
   const visibleQuests = quests.filter(q => {
     const term = questSearch.trim().toLowerCase();
@@ -3194,6 +3194,7 @@ function MasterPanel({ setScreen, authUser }) {
       {tab==="market" && <MarketView />}
       {tab==="users" && <UsersView authUser={authUser} />}
       {tab==="dungeon" && <MasterDungeonView />}
+      {tab==="leaderboard" && <GlobalLeaderboardView />}
     </div>
   );
 }
@@ -5091,8 +5092,147 @@ function SpellbookView({ spellsByLevel, preparedSpellIds, preparedCount, maxPrep
 }
 
 /* ----------------------------------------------
-   GAME SCREEN
+   GLOBAL LEADERBOARD VIEW
 ---------------------------------------------- */
+function GlobalLeaderboardView({ myId, partyCode }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [cat, setCat] = useState("xp"); // xp | quests | monsters | gold | damage
+
+  useEffect(() => {
+    let alive = true;
+    async function load() {
+      setLoading(true);
+      const { data: players } = await supabase
+        .from("players")
+        .select("id,name,class,race,level,xp,gold,party_code,stats,avatar_config")
+        .order("xp", { ascending: false });
+      if (!alive) return;
+
+      // Aggregate by party
+      const byParty = {};
+      for (const p of players || []) {
+        const pc = p.party_code || "?";
+        if (!byParty[pc]) byParty[pc] = { party_code: pc, players: [], totalXp: 0, totalGold: 0, totalQuests: 0, totalMonsters: 0, totalDamage: 0, topLevel: 0 };
+        const g = byParty[pc];
+        g.players.push(p);
+        g.totalXp += p.xp || 0;
+        g.totalGold += p.gold || 0;
+        const s = p.stats || p.avatar_config?.stats || {};
+        g.totalQuests += s.questsCompleted || 0;
+        g.totalMonsters += s.monstersKilled || 0;
+        g.totalDamage += s.totalDamage || 0;
+        if ((p.level || 1) > g.topLevel) g.topLevel = p.level || 1;
+      }
+
+      setData({ players: players || [], parties: Object.values(byParty) });
+      setLoading(false);
+    }
+    load();
+    return () => { alive = false; };
+  }, []);
+
+  const CATS = [
+    { k: "xp",       l: "⭐ XP",            pKey: "xp",           gKey: "totalXp",       fmt: v => `${v.toLocaleString("it-IT")} XP` },
+    { k: "quests",   l: "📜 Missioni",       pKey: null,           gKey: "totalQuests",   fmt: v => `${v} completate`, pFn: p => (p.stats||p.avatar_config?.stats||{}).questsCompleted||0 },
+    { k: "monsters", l: "💀 Mostri",         pKey: null,           gKey: "totalMonsters", fmt: v => `${v} uccisi`, pFn: p => (p.stats||p.avatar_config?.stats||{}).monstersKilled||0 },
+    { k: "gold",     l: "💰 Oro",            pKey: "gold",         gKey: "totalGold",     fmt: v => `${v.toLocaleString("it-IT")} 💰` },
+    { k: "damage",   l: "🔥 Danno",          pKey: null,           gKey: "totalDamage",   fmt: v => `${v.toLocaleString("it-IT")} dmg`, pFn: p => (p.stats||p.avatar_config?.stats||{}).totalDamage||0 },
+  ];
+  const catCfg = CATS.find(c => c.k === cat);
+
+  const getPlayerVal = p => catCfg.pFn ? catCfg.pFn(p) : (p[catCfg.pKey] || 0);
+  const getPartyVal  = g => g[catCfg.gKey] || 0;
+
+  const sortedPlayers = data ? [...data.players].sort((a, b) => getPlayerVal(b) - getPlayerVal(a)).slice(0, 50) : [];
+  const sortedParties = data ? [...data.parties].sort((a, b) => getPartyVal(b) - getPartyVal(a)).slice(0, 20) : [];
+
+  const MEDAL = ["🥇","🥈","🥉"];
+  const ROW_BASE = { display:"flex", alignItems:"center", gap:10, padding:"0.6rem 0.9rem", borderBottom:"1px solid rgba(255,255,255,0.05)", borderRadius:6, marginBottom:4 };
+  const ME_STYLE = { background:"rgba(109,40,217,0.18)", border:"1px solid rgba(196,181,253,0.3)" };
+
+  const panelStyle = { background:"rgba(3,7,18,0.85)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, padding:"1rem", flex:1 };
+
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.5)" }}>
+      <h2 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.1rem", textAlign:"center", marginBottom:"0.2rem", letterSpacing:"0.06em" }}>🏆 Classifiche Globali</h2>
+      <p style={{ color:"#6b7280", fontSize:"0.72rem", textAlign:"center", marginBottom:"1.2rem" }}>Tutti gli avventurieri di Zodar — aggiornato in tempo reale</p>
+
+      {/* Category tabs */}
+      <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:"1.2rem", justifyContent:"center" }}>
+        {CATS.map(c => (
+          <button key={c.k} onClick={() => setCat(c.k)} style={{ padding:"0.35rem 0.9rem", background: cat===c.k ? "rgba(109,40,217,0.5)" : "rgba(15,23,42,0.8)", border:`1px solid ${cat===c.k?"#c4b5fd":"#374151"}`, borderRadius:20, color: cat===c.k ? "#fff" : "#9ca3af", cursor:"pointer", fontSize:"0.78rem", fontFamily:"'Cinzel',serif", fontWeight:700, transition:"all 0.15s" }}>
+            {c.l}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div style={{ textAlign:"center", color:"#6b7280", padding:"3rem", fontSize:"0.85rem" }}>⏳ Caricamento classifiche…</div>
+      ) : (
+        <div style={{ display:"flex", gap:"1rem", flexWrap:"wrap" }}>
+          {/* Party leaderboard */}
+          <div style={{ ...panelStyle, minWidth:0, flex:"1 1 280px" }}>
+            <div style={{ fontFamily:"'Cinzel',serif", color:"#a78bfa", fontSize:"0.82rem", letterSpacing:"0.06em", marginBottom:"0.8rem", display:"flex", alignItems:"center", gap:6 }}>
+              🏰 Classifiche per Party
+            </div>
+            {sortedParties.map((g, i) => {
+              const isMyParty = g.party_code === partyCode;
+              const val = getPartyVal(g);
+              return (
+                <div key={g.party_code} style={{ ...ROW_BASE, ...(isMyParty ? ME_STYLE : {}), background: isMyParty ? "rgba(109,40,217,0.18)" : i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
+                  <span style={{ width:24, textAlign:"center", fontSize: i < 3 ? "1.1rem" : "0.8rem", color:"#6b7280", fontWeight:700, flexShrink:0 }}>{MEDAL[i] || `#${i+1}`}</span>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ color: isMyParty ? "#c4b5fd" : "#e2e8f0", fontFamily:"'Cinzel',serif", fontSize:"0.8rem", fontWeight:700, display:"flex", alignItems:"center", gap:6 }}>
+                      {g.party_code}
+                      {isMyParty && <span style={{ fontSize:"0.62rem", color:"#a78bfa", background:"rgba(109,40,217,0.25)", padding:"1px 6px", borderRadius:8 }}>il tuo party</span>}
+                    </div>
+                    <div style={{ color:"#6b7280", fontSize:"0.68rem", marginTop:1 }}>{g.players.length} avventurieri · Lv.{g.topLevel} max</div>
+                  </div>
+                  <div style={{ color:"#fbbf24", fontSize:"0.78rem", fontWeight:700, flexShrink:0, textAlign:"right" }}>
+                    {catCfg.fmt(val)}
+                  </div>
+                </div>
+              );
+            })}
+            {sortedParties.length === 0 && <div style={{ color:"#4b5563", textAlign:"center", padding:"1.5rem", fontSize:"0.8rem" }}>Nessun dato</div>}
+          </div>
+
+          {/* Player leaderboard */}
+          <div style={{ ...panelStyle, minWidth:0, flex:"1 1 280px" }}>
+            <div style={{ fontFamily:"'Cinzel',serif", color:"#f59e0b", fontSize:"0.82rem", letterSpacing:"0.06em", marginBottom:"0.8rem" }}>
+              ⚔️ Classifiche Individuali
+            </div>
+            {sortedPlayers.map((p, i) => {
+              const isMe = p.id === myId;
+              const val = getPlayerVal(p);
+              const cls = CLASSES[p.class || "warrior"];
+              return (
+                <div key={p.id} style={{ ...ROW_BASE, ...(isMe ? ME_STYLE : {}), background: isMe ? "rgba(109,40,217,0.18)" : i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
+                  <span style={{ width:24, textAlign:"center", fontSize: i < 3 ? "1.1rem" : "0.8rem", color:"#6b7280", fontWeight:700, flexShrink:0 }}>{MEDAL[i] || `#${i+1}`}</span>
+                  <span style={{ fontSize:"1rem", flexShrink:0 }}>{cls?.emoji || "⚔️"}</span>
+                  <div style={{ flex:1, minWidth:0 }}>
+                    <div style={{ color: isMe ? "#c4b5fd" : "#e2e8f0", fontFamily:"'Cinzel',serif", fontSize:"0.79rem", fontWeight:700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:5 }}>
+                      {p.name}
+                      {isMe && <span style={{ fontSize:"0.6rem", color:"#a78bfa", background:"rgba(109,40,217,0.25)", padding:"1px 5px", borderRadius:8, flexShrink:0 }}>tu</span>}
+                    </div>
+                    <div style={{ color:"#6b7280", fontSize:"0.67rem", marginTop:1 }}>
+                      {RACES[p.race||"human"]?.name} {cls?.name} · Lv.{p.level||1} · {p.party_code||"—"}
+                    </div>
+                  </div>
+                  <div style={{ color:"#fbbf24", fontSize:"0.78rem", fontWeight:700, flexShrink:0, textAlign:"right" }}>
+                    {catCfg.fmt(val)}
+                  </div>
+                </div>
+              );
+            })}
+            {sortedPlayers.length === 0 && <div style={{ color:"#4b5563", textAlign:"center", padding:"1.5rem", fontSize:"0.8rem" }}>Nessun dato</div>}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
 
 /* ----------------------------------------------
    GAME SCREEN
@@ -7203,7 +7343,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["trade","🤝 Scambi"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["diary","📖 Diario"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["trade","🤝 Scambi"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["leaderboard","🏆 Classifiche"],["diary","📖 Diario"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
@@ -7598,6 +7738,10 @@ ${stepText(step)}`, "quest","Master");
             })()}
             <DungeonView dungeon={qs?.dungeon} me={me} onRoomAction={handleDungeonRoomAction} loading={false} />
           </div>
+        )}
+
+        {tab==="leaderboard" && (
+          <GlobalLeaderboardView myId={myId} partyCode={code} />
         )}
 
         {tab==="quest" && (
