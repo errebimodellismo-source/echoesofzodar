@@ -346,6 +346,184 @@ function canAccessMasterPanel(user) {
 }
 
 const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','paladin','ranger'];
+
+const STATUS_EFFECTS = {
+  poison: { label: 'Avvelenato',  emoji: '🐍', color: '#4ade80', damagePerRound: 3 },
+  burn:   { label: 'In fiamme',   emoji: '🔥', color: '#fb923c', damagePerRound: 5 },
+  stun:   { label: 'Stordito',    emoji: '💫', color: '#facc15', skipTurn: true   },
+};
+
+function processStatusEffects(combatant) {
+  const effects = combatant.statusEffects || [];
+  if (!effects.length) return { combatant, log: null, skipTurn: false, died: false };
+  let dmg = 0, skipTurn = false;
+  const logs = [], remaining = [];
+  for (const fx of effects) {
+    const def = STATUS_EFFECTS[fx.type];
+    if (!def) continue;
+    if (def.damagePerRound) {
+      dmg += def.damagePerRound;
+      logs.push(`${def.emoji} **${combatant.name}** subisce **${def.damagePerRound}** danni da ${def.label.toLowerCase()}`);
+    }
+    if (def.skipTurn) {
+      skipTurn = true;
+      logs.push(`${def.emoji} **${combatant.name}** è ${def.label.toLowerCase()} e salta il turno!`);
+    }
+    const dur = (fx.duration || 1) - 1;
+    if (dur > 0) remaining.push({ ...fx, duration: dur });
+    else logs.push(`✨ L'effetto **${def.label}** su **${combatant.name}** è terminato.`);
+  }
+  const newHp = Math.max(0, (combatant.hp || 0) - dmg);
+  return {
+    combatant: { ...combatant, hp: newHp, statusEffects: remaining },
+    log: logs.length ? logs.join('\n') : null,
+    skipTurn,
+    died: newHp <= 0,
+  };
+}
+const SUBCLASSES = {
+  warrior:  [ { id:'champion',  name:'Campione',             emoji:'🏆', desc:'+2 ATK, +10 HP max', bonus:{atk:2,maxHp:10} }, { id:'guardian',  name:'Guardiano',             emoji:'🛡️', desc:'+3 DEF',           bonus:{def:3} },         { id:'berserker', name:'Berserker',              emoji:'⚡', desc:'+4 ATK, -1 DEF',  bonus:{atk:4,def:-1} } ],
+  mage:     [ { id:'archmage',  name:'Arcimago',             emoji:'🌟', desc:'+3 MAG',             bonus:{mag:3} },         { id:'elementalist',name:'Elementalista',          emoji:'🔥', desc:'+2 MAG, +10 HP max', bonus:{mag:2,maxHp:10} },{ id:'necromancer', name:'Negromante',              emoji:'💀', desc:'+4 MAG',           bonus:{mag:4} } ],
+  rogue:    [ { id:'assassin',  name:'Assassino',            emoji:'🗡️', desc:'+3 ATK',            bonus:{atk:3} },         { id:'arcane_trickster',name:'Imbroglione Arcano', emoji:'🃏', desc:'+2 ATK, +2 MAG',   bonus:{atk:2,mag:2} },  { id:'shadowdancer',name:'Danzatore delle Ombre',   emoji:'🌑', desc:'+2 ATK, +2 DEF',  bonus:{atk:2,def:2} } ],
+  ranger:   [ { id:'hunter',    name:'Cacciatore',           emoji:'🏹', desc:'+3 ATK',            bonus:{atk:3} },         { id:'beastmaster', name:'Signore delle Bestie',  emoji:'🐺', desc:'+2 ATK, +2 MAG',   bonus:{atk:2,mag:2} },  { id:'gloom_stalker',name:'Predatore Oscuro',        emoji:'🌑', desc:'+2 ATK, +2 DEF',  bonus:{atk:2,def:2} } ],
+  paladin:  [ { id:'devotion',  name:'Giuramento di Devozione',emoji:'✨',desc:'+2 DEF, +2 MAG',   bonus:{def:2,mag:2} },   { id:'vengeance',   name:'Giuramento di Vendetta', emoji:'⚡', desc:'+3 ATK, +1 MAG',   bonus:{atk:3,mag:1} },  { id:'ancients',    name:'Giuramento degli Antichi', emoji:'🌿', desc:'+2 DEF, +10 HP max',bonus:{def:2,maxHp:10} } ],
+  cleric:   [ { id:'sacred',    name:'Ordine Sacro',         emoji:'✝️', desc:'+2 MAG, +2 DEF',   bonus:{mag:2,def:2} },   { id:'war_cleric',  name:'Chierico di Guerra',    emoji:'⚔️', desc:'+3 ATK, +1 MAG',   bonus:{atk:3,mag:1} },  { id:'life_cleric', name:'Chierico della Vita',      emoji:'💚', desc:'+4 MAG, +10 HP max', bonus:{mag:4,maxHp:10} } ],
+  druid:    [ { id:'land',      name:'Circolo della Terra',  emoji:'🌍', desc:'+4 MAG',            bonus:{mag:4} },         { id:'moon',        name:'Circolo della Luna',    emoji:'🌙', desc:'+2 DEF, +10 HP max', bonus:{def:2,maxHp:10} },{ id:'spores',      name:'Circolo delle Spore',      emoji:'🍄', desc:'+3 MAG, +1 DEF',  bonus:{mag:3,def:1} } ],
+  bard:     [ { id:'lore',      name:'Bardo della Conoscenza',emoji:'📚',desc:'+3 MAG, +5 HP max', bonus:{mag:3,maxHp:5} }, { id:'valor',       name:'Bardo del Valore',       emoji:'🎺', desc:'+2 ATK, +2 MAG',   bonus:{atk:2,mag:2} },  { id:'swords',      name:'Bardo delle Spade',         emoji:'🗡️', desc:'+3 ATK',          bonus:{atk:3} } ],
+  warlock:  [ { id:'fiend',     name:'Patto del Diavolo',    emoji:'😈', desc:'+4 MAG',            bonus:{mag:4} },         { id:'great_old_one',name:'Grande Antico',          emoji:'👁️', desc:'+3 MAG, +2 DEF',  bonus:{mag:3,def:2} },  { id:'celestial',   name:'Patto Celeste',             emoji:'☀️', desc:'+2 MAG, +10 HP max',bonus:{mag:2,maxHp:10} } ],
+  sorcerer: [ { id:'draconic',  name:'Lignaggio Draconico',  emoji:'🐉', desc:'+3 MAG, +10 HP max',bonus:{mag:3,maxHp:10}}, { id:'storm',       name:'Anima della Tempesta',   emoji:'⛈️', desc:'+4 MAG',           bonus:{mag:4} },         { id:'shadow',      name:'Magia delle Ombre',         emoji:'🌑', desc:'+2 MAG, +2 DEF',  bonus:{mag:2,def:2} } ],
+};
+function getSubclassOptions(cls) { return SUBCLASSES[cls] || SUBCLASSES.warrior; }
+
+const CRAFT_MATERIALS = [
+  // Metalli (20)
+  { id:"mat_iron_ore",        name:"Minerale di Ferro",      emoji:"🪨", type:"material", rarity:"common",    price:12,  description:"Minerale ferroso grezzo, base per qualsiasi forgiatura.", available:true },
+  { id:"mat_copper_ore",      name:"Minerale di Rame",       emoji:"🟤", type:"material", rarity:"common",    price:10,  description:"Metallo tenero e malleabile.", available:true },
+  { id:"mat_tin_ore",         name:"Minerale di Stagno",     emoji:"⚪", type:"material", rarity:"common",    price:8,   description:"Usato per leghe e saldature base.", available:true },
+  { id:"mat_coal",            name:"Carbone",                emoji:"⚫", type:"material", rarity:"common",    price:6,   description:"Combustibile essenziale per le forge.", available:true },
+  { id:"mat_bronze_ingot",    name:"Lingotto di Bronzo",     emoji:"🔶", type:"material", rarity:"common",    price:18,  description:"Lega resistente di rame e stagno.", available:true },
+  { id:"mat_iron_ingot",      name:"Lingotto di Ferro",      emoji:"🔩", type:"material", rarity:"uncommon",  price:25,  description:"Ferro purificato, pronto per la lavorazione.", available:true },
+  { id:"mat_silver_ore",      name:"Minerale d'Argento",     emoji:"🌕", type:"material", rarity:"uncommon",  price:30,  description:"Metallo nobile con proprietà magiche.", available:true },
+  { id:"mat_steel_ingot",     name:"Lingotto d'Acciaio",     emoji:"⚙️", type:"material", rarity:"uncommon",  price:40,  description:"Acciaio temperato — richiesto per la 2ª forgiatura.", available:true },
+  { id:"mat_gold_dust",       name:"Polvere d'Oro",          emoji:"✨", type:"material", rarity:"uncommon",  price:45,  description:"Oro macinato per incantesimi e rivestimenti.", available:true },
+  { id:"mat_cold_iron",       name:"Ferro Freddo",           emoji:"🧊", type:"material", rarity:"uncommon",  price:35,  description:"Forgiato senza calore, bane per i fey.", available:true },
+  { id:"mat_mithril_ore",     name:"Mithril Grezzo",         emoji:"💠", type:"material", rarity:"rare",      price:80,  description:"Metallo leggendario — richiesto per la 3ª forgiatura.", available:true },
+  { id:"mat_electrum_bar",    name:"Lingotto di Electrum",   emoji:"🌟", type:"material", rarity:"rare",      price:70,  description:"Lega misteriosa di oro e argento.", available:true },
+  { id:"mat_moonsilver",      name:"Argento Lunare",         emoji:"🌙", type:"material", rarity:"rare",      price:90,  description:"Argento caricato dalla luce della luna piena.", available:true },
+  { id:"mat_star_metal",      name:"Metallo Stellare",       emoji:"⭐", type:"material", rarity:"rare",      price:100, description:"Caduto dalle stelle — richiesto per la 4ª forgiatura.", available:true },
+  { id:"mat_sunsteel",        name:"Acciaio Solare",         emoji:"☀️", type:"material", rarity:"epic",      price:160, description:"Acciaio benedetto dalla luce divina.", available:true },
+  { id:"mat_adamantite_ore",  name:"Adamantite Grezzo",      emoji:"💎", type:"material", rarity:"epic",      price:200, description:"Il metallo più duro — richiesto per la 6ª forgiatura.", available:true },
+  { id:"mat_orichalcum",      name:"Oricalco",               emoji:"🔱", type:"material", rarity:"epic",      price:220, description:"Metallo mitico dalle profondità della terra.", available:true },
+  { id:"mat_void_iron",       name:"Ferro del Vuoto",        emoji:"🌑", type:"material", rarity:"epic",      price:240, description:"Forgiato nel vuoto assoluto.", available:true },
+  { id:"mat_celestial_alloy", name:"Lega Celeste",           emoji:"👑", type:"material", rarity:"legendary", price:400, description:"Metallo degli angeli, insuperabile.", available:true },
+  { id:"mat_zodar_ore",       name:"Minerale di Zodar",      emoji:"🌌", type:"material", rarity:"legendary", price:600, description:"Estratto dal cuore del mondo di Zodar.", available:true },
+  // Legni (15)
+  { id:"mat_oak_plank",       name:"Tavola di Quercia",      emoji:"🪵", type:"material", rarity:"common",    price:8,   description:"Legno robusto per manici e componenti.", available:true },
+  { id:"mat_ashwood_log",     name:"Tronco di Frassino",     emoji:"🌲", type:"material", rarity:"common",    price:10,  description:"Elastico e resistente agli urti.", available:true },
+  { id:"mat_pine_resin",      name:"Resina di Pino",         emoji:"🌿", type:"material", rarity:"common",    price:6,   description:"Collante naturale per assemblaggi.", available:true },
+  { id:"mat_birchwood",       name:"Betulla Bianca",         emoji:"🤍", type:"material", rarity:"common",    price:9,   description:"Legno chiaro e flessibile.", available:true },
+  { id:"mat_duskwood",        name:"Legno del Tramonto",     emoji:"🟫", type:"material", rarity:"uncommon",  price:22,  description:"Legno oscuro con strane proprietà.", available:true },
+  { id:"mat_ironwood",        name:"Legno di Ferro",         emoji:"🪵", type:"material", rarity:"uncommon",  price:28,  description:"Duro come il metallo, leggero come il legno.", available:true },
+  { id:"mat_ebonwood",        name:"Ebano",                  emoji:"🖤", type:"material", rarity:"uncommon",  price:32,  description:"Legno nero pregiato, assorbe le magie.", available:true },
+  { id:"mat_spiritwood",      name:"Legno Spiritato",        emoji:"🌿", type:"material", rarity:"rare",      price:65,  description:"Albero antico intriso di spiriti elementali.", available:true },
+  { id:"mat_moonwood",        name:"Legno Lunare",           emoji:"🌙", type:"material", rarity:"rare",      price:75,  description:"Raccolto sotto la luna piena, potenzia gli archi.", available:true },
+  { id:"mat_dragonwood",      name:"Legno del Drago",        emoji:"🐲", type:"material", rarity:"rare",      price:85,  description:"Tronco bruciato dal soffio draconico e recuperato.", available:true },
+  { id:"mat_void_bark",       name:"Corteccia del Vuoto",    emoji:"🌑", type:"material", rarity:"epic",      price:150, description:"Corteccia nera di alberi cresciuti nel vuoto.", available:true },
+  { id:"mat_elder_tree_heart",name:"Cuore d'Albero Antico",  emoji:"💚", type:"material", rarity:"epic",      price:180, description:"Il nucleo pulsante di un antico treant.", available:true },
+  { id:"mat_worldtree_branch",name:"Ramo dell'Albero Mondo", emoji:"🌳", type:"material", rarity:"epic",      price:210, description:"Frammento di Yggdrasil del mondo di Zodar.", available:true },
+  { id:"mat_phoenixthorn",    name:"Spino della Fenice",     emoji:"🔥", type:"material", rarity:"legendary", price:380, description:"Rami ardenti che non si consumano mai.", available:true },
+  { id:"mat_zodar_driftwood", name:"Deriva di Zodar",        emoji:"🌌", type:"material", rarity:"legendary", price:550, description:"Legno fluttuante trasportato dai venti cosmici di Zodar.", available:true },
+  // Cuoi (10)
+  { id:"mat_beast_hide",      name:"Pelle di Bestia",        emoji:"🟫", type:"material", rarity:"common",    price:12,  description:"Pelle grezza di una bestia comune.", available:true },
+  { id:"mat_wolf_pelt",       name:"Pelliccia di Lupo",      emoji:"🐺", type:"material", rarity:"common",    price:16,  description:"Pelliccia folta e calda.", available:true },
+  { id:"mat_bear_hide",       name:"Pelle d'Orso",           emoji:"🐻", type:"material", rarity:"uncommon",  price:28,  description:"Cuoio spesso e resistente.", available:true },
+  { id:"mat_wyvern_scales",   name:"Scaglie di Viverna",     emoji:"🦎", type:"material", rarity:"uncommon",  price:38,  description:"Scaglie dure di viverna.", available:true },
+  { id:"mat_shadow_leather",  name:"Cuoio d'Ombra",          emoji:"🌑", type:"material", rarity:"rare",      price:72,  description:"Cuoio che assorbe la luce.", available:true },
+  { id:"mat_treant_bark_leather",name:"Cuoio di Treant",     emoji:"🌳", type:"material", rarity:"rare",      price:80,  description:"Pelle legnosa di un antico treant.", available:true },
+  { id:"mat_basilisk_hide",   name:"Pelle di Basilisco",     emoji:"🐍", type:"material", rarity:"rare",      price:88,  description:"Resistente agli incantesimi di pietrificazione.", available:true },
+  { id:"mat_griffin_feather_leather",name:"Cuoio di Grifone",emoji:"🦅", type:"material", rarity:"epic",      price:165, description:"Lavorato dalle piume e dalla pelle di un grifone.", available:true },
+  { id:"mat_phoenix_leather", name:"Cuoio di Fenice",        emoji:"🔥", type:"material", rarity:"epic",      price:195, description:"Pelle ignifuga della fenice.", available:true },
+  { id:"mat_dragon_hide",     name:"Pelle di Drago",         emoji:"🐉", type:"material", rarity:"legendary", price:450, description:"La pelle più resistente del mondo.", available:true },
+  // Gemme (20)
+  { id:"mat_ruby_shard",      name:"Frammento di Rubino",    emoji:"🔴", type:"material", rarity:"common",    price:20,  description:"Scheggia di rubino grezzo.", available:true },
+  { id:"mat_sapphire_shard",  name:"Frammento di Zaffiro",   emoji:"🔵", type:"material", rarity:"common",    price:20,  description:"Scheggia di zaffiro grezzo.", available:true },
+  { id:"mat_emerald_shard",   name:"Frammento di Smeraldo",  emoji:"💚", type:"material", rarity:"common",    price:20,  description:"Scheggia di smeraldo grezzo.", available:true },
+  { id:"mat_topaz_chip",      name:"Scheggia di Topazio",    emoji:"🟡", type:"material", rarity:"common",    price:18,  description:"Frammento di topazio dorato.", available:true },
+  { id:"mat_amethyst_chip",   name:"Scheggia di Ametista",   emoji:"💜", type:"material", rarity:"common",    price:18,  description:"Frammento di ametista viola.", available:true },
+  { id:"mat_garnet",          name:"Granato",                emoji:"❤️", type:"material", rarity:"uncommon",  price:35,  description:"Pietra rossa scura e preziosa.", available:true },
+  { id:"mat_jade_stone",      name:"Giada",                  emoji:"🟢", type:"material", rarity:"uncommon",  price:32,  description:"Pietra verde sacra agli spiriti.", available:true },
+  { id:"mat_onyx",            name:"Onice",                  emoji:"⚫", type:"material", rarity:"uncommon",  price:30,  description:"Pietra nera usata nei rituali.", available:true },
+  { id:"mat_moonstone",       name:"Pietra di Luna",         emoji:"🌕", type:"material", rarity:"uncommon",  price:40,  description:"Brilla al chiaro di luna.", available:true },
+  { id:"mat_bloodstone",      name:"Pietra di Sangue",       emoji:"🩸", type:"material", rarity:"uncommon",  price:38,  description:"Macchiata di sangue antico.", available:true },
+  { id:"mat_star_ruby",       name:"Rubino Stellare",        emoji:"⭐", type:"material", rarity:"rare",      price:85,  description:"Rubino con una stella a sei punte all'interno.", available:true },
+  { id:"mat_star_sapphire",   name:"Zaffiro Stellare",       emoji:"💠", type:"material", rarity:"rare",      price:85,  description:"Zaffiro con una stella luminosa.", available:true },
+  { id:"mat_black_diamond",   name:"Diamante Nero",          emoji:"💎", type:"material", rarity:"rare",      price:95,  description:"Diamante oscuro estremamente raro.", available:true },
+  { id:"mat_fire_opal",       name:"Opale di Fuoco",         emoji:"🔥", type:"material", rarity:"rare",      price:90,  description:"Pietra che brucia dall'interno.", available:true },
+  { id:"mat_void_gem",        name:"Gemma del Vuoto",        emoji:"🌌", type:"material", rarity:"epic",      price:175, description:"Gemma nata nel vuoto, riflette l'oscurità.", available:true },
+  { id:"mat_celestial_diamond",name:"Diamante Celeste",      emoji:"💎", type:"material", rarity:"epic",      price:215, description:"Diamante caduto dal cielo.", available:true },
+  { id:"mat_chaos_crystal",   name:"Cristallo del Caos",     emoji:"⚡", type:"material", rarity:"epic",      price:225, description:"Cristallo instabile carico di energia caotica.", available:true },
+  { id:"mat_infinity_stone",  name:"Pietra dell'Infinito",   emoji:"♾️", type:"material", rarity:"legendary", price:500, description:"Pietra che contiene un frammento dell'infinito.", available:true },
+  { id:"mat_zodar_gem",       name:"Gemma di Zodar",         emoji:"🌌", type:"material", rarity:"legendary", price:700, description:"Gemma creata da Zodar per incanalare il suo potere.", available:true },
+  { id:"mat_prismatic_shard", name:"Scheggia Prismatica",    emoji:"🌈", type:"material", rarity:"legendary", price:600, description:"Frammento che contiene tutti i colori dell'esistenza.", available:true },
+  // Essenze (15)
+  { id:"mat_fire_essence",    name:"Essenza del Fuoco",      emoji:"🔥", type:"material", rarity:"common",    price:15,  description:"Energia del fuoco elementale.", available:true },
+  { id:"mat_frost_essence",   name:"Essenza del Gelo",       emoji:"🧊", type:"material", rarity:"common",    price:15,  description:"Energia del gelo elementale.", available:true },
+  { id:"mat_lightning_essence",name:"Essenza del Fulmine",   emoji:"⚡", type:"material", rarity:"uncommon",  price:30,  description:"Energia elettrica purificata.", available:true },
+  { id:"mat_shadow_essence",  name:"Essenza dell'Ombra",     emoji:"🌑", type:"material", rarity:"uncommon",  price:30,  description:"Energia oscura dell'ombra.", available:true },
+  { id:"mat_nature_essence",  name:"Essenza della Natura",   emoji:"🌿", type:"material", rarity:"uncommon",  price:28,  description:"Forza vitale della natura.", available:true },
+  { id:"mat_storm_essence",   name:"Essenza della Tempesta", emoji:"⛈️", type:"material", rarity:"uncommon",  price:35,  description:"Energia della tempesta primordiale.", available:true },
+  { id:"mat_ether_crystal",   name:"Cristallo di Etere",     emoji:"💠", type:"material", rarity:"rare",      price:78,  description:"Cristallo etereo — richiesto per la 5ª forgiatura.", available:true },
+  { id:"mat_arcane_surge",    name:"Aura Arcana",            emoji:"🔮", type:"material", rarity:"rare",      price:70,  description:"Surplus di energia arcana pura.", available:true },
+  { id:"mat_life_essence",    name:"Essenza della Vita",     emoji:"💚", type:"material", rarity:"rare",      price:82,  description:"L'energia vitale distillata.", available:true },
+  { id:"mat_death_essence",   name:"Essenza della Morte",    emoji:"💀", type:"material", rarity:"rare",      price:88,  description:"L'energia dell'oltre-morte.", available:true },
+  { id:"mat_time_fragment",   name:"Frammento del Tempo",    emoji:"⏳", type:"material", rarity:"epic",      price:200, description:"Un attimo congelato nell'eternità.", available:true },
+  { id:"mat_dragon_essence",  name:"Essenza di Drago",       emoji:"🐉", type:"material", rarity:"epic",      price:230, description:"L'anima distillata di un grande drago.", available:true },
+  { id:"mat_void_essence",    name:"Essenza del Vuoto",      emoji:"🌌", type:"material", rarity:"epic",      price:190, description:"L'energia del nulla assoluto — richiesto per la 8ª forgiatura.", available:true },
+  { id:"mat_phoenix_ash",     name:"Cenere di Fenice",       emoji:"🔥", type:"material", rarity:"legendary", price:420, description:"Cenere che pulsa di vita eterna.", available:true },
+  { id:"mat_zodar_essence",   name:"Essenza di Zodar",       emoji:"🌌", type:"material", rarity:"legendary", price:800, description:"L'essenza pura di Zodar — richiesta per la forgiatura finale.", available:true },
+  // Parti di Mostro (15)
+  { id:"mat_goblin_ear",      name:"Orecchio di Goblin",     emoji:"👂", type:"material", rarity:"common",    price:8,   description:"Trofeo comune dai goblin.", available:true },
+  { id:"mat_skeleton_bone",   name:"Osso di Scheletro",      emoji:"🦴", type:"material", rarity:"common",    price:10,  description:"Osso incantato di un non-morto.", available:true },
+  { id:"mat_slime_core",      name:"Nucleo di Melma",        emoji:"🟢", type:"material", rarity:"common",    price:12,  description:"Il nucleo rigenerativo di uno slime.", available:true },
+  { id:"mat_troll_hide",      name:"Pelle di Troll",         emoji:"🟤", type:"material", rarity:"uncommon",  price:28,  description:"Pelle rigenerante del troll.", available:true },
+  { id:"mat_medusa_scale",    name:"Scaglia di Medusa",      emoji:"🐍", type:"material", rarity:"uncommon",  price:35,  description:"Scaglia con potere pietrificante residuo.", available:true },
+  { id:"mat_vampire_fang",    name:"Zanna di Vampiro",       emoji:"🧛", type:"material", rarity:"uncommon",  price:42,  description:"Zanna che drena l'energia vitale.", available:true },
+  { id:"mat_werewolf_claw",   name:"Artiglio di Mannaro",    emoji:"🐺", type:"material", rarity:"rare",      price:68,  description:"Artiglio che mantiene il suo potere.", available:true },
+  { id:"mat_griffin_claw",    name:"Artiglio di Grifone",    emoji:"🦅", type:"material", rarity:"rare",      price:75,  description:"Affilato e resistente come l'acciaio.", available:true },
+  { id:"mat_basilisk_eye",    name:"Occhio di Basilisco",    emoji:"👁️", type:"material", rarity:"rare",      price:80,  description:"Ancora in grado di pietrificare.", available:true },
+  { id:"mat_manticore_spike", name:"Spina di Manticore",     emoji:"🦁", type:"material", rarity:"rare",      price:85,  description:"Veleno residuo nella spina.", available:true },
+  { id:"mat_dragon_scale",    name:"Scaglia di Drago",       emoji:"🐉", type:"material", rarity:"epic",      price:180, description:"Resistente al fuoco e alla magia — richiesta per la 7ª forgiatura.", available:true },
+  { id:"mat_hydra_blood",     name:"Sangue di Idra",         emoji:"🩸", type:"material", rarity:"epic",      price:195, description:"Sangue rigenerante dell'idra.", available:true },
+  { id:"mat_phoenix_feather", name:"Piuma di Fenice",        emoji:"🔥", type:"material", rarity:"epic",      price:210, description:"Piuma che brucia e rinasce — richiesta per la 9ª forgiatura.", available:true },
+  { id:"mat_tarrasque_hide",  name:"Pelle del Tarrasque",    emoji:"👹", type:"material", rarity:"legendary", price:480, description:"La pelle più resistente dell'esistenza.", available:true },
+  { id:"mat_dragon_heart",    name:"Cuore di Drago",         emoji:"🐉", type:"material", rarity:"legendary", price:650, description:"Il cuore pulsante di un grande wyrm — 10ª forgiatura.", available:true },
+  // Rune (5)
+  { id:"mat_rune_of_power",      name:"Runa del Potere",     emoji:"🔴", type:"material", rarity:"rare",      price:95,   description:"Runa che amplifica la forza offensiva.", available:true },
+  { id:"mat_rune_of_protection", name:"Runa di Protezione",  emoji:"🔵", type:"material", rarity:"rare",      price:90,   description:"Runa che rinforza la difesa.", available:true },
+  { id:"mat_rune_of_swiftness",  name:"Runa della Velocità", emoji:"🟡", type:"material", rarity:"rare",      price:85,   description:"Runa che accelera i movimenti.", available:true },
+  { id:"mat_rune_of_wisdom",     name:"Runa della Saggezza", emoji:"💜", type:"material", rarity:"epic",      price:200,  description:"Runa che potenzia la mente.", available:true },
+  { id:"mat_rune_of_zodar",      name:"Runa di Zodar",       emoji:"🌌", type:"material", rarity:"legendary", price:1000, description:"La runa suprema del mondo di Zodar.", available:true },
+];
+
+const FORGE_DIE_PROGRESSION = ['1d4','1d6','1d8','1d10','1d12','1d20','1d20+1d4','1d20+1d6','1d20+1d8','1d20+1d10','1d20+1d12','2d20'];
+const FORGE_MATERIAL_REQ = [
+  'mat_iron_ore',     // → 1d6  (idx 1)
+  'mat_steel_ingot',  // → 1d8  (idx 2)
+  'mat_mithril_ore',  // → 1d10 (idx 3)
+  'mat_star_metal',   // → 1d12 (idx 4)
+  'mat_ether_crystal',// → 1d20 (idx 5)
+  'mat_adamantite_ore',// → 1d20+1d4 (idx 6)
+  'mat_dragon_scale', // → 1d20+1d6 (idx 7)
+  'mat_void_essence', // → 1d20+1d8 (idx 8)
+  'mat_phoenix_feather',// → 1d20+1d10 (idx 9)
+  'mat_dragon_heart', // → 1d20+1d12 (idx 10)
+  'mat_zodar_essence',// → 2d20 (idx 11)
+];
+
+function getForgeLevel(itemId) { const m = String(itemId||'').match(/__f(\d+)$/); return m ? Number(m[1]) : 0; }
+function getBaseItemId(itemId) { return String(itemId||'').replace(/__f\d+$/, ''); }
+function getNextForgeItemId(itemId) { return `${getBaseItemId(itemId)}__f${getForgeLevel(itemId)+1}`; }
+
 const ABILITY_LABELS = {
   str:{ short:"FOR", name:"Forza" },
   dex:{ short:"DES", name:"Destrezza" },
@@ -700,11 +878,25 @@ function mergeCatalogItems(items=[]) {
   const baseItems = [
     ...DEFAULT_ITEMS,
     ...LEGENDARY_ITEMS.map(normalizeLegendaryInventoryItem),
+    ...CRAFT_MATERIALS,
   ];
   const merged = new Map(baseItems.map(item => [item.id, item]));
   for(const item of items) {
     const base = merged.get(item.id) || {};
     merged.set(item.id, { ...base, ...item, slot:item.slot || base.slot || null, weapon_die:item.weapon_die || base.weapon_die || null, heal_amount:item.heal_amount || base.heal_amount || 0, bonus_init:item.bonus_init ?? base.bonus_init ?? 0 });
+  }
+  // Auto-generate forge variants for weapons whose base die is in the progression
+  const weaponItems = [...merged.values()].filter(it => it.weapon_die && it.type === 'weapon' && !it.id.includes('__f'));
+  for(const weapon of weaponItems) {
+    const baseDieIdx = FORGE_DIE_PROGRESSION.indexOf(weapon.weapon_die);
+    if(baseDieIdx < 0 || baseDieIdx >= 11) continue;
+    for(let targetDieIdx = baseDieIdx + 1; targetDieIdx <= 11; targetDieIdx++) {
+      const forgeLevel = targetDieIdx - baseDieIdx;
+      const forgeId = `${weapon.id}__f${forgeLevel}`;
+      const newDie = FORGE_DIE_PROGRESSION[targetDieIdx];
+      const forgeRarity = targetDieIdx >= 10 ? 'legendary' : targetDieIdx >= 8 ? 'epic' : targetDieIdx >= 6 ? 'rare' : targetDieIdx >= 4 ? 'uncommon' : weapon.rarity;
+      merged.set(forgeId, { ...weapon, id:forgeId, name:`${weapon.name} +${forgeLevel}`, weapon_die:newDie, damageDice:newDie, bonus_atk:(weapon.bonus_atk||0)+forgeLevel, forgeLevel, rarity:forgeRarity, price:Math.round((weapon.price||50)*Math.pow(1.8,forgeLevel)), available:false });
+    }
   }
   return Array.from(merged.values()).sort((a,b)=>a.name.localeCompare(b.name, "it"));
 }
@@ -899,7 +1091,7 @@ function resolveWeaponAttack(attacker, target, weaponDie) {
   const damage = hit ? damageRoll + (isCrit ? damageRoll : 0) : 0;
   return { hitRoll, isCrit, attackBonus, attackTotal, targetCa, hit, damageRoll, damage, weaponDie: weaponDie || "1d6" };
 }
-function formatWeaponAttackLog(attacker, target, resolved, weaponName, targetHpAfter, targetMaxHp) {
+function formatWeaponAttackLog(attacker, target, resolved, weaponName, targetHpAfter, targetMaxHp, { resisted = false, statusApplied = null } = {}) {
   const header = `${attacker?.emoji || "⭐"} **${attacker?.name}** attacca ${target?.emoji || "⭐"} **${target?.name}**`;
   const hitLine = `🎯 Tiro per colpire: **d20 ${resolved.hitRoll} + bonus ${resolved.attackBonus} = ${resolved.attackTotal}** contro CA **${resolved.targetCa}**`;
   if(!resolved.hit) return `${header}\n${hitLine}\n❌ **Mancato**`;
@@ -911,7 +1103,9 @@ function formatWeaponAttackLog(attacker, target, resolved, weaponName, targetHpA
     ? `💥 Tiro danno: **${resolved.weaponDie} = ${resolved.damageRoll}**${modStr}, critico => **${resolved.damage}** con **${weaponName}**`
     : `💥 Tiro danno: **${resolved.weaponDie} = ${resolved.damageRoll}**${modStr} => **${resolved.damage}** con **${weaponName}**`;
   const hpLine = `❤️ ${target?.name}: ${targetHpAfter}/${targetMaxHp} HP`;
-  return `${header}\n${hitLine}\n✅ **Colpisce**${critNote}\n${dmgLine}\n${hpLine}`;
+  const resistLine = resisted ? `\n🛡️ **Resistenza!** Danno ridotto a **${resolved.damage}**` : "";
+  const statusLine = statusApplied ? `\n${STATUS_EFFECTS[statusApplied]?.emoji || "✨"} **${target?.name}** è ora **${STATUS_EFFECTS[statusApplied]?.label || statusApplied}**!` : "";
+  return `${header}\n${hitLine}\n✅ **Colpisce**${critNote}\n${dmgLine}\n${hpLine}${resistLine}${statusLine}`;
 }
 function isDyingCombatant(combatant) {
   return !!combatant?.isPlayer && !!combatant?.dying && !combatant?.dead;
@@ -1352,6 +1546,7 @@ async function dbSavePlayer(p) {
     updated_at: new Date().toISOString(),
   };
   if(p.accountId) payload.account_id = p.accountId;
+  payload.avatar_config = { gender: p.gender || 'male', stats: p.stats || {}, achievements: p.achievements || [], subclass: p.subclass || null };
   const { data, error } = await supabase.from("players").upsert(payload).select("id,account_id,dead").single();
   return { data, error };
 }
@@ -1365,6 +1560,8 @@ async function dbGetPlayers(partyCode) {
     accountId: r?.account_id || null,
     gender: getStoredCharacterGender(r?.id, typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male')),
     stats: (r?.avatar_config && typeof r.avatar_config === 'object') ? (r.avatar_config.stats || {}) : {},
+    achievements: (r?.avatar_config && typeof r.avatar_config === 'object') ? (r.avatar_config.achievements || []) : [],
+    subclass: (r?.avatar_config && typeof r.avatar_config === 'object') ? (r.avatar_config.subclass || null) : null,
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
     mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
@@ -1378,6 +1575,8 @@ async function dbGetAccountCharacters(accountId) {
     accountId: r?.account_id || null,
     gender: getStoredCharacterGender(r?.id, typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male')),
     stats: (r?.avatar_config && typeof r.avatar_config === 'object') ? (r.avatar_config.stats || {}) : {},
+    achievements: (r?.avatar_config && typeof r.avatar_config === 'object') ? (r.avatar_config.achievements || []) : [],
+    subclass: (r?.avatar_config && typeof r.avatar_config === 'object') ? (r.avatar_config.subclass || null) : null,
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
     mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
@@ -1405,6 +1604,7 @@ async function dbSavePartyState(partyCode, state) {
     __questDmgLog: state.questDmgLog || {},
     __partyDiary: state.partyDiary || [],
     __battleChat: state.battleChat || [],
+    __questHistory: state.questHistory || [],
   };
   const { error } = await supabase.from("party_state").upsert({
     party_code: partyCode,
@@ -1421,7 +1621,7 @@ async function dbSavePartyState(partyCode, state) {
 async function dbGetPartyState(partyCode) {
   const { data, error } = await supabase.from("party_state").select("*").eq("party_code", partyCode).maybeSingle();
   if (error) throw error;
-  if (!data) return { currentId: null, step: 0, active: false, completed: [], combat: null, masterBuffs: null, rest: null, persistentSpellSlots: null, longRestSeed: 0, questLog: [], questDmgLog: {}, partyDiary: [], battleChat: [] };
+  if (!data) return { currentId: null, step: 0, active: false, completed: [], combat: null, masterBuffs: null, rest: null, persistentSpellSlots: null, longRestSeed: 0, questLog: [], questDmgLog: {}, partyDiary: [], battleChat: [], questHistory: [] };
   const raw = data.combat || {};
   const isV2 = raw.__v === 2;
   const combat = isV2 ? (raw.__combat || null) : (raw && Object.keys(raw).length ? raw : null);
@@ -1439,6 +1639,7 @@ async function dbGetPartyState(partyCode) {
     questDmgLog: (isV2 ? raw.__questDmgLog : null) || {},
     partyDiary: (isV2 ? raw.__partyDiary : null) || [],
     battleChat: (isV2 ? raw.__battleChat : null) || [],
+    questHistory: (isV2 ? raw.__questHistory : null) || [],
   };
 }
 
@@ -2359,6 +2560,8 @@ function MasterPanel({ setScreen, authUser }) {
   const [monsterSearch, setMonsterSearch] = useState("");
   const [monsterTierFilter, setMonsterTierFilter] = useState("all");
   const [refreshingQuests, setRefreshingQuests] = useState(false);
+  const [refreshingShop, setRefreshingShop] = useState(false);
+  const [healingAll, setHealingAll] = useState(false);
 
   async function refreshAllQuestSeeds() {
     if(refreshingQuests) return;
@@ -2374,6 +2577,45 @@ function MasterPanel({ setScreen, authUser }) {
       alert("Errore aggiornamento missioni: " + (e?.message || e));
     } finally {
       setRefreshingQuests(false);
+    }
+  }
+
+  async function refreshShopInventory() {
+    if(refreshingShop) return;
+    if(!window.confirm("Aggiornare la rotazione del negozio per tutti i party attivi?\n\nI giocatori vedranno nuovi oggetti disponibili.")) return;
+    setRefreshingShop(true);
+    try {
+      const { data } = await supabase.from("party_state").select("*");
+      for(const row of (data || [])) {
+        const state = await dbGetPartyState(row.party_code);
+        await dbSavePartyState(row.party_code, { ...state, longRestSeed: (state.longRestSeed || 0) + 1 });
+      }
+    } catch(e) {
+      alert("Errore aggiornamento negozio: " + (e?.message || e));
+    } finally {
+      setRefreshingShop(false);
+    }
+  }
+
+  async function healAllPlayers() {
+    if(healingAll) return;
+    if(!window.confirm("Curare tutti i giocatori di tutti i party al massimo degli HP?")) return;
+    setHealingAll(true);
+    try {
+      const { data } = await supabase.from("party_state").select("party_code");
+      for(const row of (data || [])) {
+        const players = await dbGetPlayers(row.party_code);
+        for(const p of players) {
+          if((p.hp || 0) < (p.maxHp || 0)) {
+            await dbSavePlayer({ ...p, hp: p.maxHp });
+          }
+        }
+      }
+      alert("Tutti i giocatori sono stati curati!");
+    } catch(e) {
+      alert("Errore cura: " + (e?.message || e));
+    } finally {
+      setHealingAll(false);
     }
   }
 
@@ -2526,13 +2768,18 @@ function MasterPanel({ setScreen, authUser }) {
           </Card>
           <Card title="🎲 Missioni Giornaliere">
             <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 1rem" }}>
-              Le missioni giornaliere ruotano in base alla data + un seme interno. Se i giocatori le esauriscono durante i test, premi qui per caricare un nuovo set senza aspettare il giorno dopo.
+              Le missioni e il negozio ruotano in base alla data + un seme interno. Se i giocatori li esauriscono durante i test, premi qui per caricare un nuovo set senza aspettare il giorno dopo.
             </p>
-            <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
               <BigBtn onClick={refreshAllQuestSeeds} gold icon="🔄" disabled={refreshingQuests}>
                 {refreshingQuests ? "Aggiornamento…" : "Aggiorna Missioni"}
               </BigBtn>
-              <span style={{ color:"#64748b", fontSize:"0.75rem" }}>Aggiorna la rotazione per tutti i party attivi.</span>
+              <BigBtn onClick={refreshShopInventory} gold icon="🛒" disabled={refreshingShop}>
+                {refreshingShop ? "Aggiornamento…" : "Aggiorna Negozio"}
+              </BigBtn>
+              <BigBtn onClick={healAllPlayers} icon="💚" disabled={healingAll}>
+                {healingAll ? "Cura in corso…" : "Cura Tutti"}
+              </BigBtn>
             </div>
           </Card>
         </div>
@@ -3752,11 +3999,12 @@ function generateShopInventory(items, seed = 0) {
     return a;
   };
   const pick = (pool, n) => shuffle(pool).slice(0, Math.min(n, pool.length));
+  const equip = items.filter(i => i.type !== 'material');
   return [
-    ...pick(items.filter(i => i.rarity === "common"), 5),
-    ...pick(items.filter(i => i.rarity === "uncommon"), 3),
-    ...pick(items.filter(i => i.rarity === "rare" || i.rarity === "epic"), 1),
-    ...pick(items.filter(i => i.rarity === "legendary"), 1),
+    ...pick(equip.filter(i => i.rarity === "common"), 5),
+    ...pick(equip.filter(i => i.rarity === "uncommon"), 3),
+    ...pick(equip.filter(i => i.rarity === "rare" || i.rarity === "epic"), 1),
+    ...pick(equip.filter(i => i.rarity === "legendary"), 1),
   ];
 }
 
@@ -3813,7 +4061,148 @@ function ShopView({ me, items, loading, error, inventoryCounts, onBuy, restSeed 
           );
         })}
       </div>
+
+      {/* Materials section */}
+      {(() => {
+        const materials = items.filter(i => i.type === 'material');
+        if(!materials.length) return null;
+        const MAT_RARITY = { common:"#9ca3af", uncommon:"#34d399", rare:"#60a5fa", epic:"#a78bfa", legendary:"#fbbf24" };
+        const groups = ['common','uncommon','rare','epic','legendary'];
+        return (
+          <div style={{ marginTop:"2rem" }}>
+            <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"0.5rem", fontSize:"1.05rem" }}>⚒️ Materiali da Forgia</h3>
+            <p style={{ color:"#64748b", fontSize:"0.8rem", marginBottom:"1rem" }}>Acquista materiali per potenziare le armi alla Forgia.</p>
+            {groups.map(rarity => {
+              const mats = materials.filter(m => m.rarity === rarity);
+              if(!mats.length) return null;
+              return (
+                <div key={rarity} style={{ marginBottom:"1.2rem" }}>
+                  <div style={{ fontSize:"0.75rem", color:MAT_RARITY[rarity], fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:"0.5rem" }}>{rarity}</div>
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(200px,1fr))", gap:8 }}>
+                    {mats.map(mat => {
+                      const canAfford = me && me.gold >= (mat.price||0);
+                      const owned = inventoryCounts?.[mat.id] || 0;
+                      return (
+                        <div key={mat.id} style={{ background:"rgba(15,23,42,0.7)", border:`1px solid ${MAT_RARITY[rarity]}33`, borderRadius:8, padding:"0.7rem", display:"flex", flexDirection:"column", gap:6 }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                            <span style={{ fontSize:"1.5rem" }}>{mat.emoji}</span>
+                            <div style={{ flex:1, minWidth:0 }}>
+                              <div style={{ fontSize:"0.82rem", color:"#e2d9c5", fontWeight:600, lineHeight:1.2 }}>{mat.name}</div>
+                              {owned > 0 && <div style={{ fontSize:"0.68rem", color:"#6ee7b7" }}>Hai: {owned}</div>}
+                            </div>
+                            <div style={{ fontSize:"0.85rem", color:"#fbbf24", fontWeight:700, flexShrink:0 }}>💰{mat.price}</div>
+                          </div>
+                          <div style={{ fontSize:"0.72rem", color:"#64748b", lineHeight:1.4 }}>{mat.description}</div>
+                          <button onClick={()=>onBuy(mat)} disabled={!canAfford} style={{ padding:"0.4rem", background:canAfford?"rgba(120,53,15,0.5)":"rgba(255,255,255,0.03)", border:`1px solid ${canAfford?"#d97706":"#1f2937"}`, borderRadius:6, color:canAfford?"#fef3c7":"#374151", cursor:canAfford?"pointer":"not-allowed", fontSize:"0.78rem", fontFamily:"'Cinzel',serif" }}>
+                            {canAfford ? "Acquista" : "Non abbastanza oro"}
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })()}
     </>
+  );
+}
+
+function ForgeView({ me, inventory, inventoryCounts, catalogItems, onForge, loading }) {
+  const RARITY_COLOR = { common:"#9ca3af", uncommon:"#34d399", rare:"#60a5fa", epic:"#a78bfa", legendary:"#fbbf24" };
+  const weaponEntries = inventory.filter(e => {
+    const die = e.item?.weapon_die;
+    if(!die) return false;
+    const idx = FORGE_DIE_PROGRESSION.indexOf(die);
+    return idx >= 0 && idx < 11;
+  });
+  const groups = groupInventoryEntries(weaponEntries);
+  const forgeableGroups = groups.filter(g => g.quantity >= 2);
+
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
+      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:10, marginBottom:"1.2rem", flexWrap:"wrap" }}>
+        <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, fontSize:"1.1rem" }}>⚒️ Forgia — Potenzia le tue armi</h3>
+      </div>
+
+      {/* Progression chart */}
+      <div style={{ background:"rgba(15,23,42,0.7)", border:"1px solid #1e3a5f", borderRadius:10, padding:"1rem", marginBottom:"1.4rem" }}>
+        <div style={{ fontSize:"0.8rem", color:"#94a3b8", marginBottom:8, fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>Progressione Dado Danno:</div>
+        <div style={{ display:"flex", gap:4, flexWrap:"wrap", alignItems:"center" }}>
+          {FORGE_DIE_PROGRESSION.map((die, i) => (
+            <React.Fragment key={die}>
+              <span style={{ padding:"3px 8px", borderRadius:999, background:"rgba(109,40,217,0.2)", border:"1px solid rgba(109,40,217,0.4)", color:"#c4b5fd", fontSize:"0.75rem", fontWeight:700 }}>{die}</span>
+              {i < FORGE_DIE_PROGRESSION.length - 1 && <span style={{ color:"#475569", fontSize:"0.8rem" }}>→</span>}
+            </React.Fragment>
+          ))}
+        </div>
+      </div>
+
+      <p style={{ color:"#94a3b8", fontSize:"0.85rem", marginBottom:"1.4rem", lineHeight:1.6 }}>
+        Porta <strong style={{ color:"#e2d9c5" }}>2 copie della stessa arma</strong> + il <strong style={{ color:"#e2d9c5" }}>materiale richiesto</strong> per forgiarla al livello successivo. Ogni forgiatura aumenta il dado danno e il bonus ATK.
+      </p>
+
+      {!forgeableGroups.length && (
+        <div style={{ textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:8, color:"#64748b", fontFamily:"'Cinzel',serif" }}>
+          Nessuna arma forgiabile.<br/>Acquista o trova 2 copie della stessa arma per iniziare.
+        </div>
+      )}
+
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))", gap:16 }}>
+        {forgeableGroups.map(group => {
+          const currentDieIdx = FORGE_DIE_PROGRESSION.indexOf(group.item.weapon_die);
+          if(currentDieIdx < 0 || currentDieIdx >= 11) return null;
+          const targetDieIdx = currentDieIdx + 1;
+          const matId = FORGE_MATERIAL_REQ[targetDieIdx - 1];
+          const mat = catalogItems.find(i => i.id === matId);
+          const hasMat = (inventoryCounts[matId] || 0) >= 1;
+          const canForge = hasMat && !loading;
+          const nextDie = FORGE_DIE_PROGRESSION[targetDieIdx];
+          const rarityColor = RARITY_COLOR[group.item.rarity] || "#9ca3af";
+          const fLevel = getForgeLevel(group.itemId);
+          return (
+            <div key={group.itemId} style={{ background:"rgba(15,23,42,0.7)", border:`1px solid ${rarityColor}44`, borderRadius:12, padding:"1.2rem", display:"flex", flexDirection:"column", gap:"0.8rem", boxShadow:"0 4px 16px rgba(0,0,0,0.3)" }}>
+              <div style={{ display:"flex", gap:12, alignItems:"center" }}>
+                <span style={{ fontSize:"2.2rem", flexShrink:0 }}>{group.item.emoji}</span>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, fontSize:"0.95rem", lineHeight:1.3 }}>{group.item.name}</div>
+                  <div style={{ fontSize:"0.72rem", color:rarityColor, textTransform:"capitalize", fontWeight:600, marginTop:2 }}>{group.item.rarity}</div>
+                </div>
+                <div style={{ textAlign:"right", flexShrink:0 }}>
+                  <div style={{ fontSize:"0.78rem", color:"#94a3b8" }}>Copie:</div>
+                  <div style={{ fontSize:"1.1rem", color:"#6ee7b7", fontWeight:700 }}>{group.quantity}</div>
+                </div>
+              </div>
+
+              <div style={{ display:"flex", alignItems:"center", gap:8, background:"rgba(109,40,217,0.1)", border:"1px solid rgba(109,40,217,0.3)", borderRadius:8, padding:"0.6rem 1rem" }}>
+                <span style={{ color:"#c4b5fd", fontWeight:700, fontSize:"0.9rem" }}>{group.item.weapon_die}</span>
+                <span style={{ color:"#7c3aed", fontSize:"1.2rem", margin:"0 4px" }}>→</span>
+                <span style={{ color:"#fbbf24", fontWeight:700, fontSize:"0.9rem" }}>{nextDie}</span>
+                <span style={{ marginLeft:"auto", fontSize:"0.72rem", color:"#94a3b8" }}>+ATK +{fLevel+1}</span>
+              </div>
+
+              <div style={{ display:"flex", alignItems:"center", gap:8, padding:"0.5rem 0.8rem", background:hasMat?"rgba(34,197,94,0.08)":"rgba(239,68,68,0.08)", border:`1px solid ${hasMat?"#16a34a44":"#dc262644"}`, borderRadius:8 }}>
+                <span style={{ fontSize:"1.2rem" }}>{mat?.emoji || "🔮"}</span>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ fontSize:"0.82rem", color:"#e2d9c5" }}>{mat?.name || matId}</div>
+                  <div style={{ fontSize:"0.7rem", color:"#64748b" }}>Materiale richiesto × 1</div>
+                </div>
+                <div style={{ fontSize:"0.82rem", color:hasMat?"#6ee7b7":"#fca5a5", fontWeight:700, flexShrink:0 }}>Hai: {inventoryCounts[matId]||0}</div>
+              </div>
+
+              <button
+                onClick={()=>canForge && onForge(group)}
+                disabled={!canForge}
+                style={{ width:"100%", padding:"0.75rem", background:canForge?"linear-gradient(135deg,#713f12,#d97706)":"rgba(255,255,255,0.04)", border:`1px solid ${canForge?"#f59e0b":"#1f2937"}`, borderRadius:8, color:canForge?"#fef3c7":"#4b5563", fontFamily:"'Cinzel',serif", fontSize:"0.9rem", cursor:canForge?"pointer":"not-allowed", letterSpacing:"0.06em", fontWeight:700 }}>
+                {canForge ? "⚒️ Forgia" : hasMat ? "⏳ Caricamento…" : `Manca: ${mat?.name||matId}`}
+              </button>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -4152,6 +4541,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [tab, setTab] = useState("quest");
   const [dismissedVictoryTs, setDismissedVictoryTs] = useState(null);
   const [achievementNotif, setAchievementNotif] = useState([]);
+  const [showSubclassModal, setShowSubclassModal] = useState(false);
   const isMobile = useMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [lootedStepKey, setLootedStepKey] = useState(null);
@@ -4486,6 +4876,23 @@ function GameScreen({ myId, setScreen, authUser }) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qs?.combat?.turn, qs?.combat?.round, qs?.combat?.active, !!qs?.combat?.pendingLog]);
 
+  // Push notification when it becomes my turn
+  const prevMyTurnRef = useRef(false);
+  useEffect(() => {
+    const isNowMyTurn = !!(combat?.active && !combat.pendingLog && combat.combatants?.[combat.turn % Math.max(1, combat.combatants.length)]?.id === myId);
+    if (isNowMyTurn && !prevMyTurnRef.current) {
+      if (document.hidden && "Notification" in window) {
+        if (Notification.permission === "granted") {
+          new Notification("Echoes of Zodar ⚔️", { body: `È il tuo turno, ${me?.name || "Eroe"}!`, icon: "/favicon.ico", tag: "my-turn", renotify: true });
+        } else if (Notification.permission === "default") {
+          Notification.requestPermission();
+        }
+      }
+    }
+    prevMyTurnRef.current = isNowMyTurn;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [combat?.turn, combat?.round, combat?.active, combat?.pendingLog]);
+
   // Fallback poll — keeps the log alive if Supabase realtime silently drops
   useEffect(() => {
     const code = me?.partyCode;
@@ -4523,6 +4930,22 @@ function GameScreen({ myId, setScreen, authUser }) {
     }
     monsterTickBusyRef.current = true;
     try {
+      // Process status effects on monster at turn start
+      let monsterStatusLog = null;
+      if ((actor.statusEffects || []).length > 0) {
+        const sfx = processStatusEffects(actor);
+        const actorIdx = latestCombatants.findIndex(c => c.id === actor.id);
+        if (actorIdx >= 0) latestCombatants[actorIdx] = sfx.combatant;
+        if (sfx.skipTurn || sfx.died) {
+          const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
+          const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound, pendingLog: sfx.log };
+          await dbSavePartyState(code, { ...latestQs, combat: newCombat });
+          setQs(prev => ({ ...prev, combat: newCombat }));
+          await dbSendMessage({ party_code: code, author: "Battaglia", content: sfx.log, type: "combat" });
+          return;
+        }
+        monsterStatusLog = sfx.log;
+      }
       const latestPlayers = await dbGetPlayers(code);
       const combatPlayerIds = new Set(latestCombatants.filter(c => c?.isPlayer).map(c => c.id));
       const alivePlayers = latestPlayers.filter(p => combatPlayerIds.has(p.id) && (p?.hp || 0) > 0);
@@ -4546,7 +4969,9 @@ function GameScreen({ myId, setScreen, authUser }) {
       const legDefBonus = (ptLegendary?.turnsLeft > 0 && ptLegendary?.bonus_def) ? ptLegendary.bonus_def : 0;
       const effectivePt = legDefBonus ? { ...pt, def: (pt.def || 0) + legDefBonus } : pt;
       const resolved = await performAsyncAttack(actor, effectivePt, weaponDie);
-      const edmg = resolved.damage;
+      // Resistenza: i giocatori non hanno resistenza fisica di default, ma può essere aggiunta tramite masterBuffs
+      const playerResisted = resolved.hit && (effectivePt.resistances || []).includes('physical');
+      const edmg = playerResisted ? Math.max(1, Math.floor(resolved.damage / 2)) : resolved.damage;
       let effectiveHp = Math.max(0, pt.hp - edmg);
       const playerCombatantIdx = latestCombatants.findIndex(c => c.id === pt.id);
       if(ptBuffs.immortal > 0 && effectiveHp <= 0) {
@@ -4554,17 +4979,27 @@ function GameScreen({ myId, setScreen, authUser }) {
         monsterNewMasterBuffs = { ...monsterNewMasterBuffs, [pt.id]: { ...ptBuffs, immortal: ptBuffs.immortal - 1 } };
       }
       const immortalTriggered = ptBuffs.immortal > 0 && effectiveHp === 1 && edmg >= (pt.hp || 0);
+      // Applica status effect del mostro al giocatore (se definito)
+      const monsterAttackStatusEffect = resolved.hit && actor.attackStatusEffect ? actor.attackStatusEffect : null;
       const updPt = { ...pt, hp: effectiveHp, dead:false };
       if(playerCombatantIdx >= 0) {
-        latestCombatants[playerCombatantIdx] = immortalTriggered
+        let updCombatant = immortalTriggered
           ? reviveCombatantState({ ...latestCombatants[playerCombatantIdx], maxHp: updPt.maxHp }, 1)
           : applyCombatDamageState({ ...latestCombatants[playerCombatantIdx], maxHp: updPt.maxHp }, edmg);
-        if(effectiveHp > 0 && !immortalTriggered) latestCombatants[playerCombatantIdx].hp = effectiveHp;
+        if(effectiveHp > 0 && !immortalTriggered) updCombatant.hp = effectiveHp;
+        if(monsterAttackStatusEffect) {
+          const existing = updCombatant.statusEffects || [];
+          if (!existing.some(e => e.type === monsterAttackStatusEffect.type)) {
+            updCombatant = { ...updCombatant, statusEffects: [...existing, monsterAttackStatusEffect] };
+          }
+        }
+        latestCombatants[playerCombatantIdx] = updCombatant;
       }
       await dbSavePlayer(updPt);
       if (updPt.id === myId) setMeRaw(updPt);
       const immortalNote = ptBuffs.immortal > 0 && effectiveHp === 1 ? `\n🛡️ **${pt.name}** è protetto dall'Immortalità! (${ptBuffs.immortal - 1} turni rimasti)` : "";
-      const log = formatWeaponAttackLog(actor, pt, resolved, "Attacco naturale", updPt.hp, pt.maxHp) + immortalNote;
+      let log = formatWeaponAttackLog(actor, pt, { ...resolved, damage: edmg }, "Attacco naturale", updPt.hp, pt.maxHp, { resisted: playerResisted, statusApplied: monsterAttackStatusEffect?.type }) + immortalNote;
+      if (monsterStatusLog) log = monsterStatusLog + '\n---\n' + log;
       const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
       const allDead = latestCombatants.filter(c => !c.isPlayer).every(c => c.hp <= 0);
       if (allDead) {
@@ -4789,6 +5224,35 @@ function GameScreen({ myId, setScreen, authUser }) {
     await addMsg(`🎒 **${me.name}** acquista **${item.name}** per ${item.price} oro.`, "info", "Sistema");
   }
 
+  async function handleForge(group) {
+    if(!me?.id || inventoryLoading) return;
+    const currentDieIdx = FORGE_DIE_PROGRESSION.indexOf(group.item.weapon_die);
+    if(currentDieIdx < 0 || currentDieIdx >= 11) return;
+    if(group.quantity < 2) return;
+    const targetDieIdx = currentDieIdx + 1;
+    const matId = FORGE_MATERIAL_REQ[targetDieIdx - 1];
+    const matEntries = inventory.filter(e => e.itemId === matId);
+    if(!matEntries.length) { window.alert(`Manca il materiale richiesto.`); return; }
+    const matName = catalogItems.find(i => i.id === matId)?.name || matId;
+    const nextItemId = getNextForgeItemId(group.itemId);
+    const nextItem = catalogItems.find(i => i.id === nextItemId);
+    const nextName = nextItem?.name || `${group.item.name} +${getForgeLevel(group.itemId)+1}`;
+    if(!window.confirm(`⚒️ Forgiare:\n2× ${group.item.name}\n+ 1× ${matName}\n→ ${nextName} (${FORGE_DIE_PROGRESSION[currentDieIdx]} → ${FORGE_DIE_PROGRESSION[targetDieIdx]})?`)) return;
+    const [rowId1, rowId2] = group.rowIds;
+    const matRowId = matEntries[0].rowId;
+    setInventoryLoading(true);
+    try {
+      await dbRemovePlayerItem(rowId1);
+      await dbRemovePlayerItem(rowId2);
+      await dbRemovePlayerItem(matRowId);
+      await dbAddPlayerItem(me.id, nextItemId);
+      await refreshInventory(me);
+      await addMsg(`⚒️ **${me.name}** ha forgiato **${nextName}**! (${FORGE_DIE_PROGRESSION[currentDieIdx]} → ${FORGE_DIE_PROGRESSION[targetDieIdx]})`, "info", "Forgia");
+    } finally {
+      setInventoryLoading(false);
+    }
+  }
+
   async function equipItem(entry) {
     const slot = itemSlot(entry?.item);
     if(!slot || !me) return;
@@ -4950,6 +5414,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       await saveQState({ ...freshQs, persistentSpellSlots: newPersist });
     }
     await addMsg(`⭐ **${me.name}** sale al **livello ${updated.level}**!\n${levelGainForClass(me.class).label}`, "info", "Sistema");
+    if (updated.level === 6 && !updated.subclass) setShowSubclassModal(true);
     await refreshAll(code);
   }
 
@@ -4965,6 +5430,27 @@ function GameScreen({ myId, setScreen, authUser }) {
     const newChat = [...(qs.battleChat || []), entry].slice(-40);
     await saveQState({ ...qs, battleChat: newChat });
     setBattleChatInput("");
+  }
+
+  async function selectSubclass(subclassId) {
+    if (!me) return;
+    const options = getSubclassOptions(me.class);
+    const chosen = options.find(s => s.id === subclassId);
+    if (!chosen) return;
+    const b = chosen.bonus || {};
+    const updated = {
+      ...me,
+      subclass: subclassId,
+      atk: (me.atk || 0) + (b.atk || 0),
+      def: (me.def || 0) + (b.def || 0),
+      mag: (me.mag || 0) + (b.mag || 0),
+      maxHp: (me.maxHp || 0) + (b.maxHp || 0),
+      hp: Math.min((me.hp || 0) + (b.maxHp || 0), (me.maxHp || 0) + (b.maxHp || 0)),
+    };
+    await dbSavePlayer(updated);
+    setMeRaw(updated);
+    setShowSubclassModal(false);
+    await addMsg(`🌟 **${me.name}** sceglie la sottoclasse **${chosen.emoji} ${chosen.name}**! ${chosen.desc}`, "info", "Sistema");
   }
 
   async function forceNextCombatTurn() {
@@ -5036,6 +5522,8 @@ function GameScreen({ myId, setScreen, authUser }) {
     if(combat?.active) return;
     if(!code) return;
     if(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date()) return;
+    const isLeader = partyPlayers.length === 0 || partyPlayers[0]?.id === myId;
+    if(!isLeader) return;
     const durationMs = type === "short" ? 30 * 60 * 1000 : 60 * 60 * 1000;
     const endsAt = new Date(Date.now() + durationMs).toISOString();
     await saveQState({ ...qs, rest: { type, endsAt, startedBy: myId } });
@@ -5125,7 +5613,19 @@ function GameScreen({ myId, setScreen, authUser }) {
       await saveQState({ ...qs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: null } });
       return;
     }
-    if(isDyingCombatant(attacker)) {
+    // Process status effects at turn start (stun/death → advance turn; damage only → prepend to attack log)
+    let statusPrefixLog = null;
+    if ((attacker.statusEffects || []).length > 0) {
+      const sfx = processStatusEffects(attacker);
+      combatants[turn] = sfx.combatant;
+      if (sfx.skipTurn || sfx.died) {
+        const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
+        await saveQState({ ...qs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: sfx.log } });
+        return;
+      }
+      statusPrefixLog = sfx.log;
+    }
+    if(isDyingCombatant(combatants[turn])) {
       const latestBuffState = await dbGetPartyState(code);
       const deathSaveBuffs = latestBuffState.masterBuffs || {};
       const deathSaveMyBuffs = deathSaveBuffs[myId] || {};
@@ -5214,10 +5714,23 @@ function GameScreen({ myId, setScreen, authUser }) {
       const newTurns = myBuffs.legendaryItem.turnsLeft - 1;
       newMasterBuffs = { ...newMasterBuffs, [myId]: { ...(newMasterBuffs[myId] || myBuffs), legendaryItem: newTurns > 0 ? { ...myBuffs.legendaryItem, turnsLeft: newTurns } : null } };
     }
-    const dmg = effectiveResolved.damage;
+    // Resistenza fisica: se il bersaglio ha resistenza, dimezza il danno
+    const resisted = effectiveResolved.hit && (target.resistances || []).includes('physical');
+    const finalDmg = resisted ? Math.max(1, Math.floor(effectiveResolved.damage / 2)) : effectiveResolved.damage;
+    const effectiveResolved2 = resisted ? { ...effectiveResolved, damage: finalDmg } : effectiveResolved;
+    // Status effect applicato dall'attacco (es. mostro con statusEffect)
+    const attackStatusEffect = effectiveResolved.hit && attacker.attackStatusEffect ? attacker.attackStatusEffect : null;
     const tidx = combatants.findIndex(c=>c.id===target.id);
-    combatants[tidx] = {...target, hp:Math.max(0,target.hp-dmg)};
-    let log = formatWeaponAttackLog(attacker, target, effectiveResolved, weapon.name, combatants[tidx].hp, target.maxHp);
+    const targetAfterDmg = { ...target, hp: Math.max(0, target.hp - finalDmg) };
+    if (attackStatusEffect) {
+      const existing = targetAfterDmg.statusEffects || [];
+      if (!existing.some(e => e.type === attackStatusEffect.type)) {
+        targetAfterDmg.statusEffects = [...existing, attackStatusEffect];
+      }
+    }
+    combatants[tidx] = targetAfterDmg;
+    let log = formatWeaponAttackLog(attacker, target, effectiveResolved2, weapon.name, combatants[tidx].hp, target.maxHp, { resisted, statusApplied: attackStatusEffect?.type });
+    if (statusPrefixLog) log = statusPrefixLog + '\n---\n' + log;
     if(myPreBuff) {
       const newTurnsAfter = (myBuffs.legendaryItem?.turnsLeft || 0) - 1;
       const legLine = myPreBuff.type==="weapon" ? `🏆 **${myPreBuff.name}** (${myPreBuff.weapon_die} +${myPreBuff.bonus_atk} ATK) — ${Math.max(0,newTurnsAfter)} turni rimasti`
@@ -5230,8 +5743,8 @@ function GameScreen({ myId, setScreen, authUser }) {
     const prevEntry = newQuestDmgLog[myId] || {};
     newQuestDmgLog[myId] = {
       name: me?.name || attacker.name,
-      dmg: (prevEntry.dmg || 0) + dmg,
-      crits: (prevEntry.crits || 0) + (effectiveResolved.isCrit ? 1 : 0),
+      dmg: (prevEntry.dmg || 0) + finalDmg,
+      crits: (prevEntry.crits || 0) + (effectiveResolved2.isCrit ? 1 : 0),
     };
     const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
     const allDead = combatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
@@ -5525,7 +6038,9 @@ ${stepText(step)}`, "quest","Master");
     const newQuestLog = [...(qs.questLog || []).filter(e => e.date === today), logEntry];
     const diffLabel = q.difficulty==="difficile"?"difficile":q.difficulty==="facile"?"facile":"media";
     const newDiaryQuest = appendDiary(qs.partyDiary, { type:'quest', icon:'📜', text:`«${q.title}» completata! Missione di difficoltà ${diffLabel}. Ricompensa: +${xpE} XP e +${goldE} 💰 a testa.`, players: partyPlayers.map(p=>p.name) });
-    const newQs={...qs,active:false,step:0,currentId:null,completed:[...(qs.completed||[]),q.id],questDmgLog:{},questLog:newQuestLog,partyDiary:newDiaryQuest};
+    const historyEntry = { id: q.id, title: q.title, difficulty: q.difficulty, completedAt: new Date().toISOString(), xpEach: xpE, goldEach: goldE };
+    const newQuestHistory = [...(qs.questHistory || []), historyEntry].slice(-100);
+    const newQs={...qs,active:false,step:0,currentId:null,completed:[...(qs.completed||[]),q.id],questDmgLog:{},questLog:newQuestLog,partyDiary:newDiaryQuest,questHistory:newQuestHistory};
     await saveQState(newQs);
     const guildXp = q.difficulty==="difficile"?120:q.difficulty==="facile"?40:70;
     if(myGuild) await addGuildXP(guildXp);
@@ -5952,7 +6467,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["trade","🤝 Scambi"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["guild","🏛️ Gilda"],["diary","📖 Diario"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["trade","🤝 Scambi"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["guild","🏛️ Gilda"],["diary","📖 Diario"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
@@ -6008,21 +6523,28 @@ ${stepText(step)}`, "quest","Master");
                         {qs.rest.type === "short" ? "Mezza cura + metà incantesimi al termine" : "Cura completa + tutti gli incantesimi al termine"}
                       </div>
                     </div>
-                    <button onClick={cancelRest} style={{ padding:"0.4rem 0.8rem", background:"rgba(127,29,29,0.5)", border:"1px solid #ef4444", borderRadius:4, color:"#fca5a5", cursor:"pointer", fontSize:"0.72rem", fontFamily:"inherit" }}>
-                      ✕ Interrompi
-                    </button>
+                    {(partyPlayers.length === 0 || partyPlayers[0]?.id === myId) && (
+                      <button onClick={cancelRest} style={{ padding:"0.4rem 0.8rem", background:"rgba(127,29,29,0.5)", border:"1px solid #ef4444", borderRadius:4, color:"#fca5a5", cursor:"pointer", fontSize:"0.72rem", fontFamily:"inherit" }}>
+                        ✕ Interrompi
+                      </button>
+                    )}
                   </div>
                 ) : (
-                  <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
-                    <span style={{ color:"#4ade80", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em", marginRight:4 }}>🏕️ Riposo:</span>
-                    <button onClick={()=>startRest("short")} style={{ padding:"0.35rem 0.8rem", background:"rgba(20,83,45,0.5)", border:"1px solid #16a34a", borderRadius:4, color:"#86efac", cursor:"pointer", fontSize:"0.72rem", fontFamily:"inherit", fontWeight:700 }}>
-                      🌙 Breve <span style={{ color:"#4ade80", fontSize:"0.65rem" }}>(30 min)</span>
-                    </button>
-                    <button onClick={()=>startRest("long")} style={{ padding:"0.35rem 0.8rem", background:"rgba(20,83,45,0.7)", border:"1px solid #15803d", borderRadius:4, color:"#4ade80", cursor:"pointer", fontSize:"0.72rem", fontFamily:"inherit", fontWeight:700 }}>
-                      🌅 Lungo <span style={{ color:"#86efac", fontSize:"0.65rem" }}>(1 ora)</span>
-                    </button>
-                    <span style={{ color:"#166534", fontSize:"0.62rem" }}>Solo fuori dal combattimento</span>
-                  </div>
+                  (() => {
+                    const isLeader = partyPlayers.length === 0 || partyPlayers[0]?.id === myId;
+                    return isLeader ? (
+                      <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
+                        <span style={{ color:"#4ade80", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em", marginRight:4 }}>🏕️ Riposo:</span>
+                        <button onClick={()=>startRest("short")} style={{ padding:"0.35rem 0.8rem", background:"rgba(20,83,45,0.5)", border:"1px solid #16a34a", borderRadius:4, color:"#86efac", cursor:"pointer", fontSize:"0.72rem", fontFamily:"inherit", fontWeight:700 }}>
+                          🌙 Breve <span style={{ color:"#4ade80", fontSize:"0.65rem" }}>(30 min)</span>
+                        </button>
+                        <button onClick={()=>startRest("long")} style={{ padding:"0.35rem 0.8rem", background:"rgba(20,83,45,0.7)", border:"1px solid #15803d", borderRadius:4, color:"#4ade80", cursor:"pointer", fontSize:"0.72rem", fontFamily:"inherit", fontWeight:700 }}>
+                          🌅 Lungo <span style={{ color:"#86efac", fontSize:"0.65rem" }}>(1 ora)</span>
+                        </button>
+                        <span style={{ color:"#166534", fontSize:"0.62rem" }}>Solo fuori dal combattimento</span>
+                      </div>
+                    ) : null;
+                  })()
                 )}
               </div>
             )}
@@ -6161,6 +6683,29 @@ ${stepText(step)}`, "quest","Master");
                 <BigBtn onClick={handleLevelUp} gold disabled={!canLevelUp}>Aumenta di livello</BigBtn>
               </Card>
 
+              {/* ── Subclass ── */}
+              {me.level >= 6 && (() => {
+                const sc = me.subclass ? getSubclassOptions(me.class).find(s => s.id === me.subclass) : null;
+                return (
+                  <Card title="🌟 Sottoclasse">
+                    {sc ? (
+                      <div style={{ display:"flex", alignItems:"center", gap:14 }}>
+                        <span style={{ fontSize:"2.5rem" }}>{sc.emoji}</span>
+                        <div>
+                          <div style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontWeight:700, fontSize:"1.05rem" }}>{sc.name}</div>
+                          <div style={{ color:"#94a3b8", fontSize:"0.82rem", marginTop:2 }}>{sc.desc}</div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div style={{ display:"flex", alignItems:"center", gap:12, flexWrap:"wrap" }}>
+                        <span style={{ color:"#fbbf24", fontSize:"0.9rem" }}>Hai raggiunto il livello 6 — scegli la tua sottoclasse!</span>
+                        <button onClick={() => setShowSubclassModal(true)} style={{ padding:"0.5rem 1.2rem", background:"rgba(109,40,217,0.3)", border:"1px solid #7c3aed", borderRadius:8, color:"#c4b5fd", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.85rem" }}>Scegli ora</button>
+                      </div>
+                    )}
+                  </Card>
+                );
+              })()}
+
               {/* ── Achievements ── */}
               <Card title="🏆 Achievement">
                 {(() => {
@@ -6290,6 +6835,19 @@ ${stepText(step)}`, "quest","Master");
               inventoryCounts={inventoryCounts}
               onBuy={buyItem}
               restSeed={qs?.longRestSeed || 0}
+            />
+          </div>
+        )}
+
+        {tab==="forge" && (
+          <div style={{ flex:1, overflow:"hidden", display:"flex", flexDirection:"column", background:"rgba(3,7,18,0.5)" }}>
+            <ForgeView
+              me={me}
+              inventory={inventory}
+              inventoryCounts={inventoryCounts}
+              catalogItems={catalogItems}
+              onForge={handleForge}
+              loading={inventoryLoading}
             />
           </div>
         )}
@@ -6491,6 +7049,31 @@ ${stepText(step)}`, "quest","Master");
                           })}
                         </div>
                       )}
+                    </div>
+                  ))}
+                </div>
+              );
+            })()}
+
+            {/* ── Storico missioni ── */}
+            {(qs?.questHistory || []).length > 0 && (() => {
+              const history = [...(qs.questHistory || [])].reverse().slice(0, 30);
+              const diffColor = d => d==="difficile"?"#ef4444":d==="facile"?"#22c55e":"#fbbf24";
+              const diffLabel = d => d==="difficile"?"Difficile":d==="facile"?"Facile":"Media";
+              return (
+                <div style={{ marginTop:24 }}>
+                  <div style={{ color:"#94a3b8", fontSize:"0.7rem", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:10 }}>📖 Storico Missioni</div>
+                  {history.map((entry, i) => (
+                    <div key={i} style={{ display:"flex", alignItems:"center", gap:10, padding:"0.6rem 0.8rem", background:"rgba(15,23,42,0.5)", border:"1px solid #1e293b", borderRadius:6, marginBottom:5 }}>
+                      <div style={{ flex:1 }}>
+                        <div style={{ fontFamily:"'Cinzel',serif", color:"#e2e8f0", fontSize:"0.85rem", fontWeight:600 }}>✅ {entry.title}</div>
+                        <div style={{ fontSize:"0.68rem", color:"#64748b", marginTop:2 }}>{new Date(entry.completedAt).toLocaleDateString('it-IT')}</div>
+                      </div>
+                      <span style={{ fontSize:"0.65rem", padding:"2px 8px", borderRadius:3, border:`1px solid ${diffColor(entry.difficulty)}`, color:diffColor(entry.difficulty) }}>{diffLabel(entry.difficulty)}</span>
+                      <div style={{ textAlign:"right", fontSize:"0.72rem", color:"#94a3b8" }}>
+                        <div>⭐ +{entry.xpEach} XP</div>
+                        <div>💰 +{entry.goldEach} oro</div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -6876,12 +7459,17 @@ ${stepText(step)}`, "quest","Master");
                             </div>
                           )}
                         </div>
-                        {(c.dying || c.stable || c.dead) && (
+                        {(c.dying || c.stable || c.dead || (c.statusEffects||[]).length > 0) && (
                           <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:8, fontSize:"0.68rem" }}>
                             {c.dying && <span style={{ padding:"2px 6px", borderRadius:999, background:"rgba(127,29,29,0.35)", border:"1px solid #ef4444", color:"#fecaca" }}>🕯️ Morente</span>}
                             {c.stable && <span style={{ padding:"2px 6px", borderRadius:999, background:"rgba(30,41,59,0.5)", border:"1px solid #64748b", color:"#cbd5e1" }}>😵 Stabile</span>}
                             {c.dead && <span style={{ padding:"2px 6px", borderRadius:999, background:"rgba(24,24,27,0.7)", border:"1px solid #71717a", color:"#e4e4e7" }}>☠️ Morto</span>}
                             {(c.dying || c.stable) && <span style={{ color:"#fecaca" }}>{c.deathSuccesses || 0}/3 ✓ • {c.deathFailures || 0}/3 ✗</span>}
+                            {(c.statusEffects||[]).map(fx => {
+                              const def = STATUS_EFFECTS[fx.type];
+                              if(!def) return null;
+                              return <span key={fx.type} style={{ padding:"2px 6px", borderRadius:999, background:"rgba(0,0,0,0.4)", border:`1px solid ${def.color}`, color:def.color }}>{def.emoji} {def.label} {fx.duration}t</span>;
+                            })}
                           </div>
                         )}
                         <HpBar cur={c.hp} max={c.maxHp} red={!c.isPlayer} />
@@ -7193,7 +7781,7 @@ ${stepText(step)}`, "quest","Master");
       <DiceRoller ref={diceRef} />
 
       {/* ── Rest Overlay ── */}
-      {!!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date()) && (
+      {!!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date() && qs.rest.startedBy === myId) && (
         <div style={{ position:"fixed", inset:0, zIndex:10500, background:"radial-gradient(circle at 50% 35%,rgba(34,211,238,0.16),transparent 28%),radial-gradient(circle at 18% 18%,rgba(251,191,36,0.13),transparent 24%),linear-gradient(180deg,rgba(3,7,18,0.98),rgba(8,13,29,0.99) 54%,rgba(2,6,23,1))", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"1.25rem", padding:"1.25rem", overflow:"hidden", animation:"restOverlayIn 0.8s ease" }}>
           {/* Floating stars */}
           {[...Array(12)].map((_,i)=>(
@@ -7588,6 +8176,29 @@ ${stepText(step)}`, "quest","Master");
           </div>
         );
       })()}
+
+      {/* ── Subclass selection modal ── */}
+      {showSubclassModal && me && (
+        <div style={{ position:"fixed", inset:0, zIndex:12000, background:"rgba(0,0,0,0.88)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
+          <div style={{ background:"linear-gradient(180deg,rgba(10,10,30,0.99),rgba(3,7,18,0.99))", border:"2px solid #7c3aed", borderRadius:16, padding:"1.8rem", maxWidth:480, width:"100%", boxShadow:"0 24px 60px rgba(109,40,217,0.35)" }}>
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#c4b5fd", fontSize:"1.2rem", marginBottom:6, textAlign:"center" }}>🌟 Scegli la tua Sottoclasse</div>
+            <div style={{ color:"#94a3b8", fontSize:"0.82rem", textAlign:"center", marginBottom:"1.4rem" }}>Hai raggiunto il livello 6. Questa scelta è permanente.</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+              {getSubclassOptions(me.class).map(s => (
+                <button key={s.id} onClick={() => selectSubclass(s.id)} style={{ padding:"1rem 1.2rem", background:"rgba(109,40,217,0.15)", border:"1px solid #6d28d9", borderRadius:10, color:"#e2e8f0", cursor:"pointer", textAlign:"left", display:"flex", gap:12, alignItems:"center", fontFamily:"inherit" }}
+                  onMouseEnter={e=>e.currentTarget.style.background="rgba(109,40,217,0.35)"}
+                  onMouseLeave={e=>e.currentTarget.style.background="rgba(109,40,217,0.15)"}>
+                  <span style={{ fontSize:"2rem" }}>{s.emoji}</span>
+                  <div>
+                    <div style={{ fontFamily:"'Cinzel',serif", fontWeight:700, color:"#c4b5fd", marginBottom:2 }}>{s.name}</div>
+                    <div style={{ fontSize:"0.78rem", color:"#94a3b8" }}>{s.desc}</div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
