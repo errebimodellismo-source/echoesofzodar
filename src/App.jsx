@@ -1532,7 +1532,7 @@ function getMonsterImage(monster) {
   if(!monster) return "";
   if(monster.image) return monster.image;
   if(monster.image_url) return monster.image_url;
-  if(monster.id && monster.name) return `/assets/monsters/${monster.id}-${slugifyAssetName(monster.name)}.png`;
+  if(monster.id && monster.name && !monster.isSummon) return `/assets/monsters/${monster.id}-${slugifyAssetName(monster.name)}.png`;
   const key = `${monster.id || ""} ${monster.name || ""} ${monster.desc || ""}`.toLowerCase();
   const theme =
     /drago|dragon/.test(key) ? { icon:"🐉", title:"Drago", accent:"#ef4444", accent2:"#f59e0b", bg1:"#2b1010", bg2:"#120808", border:"#991b1b" } :
@@ -8698,7 +8698,7 @@ ${stepText(step)}`, "quest","Master");
                     return (
                       <div key={c.id||i} style={{ background:isActive?"linear-gradient(135deg, rgba(127,29,29,0.34), rgba(15,23,42,0.9))":c.isSummon?"rgba(10,40,20,0.82)":"rgba(15,23,42,0.82)", border:`2px solid ${isActive?"#ef4444":c.isSummon?"#22c55e":c.isPlayer?"#6d28d9":"#7f1d1d"}`, borderRadius:12, padding:"0.95rem", opacity:c.hp<=0?0.45:1, boxShadow:isActive?"0 16px 36px rgba(127,29,29,0.24)":"0 12px 30px rgba(0,0,0,0.16)" }}>
                         <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:8 }}>
-                          <ArtThumb src={c.isPlayer ? getPlayerPortrait(c) : getMonsterImage(c)} alt={c.name} size={70} radius={16} />
+                          <ArtThumb src={c.isSummon ? getMonsterImage(c) : c.isPlayer ? getPlayerPortrait(c) : getMonsterImage(c)} alt={c.name} size={70} radius={16} />
                           <div style={{ flex:1 }}>
                             <div style={{ fontFamily:"'Cinzel',serif", color:c.isPlayer?"#ddd6fe":"#fecaca", fontSize:"0.98rem", fontWeight:700, marginBottom:2 }}>{c.name}{c.isBoss?" ⭐":""}</div>
                             <div style={{ fontSize:"0.75rem", color:"#94a3b8" }}>Iniziativa: {c.rollInit}</div>
