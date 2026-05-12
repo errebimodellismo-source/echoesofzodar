@@ -70,6 +70,7 @@ function missionDifficultyLabel(value) {
   })[normalizeMissionDifficulty(value)];
 }
 const BACKGROUND_URL = "/assets/Zodarsfondo.png";
+const MAINTENANCE_CODE = "__maintenance__";
 const MASTER_PASSWORD = "ByBy101112!";
 const PORTRAIT_FALLBACK_URL = 'https://fv5-2.files.fm/thumb_show.php?i=p532qftvxy&view&v=1';
 function debugCharacterFlow(step, payload) {
@@ -1855,6 +1856,19 @@ async function dbGetPartyState(partyCode) {
   };
 }
 
+async function dbGetMaintenanceMode() {
+  const { data } = await supabase.from("party_state").select("quest_active").eq("party_code", MAINTENANCE_CODE).maybeSingle();
+  return !!(data?.quest_active);
+}
+async function dbSetMaintenanceMode(active, message = "") {
+  await supabase.from("party_state").upsert({
+    party_code: MAINTENANCE_CODE,
+    quest_active: active,
+    quest_id: message || null,
+    updated_at: new Date().toISOString(),
+  });
+}
+
 function getDailyResetSlot() {
   const now = new Date();
   const date = now.toLocaleDateString('en-CA');
@@ -2789,6 +2803,13 @@ function MasterPanel({ setScreen, authUser }) {
   const [refreshingQuests, setRefreshingQuests] = useState(false);
   const [refreshingShop, setRefreshingShop] = useState(false);
   const [healingAll, setHealingAll] = useState(false);
+  const [maintenance, setMaintenance] = useState(false);
+  const [maintenanceBusy, setMaintenanceBusy] = useState(false);
+  const [maintenanceInput, setMaintenanceInput] = useState("");
+
+  useEffect(() => {
+    dbGetMaintenanceMode().then(setMaintenance);
+  }, []);
 
   async function refreshAllQuestSeeds() {
     if(refreshingQuests) return;
@@ -3007,6 +3028,47 @@ function MasterPanel({ setScreen, authUser }) {
               <BigBtn onClick={healAllPlayers} icon="💚" disabled={healingAll}>
                 {healingAll ? "Cura in corso…" : "Cura Tutti"}
               </BigBtn>
+            </div>
+          </Card>
+
+          <Card title="🔧 Manutenzione">
+            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:"1rem" }}>
+              <div style={{ width:10, height:10, borderRadius:"50%", background: maintenance ? "#ef4444" : "#22c55e", boxShadow: maintenance ? "0 0 8px #ef4444" : "0 0 8px #22c55e", flexShrink:0 }} />
+              <span style={{ color: maintenance ? "#fca5a5" : "#86efac", fontWeight:700, fontSize:"0.88rem" }}>
+                {maintenance ? "Gioco CHIUSO — manutenzione attiva" : "Gioco APERTO — tutto regolare"}
+              </span>
+            </div>
+            <label style={labelStyle}>Messaggio ai giocatori (opzionale)</label>
+            <input
+              style={{ ...inputStyle, marginBottom:"1rem" }}
+              value={maintenanceInput}
+              onChange={e => setMaintenanceInput(e.target.value)}
+              placeholder="es. Aggiornamento in corso, torniamo tra 10 minuti…"
+            />
+            <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+              <button
+                disabled={maintenanceBusy || maintenance}
+                onClick={async () => {
+                  if(!window.confirm("Metti il gioco in manutenzione?\nTutti i giocatori vedranno un overlay bloccante.")) return;
+                  setMaintenanceBusy(true);
+                  await dbSetMaintenanceMode(true, maintenanceInput.trim());
+                  setMaintenance(true);
+                  setMaintenanceBusy(false);
+                }}
+                style={{ padding:"0.7rem 1.4rem", background: maintenance ? "rgba(100,100,100,0.2)" : "linear-gradient(135deg,#7f1d1d,#dc2626)", border:"1px solid #ef4444", borderRadius:8, color:"#fee2e2", fontFamily:"'Cinzel',serif", fontSize:"0.88rem", cursor: maintenance ? "not-allowed" : "pointer", fontWeight:700, opacity: maintenance ? 0.4 : 1 }}>
+                🔴 Metti in Manutenzione
+              </button>
+              <button
+                disabled={maintenanceBusy || !maintenance}
+                onClick={async () => {
+                  setMaintenanceBusy(true);
+                  await dbSetMaintenanceMode(false, "");
+                  setMaintenance(false);
+                  setMaintenanceBusy(false);
+                }}
+                style={{ padding:"0.7rem 1.4rem", background: !maintenance ? "rgba(100,100,100,0.2)" : "linear-gradient(135deg,#14532d,#16a34a)", border:"1px solid #22c55e", borderRadius:8, color:"#dcfce7", fontFamily:"'Cinzel',serif", fontSize:"0.88rem", cursor: !maintenance ? "not-allowed" : "pointer", fontWeight:700, opacity: !maintenance ? 0.4 : 1 }}>
+                🟢 Riapri il Gioco
+              </button>
             </div>
           </Card>
         </div>
@@ -5904,6 +5966,8 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [tab, setTab] = useState("quest");
   const [dismissedVictoryTs, setDismissedVictoryTs] = useState(null);
   const [declinedCombatAt, setDeclinedCombatAt] = useState(null);
+  const [maintenanceMode, setMaintenanceMode] = useState(false);
+  const [maintenanceMsg, setMaintenanceMsg] = useState("");
   const [achievementNotif, setAchievementNotif] = useState([]);
   const [showSubclassModal, setShowSubclassModal] = useState(false);
   const isMobile = useMobile();
@@ -6263,6 +6327,18 @@ function GameScreen({ myId, setScreen, authUser }) {
   }, [!!qs?.combat?.active]);
 
   // ── Daily reset at 12:00 and 00:00 ──
+  // ── Maintenance mode polling ──
+  useEffect(() => {
+    async function checkMaintenance() {
+      const { data } = await supabase.from("party_state").select("quest_active,quest_id").eq("party_code", MAINTENANCE_CODE).maybeSingle();
+      setMaintenanceMode(!!(data?.quest_active));
+      setMaintenanceMsg(data?.quest_id || "");
+    }
+    checkMaintenance();
+    const t = setInterval(checkMaintenance, 15_000);
+    return () => clearInterval(t);
+  }, []);
+
   const dailyResetRunningRef = useRef(false);
   const prevCombatHpRef = useRef({});
   const [shakingIds, setShakingIds] = useState(new Set());
@@ -8129,6 +8205,20 @@ ${stepText(step)}`, "quest","Master");
     <div style={{ display:"flex", height:"100vh", overflow:"hidden", position:"relative", zIndex:1 }}>
       <ParticleBackground />
       <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg, rgba(2,6,23,0.38) 0%, rgba(2,6,23,0.32) 45%, rgba(2,6,23,0.42) 100%)", pointerEvents:"none" }} />
+
+      {/* ── Maintenance overlay ── */}
+      {maintenanceMode && (
+        <div style={{ position:"fixed", inset:0, zIndex:99999, background:"linear-gradient(180deg,rgba(2,4,14,0.98),rgba(8,10,24,0.99))", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"1.5rem", padding:"2rem", textAlign:"center" }}>
+          <div style={{ fontSize:"4rem" }}>🔧</div>
+          <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.6rem", fontWeight:700, letterSpacing:"0.04em" }}>Gioco in Manutenzione</div>
+          <div style={{ color:"#94a3b8", fontSize:"0.95rem", maxWidth:420, lineHeight:1.7 }}>
+            {maintenanceMsg || "Il Dungeon Master sta aggiornando il mondo. Riprova tra qualche minuto."}
+          </div>
+          <div style={{ marginTop:"0.5rem", padding:"0.6rem 1.4rem", background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.3)", borderRadius:8, color:"#fbbf24", fontSize:"0.78rem" }}>
+            La pagina si aggiornerà automaticamente quando il gioco sarà di nuovo disponibile.
+          </div>
+        </div>
+      )}
       {/* Mobile overlay backdrop */}
       {isMobile && sidebarOpen && (
         <div onClick={()=>setSidebarOpen(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.55)", zIndex:999, backdropFilter:"blur(2px)" }} />
