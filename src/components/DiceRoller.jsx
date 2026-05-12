@@ -107,8 +107,6 @@ const DiceRoller = forwardRef(({ onRollComplete }, ref) => {
     }
   }));
 
-  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
-
   return (
     <div style={{
       position: 'fixed',
@@ -123,11 +121,11 @@ const DiceRoller = forwardRef(({ onRollComplete }, ref) => {
         id="dice-box-container"
         ref={containerRef}
         style={{
-          position: 'relative',
-          width: isMobile ? '100vw' : 'min(1200px, 90vw)',
-          height: isMobile ? '100vh' : 'min(840px, 80vh)',
+          position: 'fixed',
+          inset: 0,
+          width: '100vw',
+          height: '100vh',
           overflow: 'hidden',
-          borderRadius: isMobile ? 0 : 18,
           pointerEvents: 'none',
         }}
       >
