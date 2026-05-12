@@ -8395,13 +8395,31 @@ ${stepText(step)}`, "quest","Master");
                     </div>
 
                     {/* Invite panel */}
-                    {showGuildInvite && hasPerm(myMember,"invite") && (
-                      <div style={{ background:"rgba(15,23,42,0.6)", border:"1px solid #334155", borderRadius:8, padding:"0.65rem", marginBottom:8, display:"flex", gap:6 }}>
-                        <input value={guildInviteCode} onChange={e=>setGuildInviteCode(e.target.value)} placeholder="ID o party code giocatore..."
-                          style={{ flex:1, padding:"0.35rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.8rem" }}/>
-                        <SmallBtn onClick={inviteByCode}>✓ Invita</SmallBtn>
-                      </div>
-                    )}
+                    {showGuildInvite && hasPerm(myMember,"invite") && (()=>{
+                      const invitablePlayers = worldPlayers.filter(p => p.id !== myId && !myGuild.members?.find(m=>m.id===p.id) && !getPlayerGuild(guilds, p.id));
+                      return (
+                        <div style={{ background:"rgba(15,23,42,0.6)", border:"1px solid #334155", borderRadius:8, padding:"0.65rem", marginBottom:8 }}>
+                          {invitablePlayers.length > 0 && (
+                            <div style={{ marginBottom:8 }}>
+                              <div style={{ fontSize:"0.65rem", color:"#64748b", marginBottom:5 }}>Seleziona dalla lista:</div>
+                              <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+                                {invitablePlayers.map(p=>(
+                                  <button key={p.id} onClick={()=>setGuildInviteCode(p.id)}
+                                    style={{ padding:"0.3rem 0.7rem", background:guildInviteCode===p.id?"rgba(109,40,217,0.35)":"rgba(15,23,42,0.7)", border:`1px solid ${guildInviteCode===p.id?"#7c3aed":"#334155"}`, borderRadius:6, color:guildInviteCode===p.id?"#c4b5fd":"#e2e8f0", cursor:"pointer", fontSize:"0.75rem" }}>
+                                    {CLASSES[p.class]?.emoji||"⚔️"} {p.name} <span style={{color:"#64748b"}}>Lv.{p.level||1}</span>
+                                  </button>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          <div style={{ display:"flex", gap:6 }}>
+                            <input value={guildInviteCode} onChange={e=>setGuildInviteCode(e.target.value)} placeholder="…oppure ID / party code manuale"
+                              style={{ flex:1, padding:"0.35rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.8rem" }}/>
+                            <SmallBtn onClick={inviteByCode} disabled={!guildInviteCode.trim()}>✓ Invita</SmallBtn>
+                          </div>
+                        </div>
+                      );
+                    })()}
 
                     {/* Roles reference */}
                     {showGuildRoles && (
@@ -8437,7 +8455,7 @@ ${stepText(step)}`, "quest","Master");
                             <div style={{ fontSize:"0.82rem", color:"#e2e8f0", fontWeight:600 }}>{m.name}</div>
                             <div style={{ fontSize:"0.65rem", color:rd.color||"#94a3b8" }}>{role}</div>
                           </div>
-                          {hasPerm(myMember,"roles") && m.id!==myId && (
+                          {myMember?.role==="leader" && m.id!==myId && (
                             <select defaultValue={m.customRole||DEFAULT_ROLE}
                               onChange={async e=>{
                                 const newMems=(myGuild.members||[]).map(x=>x.id===m.id?{...x,customRole:e.target.value}:x);
