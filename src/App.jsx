@@ -524,6 +524,102 @@ function getForgeLevel(itemId) { const m = String(itemId||'').match(/__f(\d+)$/)
 function getBaseItemId(itemId) { return String(itemId||'').replace(/__f\d+$/, ''); }
 function getNextForgeItemId(itemId) { return `${getBaseItemId(itemId)}__f${getForgeLevel(itemId)+1}`; }
 
+/* ═══════════════════════════════════════════════
+   DUNGEON PROCEDURALE
+═══════════════════════════════════════════════ */
+const DUNGEON_THEMES = [
+  { id:'crypt',  name:'Cripta degli Antichi', emoji:'💀', adj:['buio','putrefatto','antico','silenzioso','maledetto'] },
+  { id:'cave',   name:'Grotta Maledetta',     emoji:'🦇', adj:['umido','profondo','tortuoso','stretto','oscuro'] },
+  { id:'ruins',  name:'Rovine della Torre',   emoji:'🏚️', adj:['crollante','antico','sgretolato','dimenticato','polveroso'] },
+  { id:'forest', name:'Bosco Oscuro',         emoji:'🌲', adj:['intricato','silenzioso','maledetto','angusto','misterioso'] },
+  { id:'castle', name:'Castello Maledetto',   emoji:'🏰', adj:['maestoso','sinistro','abbandonato','freddo','tetro'] },
+];
+const DUNGEON_ROOM_CFG = {
+  combat:   { emoji:'⚔️',  label:'Stanza di Combattimento', color:'#ef4444' },
+  trap:     { emoji:'⚠️',  label:'Trappola',                color:'#f59e0b' },
+  treasure: { emoji:'💰',  label:'Camera del Tesoro',       color:'#fbbf24' },
+  rest:     { emoji:'🔥',  label:'Accampamento Segreto',    color:'#22c55e' },
+  choice:   { emoji:'🔀',  label:'Bivio',                   color:'#60a5fa' },
+  boss:     { emoji:'👹',  label:'Sala del Boss',           color:'#c026d3' },
+};
+const DUNGEON_TRAP_SKILLS = [
+  { skill:'ATK', label:'Forza',    stat:'atk', desc:'Sforzate la struttura instabile' },
+  { skill:'DEF', label:'Riflessi', stat:'def', desc:'Schivate il meccanismo scattato' },
+  { skill:'MAG', label:'Magia',    stat:'mag', desc:'Neutralizzate il sigillo magico' },
+];
+function _dpick(arr, rng) { return arr[Math.floor(rng() * arr.length)]; }
+function _buildDungeonRoom(type, idx, theme, rng, partyLevel) {
+  const adj = _dpick(theme.adj, rng);
+  const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
+  const monTier = Math.max(1, Math.ceil(partyLevel / 3));
+  const dc = 10 + Math.floor(partyLevel / 2) * 2;
+  const gold = Math.floor((30 + partyLevel * 20) * (0.8 + rng() * 0.4));
+  if (type === 'combat') {
+    const pool = DEFAULT_MONSTERS.filter(m => m.tier <= monTier + 1 && m.tier >= Math.max(1, monTier - 1));
+    const base = pool.length ? pool : DEFAULT_MONSTERS.filter(m => m.tier <= 2);
+    const count = 1 + Math.floor(rng() * 2) + (partyLevel >= 5 ? 1 : 0);
+    return { id:`r${idx}`, type, idx, title:`Sala ${cap(adj)}`, desc:`Una stanza ${adj} brulicante di nemici. Prepararsi al combattimento.`, monsters: Array.from({length:count}, ()=>{ const m = _dpick(base, rng); return {...m}; }), cleared:false };
+  }
+  if (type === 'trap') {
+    const ts = _dpick(DUNGEON_TRAP_SKILLS, rng);
+    return { id:`r${idx}`, type, idx, title:`Corridoio ${cap(adj)}`, desc:`Un corridoio ${adj} nasconde una trappola. ${ts.desc} (DC ${dc}).`, skill:ts.skill, skillLabel:ts.label, skillStat:ts.stat, dc, failDmg: 5 + partyLevel * 3, cleared:false };
+  }
+  if (type === 'treasure') {
+    return { id:`r${idx}`, type, idx, title:`Camera del Tesoro`, desc:`Una stanza ${adj} cela un tesoro. L'oro brilla nell'oscurità.`, gold, cleared:false };
+  }
+  if (type === 'rest') {
+    return { id:`r${idx}`, type, idx, title:`Accampamento ${cap(adj)}`, desc:`Un angolo relativamente sicuro. Qui potete riposare brevemente.`, healPct:25, cleared:false };
+  }
+  if (type === 'choice') {
+    return { id:`r${idx}`, type, idx, title:`Bivio ${cap(adj)}`, desc:`Due passaggi si aprono davanti a voi. Quale scegliere?`, options:[
+      { label:'🛡️ Via Sicura',    desc:'Un percorso più lungo ma sicuro.',      effect:'gold',     effectValue: Math.floor(gold * 0.6) },
+      { label:'⚔️ Via Rischiosa', desc:'Un percorso pericoloso ma più ricco.', effect:'gold_big', effectValue: Math.floor(gold * 1.8) },
+    ], cleared:false };
+  }
+  return { id:`r${idx}`, type:'combat', idx, title:'Stanza', desc:'', monsters:[], cleared:false };
+}
+function generateDungeon({ roomCount=5, themeId='crypt', partyLevel=1, seed=Date.now() }) {
+  const theme = DUNGEON_THEMES.find(t => t.id === themeId) || DUNGEON_THEMES[0];
+  const rng = _makeRng(typeof seed === 'number' ? seed : _dateToSeed(String(seed)));
+  const typePool = [];
+  const W = { combat:35, trap:20, treasure:15, rest:10, choice:20 };
+  for (const [t,w] of Object.entries(W)) for (let i=0;i<w;i++) typePool.push(t);
+  const rooms = [];
+  for (let i = 0; i < roomCount - 1; i++) rooms.push(_buildDungeonRoom(_dpick(typePool, rng), i, theme, rng, partyLevel));
+  const monTier = Math.max(1, Math.ceil(partyLevel/3));
+  const bossPool = DEFAULT_MONSTERS.filter(m => m.tier >= monTier);
+  const bossBase = bossPool.length ? bossPool : DEFAULT_MONSTERS;
+  const boss = _dpick(bossBase, rng);
+  const bossHp = Math.floor((boss.hp||20) * 1.5);
+  rooms.push({ id:`r${roomCount-1}`, type:'boss', idx:roomCount-1, title:`Sala di ${boss.name||'Boss'}`, desc:`Il culmine del dungeon. ${boss.name||'Il boss'} vi attende.`, monsters:[{...boss, hp:bossHp, maxHp:bossHp}], gold:Math.floor((100+partyLevel*30)*(0.9+rng()*0.2)), cleared:false });
+  return { active:true, name:theme.name, themeId:theme.id, emoji:theme.emoji, rooms, currentRoom:0, pendingCombatRoom:null, startedAt:new Date().toISOString(), completedAt:null, seed };
+}
+
+/* ═══════════════════════════════════════════════
+   EVENTI GIORNALIERI
+═══════════════════════════════════════════════ */
+const DAILY_EVENTS = [
+  { id:'blessing',    emoji:'✨', title:'Benedizione degli Dei',   desc:'Una luce celeste discende sul gruppo.',         effect:'heal_pct', value:25,  action:'Ricevi la benedizione' },
+  { id:'lucky_coins', emoji:'🍀', title:'Monete Fortunate',        desc:'Trovate monete d\'oro lungo il sentiero.',      effect:'gold',     value:75,  action:'Raccogliere' },
+  { id:'riddle',      emoji:'🧩', title:'Indovinello del Saggio',  desc:'Un saggio sfida il gruppo con un enigma.',      effect:'xp',       value:150, action:'Rispondere' },
+  { id:'rest_night',  emoji:'🌙', title:'Notte Tranquilla',        desc:'Tutti riposano senza interruzioni.',            effect:'heal_pct', value:50,  action:'Riposare' },
+  { id:'ancient_ruins',emoji:'🏚️',title:'Rovine Antiche',          desc:'Esplorate dei resti e trovate conoscenza.',     effect:'xp',       value:100, action:'Esplorare' },
+  { id:'festival',    emoji:'🎉', title:'Giorno di Festa',         desc:'Un villaggio festeggia — cibo e musica.',       effect:'gold',     value:50,  action:'Unirsi alla festa' },
+  { id:'lost_scroll', emoji:'📜', title:'Pergamena Perduta',       desc:'Una pergamena contiene sapere antico.',         effect:'xp',       value:200, action:'Leggere' },
+  { id:'wanderer',    emoji:'🧝', title:'Elfo Errante',            desc:'Un elfo offre erbe curative al gruppo.',        effect:'heal_pct', value:20,  action:'Accettare' },
+  { id:'chest',       emoji:'📦', title:'Cassa Naufragata',        desc:'Una cassa trascinata dal fiume emerge.',         effect:'gold',     value:120, action:'Aprire' },
+  { id:'omen',        emoji:'☄️', title:'Presagio Celeste',        desc:'Una cometa passa — buon segno per l\'avventura.', effect:'xp',    value:75,  action:'Interpretare' },
+  { id:'cursed_wind', emoji:'💀', title:'Vento Maledetto',         desc:'Un vento oscuro porta sfortuna al gruppo.',     effect:'heal_pct', value:-15, action:'Resistere alla maledizione' },
+  { id:'thunder',     emoji:'⛈️', title:'Tempesta Magica',         desc:'Energia arcana investe il gruppo.',             effect:'heal_pct', value:-10, action:'Resistere' },
+  { id:'merchant',    emoji:'🧙', title:'Mercante Ambulante',      desc:'Un mercante misterioso offre merce speciale.',  effect:'notice',   value:0,   action:'Visita il Negozio' },
+  { id:'dragon',      emoji:'🐉', title:'Avvistamento di Drago',   desc:'Un drago sorvola — intimidatorio ma si allontana.', effect:'xp', value:50, action:'Osservare' },
+  { id:'fog',         emoji:'🌫️', title:'Nebbia Mistica',          desc:'La nebbia arcana confonde i sensi oggi.',       effect:'notice',   value:0,   action:'Procedere con cautela' },
+];
+function generateDailyEvent(partyCode, date = new Date().toLocaleDateString('en-CA')) {
+  const rng = _makeRng(_dateToSeed(date + '_daily_' + (partyCode || 'x')));
+  return DAILY_EVENTS[Math.floor(rng() * DAILY_EVENTS.length)];
+}
+
 const ABILITY_LABELS = {
   str:{ short:"FOR", name:"Forza" },
   dex:{ short:"DES", name:"Destrezza" },
@@ -2705,7 +2801,7 @@ function MasterPanel({ setScreen, authUser }) {
     return ()=>{ alive = false; clearInterval(timer); };
   }, [tab]);
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"guilds",l:"🏛️ Gilde"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"📊 Report"}];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"📊 Report"}];
   const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
   const visibleQuests = quests.filter(q => {
     const term = questSearch.trim().toLowerCase();
@@ -3097,6 +3193,118 @@ function MasterPanel({ setScreen, authUser }) {
       {tab==="guilds" && <MasterGuildsView />}
       {tab==="market" && <MarketView />}
       {tab==="users" && <UsersView authUser={authUser} />}
+      {tab==="dungeon" && <MasterDungeonView />}
+    </div>
+  );
+}
+
+function MasterDungeonView() {
+  const [parties, setParties] = useState([]);
+  const [selectedParty, setSelectedParty] = useState('');
+  const [roomCount, setRoomCount] = useState(5);
+  const [themeId, setThemeId] = useState('crypt');
+  const [partyLevel, setPartyLevel] = useState(3);
+  const [preview, setPreview] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [status, setStatus] = useState('');
+
+  useEffect(() => {
+    supabase.from('party_state').select('party_code').then(({ data }) => {
+      setParties((data || []).map(r => r.party_code).filter(c => c !== '__world_guilds__'));
+    });
+  }, []);
+
+  function handleGenerate() {
+    const seed = Date.now();
+    const dungeon = generateDungeon({ roomCount, themeId, partyLevel, seed });
+    setPreview(dungeon);
+    setStatus('');
+  }
+
+  async function handleLaunch() {
+    if (!selectedParty || !preview) return;
+    setLoading(true);
+    setStatus('');
+    try {
+      const state = await dbGetPartyState(selectedParty);
+      await dbSavePartyState(selectedParty, { ...state, dungeon: { ...preview, active:true } });
+      setStatus(`✅ Dungeon "${preview.name}" avviato per ${selectedParty}!`);
+    } catch(e) {
+      setStatus('❌ Errore: ' + (e?.message || e));
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  async function handleStop() {
+    if (!selectedParty) return;
+    if (!window.confirm('Terminare il dungeon attivo?')) return;
+    setLoading(true);
+    try {
+      const state = await dbGetPartyState(selectedParty);
+      await dbSavePartyState(selectedParty, { ...state, dungeon: null });
+      setStatus('🛑 Dungeon terminato.');
+      setPreview(null);
+    } catch(e) { setStatus('❌ ' + (e?.message || e)); }
+    finally { setLoading(false); }
+  }
+
+  const inputStyle = { padding:'0.4rem 0.7rem', background:'rgba(15,23,42,0.8)', border:'1px solid #1e3a5f', borderRadius:6, color:'#e2d9c5', fontSize:'0.85rem', width:'100%' };
+  return (
+    <div style={{ padding:'1.5rem', maxWidth:700 }}>
+      <h3 style={{ fontFamily:"'Cinzel',serif", color:'#fbbf24', marginBottom:'1.2rem' }}>🗺️ Generatore di Dungeon</h3>
+
+      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:12, marginBottom:'1rem' }}>
+        <div>
+          <label style={{ color:'#94a3b8', fontSize:'0.78rem', display:'block', marginBottom:4 }}>Party</label>
+          <select value={selectedParty} onChange={e=>setSelectedParty(e.target.value)} style={inputStyle}>
+            <option value=''>— Seleziona party —</option>
+            {parties.map(p => <option key={p} value={p}>{p}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{ color:'#94a3b8', fontSize:'0.78rem', display:'block', marginBottom:4 }}>Tema</label>
+          <select value={themeId} onChange={e=>setThemeId(e.target.value)} style={inputStyle}>
+            {DUNGEON_THEMES.map(t => <option key={t.id} value={t.id}>{t.emoji} {t.name}</option>)}
+          </select>
+        </div>
+        <div>
+          <label style={{ color:'#94a3b8', fontSize:'0.78rem', display:'block', marginBottom:4 }}>Stanze: {roomCount}</label>
+          <input type='range' min={3} max={10} value={roomCount} onChange={e=>setRoomCount(Number(e.target.value))} style={{ width:'100%' }} />
+        </div>
+        <div>
+          <label style={{ color:'#94a3b8', fontSize:'0.78rem', display:'block', marginBottom:4 }}>Livello party: {partyLevel}</label>
+          <input type='range' min={1} max={20} value={partyLevel} onChange={e=>setPartyLevel(Number(e.target.value))} style={{ width:'100%' }} />
+        </div>
+      </div>
+
+      <div style={{ display:'flex', gap:10, marginBottom:'1.2rem', flexWrap:'wrap' }}>
+        <button onClick={handleGenerate} style={{ padding:'0.5rem 1.2rem', background:'rgba(109,40,217,0.2)', border:'1px solid #7c3aed', borderRadius:8, color:'#c4b5fd', cursor:'pointer', fontFamily:"'Cinzel',serif", fontSize:'0.85rem' }}>🎲 Genera Anteprima</button>
+        <button onClick={handleLaunch} disabled={!preview||!selectedParty||loading} style={{ padding:'0.5rem 1.2rem', background:'rgba(34,197,94,0.15)', border:'1px solid #16a34a', borderRadius:8, color:'#6ee7b7', cursor:'pointer', fontFamily:"'Cinzel',serif", fontSize:'0.85rem', opacity:(!preview||!selectedParty)?0.4:1 }}>🚀 Avvia Dungeon</button>
+        <button onClick={handleStop} disabled={!selectedParty||loading} style={{ padding:'0.5rem 1.2rem', background:'rgba(127,29,29,0.2)', border:'1px solid #7f1d1d', borderRadius:8, color:'#fca5a5', cursor:'pointer', fontFamily:"'Cinzel',serif", fontSize:'0.85rem', opacity:!selectedParty?0.4:1 }}>🛑 Termina Dungeon</button>
+      </div>
+
+      {status && <div style={{ padding:'0.6rem 1rem', background:'rgba(15,23,42,0.7)', border:'1px solid #1e3a5f', borderRadius:8, color:'#e2d9c5', fontSize:'0.85rem', marginBottom:'1rem' }}>{status}</div>}
+
+      {preview && (
+        <div style={{ background:'rgba(15,23,42,0.7)', border:'1px solid #1e3a5f', borderRadius:10, padding:'1rem' }}>
+          <div style={{ fontFamily:"'Cinzel',serif", color:'#fbbf24', marginBottom:'0.8rem' }}>{preview.emoji} {preview.name} — {preview.rooms.length} stanze</div>
+          <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+            {preview.rooms.map((r, i) => {
+              const c = DUNGEON_ROOM_CFG[r.type];
+              return (
+                <div key={r.id} style={{ display:'flex', gap:10, alignItems:'flex-start', padding:'0.6rem 0.8rem', background:'rgba(0,0,0,0.3)', borderRadius:8, border:`1px solid ${c.color}33` }}>
+                  <span style={{ flexShrink:0, fontSize:'1.2rem' }}>{c.emoji}</span>
+                  <div>
+                    <div style={{ color:c.color, fontWeight:700, fontSize:'0.85rem' }}>{i+1}. {r.title}</div>
+                    <div style={{ color:'#64748b', fontSize:'0.75rem', marginTop:2 }}>{r.desc?.slice(0,100)}…</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -4107,6 +4315,140 @@ function ShopView({ me, items, loading, error, inventoryCounts, onBuy, restSeed 
         );
       })()}
     </>
+  );
+}
+
+/* ─── DailyEventBanner ─── */
+function DailyEventBanner({ event, claimed, onClaim, loading }) {
+  if (!event) return null;
+  const isNegative = event.value < 0;
+  const isNotice = event.effect === 'notice';
+  const bg = isNegative ? 'rgba(127,29,29,0.6)' : isNotice ? 'rgba(15,23,42,0.7)' : 'rgba(15,30,15,0.7)';
+  const border = isNegative ? '#7f1d1d' : isNotice ? '#1e3a5f' : '#166534';
+  const actionColor = isNegative ? '#ef4444' : isNotice ? '#60a5fa' : '#22c55e';
+  return (
+    <div style={{ margin:'0.8rem 1rem 0', padding:'0.8rem 1rem', background:bg, border:`1px solid ${border}`, borderRadius:10, display:'flex', alignItems:'center', gap:12, flexWrap:'wrap' }}>
+      <span style={{ fontSize:'1.8rem', flexShrink:0 }}>{event.emoji}</span>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ fontFamily:"'Cinzel',serif", color:'#e2d9c5', fontWeight:700, fontSize:'0.88rem' }}>{event.title}</div>
+        <div style={{ color:'#94a3b8', fontSize:'0.78rem', marginTop:2 }}>{event.desc}</div>
+      </div>
+      {claimed
+        ? <span style={{ fontSize:'0.75rem', color:'#6ee7b7', flexShrink:0 }}>✓ Raccolto</span>
+        : <button onClick={onClaim} disabled={loading} style={{ flexShrink:0, padding:'0.4rem 0.9rem', background:`${actionColor}22`, border:`1px solid ${actionColor}`, borderRadius:8, color:actionColor, fontFamily:"'Cinzel',serif", fontSize:'0.75rem', cursor:'pointer', fontWeight:700 }}>{event.action}</button>
+      }
+    </div>
+  );
+}
+
+/* ─── DungeonView ─── */
+function DungeonView({ dungeon, me, onRoomAction, loading }) {
+  if (!dungeon?.active) return (
+    <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:'3rem', textAlign:'center' }}>
+      <div>
+        <div style={{ fontSize:'3rem', marginBottom:'1rem' }}>🗺️</div>
+        <div style={{ fontFamily:"'Cinzel',serif", color:'#e2d9c5', fontSize:'1.1rem', marginBottom:'0.5rem' }}>Nessun Dungeon Attivo</div>
+        <div style={{ color:'#64748b', fontSize:'0.85rem' }}>Il Master può avviare un dungeon procedurale dal pannello di controllo.</div>
+      </div>
+    </div>
+  );
+  const { rooms, currentRoom, name, emoji } = dungeon;
+  const room = rooms[currentRoom];
+  const cfg = DUNGEON_ROOM_CFG[room?.type] || DUNGEON_ROOM_CFG.combat;
+  const allCleared = rooms.every(r => r.cleared);
+  return (
+    <div style={{ flex:1, overflowY:'auto', padding:'1rem' }}>
+      {/* Header */}
+      <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:'1rem' }}>
+        <span style={{ fontSize:'2rem' }}>{emoji}</span>
+        <div>
+          <div style={{ fontFamily:"'Cinzel',serif", color:'#fbbf24', fontSize:'1.1rem', fontWeight:700 }}>{name}</div>
+          <div style={{ color:'#94a3b8', fontSize:'0.75rem' }}>Stanza {currentRoom + 1} / {rooms.length}</div>
+        </div>
+      </div>
+
+      {/* Room map */}
+      <div style={{ display:'flex', gap:4, alignItems:'center', marginBottom:'1.4rem', flexWrap:'wrap' }}>
+        {rooms.map((r, i) => {
+          const c = DUNGEON_ROOM_CFG[r.type];
+          const isCurrent = i === currentRoom;
+          const isPast = r.cleared;
+          return (
+            <React.Fragment key={r.id}>
+              <div style={{ position:'relative', width:36, height:36, borderRadius:'50%', display:'flex', alignItems:'center', justifyContent:'center', fontSize:'1rem', background: isPast ? 'rgba(34,197,94,0.15)' : isCurrent ? `${c.color}22` : 'rgba(15,23,42,0.5)', border: `2px solid ${isPast ? '#16a34a' : isCurrent ? c.color : '#1e293b'}`, transition:'all 0.2s', flexShrink:0 }}>
+                {isPast ? '✓' : c.emoji}
+                {isCurrent && <div style={{ position:'absolute', inset:-4, borderRadius:'50%', border:`2px solid ${c.color}`, animation:'none', opacity:0.6 }} />}
+              </div>
+              {i < rooms.length - 1 && <div style={{ flex:'0 0 12px', height:2, background: isPast ? '#16a34a' : '#1e293b' }} />}
+            </React.Fragment>
+          );
+        })}
+      </div>
+
+      {allCleared ? (
+        <div style={{ textAlign:'center', padding:'3rem', background:'rgba(251,191,36,0.08)', border:'1px solid #92400e', borderRadius:12 }}>
+          <div style={{ fontSize:'3rem', marginBottom:'1rem' }}>🏆</div>
+          <div style={{ fontFamily:"'Cinzel',serif", color:'#fbbf24', fontSize:'1.2rem', fontWeight:700 }}>Dungeon Completato!</div>
+          <div style={{ color:'#94a3b8', marginTop:'0.5rem', fontSize:'0.85rem' }}>Avete superato tutte le stanze. In attesa del prossimo dungeon.</div>
+        </div>
+      ) : room ? (
+        <div style={{ background:'rgba(15,23,42,0.7)', border:`1px solid ${cfg.color}44`, borderRadius:12, padding:'1.4rem' }}>
+          {/* Room header */}
+          <div style={{ display:'flex', gap:12, alignItems:'center', marginBottom:'1rem' }}>
+            <span style={{ fontSize:'2.5rem' }}>{cfg.emoji}</span>
+            <div>
+              <div style={{ fontFamily:"'Cinzel',serif", color:cfg.color, fontWeight:700, fontSize:'1rem' }}>{room.title}</div>
+              <div style={{ color:'#64748b', fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.06em' }}>{cfg.label}</div>
+            </div>
+          </div>
+          <p style={{ color:'#cbd5e1', fontSize:'0.88rem', lineHeight:1.7, marginBottom:'1.4rem' }}>{room.desc}</p>
+
+          {/* Room-specific UI */}
+          {(room.type === 'combat' || room.type === 'boss') && (
+            <div>
+              <div style={{ color:'#94a3b8', fontSize:'0.78rem', marginBottom:'0.6rem' }}>Nemici: {room.monsters?.map(m=>`${m.emoji||'👾'} ${m.name}`).join(', ')}</div>
+              <button onClick={()=>onRoomAction(room,'combat')} disabled={loading} style={{ width:'100%', padding:'0.8rem', background:'linear-gradient(135deg,#7f1d1d,#dc2626)', border:'1px solid #ef4444', borderRadius:8, color:'#fee2e2', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor:'pointer', fontWeight:700 }}>
+                ⚔️ Entra in Battaglia
+              </button>
+            </div>
+          )}
+          {room.type === 'trap' && (
+            <div>
+              <div style={{ color:'#fde68a', fontSize:'0.82rem', marginBottom:'0.6rem' }}>Tiro di {room.skillLabel} contro DC {room.dc} • Fallimento: -{room.failDmg} HP</div>
+              <button onClick={()=>onRoomAction(room,'trap')} disabled={loading} style={{ width:'100%', padding:'0.8rem', background:'linear-gradient(135deg,#78350f,#d97706)', border:'1px solid #f59e0b', borderRadius:8, color:'#fef3c7', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor:'pointer', fontWeight:700 }}>
+                ⚠️ Affrontare la Trappola ({room.skillLabel})
+              </button>
+            </div>
+          )}
+          {room.type === 'treasure' && (
+            <div>
+              <div style={{ color:'#fde68a', fontSize:'0.82rem', marginBottom:'0.6rem' }}>Tesoro: 💰 {room.gold} oro (divisi tra i presenti)</div>
+              <button onClick={()=>onRoomAction(room,'treasure')} disabled={loading} style={{ width:'100%', padding:'0.8rem', background:'linear-gradient(135deg,#78350f,#b45309)', border:'1px solid #fbbf24', borderRadius:8, color:'#fef3c7', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor:'pointer', fontWeight:700 }}>
+                💰 Raccogliere il Tesoro
+              </button>
+            </div>
+          )}
+          {room.type === 'rest' && (
+            <div>
+              <div style={{ color:'#86efac', fontSize:'0.82rem', marginBottom:'0.6rem' }}>Recupero: +{room.healPct}% HP massimi</div>
+              <button onClick={()=>onRoomAction(room,'rest')} disabled={loading} style={{ width:'100%', padding:'0.8rem', background:'linear-gradient(135deg,#14532d,#16a34a)', border:'1px solid #22c55e', borderRadius:8, color:'#dcfce7', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor:'pointer', fontWeight:700 }}>
+                🔥 Riposare
+              </button>
+            </div>
+          )}
+          {room.type === 'choice' && (
+            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
+              {room.options?.map((opt, oi) => (
+                <button key={oi} onClick={()=>onRoomAction(room,'choice',oi)} disabled={loading} style={{ padding:'0.8rem', background:'rgba(15,23,42,0.8)', border:'1px solid #1e3a5f', borderRadius:8, color:'#e2d9c5', fontFamily:"'Cinzel',serif", fontSize:'0.82rem', cursor:'pointer', lineHeight:1.5, textAlign:'left' }}>
+                  <div style={{ fontWeight:700, marginBottom:4 }}>{opt.label}</div>
+                  <div style={{ color:'#64748b', fontSize:'0.72rem' }}>{opt.desc}</div>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
+    </div>
   );
 }
 
@@ -5255,6 +5597,124 @@ function GameScreen({ myId, setScreen, authUser }) {
     }
   }
 
+  /* ─── Dungeon handlers ─── */
+  async function handleDungeonRoomAction(room, action, optionIdx) {
+    if (!code || !qs?.dungeon?.active) return;
+    const dungeon = qs.dungeon;
+    if (room.idx !== dungeon.currentRoom) return;
+
+    if (action === 'combat') {
+      // Start combat with room monsters — pendingCombatRoom tracks which room to clear on win
+      const updDungeon = { ...dungeon, pendingCombatRoom: room.idx };
+      await dbSavePartyState(code, { ...qs, dungeon: updDungeon });
+      setQs(prev => ({ ...prev, dungeon: updDungeon }));
+      await startCombatStepRef.current({ monsters: room.monsters });
+      return;
+    }
+
+    if (action === 'trap') {
+      const stat = me?.[room.skillStat] || 0;
+      const roll20 = Math.floor(Math.random() * 20) + 1;
+      const total = roll20 + stat;
+      const passed = total >= room.dc;
+      let msg = `⚠️ **${me?.name}** affronta la trappola (${room.skillLabel}): tiro ${roll20} + ${stat} = **${total}** vs DC ${room.dc} → ${passed ? '✅ Superata!' : `❌ Fallita! (-${room.failDmg} HP)`}`;
+      if (!passed) {
+        const newHp = Math.max(1, (me?.hp||1) - room.failDmg);
+        const upd = { ...me, hp: newHp };
+        await dbSavePlayer(upd); setMeRaw(upd);
+      }
+      await addMsg(msg, 'combat', 'Dungeon');
+      await _advanceDungeonRoom(dungeon, room.idx);
+      return;
+    }
+
+    if (action === 'treasure') {
+      const freshPlayers = await dbGetPlayers(code);
+      const count = Math.max(1, freshPlayers.length);
+      const each = Math.floor((room.gold||0) / count);
+      for (const p of freshPlayers) {
+        const upd = { ...p, gold: (p.gold||0) + each };
+        await dbSavePlayer(upd);
+        if (p.id === myId) setMeRaw(upd);
+      }
+      await addMsg(`💰 **Tesoro!** Ogni avventuriero riceve **${each} oro** dal tesoro della cripta.`, 'info', 'Dungeon');
+      await _advanceDungeonRoom(dungeon, room.idx);
+      return;
+    }
+
+    if (action === 'rest') {
+      const freshPlayers = await dbGetPlayers(code);
+      for (const p of freshPlayers) {
+        const heal = Math.floor((p.maxHp||1) * (room.healPct||25) / 100);
+        const upd = { ...p, hp: Math.min(p.maxHp||1, (p.hp||0) + heal) };
+        await dbSavePlayer(upd);
+        if (p.id === myId) setMeRaw(upd);
+      }
+      await addMsg(`🔥 **Riposo!** Il gruppo recupera **${room.healPct}%** degli HP massimi.`, 'info', 'Dungeon');
+      await _advanceDungeonRoom(dungeon, room.idx);
+      return;
+    }
+
+    if (action === 'choice') {
+      const opt = room.options?.[optionIdx];
+      if (!opt) return;
+      let effectMsg = '';
+      if (opt.effect === 'gold' || opt.effect === 'gold_big') {
+        const freshPlayers = await dbGetPlayers(code);
+        const each = Math.floor((opt.effectValue||0) / Math.max(1, freshPlayers.length));
+        for (const p of freshPlayers) {
+          const upd = { ...p, gold: (p.gold||0) + each };
+          await dbSavePlayer(upd);
+          if (p.id === myId) setMeRaw(upd);
+        }
+        effectMsg = `+${each} oro a testa`;
+      }
+      await addMsg(`🔀 **Bivio** — scelta: ${opt.label}. ${effectMsg}`, 'info', 'Dungeon');
+      await _advanceDungeonRoom(dungeon, room.idx);
+      return;
+    }
+  }
+
+  async function _advanceDungeonRoom(dungeon, clearedIdx) {
+    const newRooms = dungeon.rooms.map((r, i) => i === clearedIdx ? { ...r, cleared:true } : r);
+    const nextRoom = clearedIdx + 1;
+    const allDone = newRooms.every(r => r.cleared);
+    const updDungeon = { ...dungeon, rooms:newRooms, currentRoom: Math.min(nextRoom, dungeon.rooms.length - 1), pendingCombatRoom:null, ...(allDone ? { completedAt:new Date().toISOString() } : {}) };
+    await dbSavePartyState(code, { ...qs, dungeon: updDungeon });
+    setQs(prev => ({ ...prev, dungeon: updDungeon }));
+    if (allDone) await addMsg(`🏆 **DUNGEON COMPLETATO!** ${dungeon.name} — tutti i nemici sconfitti, tutti i segreti svelati!`, 'victory', 'Sistema');
+  }
+
+  /* ─── Daily event claim ─── */
+  async function handleClaimDailyEvent() {
+    if (!me?.id || !code) return;
+    const today = new Date().toLocaleDateString('en-CA');
+    const event = generateDailyEvent(code, today);
+    const prevClaimed = qs?.dailyEvent?.claimedBy || [];
+    if (prevClaimed.includes(myId)) return;
+    const newClaimed = [...prevClaimed, myId];
+    let effectMsg = '';
+    if (event.effect === 'gold') {
+      const upd = { ...me, gold: (me.gold||0) + (event.value||0) };
+      await dbSavePlayer(upd); setMeRaw(upd);
+      effectMsg = `+${event.value} 💰 oro`;
+    } else if (event.effect === 'xp') {
+      const upd = { ...me, xp: (me.xp||0) + (event.value||0) };
+      await dbSavePlayer(upd); setMeRaw(upd);
+      effectMsg = `+${event.value} ⭐ XP`;
+    } else if (event.effect === 'heal_pct') {
+      const heal = Math.floor((me.maxHp||1) * Math.abs(event.value) / 100);
+      const newHp = event.value < 0 ? Math.max(1, (me.hp||1) - heal) : Math.min(me.maxHp||1, (me.hp||0) + heal);
+      const upd = { ...me, hp: newHp };
+      await dbSavePlayer(upd); setMeRaw(upd);
+      effectMsg = event.value < 0 ? `-${heal} HP` : `+${heal} HP`;
+    }
+    const updEvent = { eventId: event.id, date: today, claimedBy: newClaimed };
+    await dbSavePartyState(code, { ...qs, dailyEvent: updEvent });
+    setQs(prev => ({ ...prev, dailyEvent: updEvent }));
+    if (effectMsg) await addMsg(`${event.emoji} **${me.name}** — ${event.title}: ${effectMsg}`, 'info', 'Evento Giornaliero');
+  }
+
   async function equipItem(entry) {
     const slot = itemSlot(entry?.item);
     if(!slot || !me) return;
@@ -5935,9 +6395,21 @@ function GameScreen({ myId, setScreen, authUser }) {
       ? `Combattimento durante «${currentQuestForDiary.title}»: ${slainNames || 'nessun nemico'} sconfitti. +${xpEach} XP e +${goldEach} 💰 a testa.`
       : `${slainNames || 'Nemici'} sconfitti in battaglia! +${xpEach} XP e +${goldEach} 💰 a testa.`;
     const newDiaryCombat = appendDiary(latestQs.partyDiary, { type:'combat', icon:'⚔️', text: diaryText, players: rewardPlayers.map(p => p.name) });
-    const newQs = { ...latestQs, combat: newCombat, persistentSpellSlots: newPersistentSlots, partyDiary: newDiaryCombat };
+    // Dungeon: clear combat room on victory
+    let newDungeon = latestQs.dungeon;
+    if (newDungeon?.active && newDungeon.pendingCombatRoom != null) {
+      const ci = newDungeon.pendingCombatRoom;
+      const newRooms = newDungeon.rooms.map((r, i) => i === ci ? { ...r, cleared:true } : r);
+      const nextRoom = ci + 1;
+      const allDone = newRooms.every(r => r.cleared);
+      newDungeon = { ...newDungeon, rooms:newRooms, currentRoom:Math.min(nextRoom, newRooms.length-1), pendingCombatRoom:null, ...(allDone?{completedAt:new Date().toISOString()}:{}) };
+    }
+    const newQs = { ...latestQs, combat: newCombat, persistentSpellSlots: newPersistentSlots, partyDiary: newDiaryCombat, dungeon: newDungeon };
     await dbSavePartyState(code, newQs);
-    setQs(prev => ({ ...prev, combat: newCombat }));
+    setQs(prev => ({ ...prev, combat: newCombat, dungeon: newDungeon }));
+    if (newDungeon?.active && newDungeon.completedAt && !latestQs.dungeon?.completedAt) {
+      await addMsg(`🏆 **DUNGEON COMPLETATO!** ${newDungeon.name} — tutti i segreti svelati!`, 'victory', 'Sistema');
+    }
     // Guild: bonus oro e XP gilda per vittoria
     const myGuild = getPlayerGuild(guilds, myId);
     const goldMult = myGuild ? (1 + getGuildGoldBonus(myGuild.level||1)/100) : 1;
@@ -6469,14 +6941,14 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["trade","🤝 Scambi"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["guild","🏛️ Gilda"],["diary","📖 Diario"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["trade","🤝 Scambi"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["diary","📖 Diario"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
             return (
             <button key={k} onClick={()=>{ if(!locked){ setTab(k); if(isMobile) setSidebarOpen(false); if(k==="guild") refreshGuilds(); } }} title={isResting?"Riposo in corso…":combatLocked?"Non disponibile durante il combattimento":undefined}
               style={{ flexShrink:0, padding: isMobile?"0.6rem 0.8rem":"0.6rem 1.2rem", background:tab===k&&!isResting?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k&&!isResting?"2px solid #7c3aed":"2px solid transparent", color:locked?"#2d3748":tab===k?"#c4b5fd":"#94a3b8", cursor:locked?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize: isMobile?"0.7rem":"0.78rem", letterSpacing:"0.05em", opacity:locked?0.35:1, whiteSpace:"nowrap", filter:isResting?"grayscale(1)":"none" }}>
-              {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}
+              {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}{k==="dungeon"&&qs?.dungeon?.active&&!qs?.dungeon?.completedAt&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#701a75", borderRadius:10, fontSize:"0.62rem", color:"#e879f9" }}>LIVE</span>}
             </button>);
           })}
         </div>
@@ -6851,6 +7323,18 @@ ${stepText(step)}`, "quest","Master");
               onForge={handleForge}
               loading={inventoryLoading}
             />
+          </div>
+        )}
+
+        {tab==="dungeon" && (
+          <div style={{ flex:1, overflow:"hidden", display:"flex", flexDirection:"column", background:"rgba(3,7,18,0.5)" }}>
+            {(() => {
+              const today = new Date().toLocaleDateString('en-CA');
+              const dailyEv = generateDailyEvent(code || '', today);
+              const claimed = (qs?.dailyEvent?.date === today && qs?.dailyEvent?.claimedBy?.includes(myId));
+              return <DailyEventBanner event={dailyEv} claimed={claimed} onClaim={handleClaimDailyEvent} loading={false} />;
+            })()}
+            <DungeonView dungeon={qs?.dungeon} me={me} onRoomAction={handleDungeonRoomAction} loading={false} />
           </div>
         )}
 
