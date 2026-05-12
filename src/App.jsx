@@ -608,19 +608,26 @@ function getNextForgeItemId(itemId) { return `${getBaseItemId(itemId)}__f${getFo
    DUNGEON PROCEDURALE
 ═══════════════════════════════════════════════ */
 const DUNGEON_THEMES = [
-  { id:'crypt',  name:'Cripta degli Antichi', emoji:'💀', adj:['buio','putrefatto','antico','silenzioso','maledetto'] },
-  { id:'cave',   name:'Grotta Maledetta',     emoji:'🦇', adj:['umido','profondo','tortuoso','stretto','oscuro'] },
-  { id:'ruins',  name:'Rovine della Torre',   emoji:'🏚️', adj:['crollante','antico','sgretolato','dimenticato','polveroso'] },
-  { id:'forest', name:'Bosco Oscuro',         emoji:'🌲', adj:['intricato','silenzioso','maledetto','angusto','misterioso'] },
-  { id:'castle', name:'Castello Maledetto',   emoji:'🏰', adj:['maestoso','sinistro','abbandonato','freddo','tetro'] },
+  { id:'crypt',   name:'Cripta degli Antichi', emoji:'💀', adj:['buio','putrefatto','antico','silenzioso','maledetto'] },
+  { id:'cave',    name:'Grotta Maledetta',     emoji:'🦇', adj:['umido','profondo','tortuoso','stretto','oscuro'] },
+  { id:'ruins',   name:'Rovine della Torre',   emoji:'🏚️', adj:['crollante','antico','sgretolato','dimenticato','polveroso'] },
+  { id:'forest',  name:'Bosco Oscuro',         emoji:'🌲', adj:['intricato','silenzioso','maledetto','angusto','misterioso'] },
+  { id:'castle',  name:'Castello Maledetto',   emoji:'🏰', adj:['maestoso','sinistro','abbandonato','freddo','tetro'] },
+  { id:'volcano', name:'Vulcano Infernale',    emoji:'🌋', adj:['incandescente','soffocante','ardente','infuocato','pericoloso'] },
+  { id:'temple',  name:'Tempio Proibito',      emoji:'⛩️', adj:['sacro','misterioso','antico','sigillato','venerato'] },
+  { id:'ship',    name:'Nave Fantasma',        emoji:'⛵', adj:['spettrale','marcio','lurido','silenzioso','infestato'] },
 ];
 const DUNGEON_ROOM_CFG = {
   combat:   { emoji:'⚔️',  label:'Stanza di Combattimento', color:'#ef4444' },
+  boss:     { emoji:'👹',  label:'Sala del Boss',           color:'#c026d3' },
   trap:     { emoji:'⚠️',  label:'Trappola',                color:'#f59e0b' },
   treasure: { emoji:'💰',  label:'Camera del Tesoro',       color:'#fbbf24' },
   rest:     { emoji:'🔥',  label:'Accampamento Segreto',    color:'#22c55e' },
   choice:   { emoji:'🔀',  label:'Bivio',                   color:'#60a5fa' },
-  boss:     { emoji:'👹',  label:'Sala del Boss',           color:'#c026d3' },
+  riddle:   { emoji:'🧩',  label:'Enigma',                  color:'#a78bfa' },
+  event:    { emoji:'📖',  label:'Evento Narrativo',        color:'#94a3b8' },
+  shrine:   { emoji:'🕯️',  label:'Altare Sacro',            color:'#fb923c' },
+  merchant: { emoji:'🧙',  label:'Mercante del Dungeon',    color:'#34d399' },
 };
 const DUNGEON_TRAP_SKILLS = [
   { skill:'ATK', label:'Forza',    stat:'atk', desc:'Sforzate la struttura instabile' },
@@ -656,23 +663,42 @@ function _buildDungeonRoom(type, idx, theme, rng, partyLevel) {
       { label:'⚔️ Via Rischiosa', desc:'Un percorso pericoloso ma più ricco.', effect:'gold_big', effectValue: Math.floor(gold * 1.8) },
     ], cleared:false };
   }
+  if (type === 'riddle') {
+    return { id:`r${idx}`, type, idx, title:`Enigma ${cap(adj)}`, desc:`Un'iscrizione ${adj} pone una domanda al gruppo. Rispondere correttamente porta ricompense.`, question:'Scrivi la tua domanda qui...', answer:'risposta', xpReward: 50 + partyLevel * 15, failDmg:0, cleared:false };
+  }
+  if (type === 'event') {
+    return { id:`r${idx}`, type, idx, title:`Evento ${cap(adj)}`, desc:`Qualcosa di insolito accade in questo luogo ${adj}.`, effect:'xp', effectValue: 30 + partyLevel * 10, cleared:false };
+  }
+  if (type === 'shrine') {
+    return { id:`r${idx}`, type, idx, title:`Altare ${cap(adj)}`, desc:`Un altare antico emana energia mistica. Sacrificando vitalità si ottiene forza.`, hpCost: Math.floor(partyLevel * 3 + 5), buffStat:'atk', buffAmount: Math.floor(partyLevel / 2) + 2, cleared:false };
+  }
+  if (type === 'merchant') {
+    return { id:`r${idx}`, type, idx, title:`Mercante ${cap(adj)}`, desc:`Un misterioso mercante si è insediato in questo luogo. I suoi prezzi sono scontati.`, items:[], cleared:false };
+  }
   return { id:`r${idx}`, type:'combat', idx, title:'Stanza', desc:'', monsters:[], cleared:false };
 }
-function generateDungeon({ roomCount=5, themeId='crypt', partyLevel=1, seed=Date.now() }) {
+function generateDungeon({ roomCount=5, themeId='crypt', partyLevel=1, difficulty='normal', seed=Date.now() }) {
   const theme = DUNGEON_THEMES.find(t => t.id === themeId) || DUNGEON_THEMES[0];
   const rng = _makeRng(typeof seed === 'number' ? seed : _dateToSeed(String(seed)));
+  const diffMult = { easy:0.7, normal:1, hard:1.4, deadly:1.8 }[difficulty] || 1;
+  const adjPartyLevel = Math.max(1, Math.round(partyLevel * diffMult));
   const typePool = [];
-  const W = { combat:35, trap:20, treasure:15, rest:10, choice:20 };
+  const W = difficulty === 'deadly'
+    ? { combat:50, trap:25, treasure:10, rest:5, choice:10 }
+    : difficulty === 'hard'
+    ? { combat:40, trap:22, treasure:12, rest:8, choice:10, riddle:4, shrine:4 }
+    : { combat:30, trap:15, treasure:15, rest:12, choice:12, riddle:8, event:5, shrine:3 };
   for (const [t,w] of Object.entries(W)) for (let i=0;i<w;i++) typePool.push(t);
   const rooms = [];
-  for (let i = 0; i < roomCount - 1; i++) rooms.push(_buildDungeonRoom(_dpick(typePool, rng), i, theme, rng, partyLevel));
-  const monTier = Math.max(1, Math.ceil(partyLevel/3));
+  for (let i = 0; i < roomCount - 1; i++) rooms.push(_buildDungeonRoom(_dpick(typePool, rng), i, theme, rng, adjPartyLevel));
+  const monTier = Math.max(1, Math.ceil(adjPartyLevel/3));
   const bossPool = DEFAULT_MONSTERS.filter(m => m.tier >= monTier);
   const bossBase = bossPool.length ? bossPool : DEFAULT_MONSTERS;
   const boss = _dpick(bossBase, rng);
-  const bossHp = Math.floor((boss.hp||20) * 1.5);
-  rooms.push({ id:`r${roomCount-1}`, type:'boss', idx:roomCount-1, title:`Sala di ${boss.name||'Boss'}`, desc:`Il culmine del dungeon. ${boss.name||'Il boss'} vi attende.`, monsters:[{...boss, hp:bossHp, maxHp:bossHp}], gold:Math.floor((100+partyLevel*30)*(0.9+rng()*0.2)), cleared:false });
-  return { active:true, name:theme.name, themeId:theme.id, emoji:theme.emoji, rooms, currentRoom:0, pendingCombatRoom:null, startedAt:new Date().toISOString(), completedAt:null, seed };
+  const bossHpMult = difficulty === 'deadly' ? 2.5 : difficulty === 'hard' ? 2 : 1.5;
+  const bossHp = Math.floor((boss.hp||20) * bossHpMult);
+  rooms.push({ id:`r${roomCount-1}`, type:'boss', idx:roomCount-1, title:`Sala di ${boss.name||'Boss'}`, desc:`Il culmine del dungeon. ${boss.name||'Il boss'} vi attende.`, monsters:[{...boss, hp:bossHp, maxHp:bossHp}], gold:Math.floor((100+adjPartyLevel*30)*(0.9+rng()*0.2)), cleared:false });
+  return { active:true, name:theme.name, themeId:theme.id, emoji:theme.emoji, difficulty, rooms, currentRoom:0, pendingCombatRoom:null, startedAt:new Date().toISOString(), completedAt:null, seed };
 }
 
 /* ═══════════════════════════════════════════════
@@ -3311,6 +3337,7 @@ function MasterDungeonView() {
   const [roomCount, setRoomCount]   = useState(5);
   const [themeId, setThemeId]       = useState('crypt');
   const [partyLevel, setPartyLevel] = useState(3);
+  const [difficulty, setDifficulty] = useState('normal');
   // manual
   const [dungeonName, setDungeonName] = useState('Il Dungeon Oscuro');
   const [manTheme, setManTheme]     = useState('crypt');
@@ -3336,6 +3363,10 @@ function MasterDungeonView() {
     if (type === 'treasure') return { ...base, gold:100 };
     if (type === 'rest')     return { ...base, healPct:25 };
     if (type === 'choice')   return { ...base, options:[{ label:'🛡️ Via Sicura', desc:'Percorso sicuro.', effect:'gold', effectValue:50 },{ label:'⚔️ Via Rischiosa', desc:'Percorso pericoloso.', effect:'gold_big', effectValue:150 }] };
+    if (type === 'riddle')   return { ...base, question:'Scrivi la domanda...', answer:'risposta', xpReward:150, failDmg:0 };
+    if (type === 'event')    return { ...base, effect:'xp', effectValue:100 };
+    if (type === 'shrine')   return { ...base, hpCost:10, buffStat:'atk', buffAmount:3 };
+    if (type === 'merchant') return { ...base, items:[] };
     return base;
   }
   function updateRoom(id, patch) { setManRooms(rs => rs.map(r => r.id === id ? { ...r, ...patch } : r)); }
@@ -3357,7 +3388,7 @@ function MasterDungeonView() {
 
   // ── Procedural generate ──
   function handleGenerate() {
-    setPreview(generateDungeon({ roomCount, themeId, partyLevel, seed:Date.now() }));
+    setPreview(generateDungeon({ roomCount, themeId, partyLevel, difficulty, seed:Date.now() }));
     setStatus('');
   }
 
@@ -3464,6 +3495,15 @@ function MasterDungeonView() {
             <div>
               <label style={{ color:'#94a3b8', fontSize:'0.75rem', display:'block', marginBottom:4 }}>Livello party: {partyLevel}</label>
               <input type='range' min={1} max={20} value={partyLevel} onChange={e=>setPartyLevel(+e.target.value)} style={{ width:'100%', marginTop:6 }} />
+            </div>
+            <div>
+              <label style={{ color:'#94a3b8', fontSize:'0.75rem', display:'block', marginBottom:4 }}>Difficoltà</label>
+              <select value={difficulty} onChange={e=>setDifficulty(e.target.value)} style={IS}>
+                <option value='easy'>🟢 Facile</option>
+                <option value='normal'>🟡 Normale</option>
+                <option value='hard'>🟠 Difficile</option>
+                <option value='deadly'>🔴 Mortale</option>
+              </select>
             </div>
           </div>
           <div style={{ marginTop:12 }}>
@@ -3582,17 +3622,100 @@ function MasterDungeonView() {
                             <input value={opt.label} onChange={e=>updateRoom(room.id,{options:room.options.map((o,i)=>i===oi?{...o,label:e.target.value}:o)})} style={IS} placeholder='Etichetta scelta' />
                             <input value={opt.desc} onChange={e=>updateRoom(room.id,{options:room.options.map((o,i)=>i===oi?{...o,desc:e.target.value}:o)})} style={IS} placeholder='Descrizione breve' />
                           </div>
-                          <div style={{ display:'flex', gap:6, alignItems:'center' }}>
+                          <div style={{ display:'flex', gap:6, alignItems:'center', flexWrap:'wrap' }}>
                             <label style={{ color:'#64748b', fontSize:'0.72rem' }}>Effetto:</label>
                             <select value={opt.effect} onChange={e=>updateRoom(room.id,{options:room.options.map((o,i)=>i===oi?{...o,effect:e.target.value}:o)})} style={{ ...IS, width:'auto' }}>
-                              <option value='gold'>Oro</option>
-                              <option value='gold_big'>Oro (grande)</option>
-                              <option value='heal_pct'>Cura HP</option>
+                              <option value='gold'>💰 Oro</option>
+                              <option value='gold_big'>💰 Oro grande</option>
+                              <option value='xp'>⭐ XP</option>
+                              <option value='heal_pct'>❤️ Cura HP %</option>
+                              <option value='dmg_pct'>💀 Danno HP %</option>
+                              <option value='nothing'>— Nessun effetto</option>
                             </select>
-                            <input type='number' value={opt.effectValue} onChange={e=>updateRoom(room.id,{options:room.options.map((o,i)=>i===oi?{...o,effectValue:+e.target.value}:o)})} style={{ ...IS, width:80 }} placeholder='Valore' />
+                            {opt.effect !== 'nothing' && <input type='number' value={opt.effectValue||0} onChange={e=>updateRoom(room.id,{options:room.options.map((o,i)=>i===oi?{...o,effectValue:+e.target.value}:o)})} style={{ ...IS, width:80 }} placeholder='Valore' />}
                           </div>
                         </div>
                       ))}
+                      {(room.options||[]).length < 3 && (
+                        <button onClick={()=>updateRoom(room.id,{options:[...(room.options||[]),{label:`Opzione ${(room.options||[]).length+1}`,desc:'',effect:'gold',effectValue:50}]})}
+                          style={{ padding:'3px 10px', background:'rgba(96,165,250,0.1)', border:'1px solid #3b82f6', borderRadius:6, color:'#60a5fa', cursor:'pointer', fontSize:'0.72rem', alignSelf:'flex-start' }}>+ Aggiungi opzione</button>
+                      )}
+                    </div>
+                  )}
+
+                  {room.type==='riddle' && (
+                    <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
+                      <div>
+                        <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>Domanda</label>
+                        <textarea value={room.question||''} onChange={e=>updateRoom(room.id,{question:e.target.value})} style={{ ...TA, minHeight:40 }} rows={2} placeholder='Scrivi la domanda per i giocatori...' />
+                      </div>
+                      <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+                        <div>
+                          <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>Risposta corretta</label>
+                          <input value={room.answer||''} onChange={e=>updateRoom(room.id,{answer:e.target.value})} style={IS} placeholder='risposta' />
+                        </div>
+                        <div>
+                          <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>⭐ XP se corretto</label>
+                          <input type='number' value={room.xpReward||0} onChange={e=>updateRoom(room.id,{xpReward:+e.target.value})} style={IS} min={0} />
+                        </div>
+                        <div>
+                          <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>💀 Danno se sbagliato</label>
+                          <input type='number' value={room.failDmg||0} onChange={e=>updateRoom(room.id,{failDmg:+e.target.value})} style={IS} min={0} />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {room.type==='event' && (
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+                      <div>
+                        <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>Effetto</label>
+                        <select value={room.effect||'xp'} onChange={e=>updateRoom(room.id,{effect:e.target.value})} style={IS}>
+                          <option value='xp'>⭐ XP</option>
+                          <option value='gold'>💰 Oro</option>
+                          <option value='heal_pct'>❤️ Cura HP %</option>
+                          <option value='dmg_pct'>💀 Danno HP %</option>
+                          <option value='nothing'>— Solo narrazione</option>
+                        </select>
+                      </div>
+                      {room.effect !== 'nothing' && <div>
+                        <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>Valore</label>
+                        <input type='number' value={room.effectValue||0} onChange={e=>updateRoom(room.id,{effectValue:+e.target.value})} style={IS} min={0} />
+                      </div>}
+                    </div>
+                  )}
+
+                  {room.type==='shrine' && (
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr 1fr', gap:8 }}>
+                      <div>
+                        <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>💀 HP sacrificati</label>
+                        <input type='number' value={room.hpCost||10} onChange={e=>updateRoom(room.id,{hpCost:+e.target.value})} style={IS} min={1} max={99} />
+                      </div>
+                      <div>
+                        <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>Statistica potenziata</label>
+                        <select value={room.buffStat||'atk'} onChange={e=>updateRoom(room.id,{buffStat:e.target.value})} style={IS}>
+                          <option value='atk'>⚔️ ATK</option>
+                          <option value='def'>🛡️ DEF</option>
+                          <option value='mag'>🔮 MAG</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>Bonus (per il prossimo combattimento)</label>
+                        <input type='number' value={room.buffAmount||3} onChange={e=>updateRoom(room.id,{buffAmount:+e.target.value})} style={IS} min={1} max={30} />
+                      </div>
+                    </div>
+                  )}
+
+                  {room.type==='treasure' && (
+                    <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:8 }}>
+                      <div>
+                        <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>Oro totale</label>
+                        <input type='number' value={room.gold||0} onChange={e=>updateRoom(room.id,{gold:+e.target.value})} style={IS} min={0} />
+                      </div>
+                      <div>
+                        <label style={{ color:'#94a3b8', fontSize:'0.72rem', display:'block', marginBottom:3 }}>⭐ XP bonus (opzionale)</label>
+                        <input type='number' value={room.xpBonus||0} onChange={e=>updateRoom(room.id,{xpBonus:+e.target.value})} style={IS} min={0} />
+                      </div>
                     </div>
                   )}
                 </div>
@@ -3631,9 +3754,13 @@ function MasterDungeonView() {
                       <div style={{ color:'#64748b', fontSize:'0.72rem' }}>Mostri: {r.monsters.map(m=>`${m.emoji||'👾'} ${m.name}`).join(', ')}</div>
                     )}
                     {r.type==='trap' && <div style={{ color:'#64748b', fontSize:'0.72rem' }}>DC {r.dc} {r.skillLabel} — fallimento -{r.failDmg} HP</div>}
-                    {r.type==='treasure' && <div style={{ color:'#64748b', fontSize:'0.72rem' }}>💰 {r.gold} oro</div>}
+                    {r.type==='treasure' && <div style={{ color:'#64748b', fontSize:'0.72rem' }}>💰 {r.gold} oro{r.xpBonus>0?` · +${r.xpBonus} XP`:''}</div>}
                     {r.type==='rest' && <div style={{ color:'#64748b', fontSize:'0.72rem' }}>🔥 +{r.healPct}% HP</div>}
                     {r.type==='choice' && <div style={{ color:'#64748b', fontSize:'0.72rem' }}>Scelte: {r.options?.map(o=>o.label).join(' / ')}</div>}
+                    {r.type==='riddle' && <div style={{ color:'#64748b', fontSize:'0.72rem' }}>❓ {r.question?.slice(0,60)} · +{r.xpReward} XP se corretto</div>}
+                    {r.type==='event' && <div style={{ color:'#64748b', fontSize:'0.72rem' }}>📖 Effetto: {r.effect} {r.effectValue>0?`(${r.effectValue})`:''}</div>}
+                    {r.type==='shrine' && <div style={{ color:'#64748b', fontSize:'0.72rem' }}>🕯️ -{r.hpCost} HP → +{r.buffAmount} {r.buffStat?.toUpperCase()}</div>}
+                    {r.type==='merchant' && <div style={{ color:'#64748b', fontSize:'0.72rem' }}>🧙 Mercante disponibile</div>}
                     {r.desc && <div style={{ color:'#475569', fontSize:'0.7rem', marginTop:2 }}>{r.desc.slice(0,80)}{r.desc.length>80?'…':''}</div>}
                   </div>
                 </div>
@@ -4687,6 +4814,7 @@ function DailyEventBanner({ event, claimed, onClaim, loading }) {
 
 /* ─── DungeonView ─── */
 function DungeonView({ dungeon, me, onRoomAction, loading }) {
+  const [riddleAnswer, setRiddleAnswer] = React.useState('');
   if (!dungeon?.active) return (
     <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:'3rem', textAlign:'center' }}>
       <div>
@@ -4788,6 +4916,67 @@ function DungeonView({ dungeon, me, onRoomAction, loading }) {
                   <div style={{ color:'#64748b', fontSize:'0.72rem' }}>{opt.desc}</div>
                 </button>
               ))}
+            </div>
+          )}
+          {room.type === 'riddle' && (
+            <div>
+              <div style={{ background:'rgba(109,40,217,0.1)', border:'1px solid rgba(109,40,217,0.3)', borderRadius:8, padding:'0.8rem 1rem', marginBottom:'0.8rem', color:'#c4b5fd', fontSize:'0.85rem', fontStyle:'italic', lineHeight:1.6 }}>
+                🧩 {room.riddle}
+              </div>
+              <div style={{ color:'#94a3b8', fontSize:'0.75rem', marginBottom:'0.5rem' }}>Risposta corretta: +{room.xpReward} XP • Risposta sbagliata: -{room.failDmg} HP</div>
+              <div style={{ display:'flex', gap:8 }}>
+                <input
+                  value={riddleAnswer}
+                  onChange={e => setRiddleAnswer(e.target.value)}
+                  onKeyDown={e => { if(e.key==='Enter' && riddleAnswer.trim()) { onRoomAction(room,'riddle',riddleAnswer.trim()); setRiddleAnswer(''); }}}
+                  placeholder="La tua risposta..."
+                  disabled={loading}
+                  style={{ flex:1, padding:'0.7rem 1rem', background:'rgba(15,23,42,0.9)', border:'1px solid #3730a3', borderRadius:8, color:'#e2d9c5', fontSize:'0.88rem', outline:'none' }}
+                />
+                <button
+                  onClick={()=>{ if(riddleAnswer.trim()) { onRoomAction(room,'riddle',riddleAnswer.trim()); setRiddleAnswer(''); }}}
+                  disabled={loading || !riddleAnswer.trim()}
+                  style={{ padding:'0.7rem 1.2rem', background:'linear-gradient(135deg,#3730a3,#6d28d9)', border:'1px solid #a78bfa', borderRadius:8, color:'#ede9fe', fontFamily:"'Cinzel',serif", fontSize:'0.88rem', cursor:'pointer', fontWeight:700 }}>
+                  Rispondere
+                </button>
+              </div>
+            </div>
+          )}
+          {room.type === 'event' && (
+            <div>
+              <div style={{ background:'rgba(148,163,184,0.08)', border:'1px solid #334155', borderRadius:8, padding:'0.8rem 1rem', marginBottom:'0.8rem', color:'#cbd5e1', fontSize:'0.85rem', lineHeight:1.7, fontStyle:'italic' }}>
+                📖 {room.narrative}
+              </div>
+              {room.effect && room.effect !== 'nothing' && (
+                <div style={{ color:'#94a3b8', fontSize:'0.75rem', marginBottom:'0.6rem' }}>
+                  {room.effect === 'xp' && `✨ Guadagni ${room.amount} XP`}
+                  {room.effect === 'gold' && `💰 Trovi ${room.amount} monete d'oro`}
+                  {room.effect === 'heal_pct' && `💚 Recuperi il ${room.amount}% degli HP massimi`}
+                  {room.effect === 'dmg_pct' && `💔 Subisci il ${room.amount}% degli HP massimi come danno`}
+                </div>
+              )}
+              <button onClick={()=>onRoomAction(room,'event')} disabled={loading} style={{ width:'100%', padding:'0.8rem', background:'linear-gradient(135deg,#0f172a,#1e293b)', border:'1px solid #475569', borderRadius:8, color:'#e2d9c5', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor:'pointer', fontWeight:700 }}>
+                📖 Prosegui
+              </button>
+            </div>
+          )}
+          {room.type === 'shrine' && (
+            <div>
+              <div style={{ background:'rgba(251,146,60,0.08)', border:'1px solid #92400e', borderRadius:8, padding:'0.8rem 1rem', marginBottom:'0.8rem' }}>
+                <div style={{ color:'#fdba74', fontSize:'0.85rem', fontWeight:700, marginBottom:4 }}>Offerta richiesta: ❤️ -{room.hpCost}% HP massimi</div>
+                <div style={{ color:'#94a3b8', fontSize:'0.78rem' }}>In cambio: <span style={{ color:'#fcd34d' }}>{room.buffLabel}</span></div>
+              </div>
+              <button onClick={()=>onRoomAction(room,'shrine')} disabled={loading} style={{ width:'100%', padding:'0.8rem', background:'linear-gradient(135deg,#431407,#ea580c)', border:'1px solid #fb923c', borderRadius:8, color:'#fff7ed', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor:'pointer', fontWeight:700 }}>
+                🕯️ Sacrifica e Ricevi il Benedizione
+              </button>
+            </div>
+          )}
+          {room.type === 'merchant' && (
+            <div style={{ textAlign:'center', padding:'1.5rem 1rem', color:'#94a3b8', fontSize:'0.88rem' }}>
+              <div style={{ fontSize:'2.5rem', marginBottom:'0.6rem' }}>🧙</div>
+              <div style={{ fontFamily:"'Cinzel',serif", color:'#34d399', fontWeight:700, marginBottom:'0.4rem' }}>Mercante del Dungeon</div>
+              <div>Il mercante ha la sua merce esposta... ma per ora non accetta visitatori.</div>
+              <div style={{ marginTop:'0.8rem', fontSize:'0.75rem', color:'#475569' }}>(funzionalità in arrivo)</div>
             </div>
           )}
         </div>
@@ -6568,12 +6757,14 @@ function GameScreen({ myId, setScreen, authUser }) {
       const freshPlayers = await dbGetPlayers(code);
       const count = Math.max(1, freshPlayers.length);
       const each = Math.floor((room.gold||0) / count);
+      const xpBonus = room.xpBonus || 0;
       for (const p of freshPlayers) {
-        const upd = { ...p, gold: (p.gold||0) + each };
+        const upd = { ...p, gold: (p.gold||0) + each, xp: (p.xp||0) + xpBonus };
         await dbSavePlayer(upd);
         if (p.id === myId) setMeRaw(upd);
       }
-      await addMsg(`💰 **Tesoro!** Ogni avventuriero riceve **${each} oro** dal tesoro della cripta.`, 'info', 'Dungeon');
+      const xpMsg = xpBonus > 0 ? ` · +${xpBonus} ⭐ XP` : '';
+      await addMsg(`💰 **Tesoro!** Ogni avventuriero riceve **${each} oro**${xpMsg}.`, 'info', 'Dungeon');
       await _advanceDungeonRoom(dungeon, room.idx);
       return;
     }
@@ -6598,14 +6789,83 @@ function GameScreen({ myId, setScreen, authUser }) {
       if (opt.effect === 'gold' || opt.effect === 'gold_big') {
         const freshPlayers = await dbGetPlayers(code);
         const each = Math.floor((opt.effectValue||0) / Math.max(1, freshPlayers.length));
-        for (const p of freshPlayers) {
-          const upd = { ...p, gold: (p.gold||0) + each };
-          await dbSavePlayer(upd);
-          if (p.id === myId) setMeRaw(upd);
-        }
+        for (const p of freshPlayers) { const upd={...p,gold:(p.gold||0)+each}; await dbSavePlayer(upd); if(p.id===myId) setMeRaw(upd); }
         effectMsg = `+${each} oro a testa`;
+      } else if (opt.effect === 'xp') {
+        const freshPlayers = await dbGetPlayers(code);
+        const each = Math.floor((opt.effectValue||0) / Math.max(1, freshPlayers.length));
+        for (const p of freshPlayers) { const upd={...p,xp:(p.xp||0)+each}; await dbSavePlayer(upd); if(p.id===myId) setMeRaw(upd); }
+        effectMsg = `+${each} XP a testa`;
+      } else if (opt.effect === 'heal_pct') {
+        const freshPlayers = await dbGetPlayers(code);
+        for (const p of freshPlayers) { const heal=Math.floor((p.maxHp||1)*(opt.effectValue||0)/100); const upd={...p,hp:Math.min(p.maxHp||1,(p.hp||0)+heal)}; await dbSavePlayer(upd); if(p.id===myId) setMeRaw(upd); }
+        effectMsg = `+${opt.effectValue}% HP`;
+      } else if (opt.effect === 'dmg_pct') {
+        const freshPlayers = await dbGetPlayers(code);
+        for (const p of freshPlayers) { const dmg=Math.floor((p.maxHp||1)*(opt.effectValue||0)/100); const upd={...p,hp:Math.max(1,(p.hp||0)-dmg)}; await dbSavePlayer(upd); if(p.id===myId) setMeRaw(upd); }
+        effectMsg = `-${opt.effectValue}% HP`;
       }
-      await addMsg(`🔀 **Bivio** — scelta: ${opt.label}. ${effectMsg}`, 'info', 'Dungeon');
+      await addMsg(`🔀 **Bivio** — *${opt.label}*: ${opt.desc}${effectMsg?' · '+effectMsg:''}`, 'info', 'Dungeon');
+      await _advanceDungeonRoom(dungeon, room.idx);
+      return;
+    }
+
+    if (action === 'riddle') {
+      const playerAnswer = (optionIdx || '').toString().trim().toLowerCase();
+      const correct = (room.answer||'').trim().toLowerCase();
+      const passed = playerAnswer === correct;
+      if (passed) {
+        const freshPlayers = await dbGetPlayers(code);
+        for (const p of freshPlayers) { const upd={...p,xp:(p.xp||0)+(room.xpReward||0)}; await dbSavePlayer(upd); if(p.id===myId) setMeRaw(upd); }
+        await addMsg(`🧩 **Enigma risolto!** +${room.xpReward} ⭐ XP al gruppo!`, 'info', 'Dungeon');
+      } else {
+        if ((room.failDmg||0) > 0) {
+          const freshPlayers = await dbGetPlayers(code);
+          for (const p of freshPlayers) { const upd={...p,hp:Math.max(1,(p.hp||0)-room.failDmg)}; await dbSavePlayer(upd); if(p.id===myId) setMeRaw(upd); }
+          await addMsg(`🧩 **Risposta sbagliata!** Il gruppo subisce **${room.failDmg} danni**.`, 'combat', 'Dungeon');
+        } else {
+          await addMsg(`🧩 **Risposta sbagliata.** Il gruppo passa oltre deluso.`, 'info', 'Dungeon');
+        }
+      }
+      await _advanceDungeonRoom(dungeon, room.idx);
+      return;
+    }
+
+    if (action === 'event') {
+      const freshPlayers = await dbGetPlayers(code);
+      let effectMsg = '';
+      if (room.effect === 'xp') {
+        const each = Math.floor((room.effectValue||0) / Math.max(1, freshPlayers.length));
+        for (const p of freshPlayers) { const upd={...p,xp:(p.xp||0)+each}; await dbSavePlayer(upd); if(p.id===myId) setMeRaw(upd); }
+        effectMsg = `+${each} XP`;
+      } else if (room.effect === 'gold') {
+        const each = Math.floor((room.effectValue||0) / Math.max(1, freshPlayers.length));
+        for (const p of freshPlayers) { const upd={...p,gold:(p.gold||0)+each}; await dbSavePlayer(upd); if(p.id===myId) setMeRaw(upd); }
+        effectMsg = `+${each} 💰`;
+      } else if (room.effect === 'heal_pct') {
+        for (const p of freshPlayers) { const heal=Math.floor((p.maxHp||1)*(room.effectValue||0)/100); const upd={...p,hp:Math.min(p.maxHp||1,(p.hp||0)+heal)}; await dbSavePlayer(upd); if(p.id===myId) setMeRaw(upd); }
+        effectMsg = `+${room.effectValue}% HP`;
+      } else if (room.effect === 'dmg_pct') {
+        for (const p of freshPlayers) { const dmg=Math.floor((p.maxHp||1)*(room.effectValue||0)/100); const upd={...p,hp:Math.max(1,(p.hp||0)-dmg)}; await dbSavePlayer(upd); if(p.id===myId) setMeRaw(upd); }
+        effectMsg = `-${room.effectValue}% HP`;
+      }
+      await addMsg(`📖 **${room.title}** — ${room.desc}${effectMsg?' · '+effectMsg:''}`, 'info', 'Dungeon');
+      await _advanceDungeonRoom(dungeon, room.idx);
+      return;
+    }
+
+    if (action === 'shrine') {
+      const cost = room.hpCost || 10;
+      if ((me?.hp||0) <= cost) { await addMsg(`🕯️ **Altare** — non hai abbastanza HP per il sacrificio (richiede ${cost} HP).`, 'info', 'Dungeon'); return; }
+      const upd = { ...me, hp: (me.hp||0) - cost };
+      await dbSavePlayer(upd); setMeRaw(upd);
+      // Store buff in qs so combat can apply it
+      const buffKey = `shrine_${room.id}`;
+      const shrineBuffs = { ...(qs.shrineBuffs||{}), [myId]: { stat: room.buffStat, amount: room.buffAmount, source: buffKey } };
+      await dbSavePartyState(code, { ...qs, shrineBuffs });
+      setQs(prev => ({ ...prev, shrineBuffs }));
+      const statLabel = {atk:'ATK',def:'DEF',mag:'MAG'}[room.buffStat]||room.buffStat;
+      await addMsg(`🕯️ **${me?.name}** sacrifica **${cost} HP** all'altare → **+${room.buffAmount} ${statLabel}** per il prossimo combattimento!`, 'info', 'Dungeon');
       await _advanceDungeonRoom(dungeon, room.idx);
       return;
     }
