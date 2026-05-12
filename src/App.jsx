@@ -6457,6 +6457,23 @@ function GameScreen({ myId, setScreen, authUser }) {
     }
     await dbSavePartyState(code, { ...latestState, combat:null });
     setQs(prev => ({ ...prev, combat:null }));
+    // Save defeat to battle history
+    if(me) {
+      const oldStats = me.stats || {};
+      const defeatEntry = {
+        date: new Date().toISOString(),
+        result: "defeat",
+        questName: latestState?.active ? (getQuests().find(q => q.id === latestState.currentId)?.title || null) : null,
+        enemies: (combatants||[]).filter(c=>!c.isPlayer&&c.hp>0).map(m=>`${m.emoji||''} ${m.name}`),
+        myDmg: (latestState?.questDmgLog?.[myId]?.dmg) || 0,
+        xpGained: 0,
+        goldGained: 0,
+        rounds: latestState?.combat?.round || 1,
+      };
+      const newStats = { ...oldStats, battleHistory: [defeatEntry, ...(oldStats.battleHistory||[])].slice(0,10) };
+      const upd = { ...me, stats: newStats };
+      await dbSavePlayer(upd); setMeRaw(upd);
+    }
     await dbSendMessage({
       party_code: code,
       author: "Sistema",
@@ -7288,12 +7305,23 @@ function GameScreen({ myId, setScreen, authUser }) {
     const goldEach = Math.floor(totalGold / partyCount);
 
     const combatDmgLog = latestQs.questDmgLog || {};
+    const currentQuestForDiary = latestQs?.active ? getQuests().find(q => q.id === latestQs.currentId) : null;
     const playerResults = [];
     for (const p of rewardPlayers) {
       const beforeXp = p.xp || 0;
       const beforeLevel = p.level || 1;
       const pDmgEntry = combatDmgLog[p.id] || {};
       const oldStats = p.stats || {};
+      const battleEntry = {
+        date: new Date().toISOString(),
+        result: "victory",
+        questName: currentQuestForDiary?.title || null,
+        enemies: slain.map(m => `${m.emoji} ${m.name}`),
+        myDmg: pDmgEntry.dmg || 0,
+        xpGained: xpEach,
+        goldGained: goldEach,
+        rounds: latestCombat?.round || 1,
+      };
       const newStats = {
         ...oldStats,
         monstersKilled: (oldStats.monstersKilled || 0) + slain.length,
@@ -7301,6 +7329,7 @@ function GameScreen({ myId, setScreen, authUser }) {
         criticalHits: (oldStats.criticalHits || 0) + (pDmgEntry.crits || 0),
         questsCompleted: oldStats.questsCompleted || 0,
         deathSavesSurvived: oldStats.deathSavesSurvived || 0,
+        battleHistory: [battleEntry, ...(oldStats.battleHistory || [])].slice(0, 10),
       };
       const { achievements: newAchievements, newlyUnlocked } = checkNewAchievements(newStats, p);
       newStats.achievements = newAchievements;
@@ -7333,7 +7362,6 @@ function GameScreen({ myId, setScreen, authUser }) {
       const comp = getSpellSlots(player?.level || 1);
       newPersistentSlots[pid] = Object.fromEntries([1,2,3,4,5].map(k => [k, stored[k] !== undefined ? stored[k] : (comp[k] ?? 0)]));
     }
-    const currentQuestForDiary = latestQs?.active ? getQuests().find(q => q.id === latestQs.currentId) : null;
     const slainNames = slain.map(m => `${m.emoji} ${m.name}`).join(', ');
     const diaryText = currentQuestForDiary
       ? `Combattimento durante «${currentQuestForDiary.title}»: ${slainNames || 'nessun nemico'} sconfitti. +${xpEach} XP e +${goldEach} 💰 a testa.`
@@ -8925,7 +8953,40 @@ ${stepText(step)}`, "quest","Master");
           const typeBorder = { quest:'rgba(251,191,36,0.35)', combat:'rgba(239,68,68,0.3)', death:'rgba(153,27,27,0.5)', rest:'rgba(59,130,246,0.3)', default:'rgba(51,65,85,0.4)' };
           return (
             <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.5)" }}>
-              <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>📖 Diario del Party</h3>
+              <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>📖 Diario</h3>
+
+              {/* Battle history */}
+              {(me?.stats?.battleHistory||[]).length > 0 && (
+                <div style={{ background:"rgba(15,23,42,0.85)", border:"1px solid rgba(255,255,255,0.07)", borderRadius:10, padding:"0.9rem", marginBottom:"1.2rem" }}>
+                  <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8", marginBottom:10 }}>⚔️ ULTIME BATTAGLIE</div>
+                  {(me.stats.battleHistory).map((b, i) => {
+                    const won = b.result === "victory";
+                    return (
+                      <div key={i} style={{ display:"flex", gap:10, alignItems:"flex-start", padding:"0.55rem 0.7rem", background: won?"rgba(20,83,45,0.15)":"rgba(127,29,29,0.15)", border:`1px solid ${won?"rgba(74,222,128,0.2)":"rgba(239,68,68,0.2)"}`, borderRadius:7, marginBottom:6 }}>
+                        <span style={{ fontSize:"1.1rem", flexShrink:0 }}>{won?"🏆":"💀"}</span>
+                        <div style={{ flex:1, minWidth:0 }}>
+                          <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:2 }}>
+                            <span style={{ fontSize:"0.78rem", fontWeight:700, color: won?"#4ade80":"#f87171" }}>{won?"VITTORIA":"SCONFITTA"}</span>
+                            {b.questName && <span style={{ fontSize:"0.68rem", color:"#64748b" }}>— {b.questName}</span>}
+                          </div>
+                          <div style={{ fontSize:"0.68rem", color:"#94a3b8", display:"flex", gap:10, flexWrap:"wrap" }}>
+                            {b.enemies?.length > 0 && <span>🗡️ {b.enemies.slice(0,3).join(', ')}{b.enemies.length>3?` +${b.enemies.length-3}`:""}</span>}
+                            {b.myDmg > 0 && <span>🔥 {b.myDmg} dmg</span>}
+                            {b.xpGained > 0 && <span>⭐ +{b.xpGained} XP</span>}
+                            {b.goldGained > 0 && <span>💰 +{b.goldGained}</span>}
+                            <span>🔄 {b.rounds} round{b.rounds!==1?"i":""}</span>
+                          </div>
+                        </div>
+                        <span style={{ fontSize:"0.62rem", color:"#374151", flexShrink:0, whiteSpace:"nowrap" }}>
+                          {new Date(b.date).toLocaleDateString('it-IT',{day:'2-digit',month:'2-digit'})}
+                        </span>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8", marginBottom:8 }}>📜 DIARIO DEL PARTY</div>
               {diary.length === 0 && (
                 <div style={{ color:"#4b5563", textAlign:"center", padding:"3rem 1rem", border:"1px dashed #1f2937", borderRadius:8, fontSize:"0.85rem" }}>
                   Il diario è vuoto. Completate missioni, combattimenti e riposi per riempirlo di storie.
