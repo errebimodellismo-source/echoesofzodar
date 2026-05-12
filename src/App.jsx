@@ -5430,6 +5430,11 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [guildChatInput, setGuildChatInput] = useState("");
   const [guildMissionForm, setGuildMissionForm] = useState({ title:"", desc:"", goal:1, rewardGold:0, rewardXp:50 });
   const [showMissionForm, setShowMissionForm] = useState(false);
+  const [showGuildRoles, setShowGuildRoles] = useState(false);
+  const [showGuildInvite, setShowGuildInvite] = useState(false);
+  const [guildInviteCode, setGuildInviteCode] = useState("");
+  const [bulletinInput, setBulletinInput] = useState("");
+  const [showBulletinForm, setShowBulletinForm] = useState(false);
   const [turnTimeLeft, setTurnTimeLeft] = useState(null);
   const [legNotif, setLegNotif] = useState(null);
   const [selectedTarget, setSelectedTarget] = useState(null);
@@ -6107,6 +6112,53 @@ function GameScreen({ myId, setScreen, authUser }) {
     const newG={...myGuild,missions};
     const newGuilds={...guilds,[myGuild.id]:newG};
     await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
+  }
+
+  async function kickMember(memberId) {
+    const myGuild=getPlayerGuild(guilds,myId); if(!myGuild) return;
+    if(memberId===myId){window.alert("Non puoi espellere te stesso.");return;}
+    const target=myGuild.members.find(m=>m.id===memberId); if(!target) return;
+    if(!window.confirm(`Espellere ${target.name} dalla gilda?`)) return;
+    const newMem=myGuild.members.filter(m=>m.id!==memberId);
+    const newG={...myGuild,members:newMem};
+    const newGuilds={...guilds,[myGuild.id]:newG};
+    await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
+    await addMsg(`⚖️ **${target.name}** è stato espulso dalla gilda!`,"info","Sistema");
+  }
+
+  async function postBulletin() {
+    const myGuild=getPlayerGuild(guilds,myId); if(!myGuild) return;
+    if(!bulletinInput.trim()) return;
+    const entry = { id:`bull_${Date.now()}`, text:bulletinInput.trim(), author:me.name, createdAt:new Date().toISOString() };
+    const newBulletin=[entry,...(myGuild.bulletin||[])].slice(0,20);
+    const newG={...myGuild,bulletin:newBulletin};
+    const newGuilds={...guilds,[myGuild.id]:newG};
+    await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
+    setBulletinInput(""); setShowBulletinForm(false);
+  }
+
+  async function deleteBulletin(entryId) {
+    const myGuild=getPlayerGuild(guilds,myId); if(!myGuild) return;
+    const newBulletin=(myGuild.bulletin||[]).filter(b=>b.id!==entryId);
+    const newG={...myGuild,bulletin:newBulletin};
+    const newGuilds={...guilds,[myGuild.id]:newG};
+    await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
+  }
+
+  async function inviteByCode() {
+    const myGuild=getPlayerGuild(guilds,myId); if(!myGuild) return;
+    const code=guildInviteCode.trim().toUpperCase();
+    if(!code){window.alert("Inserisci un party code.");return;}
+    const target=worldPlayers.find(p=>p.partyCode===code||p.id===code);
+    if(!target){window.alert("Nessun giocatore trovato con questo codice.");return;}
+    if(myGuild.members.find(m=>m.id===target.id)){window.alert(`${target.name} è già nella gilda.`);return;}
+    if(getPlayerGuild(guilds,target.id)){window.alert(`${target.name} è già in un'altra gilda.`);return;}
+    const newMem=[...(myGuild.members||[]),{id:target.id,name:target.name,role:"member",joinedAt:new Date().toISOString()}];
+    const newG={...myGuild,members:newMem};
+    const newGuilds={...guilds,[myGuild.id]:newG};
+    await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
+    setGuildInviteCode(""); setShowGuildInvite(false);
+    await addMsg(`🏛️ **${target.name}** è entrato nella gilda **${myGuild.emoji} ${myGuild.name}**!`,"info","Sistema");
   }
 
   async function saveQState(newQs) {
@@ -8299,6 +8351,8 @@ ${stepText(step)}`, "quest","Master");
                       {warehouseOpen && (
                         <div>
                           <div style={{ fontSize:"0.72rem", color:"#64748b", marginBottom:8 }}>Clicca un oggetto del tuo inventario per depositarlo, clicca un oggetto del magazzino per ritirarlo.</div>
+                          {hasPerm(myMember,"bank") ? (
+                            <>
                           <div style={{ marginBottom:8 }}>
                             <div style={{ fontSize:"0.7rem", color:"#a78bfa", marginBottom:4 }}>📤 Il tuo inventario (deposita)</div>
                             <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
@@ -8321,6 +8375,10 @@ ${stepText(step)}`, "quest","Master");
                               {!warehouseItems.length&&<span style={{color:"#4b5563",fontSize:"0.75rem"}}>Magazzino vuoto.</span>}
                             </div>
                           </div>
+                            </>
+                          ) : (
+                            <div style={{ fontSize:"0.75rem", color:"#64748b", textAlign:"center", padding:"0.5rem" }}>🔒 Solo il Tesoriere e i ruoli con permesso <em>bank</em> possono accedere al magazzino.</div>
+                          )}
                         </div>
                       )}
                     </div>
@@ -8328,7 +8386,44 @@ ${stepText(step)}`, "quest","Master");
 
                   {/* Members */}
                   <div style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:10, padding:"0.85rem", marginBottom:"1rem" }}>
-                    <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8", marginBottom:8 }}>👥 MEMBRI ({myGuild.members?.length||0})</div>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+                      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8" }}>👥 MEMBRI ({myGuild.members?.length||0})</div>
+                      <div style={{ display:"flex", gap:6 }}>
+                        {hasPerm(myMember,"invite") && <SmallBtn onClick={()=>setShowGuildInvite(v=>!v)}>📨 Invita</SmallBtn>}
+                        <SmallBtn onClick={()=>setShowGuildRoles(v=>!v)}>📋 Ruoli</SmallBtn>
+                      </div>
+                    </div>
+
+                    {/* Invite panel */}
+                    {showGuildInvite && hasPerm(myMember,"invite") && (
+                      <div style={{ background:"rgba(15,23,42,0.6)", border:"1px solid #334155", borderRadius:8, padding:"0.65rem", marginBottom:8, display:"flex", gap:6 }}>
+                        <input value={guildInviteCode} onChange={e=>setGuildInviteCode(e.target.value)} placeholder="ID o party code giocatore..."
+                          style={{ flex:1, padding:"0.35rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.8rem" }}/>
+                        <SmallBtn onClick={inviteByCode}>✓ Invita</SmallBtn>
+                      </div>
+                    )}
+
+                    {/* Roles reference */}
+                    {showGuildRoles && (
+                      <div style={{ background:"rgba(15,23,42,0.6)", border:"1px solid #334155", borderRadius:8, padding:"0.65rem", marginBottom:8 }}>
+                        <div style={{ fontSize:"0.68rem", color:"#94a3b8", fontFamily:"'Cinzel',serif", marginBottom:6 }}>RUOLI E PERMESSI</div>
+                        {Object.entries(GUILD_ROLES).map(([rName,rd])=>(
+                          <div key={rName} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:4 }}>
+                            <span style={{ fontSize:"0.85rem" }}>{rd.icon}</span>
+                            <span style={{ fontSize:"0.72rem", color:rd.color||"#94a3b8", fontWeight:600, minWidth:120 }}>{rName}</span>
+                            <div style={{ display:"flex", flexWrap:"wrap", gap:3 }}>
+                              {rd.perms.length===0
+                                ? <span style={{ fontSize:"0.6rem", color:"#4b5563" }}>solo combattente</span>
+                                : rd.perms.map(p=>(
+                                    <span key={p} style={{ fontSize:"0.58rem", padding:"1px 5px", background:"rgba(109,40,217,0.2)", border:"1px solid #4c1d95", borderRadius:4, color:"#c4b5fd" }}>{p}</span>
+                                  ))
+                              }
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     {(myGuild.members||[]).map(m=>{
                       const role = m.role==="leader" ? "Maestro di Gilda" : (m.customRole||DEFAULT_ROLE);
                       const rd = GUILD_ROLES[role]||GUILD_ROLES[DEFAULT_ROLE];
@@ -8342,7 +8437,6 @@ ${stepText(step)}`, "quest","Master");
                             <div style={{ fontSize:"0.82rem", color:"#e2e8f0", fontWeight:600 }}>{m.name}</div>
                             <div style={{ fontSize:"0.65rem", color:rd.color||"#94a3b8" }}>{role}</div>
                           </div>
-                          {/* Leader can change roles */}
                           {hasPerm(myMember,"roles") && m.id!==myId && (
                             <select defaultValue={m.customRole||DEFAULT_ROLE}
                               onChange={async e=>{
@@ -8357,12 +8451,43 @@ ${stepText(step)}`, "quest","Master");
                               ))}
                             </select>
                           )}
+                          {hasPerm(myMember,"kick") && m.id!==myId && m.role!=="leader" && (
+                            <button onClick={()=>kickMember(m.id)} title="Espelli" style={{ background:"none", border:"1px solid #7f1d1d", borderRadius:4, color:"#f87171", cursor:"pointer", fontSize:"0.65rem", padding:"2px 6px" }}>✕</button>
+                          )}
                         </div>
                       );
                     })}
                   </div>
 
                   <SmallBtn red onClick={leaveGuild}>🚪 Lascia la gilda</SmallBtn>
+
+                  {/* Bulletin board */}
+                  <div style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:10, padding:"0.85rem", marginBottom:"1rem", marginTop:"1rem" }}>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
+                      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8" }}>📌 BACHECA GILDA</div>
+                      {hasPerm(myMember,"bulletin") && <SmallBtn onClick={()=>setShowBulletinForm(v=>!v)}>{showBulletinForm?"✕":"+ Annuncio"}</SmallBtn>}
+                    </div>
+                    {showBulletinForm && hasPerm(myMember,"bulletin") && (
+                      <div style={{ display:"flex", gap:6, marginBottom:8 }}>
+                        <input value={bulletinInput} onChange={e=>setBulletinInput(e.target.value)} placeholder="Scrivi un annuncio..."
+                          style={{ flex:1, padding:"0.4rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.8rem" }}
+                          onKeyDown={e=>{ if(e.key==="Enter") postBulletin(); }}/>
+                        <SmallBtn onClick={postBulletin}>Pubblica</SmallBtn>
+                      </div>
+                    )}
+                    {!(myGuild.bulletin||[]).length && <div style={{ fontSize:"0.75rem", color:"#4b5563" }}>Nessun annuncio.</div>}
+                    {(myGuild.bulletin||[]).map(b=>(
+                      <div key={b.id} style={{ background:"rgba(251,191,36,0.06)", border:"1px solid rgba(251,191,36,0.18)", borderRadius:7, padding:"0.5rem 0.7rem", marginBottom:5, display:"flex", gap:8, alignItems:"flex-start" }}>
+                        <div style={{ flex:1 }}>
+                          <div style={{ fontSize:"0.78rem", color:"#fde68a" }}>{b.text}</div>
+                          <div style={{ fontSize:"0.62rem", color:"#64748b", marginTop:2 }}>— {b.author} · {new Date(b.createdAt).toLocaleDateString("it-IT")}</div>
+                        </div>
+                        {hasPerm(myMember,"bulletin") && (
+                          <button onClick={()=>deleteBulletin(b.id)} style={{ background:"none", border:"none", color:"#374151", fontSize:"0.7rem", cursor:"pointer", padding:"0 4px" }}>✕</button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
 
                   {/* Guild Missions */}
                   <div style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:10, padding:"0.85rem", marginBottom:"1rem", marginTop:"1rem" }}>
