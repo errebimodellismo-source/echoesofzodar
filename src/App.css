@@ -18,6 +18,27 @@
   filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
+@keyframes hitShake {
+  0%   { transform: translateX(0) rotate(0deg); }
+  15%  { transform: translateX(-7px) rotate(-0.5deg); }
+  30%  { transform: translateX(6px)  rotate(0.4deg); }
+  45%  { transform: translateX(-4px) rotate(-0.3deg); }
+  60%  { transform: translateX(3px)  rotate(0.2deg); }
+  75%  { transform: translateX(-2px); }
+  100% { transform: translateX(0); }
+}
+
+@keyframes hitFlash {
+  0%   { box-shadow: inset 0 0 0 2px rgba(239,68,68,0.9), 0 0 16px rgba(239,68,68,0.35); }
+  60%  { box-shadow: inset 0 0 0 2px rgba(239,68,68,0.4), 0 0 8px rgba(239,68,68,0.15); }
+  100% { box-shadow: none; }
+}
+
+@keyframes hpGlow {
+  0%, 100% { opacity: 0.55; }
+  50%       { opacity: 1; }
+}
+
 @keyframes tabFadeIn {
   from { opacity: 0; transform: translateY(8px); }
   to   { opacity: 1; transform: translateY(0); }

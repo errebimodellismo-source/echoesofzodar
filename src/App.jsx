@@ -6255,6 +6255,8 @@ function GameScreen({ myId, setScreen, authUser }) {
 
   // ── Daily reset at 12:00 and 00:00 ──
   const dailyResetRunningRef = useRef(false);
+  const prevCombatHpRef = useRef({});
+  const [shakingIds, setShakingIds] = useState(new Set());
   useEffect(() => {
     async function checkDailyReset() {
       if(dailyResetRunningRef.current) return;
@@ -6292,6 +6294,23 @@ function GameScreen({ myId, setScreen, authUser }) {
       Notification.requestPermission();
     }
   }, [!!qs?.combat?.active]);
+
+  // Detect HP drops to trigger shake animation on combatant cards
+  useEffect(() => {
+    const combatants = qs?.combat?.combatants;
+    if(!combatants) return;
+    const hit = new Set();
+    combatants.forEach(c => {
+      const prev = prevCombatHpRef.current[c.id];
+      if(prev !== undefined && c.hp < prev) hit.add(c.id);
+      prevCombatHpRef.current[c.id] = c.hp;
+    });
+    if(hit.size > 0) {
+      setShakingIds(hit);
+      const t = setTimeout(() => setShakingIds(new Set()), 600);
+      return () => clearTimeout(t);
+    }
+  }, [qs?.combat?.combatants]);
 
   useEffect(() => {
     const c = qs?.combat;
@@ -9370,8 +9389,9 @@ ${stepText(step)}`, "quest","Master");
                     <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(250px,1fr))", gap:12, marginBottom:"1rem" }}>
                   {combat.combatants.map((c,i)=>{
                     const isActive = i===combat.turn%combat.combatants.length;
+                    const isShaking = shakingIds.has(c.id);
                     return (
-                      <div key={c.id||i} style={{ background:isActive?"linear-gradient(135deg, rgba(127,29,29,0.34), rgba(15,23,42,0.9))":c.isSummon?"rgba(10,40,20,0.82)":"rgba(15,23,42,0.82)", border:`2px solid ${isActive?"#ef4444":c.isSummon?"#22c55e":c.isPlayer?"#6d28d9":"#7f1d1d"}`, borderRadius:12, padding:"0.95rem", opacity:c.hp<=0?0.45:1, boxShadow:isActive?"0 16px 36px rgba(127,29,29,0.24)":"0 12px 30px rgba(0,0,0,0.16)" }}>
+                      <div key={c.id||i} style={{ background:isActive?"linear-gradient(135deg, rgba(127,29,29,0.34), rgba(15,23,42,0.9))":c.isSummon?"rgba(10,40,20,0.82)":"rgba(15,23,42,0.82)", border:`2px solid ${isActive?"#ef4444":c.isSummon?"#22c55e":c.isPlayer?"#6d28d9":"#7f1d1d"}`, borderRadius:12, padding:"0.95rem", opacity:c.hp<=0?0.45:1, boxShadow:isActive?"0 16px 36px rgba(127,29,29,0.24)":"0 12px 30px rgba(0,0,0,0.16)", animation: isShaking ? "hitShake 0.5s ease, hitFlash 0.5s ease" : "none", willChange: isShaking ? "transform" : "auto" }}>
                         <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:8 }}>
                           <ArtThumb src={c.isSummon ? getMonsterImage(c) : c.isPlayer ? getPlayerPortrait(c) : getMonsterImage(c)} alt={c.name} size={70} radius={16} />
                           <div style={{ flex:1 }}>
@@ -10146,10 +10166,33 @@ ${stepText(step)}`, "quest","Master");
 ---------------------------------------------- */
 function HpBar({ cur, max, red }) {
   const pct = Math.min(100, Math.max(0, (cur||0)/(max||1)*100));
-  const color = red ? "#ef4444" : pct>60?"#22c55e":pct>30?"#f59e0b":"#ef4444";
+  const isLow = pct <= 30;
+  const isMid = pct > 30 && pct <= 60;
+  const color = red
+    ? (isLow ? "#b91c1c" : isMid ? "#dc2626" : "#ef4444")
+    : (isLow ? "#ef4444" : isMid ? "#f59e0b" : "#22c55e");
+  const glow = red
+    ? (isLow ? "rgba(185,28,28,0.55)" : "rgba(239,68,68,0.3)")
+    : (isLow ? "rgba(239,68,68,0.55)" : isMid ? "rgba(245,158,11,0.4)" : "rgba(34,197,94,0.35)");
+  const grad = red
+    ? `linear-gradient(90deg, ${color}cc, ${color})`
+    : `linear-gradient(90deg, ${color}bb, ${color}, ${color}dd)`;
   return (
-    <div style={{ height:5, background:"#0f172a", borderRadius:3, overflow:"hidden" }}>
-      <div style={{ height:"100%", background:color, width:`${pct}%`, transition:"width .4s" }} />
+    <div style={{ height:7, background:"rgba(0,0,0,0.5)", borderRadius:4, overflow:"visible", position:"relative" }}>
+      <div style={{
+        height:"100%", borderRadius:4,
+        background: grad,
+        width:`${pct}%`,
+        transition:"width 0.55s cubic-bezier(0.34,1.2,0.64,1), background 0.6s ease",
+        boxShadow: pct > 0 ? `0 0 8px 1px ${glow}` : "none",
+        position:"relative", overflow:"hidden",
+      }}>
+        {/* shine sweep */}
+        <div style={{ position:"absolute", inset:0, background:"linear-gradient(90deg,transparent 0%,rgba(255,255,255,0.18) 50%,transparent 100%)", borderRadius:4 }} />
+      </div>
+      {isLow && pct > 0 && (
+        <div style={{ position:"absolute", inset:0, borderRadius:4, boxShadow:`0 0 10px 2px ${glow}`, animation:"hpGlow 1.2s ease-in-out infinite", pointerEvents:"none" }} />
+      )}
     </div>
   );
 }
