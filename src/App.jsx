@@ -103,8 +103,10 @@ const LEGENDARY_ITEMS = [
   { id:"leg_eye_gods",    name:"Occhio degli Dei",    emoji:"👁️",  type:"magic",  bonus_mag:5, desc:"Vede ogni punto debole del nemico" },
   { id:"leg_starstaff",   name:"Baculo delle Stelle", emoji:"🌟",  type:"magic",  bonus_mag:6, desc:"Forgia incantesimi di potere cosmico" },
   // Reliquie di Zodar — doni supremi del Master
-  { id:"leg_zodar_sword", name:"Spada di Zodar",      emoji:"🌌",  type:"weapon", weapon_die:"5d20", bonus_atk:10, desc:"Forgiata da Zodar nell'alba dei tempi — nessuna lama la eguaglia" },
+  { id:"leg_zodar_sword", name:"Spada di Zodar",      emoji:"🌌",  type:"weapon", weapon_die:"5d20",   bonus_atk:10, desc:"Forgiata da Zodar nell'alba dei tempi — nessuna lama la eguaglia" },
   { id:"leg_zodar_armor", name:"Armatura di Zodar",   emoji:"✨",  type:"armor",  bonus_def:20, desc:"Ogni scaglia porta il sigillo di Zodar — il male non osa toccarla" },
+  // Arma segreta del Master
+  { id:"leg_dito_strabo", name:"Dito di Strabo",      emoji:"☝️",  type:"weapon", weapon_die:"100d20", bonus_atk:20, desc:"Il dito puntato di Strabo — ogni colpo riscrive la realtà stessa" },
 ];
 
 const XP_TABLE = [0,0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000];
