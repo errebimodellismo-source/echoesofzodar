@@ -8,6 +8,7 @@ import { DEFAULT_ITEMS, DEFAULT_WEAPON } from "./data/itemsData";
 import DiceRoller from "./components/DiceRoller";
 import ParticleBackground from "./components/ParticleBackground";
 import CombatVisualizer from "./components/CombatVisualizer";
+import AnimatedBackground from "./components/AnimatedBackground";
 import audioManager from "./utils/audioManager";
 
 /* ----------------------------------------------
@@ -70,6 +71,7 @@ function missionDifficultyLabel(value) {
     difficile: "Difficile",
   })[normalizeMissionDifficulty(value)];
 }
+const GAME_VERSION = "v1.4.0";
 const BACKGROUND_URL = "/assets/Zodarsfondo.png";
 const MAINTENANCE_CODE = "__maintenance__";
 const MASTER_PASSWORD = "ByBy101112!";
@@ -1887,12 +1889,14 @@ async function dbGetMaintenanceMode() {
   const { data } = await supabase.from("party_state").select("quest_active").eq("party_code", MAINTENANCE_CODE).maybeSingle();
   return !!(data?.quest_active);
 }
-async function dbSetMaintenanceMode(active, message = "") {
+async function dbSetMaintenanceMode(active, message = "", patchNotes = "") {
+  const ts = new Date().toISOString();
   await supabase.from("party_state").upsert({
     party_code: MAINTENANCE_CODE,
     quest_active: active,
     quest_id: message || null,
-    updated_at: new Date().toISOString(),
+    state: patchNotes ? { patch_notes: patchNotes, patch_ts: ts } : null,
+    updated_at: ts,
   });
 }
 
@@ -2208,14 +2212,16 @@ export default function App() {
   }
 
   if(authLoading) return (
-    <div style={{ minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" }}>
+    <div style={{ minHeight:"100vh", width:"100vw", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" }}>
+      <AnimatedBackground />
       <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)" }} />
       <div style={{ position:"relative", zIndex:1, color:"#e2d9c5", fontFamily:"'Cinzel',serif" }}>Caricamento...</div>
     </div>
   );
 
   return (
-    <div style={{ minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", fontFamily:"'Crimson Pro',Georgia,serif", color:"#e2d9c5", position:"relative" }}>
+    <div style={{ minHeight:"100vh", width:"100vw", fontFamily:"'Crimson Pro',Georgia,serif", color:"#e2d9c5", position:"relative" }}>
+      <AnimatedBackground />
       <style>{`
         *, *::before, *::after { box-sizing: border-box; }
         body { overflow-x: hidden; }
@@ -2278,7 +2284,7 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
   }
 
   return (
-    <div style={{ minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", position:"relative" }}>
+    <div style={{ minHeight:"100vh", width:"100vw", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", position:"relative" }}>
       <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)" }} />
       <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", width:"100%", padding:"2rem 1rem" }}>
       <p style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontSize:"1rem", letterSpacing:"0.6em", margin:"0 0 0.5rem" }}>⚔ ZODAR ⚔</p>
@@ -2323,6 +2329,9 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
           🛡️ Accesso Master
         </button>
       </div>
+      <div style={{ marginTop:"2rem", color:"rgba(148,163,184,0.45)", fontSize:"0.68rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>
+        {GAME_VERSION}
+      </div>
       </div>
     </div>
   );
@@ -2343,7 +2352,7 @@ function MasterPanelAuth({ setScreen, authUser }) {
   if(ok) return <MasterPanel setScreen={setScreen} authUser={authUser} />;
 
   return (
-    <div style={{ minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", position:"relative" }}>
+    <div style={{ minHeight:"100vh", width:"100vw", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", position:"relative" }}>
       <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.36)" }} />
       <div style={{ position:"relative", zIndex:1, width:"100%", maxWidth:360, background:"rgba(0,0,0,0.55)", border:"1px solid #374151", borderRadius:8, padding:"2rem", textAlign:"center" }}>
         <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>🛡️</div>
@@ -2565,7 +2574,7 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   }
 
   return (
-    <div onClick={() => audioManager.playBGM("intro")} style={{ minHeight:"100vh", width:"100vw", backgroundImage:`url(${BACKGROUND_URL})`, backgroundSize:"cover", backgroundPosition:"center", backgroundRepeat:"no-repeat", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"2rem 1rem", position:"relative" }}>
+    <div onClick={() => audioManager.playBGM("intro")} style={{ minHeight:"100vh", width:"100vw", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"2rem 1rem", position:"relative" }}>
       <div style={{ position:"absolute", inset:0, background:"radial-gradient(at 15% 50%, rgba(109,40,217,0.3) 0%, rgba(0,0,0,0) 55%), radial-gradient(at 85% 30%, rgba(109,40,217,0.2) 0%, rgba(0,0,0,0) 50%), rgba(0,0,0,0.42)" }} />
       <FireEmbers />
       <FallingLeaves />
@@ -2656,6 +2665,7 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
 
       {authUser && <p style={{ marginTop:"1rem", color:"#64748b", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
       <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE • FANTASY • MULTIPLAYER ONLINE</p>
+      <p style={{ marginTop:"0.5rem", color:"rgba(148,163,184,0.4)", fontSize:"0.65rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.14em" }}>{GAME_VERSION}</p>
       </div>{/* /zIndex wrapper */}
     </div>
   );
@@ -2854,6 +2864,7 @@ function MasterPanel({ setScreen, authUser }) {
   const [maintenance, setMaintenance] = useState(false);
   const [maintenanceBusy, setMaintenanceBusy] = useState(false);
   const [maintenanceInput, setMaintenanceInput] = useState("");
+  const [patchNotesInput, setPatchNotesInput] = useState("");
 
   useEffect(() => {
     dbGetMaintenanceMode().then(setMaintenance);
@@ -3086,12 +3097,19 @@ function MasterPanel({ setScreen, authUser }) {
                 {maintenance ? "Gioco CHIUSO — manutenzione attiva" : "Gioco APERTO — tutto regolare"}
               </span>
             </div>
-            <label style={labelStyle}>Messaggio ai giocatori (opzionale)</label>
+            <label style={labelStyle}>Messaggio ai giocatori durante la manutenzione (opzionale)</label>
             <input
               style={{ ...inputStyle, marginBottom:"1rem" }}
               value={maintenanceInput}
               onChange={e => setMaintenanceInput(e.target.value)}
               placeholder="es. Aggiornamento in corso, torniamo tra 10 minuti…"
+            />
+            <label style={labelStyle}>📋 Patch Notes — mostrate ai giocatori alla riapertura</label>
+            <textarea
+              style={{ ...inputStyle, marginBottom:"1rem", minHeight:100, resize:"vertical", fontFamily:"monospace", fontSize:"0.82rem" }}
+              value={patchNotesInput}
+              onChange={e => setPatchNotesInput(e.target.value)}
+              placeholder={"• Nuovi oggetti leggendari\n• Fix cura di massa\n• Armi a distanza usano DES\n• Visualizzatore combattimento"}
             />
             <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
               <button
@@ -3099,7 +3117,7 @@ function MasterPanel({ setScreen, authUser }) {
                 onClick={async () => {
                   if(!window.confirm("Metti il gioco in manutenzione?\nTutti i giocatori vedranno un overlay bloccante.")) return;
                   setMaintenanceBusy(true);
-                  await dbSetMaintenanceMode(true, maintenanceInput.trim());
+                  await dbSetMaintenanceMode(true, maintenanceInput.trim(), patchNotesInput.trim());
                   setMaintenance(true);
                   setMaintenanceBusy(false);
                 }}
@@ -3110,7 +3128,7 @@ function MasterPanel({ setScreen, authUser }) {
                 disabled={maintenanceBusy || !maintenance}
                 onClick={async () => {
                   setMaintenanceBusy(true);
-                  await dbSetMaintenanceMode(false, "");
+                  await dbSetMaintenanceMode(false, "", patchNotesInput.trim());
                   setMaintenance(false);
                   setMaintenanceBusy(false);
                 }}
@@ -4797,8 +4815,10 @@ function generateShopInventory(items, seed = 0) {
     return a;
   };
   const pick = (pool, n) => shuffle(pool).slice(0, Math.min(n, pool.length));
-  const equip = items.filter(i => i.type !== 'material');
+  const always = items.filter(i => i.id === "potion_escape");
+  const equip = items.filter(i => i.type !== 'material' && i.id !== "potion_escape");
   return [
+    ...always,
     ...pick(equip.filter(i => i.rarity === "common"), 5),
     ...pick(equip.filter(i => i.rarity === "uncommon"), 3),
     ...pick(equip.filter(i => i.rarity === "rare" || i.rarity === "epic"), 1),
@@ -5200,57 +5220,95 @@ function ForgeView({ me, inventory, inventoryCounts, catalogItems, onForge, load
   );
 }
 
+const INV_CATEGORIES = [
+  { key:"weapon",    label:"⚔️ Armi" },
+  { key:"armor",     label:"🛡️ Armature" },
+  { key:"shield",    label:"🔰 Scudi" },
+  { key:"accessory", label:"💍 Accessori" },
+  { key:"potion",    label:"🧪 Pozioni" },
+  { key:"material",  label:"⚗️ Materiali" },
+];
+function _invCategory(item) {
+  const t = item.type;
+  if (t === "weapon" || t === "magic") return "weapon";
+  if (t === "armor") return "armor";
+  if (t === "shield") return "shield";
+  if (t === "accessory") return "accessory";
+  if (t === "potion" || t === "consumable") return "potion";
+  if (t === "material") return "material";
+  return "accessory";
+}
+
 function InventoryView({ loading, groups, equipment, selectedItem, onSelectItem, onCloseItem, onEquip, onSell, onUse, canUseConsumables }) {
+  const byCategory = INV_CATEGORIES.map(cat => ({
+    ...cat,
+    items: groups.filter(g => _invCategory(g.item) === cat.key),
+  })).filter(cat => cat.items.length > 0);
+
+  const renderCard = (group) => {
+    const slot = itemSlot(group.item);
+    const equipped = !!slot && equipment?.[slot] === group.item.id;
+    const selected = selectedItem?.item?.id === group.item.id;
+    return (
+      <button
+        key={group.item.id}
+        onClick={()=>onSelectItem(group)}
+        style={{
+          textAlign:"left",
+          background:PANEL_BG,
+          border:`1px solid ${selected ? "#7c3aed" : equipped ? "#b45309" : PANEL_BORDER}`,
+          borderRadius:6,
+          padding:"0.8rem",
+          cursor:"pointer",
+          color:"inherit",
+          font:"inherit",
+          boxShadow:selected ? "0 0 0 1px rgba(124,58,237,0.35) inset" : "none",
+        }}
+      >
+        <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:6 }}>
+          <ArtThumb src={getItemImage(group.item)} alt={group.item.name} size={62} />
+          <div style={{ flex:1 }}>
+            <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{group.item.name}</div>
+            <div style={{ fontSize:"0.72rem", color:"#94a3b8" }}>{itemTypeLabel(group.item.type)} • {itemRarityLabel(group.item.rarity)}</div>
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
+            <span style={{ fontSize:"0.78rem", color:"#c4b5fd", fontWeight:700 }}>x{group.quantity}</span>
+            {equipped && <span style={{ fontSize:"0.66rem", color:"#fbbf24" }}>Equip.</span>}
+          </div>
+        </div>
+        <div style={{ fontSize:"0.75rem", color:"#94a3b8", marginBottom:6 }}>{group.item.description}</div>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#94a3b8", marginBottom:10 }}>
+          {itemStatSummary(group.item).map(stat => <span key={stat}>{stat}</span>)}
+        </div>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#9ca3af" }}>
+          <span>Quantità: {group.quantity}</span>
+          <span>Valore: {group.item.price || 0} oro</span>
+          <span style={{ color:"#94a3b8" }}>Clicca per ispezionare</span>
+        </div>
+      </button>
+    );
+  };
+
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
       <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🎒 Inventario</h3>
       {loading && <div style={{ color:"#94a3b8" }}>Caricamento...</div>}
       {!loading && !groups.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Inventario vuoto. Saccheggia o compra qualcosa.</div>}
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))", gap:10 }}>
-        {groups.map(group=>{
-          const slot = itemSlot(group.item);
-          const equipped = !!slot && equipment?.[slot] === group.item.id;
-          const selected = selectedItem?.item?.id === group.item.id;
-          return (
-            <button
-              key={group.item.id}
-              onClick={()=>onSelectItem(group)}
-              style={{
-                textAlign:"left",
-                background:PANEL_BG,
-                border:`1px solid ${selected ? "#7c3aed" : equipped ? "#b45309" : PANEL_BORDER}`,
-                borderRadius:6,
-                padding:"0.8rem",
-                cursor:"pointer",
-                color:"inherit",
-                font:"inherit",
-                boxShadow:selected ? "0 0 0 1px rgba(124,58,237,0.35) inset" : "none",
-              }}
-            >
-              <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:6 }}>
-                <ArtThumb src={getItemImage(group.item)} alt={group.item.name} size={62} />
-                <div style={{ flex:1 }}>
-                  <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{group.item.name}</div>
-                  <div style={{ fontSize:"0.72rem", color:"#94a3b8" }}>{itemTypeLabel(group.item.type)} • {itemRarityLabel(group.item.rarity)}</div>
-                </div>
-                <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
-                  <span style={{ fontSize:"0.78rem", color:"#c4b5fd", fontWeight:700 }}>x{group.quantity}</span>
-                  {equipped && <span style={{ fontSize:"0.66rem", color:"#fbbf24" }}>Equip.</span>}
-                </div>
-              </div>
-              <div style={{ fontSize:"0.75rem", color:"#94a3b8", marginBottom:6 }}>{group.item.description}</div>
-              <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#94a3b8", marginBottom:10 }}>
-                {itemStatSummary(group.item).map(stat => <span key={stat}>{stat}</span>)}
-              </div>
-              <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#9ca3af" }}>
-                <span>Quantità: {group.quantity}</span>
-                <span>Valore: {group.item.price || 0} oro</span>
-                <span style={{ color:"#94a3b8" }}>Clicca per ispezionare</span>
-              </div>
-            </button>
-          );
-        })}
-      </div>
+      {byCategory.map(cat => (
+        <div key={cat.key} style={{ marginBottom:"1.5rem" }}>
+          <div style={{
+            fontFamily:"'Cinzel',serif", color:"#94a3b8", fontSize:"0.72rem",
+            letterSpacing:"0.12em", textTransform:"uppercase",
+            borderBottom:"1px solid rgba(148,163,184,0.15)", paddingBottom:"0.4rem", marginBottom:"0.6rem",
+          }}>
+            {cat.label} <span style={{ color:"#475569", fontFamily:"inherit" }}>({cat.items.length})</span>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))", gap:10 }}>
+            {cat.items.map(renderCard)}
+          </div>
+        </div>
+      ))}
+
       {!!selectedItem && (
         <div style={{ position:"fixed", inset:0, background:"rgba(2,6,23,0.78)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem", zIndex:50 }} onClick={onCloseItem}>
           <div onClick={e=>e.stopPropagation()} style={{ width:"min(560px,100%)", background:"linear-gradient(180deg, rgba(17,24,39,0.98), rgba(10,10,18,0.98))", border:"1px solid #312e81", borderRadius:10, boxShadow:"0 24px 80px rgba(0,0,0,0.45)", padding:"1rem" }}>
@@ -6027,6 +6085,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [combatView, setCombatView] = useState('visual');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [maintenanceMsg, setMaintenanceMsg] = useState("");
+  const [patchModal, setPatchModal] = useState(null); // { notes, ts }
   const [achievementNotif, setAchievementNotif] = useState([]);
   const [showSubclassModal, setShowSubclassModal] = useState(false);
   const isMobile = useMobile();
@@ -6393,11 +6452,36 @@ function GameScreen({ myId, setScreen, authUser }) {
 
   // ── Daily reset at 12:00 and 00:00 ──
   // ── Maintenance mode polling ──
+  const prevMaintenanceRef = useRef(null);
   useEffect(() => {
     async function checkMaintenance() {
-      const { data } = await supabase.from("party_state").select("quest_active,quest_id").eq("party_code", MAINTENANCE_CODE).maybeSingle();
-      setMaintenanceMode(!!(data?.quest_active));
+      const { data } = await supabase.from("party_state").select("quest_active,quest_id,state").eq("party_code", MAINTENANCE_CODE).maybeSingle();
+      const isActive = !!(data?.quest_active);
+      setMaintenanceMode(isActive);
       setMaintenanceMsg(data?.quest_id || "");
+      // Show patch modal when maintenance just ended
+      if (prevMaintenanceRef.current === true && !isActive) {
+        const notes = data?.state?.patch_notes;
+        const ts = data?.state?.patch_ts || data?.updated_at || "";
+        if (notes && ts) {
+          const seenKey = `patchSeen_${ts}`;
+          if (!localStorage.getItem(seenKey)) {
+            setPatchModal({ notes, ts });
+          }
+        }
+      }
+      // Also show on first load if game is open and patch not yet seen
+      if (prevMaintenanceRef.current === null && !isActive) {
+        const notes = data?.state?.patch_notes;
+        const ts = data?.state?.patch_ts || data?.updated_at || "";
+        if (notes && ts) {
+          const seenKey = `patchSeen_${ts}`;
+          if (!localStorage.getItem(seenKey)) {
+            setPatchModal({ notes, ts });
+          }
+        }
+      }
+      prevMaintenanceRef.current = isActive;
     }
     checkMaintenance();
     const t = setInterval(checkMaintenance, 15_000);
@@ -8433,6 +8517,37 @@ ${stepText(step)}`, "quest","Master");
           </div>
         </div>
       )}
+      {/* ── Patch Notes modal ── */}
+      {!!patchModal && (
+        <div style={{ position:"fixed", inset:0, zIndex:99998, background:"rgba(2,6,23,0.82)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
+          <div style={{ width:"min(540px,100%)", background:"linear-gradient(180deg,rgba(17,24,39,0.99),rgba(8,10,24,0.99))", border:"1px solid rgba(251,191,36,0.35)", borderRadius:14, boxShadow:"0 32px 80px rgba(0,0,0,0.6), 0 0 40px rgba(251,191,36,0.08)", padding:"1.6rem" }}>
+            <div style={{ textAlign:"center", marginBottom:"1.2rem" }}>
+              <div style={{ fontSize:"2.4rem", marginBottom:"0.5rem" }}>📋</div>
+              <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.25rem", fontWeight:700, letterSpacing:"0.04em" }}>Novità dell'Aggiornamento</div>
+              <div style={{ color:"#64748b", fontSize:"0.72rem", marginTop:4 }}>
+                {new Date(patchModal.ts).toLocaleDateString("it-IT", { day:"numeric", month:"long", year:"numeric" })}
+              </div>
+            </div>
+            <div style={{
+              background:"rgba(0,0,0,0.35)", border:"1px solid rgba(255,255,255,0.06)",
+              borderRadius:8, padding:"1rem", marginBottom:"1.2rem",
+              color:"#cbd5e1", fontSize:"0.88rem", lineHeight:1.8,
+              whiteSpace:"pre-wrap", maxHeight:320, overflowY:"auto",
+            }}>
+              {patchModal.notes}
+            </div>
+            <button
+              onClick={() => {
+                localStorage.setItem(`patchSeen_${patchModal.ts}`, "1");
+                setPatchModal(null);
+              }}
+              style={{ width:"100%", padding:"0.75rem", background:"linear-gradient(135deg,rgba(120,80,10,0.5),rgba(180,100,10,0.4))", border:"1px solid rgba(251,191,36,0.5)", borderRadius:8, color:"#fbbf24", fontFamily:"'Cinzel',serif", fontSize:"0.9rem", fontWeight:700, cursor:"pointer", letterSpacing:"0.06em" }}>
+              ✅ Capito, avventura!
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Mobile overlay backdrop */}
       {isMobile && sidebarOpen && (
         <div onClick={()=>setSidebarOpen(false)} style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.55)", zIndex:999, backdropFilter:"blur(2px)" }} />
@@ -8963,7 +9078,7 @@ ${stepText(step)}`, "quest","Master");
             <ShopView
               key={qs?.longRestSeed || 0}
               me={me}
-              items={catalogItems.filter(i=>i.available)}
+              items={catalogItems.filter(i=>i.available || i.id==="potion_escape")}
               loading={inventoryLoading}
               error={null}
               inventoryCounts={inventoryCounts}
@@ -9091,8 +9206,9 @@ ${stepText(step)}`, "quest","Master");
               <span style={{ color:"#6b7280", fontSize:"0.71rem" }}>si rinnova in {hoursUntilMidnight()}</span>
             </div>
             {(() => {
-              const completedIds = new Set(qs?.completed || []);
-              const availableDaily = publicDailyQuests.filter(q => !completedIds.has(q.id));
+              const today = new Date().toLocaleDateString('en-CA');
+              const completedToday = new Set((qs?.questLog || []).filter(e => e.date === today).map(e => e.id));
+              const availableDaily = publicDailyQuests.filter(q => !completedToday.has(q.id));
               const doneCount = publicDailyQuests.length - availableDaily.length;
               return (
                 <>
@@ -9145,7 +9261,10 @@ ${stepText(step)}`, "quest","Master");
               </div>
               {specialQuestError && <div style={{ color:specialQuestError.startsWith("Missione")?"#86efac":"#fca5a5", fontSize:"0.78rem", marginTop:8 }}>{specialQuestError}</div>}
             </div>
-            {unlockedSpecialQuests.filter(q => !(qs?.completed||[]).includes(q.id)).map(q => (
+            {unlockedSpecialQuests.filter(q => {
+              const today = new Date().toLocaleDateString('en-CA');
+              return !(qs?.questLog||[]).some(e => e.date === today && e.id === q.id);
+            }).map(q => (
               <div key={q.id} style={{ background:"rgba(88,28,135,0.16)", border:"1px solid #7c3aed", borderRadius:6, padding:"1rem", marginBottom:8 }}>
                 <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
                   <div style={{ flex:1 }}>

@@ -1,0 +1,21 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(npm run:*)",
+      "Bash(git reset:*)",
+      "Bash(python fix_emoji.py)",
+      "Bash(python \"c:/Users/roppo/echoesofzodar/fix_emoji.py\")",
+      "Bash(python -c \":*)",
+      "Bash(python \"c:/Users/roppo/echoesofzodar/fix_all.py\")",
+      "Bash(python3 -c \":*)",
+      "Bash(python3:*)",
+      "Bash(find /c/Users/roppo/echoesofzodar/src -name *.jsx -o -name *.tsx -o -name *.js -o -name *.ts)",
+      "Bash(Select-String -Path \"c:\\\\Users\\\\roppo\\\\echoesofzodar\\\\src\\\\data\\\\questsData.js\" -Pattern 'id:\"fq50\"|id:\"mq50\"|id:\"dq27\"')",
+      "WebSearch",
+      "Bash(npx vercel *)"
+    ]
+  }
+}

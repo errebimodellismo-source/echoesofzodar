@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout:*)",
+      "Bash(npm install:*)",
+      "Read(//c/Users/roppo/Downloads/**)",
+      "Read(//c/Users/roppo/Downloads//**)",
+      "Bash(cp /c/Users/roppo/Downloads/combat.mp3 /c/Users/roppo/Downloads/main.mp3 /c/Users/roppo/Downloads/shop.mp3 /c/Users/roppo/echoesofzodar/public/assets/audio/)",
+      "Bash(grep -iE \"\\\\.\\(jpg|jpeg|png|webp\\)$\")",
+      "Bash(node -e \"const fs=require\\('fs'\\); const content=fs.readFileSync\\('src/App.jsx','utf8'\\); const lines=content.split\\('\\\\n'\\); for\\(let i=2583;i<=2610;i++\\) console.log\\(i+': '+JSON.stringify\\(lines[i-1]\\)\\);\")",
+      "Bash(node -e ' *)",
+      "Bash(npx netlify *)",
+      "Read(//c/Users/roppo/echoesofzodar/dist/assets/**)"
+    ],
+    "additionalDirectories": [
+      "C:\\Users\\roppo\\Downloads"
+    ]
+  }
+}
