@@ -8555,26 +8555,6 @@ ${stepText(step)}`, "quest","Master");
         </div>
       )}
 
-      {/* ── Donation button (fixed corner) ── */}
-      <button
-        onClick={() => setShowDonation(true)}
-        title="Supporta il gioco"
-        style={{
-          position:"fixed", bottom:16, right:16, zIndex:9000,
-          width:42, height:42, borderRadius:"50%",
-          background:"linear-gradient(135deg,rgba(251,191,36,0.18),rgba(180,83,9,0.25))",
-          border:"1px solid rgba(251,191,36,0.4)",
-          color:"#fbbf24", fontSize:"1.2rem", cursor:"pointer",
-          display:"flex", alignItems:"center", justifyContent:"center",
-          boxShadow:"0 2px 12px rgba(0,0,0,0.4)",
-          transition:"transform 0.15s, box-shadow 0.15s",
-        }}
-        onMouseEnter={e=>{ e.currentTarget.style.transform="scale(1.12)"; e.currentTarget.style.boxShadow="0 4px 20px rgba(251,191,36,0.3)"; }}
-        onMouseLeave={e=>{ e.currentTarget.style.transform="scale(1)"; e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,0.4)"; }}
-      >
-        ☕
-      </button>
-
       {/* ── Donation modal ── */}
       {showDonation && (
         <div style={{ position:"fixed", inset:0, zIndex:9001, background:"rgba(2,6,23,0.82)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}
@@ -8812,6 +8792,24 @@ ${stepText(step)}`, "quest","Master");
               {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}{k==="combat"&&combat?.active&&!combat?.pendingLog&&combat?.combatants?.[combat.turn%Math.max(1,combat.combatants.length)]?.id===myId&&tab!=="combat"&&<span style={{ marginLeft:4, display:"inline-block", width:8, height:8, borderRadius:"50%", background:"#ef4444", boxShadow:"0 0 6px #ef4444", animation:"pulse 1s infinite" }} />}{k==="dungeon"&&qs?.dungeon?.active&&!qs?.dungeon?.completedAt&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#701a75", borderRadius:10, fontSize:"0.62rem", color:"#e879f9" }}>LIVE</span>}
             </button>);
           })}
+          {/* Donation button in navbar */}
+          <button
+            onClick={() => setShowDonation(true)}
+            title="Supporta il gioco"
+            style={{
+              flexShrink:0, marginLeft:"auto", padding:"0 1rem",
+              background:"linear-gradient(135deg,rgba(251,191,36,0.12),rgba(180,83,9,0.18))",
+              border:"none", borderBottom:"2px solid rgba(251,191,36,0.35)",
+              color:"#fbbf24", cursor:"pointer", fontFamily:"'Cinzel',serif",
+              fontSize: isMobile?"0.68rem":"0.75rem", letterSpacing:"0.06em",
+              whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:5,
+              transition:"background 0.15s, color 0.15s",
+            }}
+            onMouseEnter={e=>{ e.currentTarget.style.background="rgba(251,191,36,0.22)"; e.currentTarget.style.color="#fde68a"; }}
+            onMouseLeave={e=>{ e.currentTarget.style.background="linear-gradient(135deg,rgba(251,191,36,0.12),rgba(180,83,9,0.18))"; e.currentTarget.style.color="#fbbf24"; }}
+          >
+            ☕{!isMobile && " Dona"}
+          </button>
         </div>
 
         <div key={tab} style={{ flex:1, display:"contents", animation:"tabFadeIn 0.18s ease" }}>
