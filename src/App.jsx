@@ -7,6 +7,7 @@ import { DEFAULT_MONSTERS } from "./data/monstersData";
 import { DEFAULT_ITEMS, DEFAULT_WEAPON } from "./data/itemsData";
 import DiceRoller from "./components/DiceRoller";
 import ParticleBackground from "./components/ParticleBackground";
+import CombatVisualizer from "./components/CombatVisualizer";
 import audioManager from "./utils/audioManager";
 
 /* ----------------------------------------------
@@ -6023,6 +6024,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [dismissedVictoryTs, setDismissedVictoryTs] = useState(null);
   const [declinedCombatAt, setDeclinedCombatAt] = useState(null);
   const [nowTick, setNowTick] = useState(Date.now());
+  const [combatView, setCombatView] = useState('visual');
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [maintenanceMsg, setMaintenanceMsg] = useState("");
   const [achievementNotif, setAchievementNotif] = useState([]);
@@ -9703,11 +9705,16 @@ ${stepText(step)}`, "quest","Master");
                   <div>
                     <h3 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fca5a5", margin:"0 0 0.35rem", fontSize:"1.5rem", letterSpacing:"0.04em" }}>⚔️ Battaglia</h3>
                     <div style={{ color:"#cbd5e1", fontSize:"0.9rem" }}>Round {combat.round} • {combat.combatants.length} partecipanti • il destino si decide ora</div>
-                    {"Notification" in window && Notification.permission !== "granted" && (
-                      <button onClick={()=>Notification.requestPermission()} style={{ marginTop:6, padding:"0.25rem 0.7rem", background:"rgba(109,40,217,0.2)", border:"1px solid #7c3aed", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontSize:"0.68rem" }}>
-                        🔔 Abilita notifiche turno
+                    <div style={{ display:"flex", gap:6, marginTop:6, flexWrap:"wrap" }}>
+                      {"Notification" in window && Notification.permission !== "granted" && (
+                        <button onClick={()=>Notification.requestPermission()} style={{ padding:"0.25rem 0.7rem", background:"rgba(109,40,217,0.2)", border:"1px solid #7c3aed", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontSize:"0.68rem" }}>
+                          🔔 Notifiche
+                        </button>
+                      )}
+                      <button onClick={()=>setCombatView(v=>v==='visual'?'cards':'visual')} style={{ padding:"0.25rem 0.8rem", background: combatView==='visual'?"rgba(239,68,68,0.2)":"rgba(30,41,59,0.5)", border:`1px solid ${combatView==='visual'?"#ef4444":"#475569"}`, borderRadius:6, color: combatView==='visual'?"#fca5a5":"#94a3b8", cursor:"pointer", fontSize:"0.68rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.05em", transition:"all 0.2s" }}>
+                        {combatView==='visual'?"🗺️ Vista Campo":"📋 Vista Schede"}
                       </button>
-                    )}
+                    </div>
                   </div>
                   {myTurn&&(
                     <div style={{ display:"flex", alignItems:"center", gap:8 }}>
@@ -9723,6 +9730,11 @@ ${stepText(step)}`, "quest","Master");
 
                 <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1.7fr) minmax(320px,0.95fr)", gap:"1rem", alignItems:"start" }}>
                   <div>
+                    {combatView==='visual' && (
+                      <div style={{ marginBottom:"1rem", padding:"1rem", background:"rgba(10,15,30,0.7)", border:"1px solid rgba(127,29,29,0.3)", borderRadius:14 }}>
+                        <CombatVisualizer combat={combat} myId={myId} isMobile={isMobile} />
+                      </div>
+                    )}
                     <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(250px,1fr))", gap:12, marginBottom:"1rem" }}>
                   {combat.combatants.map((c,i)=>{
                     const isActive = i===combat.turn%combat.combatants.length;

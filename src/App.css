@@ -49,6 +49,12 @@
   50% { opacity: 0.4; box-shadow: 0 0 2px #ef4444; }
 }
 
+@keyframes floatUp {
+  0%   { opacity: 1; transform: translateX(-50%) translateY(0) scale(1); }
+  30%  { opacity: 1; transform: translateX(-50%) translateY(-18px) scale(1.2); }
+  100% { opacity: 0; transform: translateX(-50%) translateY(-44px) scale(0.85); }
+}
+
 @keyframes logo-spin {
   from {
     transform: rotate(0deg);
