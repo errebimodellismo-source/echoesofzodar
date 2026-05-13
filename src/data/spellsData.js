@@ -120,7 +120,7 @@ export const SPELLS = {
       {id:"cl25",name:"Augura",emoji:"🔮",dmg:"0",type:"utility",slots:2,desc:"Prevedi il prossimo attacco nemico, +4 DEF questo round"},
     ],
     3:[
-      {id:"cl31",name:"Cura di Massa",emoji:"💚",dmg:"-3d8",type:"heal",slots:3,desc:"Cura 3d8 HP a TUTTI gli alleati contemporaneamente"},
+      {id:"cl31",name:"Cura di Massa",emoji:"💚",dmg:"-3d8",type:"heal",area:true,slots:3,desc:"Cura 3d8 HP a TUTTI gli alleati contemporaneamente"},
       {id:"cl32",name:"Colpo Radioso",emoji:"✨",dmg:"6d8",type:"damage",slots:3,desc:"Esplosione di luce sacra devastante"},
       {id:"cl33",name:"Animare Morti",emoji:"💀",dmg:"0",type:"summon",slots:3,desc:"Evoca uno scheletro alleato per combattere",summon:{name:"Scheletro",emoji:"💀",hp:28,atk:14,def:10,dmgDie:"1d8"}},
       {id:"cl34",name:"Rimuovi Malediz.",emoji:"🌟",dmg:"0",type:"utility",slots:3,desc:"Rimuovi tutti gli effetti negativi dal party"},
@@ -157,7 +157,7 @@ export const SPELLS = {
     ],
     3:[
       {id:"dr31",name:"Colpo del Vento",emoji:"💨",dmg:"6d8",type:"damage",slots:3,desc:"Vento devastante che travolge tutti i nemici"},
-      {id:"dr32",name:"Cura di Gruppo",emoji:"💚",dmg:"-3d8",type:"heal",slots:3,desc:"Cura 3d8 HP a tutti gli alleati"},
+      {id:"dr32",name:"Cura di Gruppo",emoji:"💚",dmg:"-3d8",type:"heal",area:true,slots:3,desc:"Cura 3d8 HP a tutti gli alleati"},
       {id:"dr33",name:"Tempesta di Spine",emoji:"🌵",dmg:"5d6",type:"damage",slots:3,desc:"Pioggia di spine magiche su tutti i nemici"},
       {id:"dr34",name:"Terreno Difficile",emoji:"🌊",dmg:"0",type:"control",slots:3,desc:"Il terreno si trasforma, i nemici perdono il turno"},
     ],
@@ -189,7 +189,7 @@ export const SPELLS = {
     ],
     3:[
       {id:"ba31",name:"Ipnosi",emoji:"🌀",dmg:"0",type:"control",slots:3,desc:"Ipnotizzi il nemico più forte, salta 1 turno"},
-      {id:"ba32",name:"Cura di Gruppo",emoji:"💚",dmg:"-3d6",type:"heal",slots:3,desc:"Canzone di guarigione, 3d6 HP a tutti gli alleati"},
+      {id:"ba32",name:"Cura di Gruppo",emoji:"💚",dmg:"-3d6",type:"heal",area:true,slots:3,desc:"Canzone di guarigione, 3d6 HP a tutti gli alleati"},
       {id:"ba33",name:"Onda Tonica",emoji:"🎶",dmg:"5d6",type:"damage",slots:3,desc:"Onda di energia sonora esplosiva"},
       {id:"ba34",name:"Vergogna",emoji:"😳",dmg:"4d6",type:"damage",slots:3,desc:"Maledizione di vergogna, -4 ATK al nemico per 2 round"},
     ],
@@ -199,7 +199,7 @@ export const SPELLS = {
       {id:"ba43",name:"Tentacoli Neri",emoji:"🖤",dmg:"6d6",type:"damage",slots:4,desc:"Tentacoli di oscurità paralizzano i nemici"},
     ],
     5:[
-      {id:"ba51",name:"Mass Cura",emoji:"💚",dmg:"-5d8",type:"heal",slots:5,desc:"Cura massiccia: 5d8+5 HP a tutti gli alleati"},
+      {id:"ba51",name:"Mass Cura",emoji:"💚",dmg:"-5d8",type:"heal",area:true,slots:5,desc:"Cura massiccia: 5d8+5 HP a tutti gli alleati"},
       {id:"ba52",name:"Mente Vuota",emoji:"💭",dmg:"0",type:"control",slots:5,desc:"Tutti i nemici perdono il turno per 1 round"},
       {id:"ba53",name:"Leggenda Vivente",emoji:"🌟",dmg:"0",type:"buff",slots:5,desc:"+8 a tutti i tuoi tiri per il resto del combattimento"},
     ],

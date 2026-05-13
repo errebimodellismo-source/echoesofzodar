@@ -6385,10 +6385,10 @@ function GameScreen({ myId, setScreen, authUser }) {
 
   // Tick every second for boss revive countdown
   useEffect(() => {
-    if (!combat?.isBossEvent || !combat?.bossKnockedOut?.[myId]) return;
+    if (!qs?.combat?.isBossEvent || !qs?.combat?.bossKnockedOut?.[myId]) return;
     const iv = setInterval(() => setNowTick(Date.now()), 1000);
     return () => clearInterval(iv);
-  }, [!!combat?.isBossEvent, !!combat?.bossKnockedOut?.[myId]]);
+  }, [!!qs?.combat?.isBossEvent, !!qs?.combat?.bossKnockedOut?.[myId]]);
 
   const dailyResetRunningRef = useRef(false);
   const prevCombatHpRef = useRef({});
@@ -7814,24 +7814,43 @@ function GameScreen({ myId, setScreen, authUser }) {
       const bonusLabel = magLegBonus > 0 ? `+${Math.floor((attacker.mag||0)/2)} +${magLegBonus}(leg)` : `+${bonus}`;
       log += `💥 Tiro danno: **${spell.dmg} = ${base}**\n✨ Bonus magia: **${bonusLabel}**\n🛡️ Riduzione bersaglio: **-${Math.floor(target.def/2)}**\n🔥 Danno finale: **${dmg}**\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`;
     } else if(spell.type === "heal") {
-      // Heal target: ally if selected, otherwise self
-      const healCombatant = allyTargetId
-        ? newCombatants.find(c => c.isPlayer && c.id === allyTargetId && !c.dead)
-        : attacker;
-      const healTarget = healCombatant || attacker;
       const magLegHealBonus = (spellMyBuffs.legendaryItem?.turnsLeft > 0 && spellMyBuffs.legendaryItem?.bonus_mag) ? spellMyBuffs.legendaryItem.bonus_mag : 0;
       const baseHeal = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), notation:spell.dmg, label:`Cura ${spell.dmg}`, themeColor:"#10b981" });
       const heal = Math.max(1, baseHeal + Math.floor((attacker.mag||0)/2) + magLegHealBonus);
-      const healed = Math.min(healTarget.maxHp, healTarget.hp + heal);
-      const pid = newCombatants.findIndex(c=>c.id===healTarget.id);
-      newCombatants[pid] = reviveCombatantState(healTarget, healed);
-      const targetLabel = healTarget.id === attacker.id ? healTarget.name : `${healTarget.name} (da ${attacker.name})`;
-      log += `💚 Tiro cura: **${spell.dmg} = ${baseHeal}**\n✨ Bonus magia: **+${Math.floor((attacker.mag||0)/2)}**\n🌿 Cura finale: **${heal}**\n❤️ ${targetLabel}: ${healed}/${healTarget.maxHp} HP`;
-      const healPlayerData = partyPlayers.find(p => p.id === healTarget.id) || (healTarget.id === myId ? me : null);
-      if(healPlayerData) {
-        const updated = {...healPlayerData, hp: healed, dead: false};
-        await dbSavePlayer(updated);
-        if(healTarget.id === myId) setMeRaw(updated);
+      if(spell.area) {
+        // Area heal: restore HP to ALL alive player combatants
+        const healTargets = newCombatants.filter(c => c.isPlayer && !c.isSummon && !c.dead);
+        let areaLog = '';
+        for(const ht of healTargets) {
+          const healed = Math.min(ht.maxHp, ht.hp + heal);
+          const idx = newCombatants.findIndex(c => c.id === ht.id);
+          newCombatants[idx] = reviveCombatantState(ht, healed);
+          areaLog += `\n❤️ ${ht.name}: ${healed}/${ht.maxHp} HP`;
+          const htPlayerData = partyPlayers.find(p => p.id === ht.id) || (ht.id === myId ? me : null);
+          if(htPlayerData) {
+            const updated = {...htPlayerData, hp: healed, dead: false};
+            await dbSavePlayer(updated);
+            if(ht.id === myId) setMeRaw(updated);
+          }
+        }
+        log += `💚 Tiro cura: **${spell.dmg} = ${baseHeal}**\n✨ Bonus magia: **+${Math.floor((attacker.mag||0)/2)}**\n🌿 Cura di massa: **${heal} HP** a tutti!${areaLog}`;
+      } else {
+        // Single-target heal: ally if selected, otherwise self
+        const healCombatant = allyTargetId
+          ? newCombatants.find(c => c.isPlayer && c.id === allyTargetId && !c.dead)
+          : attacker;
+        const healTarget = healCombatant || attacker;
+        const healed = Math.min(healTarget.maxHp, healTarget.hp + heal);
+        const pid = newCombatants.findIndex(c=>c.id===healTarget.id);
+        newCombatants[pid] = reviveCombatantState(healTarget, healed);
+        const targetLabel = healTarget.id === attacker.id ? healTarget.name : `${healTarget.name} (da ${attacker.name})`;
+        log += `💚 Tiro cura: **${spell.dmg} = ${baseHeal}**\n✨ Bonus magia: **+${Math.floor((attacker.mag||0)/2)}**\n🌿 Cura finale: **${heal}**\n❤️ ${targetLabel}: ${healed}/${healTarget.maxHp} HP`;
+        const healPlayerData = partyPlayers.find(p => p.id === healTarget.id) || (healTarget.id === myId ? me : null);
+        if(healPlayerData) {
+          const updated = {...healPlayerData, hp: healed, dead: false};
+          await dbSavePlayer(updated);
+          if(healTarget.id === myId) setMeRaw(updated);
+        }
       }
       setSelectedAllyTarget(null);
     } else if(spell.type === "summon" && spell.summon) {
