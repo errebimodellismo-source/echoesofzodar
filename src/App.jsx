@@ -8576,10 +8576,13 @@ ${stepText(step)}`, "quest","Master");
               </div>
             </div>
 
-            <div style={{ background:"rgba(0,0,0,0.3)", border:"1px solid rgba(255,255,255,0.05)", borderRadius:8, padding:"1rem", marginBottom:"1.2rem", color:"#94a3b8", fontSize:"0.85rem", lineHeight:1.7 }}>
-              Echoes of Zodar è sviluppato con passione nel tempo libero. I tuoi aiuti coprono
-              i costi di <strong style={{ color:"#cbd5e1" }}>server, database, dominio e strumenti</strong> che
-              permettono al gioco di esistere. Anche un caffè fa la differenza!
+            <div style={{ background:"rgba(0,0,0,0.3)", border:"1px solid rgba(255,255,255,0.05)", borderRadius:8, padding:"1rem", marginBottom:"1.2rem", color:"#94a3b8", fontSize:"0.85rem", lineHeight:1.8 }}>
+              <p style={{ margin:"0 0 0.6rem", color:"#cbd5e1", fontStyle:"italic" }}>
+                "Echoes of Zodar è sviluppato da una sola persona, con passione e nel tempo libero.
+                Ogni donazione aiuta a pagare i server, il dominio e a tenere vivo il sogno."
+              </p>
+              I tuoi aiuti coprono i costi di <strong style={{ color:"#cbd5e1" }}>server, database, dominio e strumenti</strong> che
+              permettono al gioco di esistere. Anche un piccolo contributo fa la differenza — grazie di cuore! ❤️
             </div>
 
             <a
