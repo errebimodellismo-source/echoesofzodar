@@ -587,19 +587,22 @@ const CRAFT_MATERIALS = [
   { id:"mat_rune_of_zodar",      name:"Runa di Zodar",       emoji:"🌌", type:"material", rarity:"legendary", price:100000,description:"La runa suprema del mondo di Zodar.", available:true },
 ];
 
-const FORGE_DIE_PROGRESSION = ['1d4','1d6','1d8','1d10','1d12','1d20','1d20+1d4','1d20+1d6','1d20+1d8','1d20+1d10','1d20+1d12','2d20'];
+const FORGE_DIE_PROGRESSION = ['1d4','1d6','1d8','1d10','1d12','2d6','2d8','2d10','1d20','1d20+1d4','1d20+1d6','1d20+1d8','1d20+1d10','1d20+1d12','2d20'];
 const FORGE_MATERIAL_REQ = [
-  'mat_iron_ore',     // → 1d6  (idx 1)
-  'mat_steel_ingot',  // → 1d8  (idx 2)
-  'mat_mithril_ore',  // → 1d10 (idx 3)
-  'mat_star_metal',   // → 1d12 (idx 4)
-  'mat_ether_crystal',// → 1d20 (idx 5)
-  'mat_adamantite_ore',// → 1d20+1d4 (idx 6)
-  'mat_dragon_scale', // → 1d20+1d6 (idx 7)
-  'mat_void_essence', // → 1d20+1d8 (idx 8)
-  'mat_phoenix_feather',// → 1d20+1d10 (idx 9)
-  'mat_dragon_heart', // → 1d20+1d12 (idx 10)
-  'mat_zodar_essence',// → 2d20 (idx 11)
+  'mat_iron_ore',      // → 1d6       (idx 1)
+  'mat_steel_ingot',   // → 1d8       (idx 2)
+  'mat_mithril_ore',   // → 1d10      (idx 3)
+  'mat_star_metal',    // → 1d12      (idx 4)
+  'mat_ether_crystal', // → 2d6       (idx 5) — tier leggendario
+  'mat_adamantite_ore',// → 2d8       (idx 6)
+  'mat_dragon_scale',  // → 2d10      (idx 7)
+  'mat_void_essence',  // → 1d20      (idx 8)
+  'mat_phoenix_feather',// → 1d20+1d4 (idx 9)
+  'mat_dragon_heart',  // → 1d20+1d6  (idx 10)
+  'mat_zodar_essence', // → 1d20+1d8  (idx 11)
+  'mat_phoenix_ash',   // → 1d20+1d10 (idx 12)
+  'mat_tarrasque_hide',// → 1d20+1d12 (idx 13)
+  'mat_rune_of_zodar', // → 2d20      (idx 14) — forgiatura suprema
 ];
 
 function getForgeLevel(itemId) { const m = String(itemId||'').match(/__f(\d+)$/); return m ? Number(m[1]) : 0; }
@@ -1096,7 +1099,7 @@ function mergeCatalogItems(items=[]) {
   const weaponItems = [...merged.values()].filter(it => it.weapon_die && it.type === 'weapon' && !it.id.includes('__f'));
   for(const weapon of weaponItems) {
     const baseDieIdx = FORGE_DIE_PROGRESSION.indexOf(weapon.weapon_die);
-    if(baseDieIdx < 0 || baseDieIdx >= 11) continue;
+    if(baseDieIdx < 0 || baseDieIdx >= 14) continue;
     for(let targetDieIdx = baseDieIdx + 1; targetDieIdx <= 11; targetDieIdx++) {
       const forgeLevel = targetDieIdx - baseDieIdx;
       const forgeId = `${weapon.id}__f${forgeLevel}`;
@@ -5127,7 +5130,7 @@ function ForgeView({ me, inventory, inventoryCounts, catalogItems, onForge, load
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(320px,1fr))", gap:16 }}>
         {forgeableGroups.map(group => {
           const currentDieIdx = FORGE_DIE_PROGRESSION.indexOf(group.item.weapon_die);
-          if(currentDieIdx < 0 || currentDieIdx >= 11) return null;
+          if(currentDieIdx < 0 || currentDieIdx >= 14) return null;
           const targetDieIdx = currentDieIdx + 1;
           const matId = FORGE_MATERIAL_REQ[targetDieIdx - 1];
           const mat = catalogItems.find(i => i.id === matId);
@@ -7034,7 +7037,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   async function handleForge(group) {
     if(!me?.id || inventoryLoading) return;
     const currentDieIdx = FORGE_DIE_PROGRESSION.indexOf(group.item.weapon_die);
-    if(currentDieIdx < 0 || currentDieIdx >= 11) return;
+    if(currentDieIdx < 0 || currentDieIdx >= 14) return;
     if(group.quantity < 2) return;
     const targetDieIdx = currentDieIdx + 1;
     const matId = FORGE_MATERIAL_REQ[targetDieIdx - 1];
