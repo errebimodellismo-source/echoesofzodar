@@ -2666,6 +2666,12 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
       {authUser && <p style={{ marginTop:"1rem", color:"#64748b", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
       <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE • FANTASY • MULTIPLAYER ONLINE</p>
       <p style={{ marginTop:"0.5rem", color:"rgba(148,163,184,0.4)", fontSize:"0.65rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.14em" }}>{GAME_VERSION}</p>
+      <a href="https://paypal.me/echoesofzodargame" target="_blank" rel="noopener noreferrer"
+        style={{ marginTop:"0.6rem", color:"rgba(148,163,184,0.35)", fontSize:"0.62rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.1em", textDecoration:"none" }}
+        onMouseEnter={e=>e.currentTarget.style.color="rgba(251,191,36,0.7)"}
+        onMouseLeave={e=>e.currentTarget.style.color="rgba(148,163,184,0.35)"}>
+        ☕ Supporta il progetto
+      </a>
       </div>{/* /zIndex wrapper */}
     </div>
   );
@@ -6086,6 +6092,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [maintenanceMsg, setMaintenanceMsg] = useState("");
   const [patchModal, setPatchModal] = useState(null); // { notes, ts }
+  const [showDonation, setShowDonation] = useState(false);
   const [achievementNotif, setAchievementNotif] = useState([]);
   const [showSubclassModal, setShowSubclassModal] = useState(false);
   const isMobile = useMobile();
@@ -8543,6 +8550,86 @@ ${stepText(step)}`, "quest","Master");
               }}
               style={{ width:"100%", padding:"0.75rem", background:"linear-gradient(135deg,rgba(120,80,10,0.5),rgba(180,100,10,0.4))", border:"1px solid rgba(251,191,36,0.5)", borderRadius:8, color:"#fbbf24", fontFamily:"'Cinzel',serif", fontSize:"0.9rem", fontWeight:700, cursor:"pointer", letterSpacing:"0.06em" }}>
               ✅ Capito, avventura!
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Donation button (fixed corner) ── */}
+      <button
+        onClick={() => setShowDonation(true)}
+        title="Supporta il gioco"
+        style={{
+          position:"fixed", bottom:16, right:16, zIndex:9000,
+          width:42, height:42, borderRadius:"50%",
+          background:"linear-gradient(135deg,rgba(251,191,36,0.18),rgba(180,83,9,0.25))",
+          border:"1px solid rgba(251,191,36,0.4)",
+          color:"#fbbf24", fontSize:"1.2rem", cursor:"pointer",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          boxShadow:"0 2px 12px rgba(0,0,0,0.4)",
+          transition:"transform 0.15s, box-shadow 0.15s",
+        }}
+        onMouseEnter={e=>{ e.currentTarget.style.transform="scale(1.12)"; e.currentTarget.style.boxShadow="0 4px 20px rgba(251,191,36,0.3)"; }}
+        onMouseLeave={e=>{ e.currentTarget.style.transform="scale(1)"; e.currentTarget.style.boxShadow="0 2px 12px rgba(0,0,0,0.4)"; }}
+      >
+        ☕
+      </button>
+
+      {/* ── Donation modal ── */}
+      {showDonation && (
+        <div style={{ position:"fixed", inset:0, zIndex:9001, background:"rgba(2,6,23,0.82)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}
+          onClick={() => setShowDonation(false)}>
+          <div onClick={e => e.stopPropagation()} style={{
+            width:"min(500px,100%)",
+            background:"linear-gradient(180deg,rgba(17,24,39,0.99),rgba(8,10,24,0.99))",
+            border:"1px solid rgba(251,191,36,0.3)",
+            borderRadius:14, padding:"1.6rem",
+            boxShadow:"0 32px 80px rgba(0,0,0,0.6), 0 0 40px rgba(251,191,36,0.06)",
+          }}>
+            <div style={{ textAlign:"center", marginBottom:"1.2rem" }}>
+              <div style={{ fontSize:"2.4rem", marginBottom:"0.4rem" }}>☕</div>
+              <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.15rem", fontWeight:700, letterSpacing:"0.04em" }}>
+                Supporta Echoes of Zodar
+              </div>
+              <div style={{ color:"#64748b", fontSize:"0.75rem", marginTop:4 }}>
+                Il gioco è gratuito — ogni contributo aiuta a mantenerlo vivo
+              </div>
+            </div>
+
+            <div style={{ background:"rgba(0,0,0,0.3)", border:"1px solid rgba(255,255,255,0.05)", borderRadius:8, padding:"1rem", marginBottom:"1.2rem", color:"#94a3b8", fontSize:"0.85rem", lineHeight:1.7 }}>
+              Echoes of Zodar è sviluppato con passione nel tempo libero. I tuoi aiuti coprono
+              i costi di <strong style={{ color:"#cbd5e1" }}>server, database, dominio e strumenti</strong> che
+              permettono al gioco di esistere. Anche un caffè fa la differenza!
+            </div>
+
+            <a
+              href="https://paypal.me/echoesofzodargame"
+              target="_blank"
+              rel="noopener noreferrer"
+              style={{
+                display:"block", width:"100%", padding:"0.85rem",
+                background:"linear-gradient(135deg,#003087,#009cde)",
+                border:"none", borderRadius:8,
+                color:"#fff", fontFamily:"'Cinzel',serif",
+                fontSize:"0.95rem", fontWeight:700,
+                textDecoration:"none", textAlign:"center",
+                letterSpacing:"0.06em",
+                boxShadow:"0 4px 16px rgba(0,150,220,0.3)",
+                marginBottom:"0.7rem",
+              }}
+            >
+              💙 Dona con PayPal
+            </a>
+
+            <div style={{ textAlign:"center", color:"#475569", fontSize:"0.7rem", marginBottom:"1rem" }}>
+              echoesofzodargame@gmail.com · tutte le donazioni sono volontarie
+            </div>
+
+            <button
+              onClick={() => setShowDonation(false)}
+              style={{ width:"100%", padding:"0.6rem", background:"transparent", border:"1px solid #1f2937", borderRadius:8, color:"#64748b", cursor:"pointer", fontSize:"0.82rem" }}
+            >
+              Chiudi
             </button>
           </div>
         </div>
