@@ -2670,7 +2670,7 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
         style={{ marginTop:"0.6rem", color:"rgba(148,163,184,0.35)", fontSize:"0.62rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.1em", textDecoration:"none" }}
         onMouseEnter={e=>e.currentTarget.style.color="rgba(251,191,36,0.7)"}
         onMouseLeave={e=>e.currentTarget.style.color="rgba(148,163,184,0.35)"}>
-        ☕ Supporta il progetto
+        ❤️ Supporta il progetto
       </a>
       </div>{/* /zIndex wrapper */}
     </div>
@@ -8567,7 +8567,7 @@ ${stepText(step)}`, "quest","Master");
             boxShadow:"0 32px 80px rgba(0,0,0,0.6), 0 0 40px rgba(251,191,36,0.06)",
           }}>
             <div style={{ textAlign:"center", marginBottom:"1.2rem" }}>
-              <div style={{ fontSize:"2.4rem", marginBottom:"0.4rem" }}>☕</div>
+              <div style={{ fontSize:"2.4rem", marginBottom:"0.4rem" }}>❤️</div>
               <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.15rem", fontWeight:700, letterSpacing:"0.04em" }}>
                 Supporta Echoes of Zodar
               </div>
@@ -8808,7 +8808,7 @@ ${stepText(step)}`, "quest","Master");
             onMouseEnter={e=>{ e.currentTarget.style.background="rgba(251,191,36,0.22)"; e.currentTarget.style.color="#fde68a"; }}
             onMouseLeave={e=>{ e.currentTarget.style.background="linear-gradient(135deg,rgba(251,191,36,0.12),rgba(180,83,9,0.18))"; e.currentTarget.style.color="#fbbf24"; }}
           >
-            ☕{!isMobile && " Dona"}
+            ❤️{!isMobile && " Dona"}
           </button>
         </div>
 
