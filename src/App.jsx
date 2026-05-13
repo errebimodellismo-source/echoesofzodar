@@ -2666,7 +2666,7 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
       {authUser && <p style={{ marginTop:"1rem", color:"#64748b", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
       <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE • FANTASY • MULTIPLAYER ONLINE</p>
       <p style={{ marginTop:"0.5rem", color:"rgba(148,163,184,0.4)", fontSize:"0.65rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.14em" }}>{GAME_VERSION}</p>
-      <a href="https://paypal.me/echoesofzodargame" target="_blank" rel="noopener noreferrer"
+      <a href="https://www.paypal.com/donate/?business=echoesofzodargame%40gmail.com&currency_code=EUR" target="_blank" rel="noopener noreferrer"
         style={{ marginTop:"0.6rem", color:"rgba(148,163,184,0.35)", fontSize:"0.62rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.1em", textDecoration:"none" }}
         onMouseEnter={e=>e.currentTarget.style.color="rgba(251,191,36,0.7)"}
         onMouseLeave={e=>e.currentTarget.style.color="rgba(148,163,184,0.35)"}>
@@ -8583,7 +8583,7 @@ ${stepText(step)}`, "quest","Master");
             </div>
 
             <a
-              href="https://paypal.me/echoesofzodargame"
+              href="https://www.paypal.com/donate/?business=echoesofzodargame%40gmail.com&currency_code=EUR"
               target="_blank"
               rel="noopener noreferrer"
               style={{
