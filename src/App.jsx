@@ -2103,6 +2103,26 @@ export default function App() {
     return () => clearInterval(timer);
   }, [authUser, myId]);
 
+  // Inactivity timeout — 5 minutes no interaction → full signOut (not hero selection)
+  useEffect(() => {
+    if (!authUser) return;
+    const INACTIVITY_MS = 5 * 60 * 1000;
+    let lastActivity = Date.now();
+    const resetActivity = () => { lastActivity = Date.now(); };
+    const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
+    events.forEach(e => window.addEventListener(e, resetActivity, { passive: true }));
+    const check = setInterval(async () => {
+      if (Date.now() - lastActivity >= INACTIVITY_MS) {
+        clearInterval(check);
+        await supabase.auth.signOut();
+      }
+    }, 30_000);
+    return () => {
+      clearInterval(check);
+      events.forEach(e => window.removeEventListener(e, resetActivity));
+    };
+  }, [authUser]);
+
   async function goGame(characterOrId) {
     const selectedCharacter = characterOrId && typeof characterOrId === "object" ? characterOrId : null;
     const validId = (selectedCharacter?.id ?? characterOrId ?? "").toString().trim();
@@ -6184,8 +6204,12 @@ function GameScreen({ myId, setScreen, authUser }) {
         const hpChanged = (sourcePlayer.hp || 0) > synced.maxHp;
         const statsChanged = ["atk","def","mag","init","maxHp"].some(key => (sourcePlayer[key] || 0) !== (synced[key] || 0));
         if(hpChanged || statsChanged) {
-          await dbSavePlayer(synced);
-          if(sourcePlayer.id === myId) setMeRaw(synced);
+          // Re-fetch HP from DB to avoid stale local state overwriting combat-reduced HP
+          const { data: freshRow } = await supabase.from("players").select("hp,dead").eq("id", sourcePlayer.id).maybeSingle();
+          const freshHp = freshRow ? Math.min(synced.maxHp, Math.max(0, freshRow.hp ?? sourcePlayer.hp)) : Math.min(synced.maxHp, Math.max(0, sourcePlayer.hp));
+          const toSave = { ...synced, hp: freshHp, dead: freshRow?.dead ?? synced.dead };
+          await dbSavePlayer(toSave);
+          if(sourcePlayer.id === myId) setMeRaw(toSave);
         }
       }
     } catch(e) {
