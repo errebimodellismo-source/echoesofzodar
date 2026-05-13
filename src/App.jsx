@@ -5983,6 +5983,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [tab, setTab] = useState("quest");
   const [dismissedVictoryTs, setDismissedVictoryTs] = useState(null);
   const [declinedCombatAt, setDeclinedCombatAt] = useState(null);
+  const [nowTick, setNowTick] = useState(Date.now());
   const [maintenanceMode, setMaintenanceMode] = useState(false);
   const [maintenanceMsg, setMaintenanceMsg] = useState("");
   const [achievementNotif, setAchievementNotif] = useState([]);
@@ -6358,6 +6359,13 @@ function GameScreen({ myId, setScreen, authUser }) {
     return () => clearInterval(t);
   }, []);
 
+  // Tick every second for boss revive countdown
+  useEffect(() => {
+    if (!combat?.isBossEvent || !combat?.bossKnockedOut?.[myId]) return;
+    const iv = setInterval(() => setNowTick(Date.now()), 1000);
+    return () => clearInterval(iv);
+  }, [!!combat?.isBossEvent, !!combat?.bossKnockedOut?.[myId]]);
+
   const dailyResetRunningRef = useRef(false);
   const prevCombatHpRef = useRef({});
   const [shakingIds, setShakingIds] = useState(new Set());
@@ -6500,16 +6508,88 @@ function GameScreen({ myId, setScreen, authUser }) {
         setQs(prev => ({ ...prev, combat: newCombat }));
         return;
       }
+      const isBossEvent = !!latestCombat.isBossEvent;
+      // Enrage: boss ATK ×1.6 when HP < 50%
+      const bossHpPct = actor.hp / Math.max(1, actor.maxHp);
+      const enraged = isBossEvent && bossHpPct <= 0.5;
+      const enrageAtk = enraged ? Math.ceil((actor.atk || 0) * 1.6) : (actor.atk || 0);
+      const enragedActor = enraged ? { ...actor, atk: enrageAtk } : actor;
+      // Boss special move every 3 rounds (area or massive single)
+      const bossSpecialRound = isBossEvent && latestCombat.round > 1 && latestCombat.round % 3 === 0;
+      let monsterNewMasterBuffs = latestQs.masterBuffs || {};
+      if (bossSpecialRound) {
+        const specialType = latestCombat.round % 6 === 0 ? 'area' : 'massive';
+        if (specialType === 'area') {
+          // Area attack: hit ALL alive players
+          let areaLog = `💥 **${actor.name}** scatena **COLPO DEVASTANTE**!\n🌋 L'energia oscura travolge tutti i combattenti!\n`;
+          const newKO = { ...(latestCombat.bossKnockedOut || {}) };
+          let newEnraged = latestCombat.bossEnraged || enraged;
+          for (const ap of alivePlayers) {
+            const apBuffs = (latestQs.masterBuffs || {})[ap.id] || {};
+            const areaDmg = Math.max(1, Math.floor((enragedActor.atk || 10) * 0.9) - Math.floor((ap.def || 0) / 3));
+            let apHp = Math.max(0, ap.hp - areaDmg);
+            if (apBuffs.immortal > 0 && apHp <= 0) { apHp = 1; monsterNewMasterBuffs = { ...monsterNewMasterBuffs, [ap.id]: { ...apBuffs, immortal: apBuffs.immortal - 1 } }; }
+            areaLog += `  💔 **${ap.name}**: -${areaDmg} → ${apHp}/${ap.maxHp} HP\n`;
+            if (isBossEvent && apHp <= 0 && !(apBuffs.immortal > 0)) {
+              newKO[ap.id] = Date.now();
+              const ci = latestCombatants.findIndex(c => c.id === ap.id);
+              if (ci >= 0) latestCombatants.splice(ci, 1);
+              await dbSavePlayer({ ...ap, hp: 1, dead: false });
+              if (ap.id === myId) setMeRaw({ ...ap, hp: 1, dead: false });
+              areaLog += `  💀 **${ap.name}** è stato eliminato dall'arena!\n`;
+            } else {
+              const ci = latestCombatants.findIndex(c => c.id === ap.id);
+              if (ci >= 0) latestCombatants[ci] = { ...latestCombatants[ci], hp: apHp };
+              await dbSavePlayer({ ...ap, hp: apHp, dead: false });
+              if (ap.id === myId) setMeRaw({ ...ap, hp: apHp, dead: false });
+            }
+          }
+          if (enraged && !latestCombat.bossEnraged) areaLog += `\n🔴 **${actor.name}** è in **FURIA**! ATK aumentato!`;
+          const { nextTurn: nt, nextRound: nr } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
+          if(!hasActionablePlayerCombatants(latestCombatants)) { await resolveCombatNoActionablePlayers({ ...latestQs, masterBuffs: monsterNewMasterBuffs }, latestCombatants); return; }
+          const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nt, round: nr, bossKnockedOut: newKO, bossEnraged: newEnraged, pendingLog: areaLog };
+          await dbSavePartyState(code, { ...latestQs, masterBuffs: monsterNewMasterBuffs, combat: newCombat });
+          setQs(prev => ({ ...prev, combat: newCombat }));
+          return;
+        } else {
+          // Massive single: 2.5× normal damage on one target
+          const massPt = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
+          const massBuffs = (latestQs.masterBuffs || {})[massPt.id] || {};
+          const massDmg = Math.max(1, Math.round((Math.floor(Math.random() * 8) + 1 + Math.floor((enragedActor.atk || 0) / 4)) * 2.5));
+          let massHp = Math.max(0, massPt.hp - massDmg);
+          const massKO = { ...(latestCombat.bossKnockedOut || {}) };
+          if (massBuffs.immortal > 0 && massHp <= 0) { massHp = 1; monsterNewMasterBuffs = { ...monsterNewMasterBuffs, [massPt.id]: { ...massBuffs, immortal: massBuffs.immortal - 1 } }; }
+          let massLog = `⚡ **${actor.name}** scatena **ATTACCO FATALE** su **${massPt.name}**!\n💥 Danno: **${massDmg}** (colpo devastante)\n❤️ ${massPt.name}: ${massHp}/${massPt.maxHp} HP`;
+          if (isBossEvent && massHp <= 0 && !(massBuffs.immortal > 0)) {
+            massKO[massPt.id] = Date.now();
+            const ci = latestCombatants.findIndex(c => c.id === massPt.id);
+            if (ci >= 0) latestCombatants.splice(ci, 1);
+            await dbSavePlayer({ ...massPt, hp: 1, dead: false });
+            if (massPt.id === myId) setMeRaw({ ...massPt, hp: 1, dead: false });
+            massLog += `\n💀 **${massPt.name}** è stato eliminato dall'arena!`;
+          } else {
+            const ci = latestCombatants.findIndex(c => c.id === massPt.id);
+            if (ci >= 0) latestCombatants[ci] = { ...latestCombatants[ci], hp: massHp };
+            await dbSavePlayer({ ...massPt, hp: massHp, dead: false });
+            if (massPt.id === myId) setMeRaw({ ...massPt, hp: massHp, dead: false });
+          }
+          if (enraged && !latestCombat.bossEnraged) massLog += `\n🔴 **${actor.name}** è in **FURIA**! ATK aumentato!`;
+          const { nextTurn: nt, nextRound: nr } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
+          if(!hasActionablePlayerCombatants(latestCombatants)) { await resolveCombatNoActionablePlayers({ ...latestQs, masterBuffs: monsterNewMasterBuffs }, latestCombatants); return; }
+          const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nt, round: nr, bossKnockedOut: massKO, bossEnraged: enraged, pendingLog: massLog };
+          await dbSavePartyState(code, { ...latestQs, masterBuffs: monsterNewMasterBuffs, combat: newCombat });
+          setQs(prev => ({ ...prev, combat: newCombat }));
+          return;
+        }
+      }
+      // Normal attack
       const pt = alivePlayers[Math.floor(Math.random() * alivePlayers.length)];
       const ptBuffs = (latestQs.masterBuffs || {})[pt.id] || {};
-      let monsterNewMasterBuffs = latestQs.masterBuffs || {};
-      const weaponDie = getCombatDamageDie(actor);
-      // Apply legendary armor defense bonus passively
+      const weaponDie = getCombatDamageDie(enragedActor);
       const ptLegendary = ptBuffs.legendaryItem;
       const legDefBonus = (ptLegendary?.turnsLeft > 0 && ptLegendary?.bonus_def) ? ptLegendary.bonus_def : 0;
       const effectivePt = legDefBonus ? { ...pt, def: (pt.def || 0) + legDefBonus } : pt;
-      const resolved = await performAsyncAttack(actor, effectivePt, weaponDie);
-      // Resistenza: i giocatori non hanno resistenza fisica di default, ma può essere aggiunta tramite masterBuffs
+      const resolved = await performAsyncAttack(enragedActor, effectivePt, weaponDie);
       const playerResisted = resolved.hit && (effectivePt.resistances || []).includes('physical');
       const edmg = playerResisted ? Math.max(1, Math.floor(resolved.damage / 2)) : resolved.damage;
       let effectiveHp = Math.max(0, pt.hp - edmg);
@@ -6519,9 +6599,26 @@ function GameScreen({ myId, setScreen, authUser }) {
         monsterNewMasterBuffs = { ...monsterNewMasterBuffs, [pt.id]: { ...ptBuffs, immortal: ptBuffs.immortal - 1 } };
       }
       const immortalTriggered = ptBuffs.immortal > 0 && effectiveHp === 1 && edmg >= (pt.hp || 0);
-      // Applica status effect del mostro al giocatore (se definito)
       const monsterAttackStatusEffect = resolved.hit && actor.attackStatusEffect ? actor.attackStatusEffect : null;
-      const updPt = { ...pt, hp: effectiveHp, dead:false };
+      const bossKnockedOut = { ...(latestCombat.bossKnockedOut || {}) };
+      // Boss event: instant expulsion on death instead of death saves
+      if (isBossEvent && effectiveHp <= 0 && !immortalTriggered) {
+        bossKnockedOut[pt.id] = Date.now();
+        if (playerCombatantIdx >= 0) latestCombatants.splice(playerCombatantIdx, 1);
+        await dbSavePlayer({ ...pt, hp: 1, dead: false });
+        if (pt.id === myId) setMeRaw({ ...pt, hp: 1, dead: false });
+        let koLog = formatWeaponAttackLog(enragedActor, pt, { ...resolved, damage: edmg }, enraged ? "Attacco (Furia)" : "Attacco naturale", 0, pt.maxHp, { resisted: playerResisted });
+        koLog += `\n💀 **${pt.name}** è stato eliminato dall'arena! Tornerà a 1 HP e potrà rientrare tra 90 secondi.`;
+        if (enraged && !latestCombat.bossEnraged) koLog += `\n🔴 **${actor.name}** è in **FURIA**!`;
+        if (monsterStatusLog) koLog = monsterStatusLog + '\n---\n' + koLog;
+        const { nextTurn: nt, nextRound: nr } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
+        if(!hasActionablePlayerCombatants(latestCombatants)) { await resolveCombatNoActionablePlayers({ ...latestQs, masterBuffs: monsterNewMasterBuffs }, latestCombatants); return; }
+        const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nt, round: nr, bossKnockedOut, bossEnraged: enraged, pendingLog: koLog };
+        await dbSavePartyState(code, { ...latestQs, masterBuffs: monsterNewMasterBuffs, combat: newCombat });
+        setQs(prev => ({ ...prev, combat: newCombat }));
+        return;
+      }
+      const updPt = { ...pt, hp: effectiveHp, dead: false };
       if(playerCombatantIdx >= 0) {
         let updCombatant = immortalTriggered
           ? reviveCombatantState({ ...latestCombatants[playerCombatantIdx], maxHp: updPt.maxHp }, 1)
@@ -6537,18 +6634,20 @@ function GameScreen({ myId, setScreen, authUser }) {
       }
       await dbSavePlayer(updPt);
       if (updPt.id === myId) setMeRaw(updPt);
-      const immortalNote = ptBuffs.immortal > 0 && effectiveHp === 1 ? `\n🛡️ **${pt.name}** è protetto dall'Immortalità! (${ptBuffs.immortal - 1} turni rimasti)` : "";
-      let log = formatWeaponAttackLog(actor, pt, { ...resolved, damage: edmg }, "Attacco naturale", updPt.hp, pt.maxHp, { resisted: playerResisted, statusApplied: monsterAttackStatusEffect?.type }) + immortalNote;
+      const immortalNote = immortalTriggered ? `\n🛡️ **${pt.name}** è protetto dall'Immortalità! (${ptBuffs.immortal - 1} turni rimasti)` : "";
+      let enrageNote = (enraged && !latestCombat.bossEnraged) ? `\n🔴 **${actor.name}** è in **FURIA**! I suoi attacchi sono ora devastanti!` : "";
+      let log = formatWeaponAttackLog(enragedActor, pt, { ...resolved, damage: edmg }, enraged ? "Attacco (Furia)" : "Attacco naturale", updPt.hp, pt.maxHp, { resisted: playerResisted, statusApplied: monsterAttackStatusEffect?.type }) + immortalNote + enrageNote;
       if (monsterStatusLog) log = monsterStatusLog + '\n---\n' + log;
       const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
       const allDead = latestCombatants.filter(c => !c.isPlayer).every(c => c.hp <= 0);
+      const newBossEnraged = enraged || latestCombat.bossEnraged;
       if (allDead) {
         const endQs = { ...latestQs, masterBuffs: monsterNewMasterBuffs, combat: { ...latestCombat, combatants: latestCombatants } };
         await dbSavePartyState(code, endQs);
         setQs(prev => ({ ...prev, combat: endQs.combat }));
         await dbSendMessage({ party_code: code, author: "Sistema", content: "🏆 **BATTAGLIA VINTA!** Tutti i nemici sconfitti!", type: "victory" });
       } else {
-        const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound, pendingLog: log };
+        const newCombat = { ...latestCombat, combatants: latestCombatants, turn: nextTurn, round: nextRound, bossKnockedOut, bossEnraged: newBossEnraged, pendingLog: log };
         await dbSavePartyState(code, { ...latestQs, masterBuffs: monsterNewMasterBuffs, combat: newCombat });
         setQs(prev => ({ ...prev, combat: newCombat }));
         await dbSendMessage({ party_code: code, author: "Battaglia", content: log, type: "combat" });
@@ -6575,6 +6674,29 @@ function GameScreen({ myId, setScreen, authUser }) {
     const log = `🚪 **${c.combatants[myIdx].name}** ha abbandonato la battaglia.`;
     await saveQState({ ...latestQs, combat: { ...c, combatants: newCombatants, turn: newTurn, pendingLog: log } });
     await addMsg(log, "combat", "Sistema");
+  }
+
+  const BOSS_REVIVE_MS = 90_000;
+  async function enterBossArena() {
+    const latestQs = await dbGetPartyState(code);
+    const c = latestQs?.combat;
+    if (!c?.active || !c?.isBossEvent) return;
+    if (c.combatants?.some(x => x.id === myId)) return;
+    const koTime = c.bossKnockedOut?.[myId];
+    if (koTime && Date.now() - koTime < BOSS_REVIVE_MS) return;
+    const newCombatant = {
+      id: myId, name: me.name, class: me.class, race: me.race,
+      emoji: CLASSES[me.class]?.emoji || "⚔️",
+      hp: me.hp, maxHp: me.maxHp, atk: me.atk, def: me.def, mag: me.mag, init: me.init,
+      weaponDie: getEquippedWeapon(equipment, itemMapRef.current).weapon_die,
+      isPlayer: true, dying: false, stable: false, dead: false, deathSuccesses: 0, deathFailures: 0,
+      rollInit: (me.init || 1) + Math.floor(Math.random() * 20) + 1,
+    };
+    const newKO = { ...(c.bossKnockedOut || {}) };
+    delete newKO[myId];
+    const newCombatants = [...c.combatants, newCombatant].sort((a, b) => b.rollInit - a.rollInit);
+    await saveQState({ ...latestQs, combat: { ...c, combatants: newCombatants, bossKnockedOut: newKO } });
+    await addMsg(`⚔️ **${me.name}** rientra nell'arena!`, "combat", "Sistema");
   }
 
   // Auto-resolve summon turns (skeleton, animal, etc.)
@@ -8010,7 +8132,8 @@ ${stepText(step)}`, "quest","Master");
       for(const k of [1,2,3,4,5]) merged[k] = Math.max((persisted?.[k] ?? computed[k]), computed[k]);
       return [p.id, merged];
     }));
-    const newCombat = { active:true, combatants:allCombatants, turn:0, round:1, spellSlots, startedAt: Date.now() };
+    const isBossEvent = monsters.some(m => m.isBoss);
+    const newCombat = { active:true, combatants:allCombatants, turn:0, round:1, spellSlots, startedAt: Date.now(), ...(isBossEvent ? { isBossEvent:true, bossKnockedOut:{}, bossEnraged:false } : {}) };
     const newQs = {...qs, combat:newCombat};
     await saveQState(newQs);
     await addMsg(`⚔️ **BATTAGLIA INIZIATA!** Round 1\n\n**Ordine di Iniziativa:**\n${allCombatants.map((c,i)=>`${i+1}. ${c.emoji||"⭐"} ${c.name} (${c.rollInit})`).join("\n")}`, "combat", "Sistema");
@@ -9889,6 +10012,26 @@ ${stepText(step)}`, "quest","Master");
           startedAt={combat.startedAt}
         />
       )}
+      {/* ── Boss Arena Re-entry Banner ── */}
+      {combat?.active && combat?.isBossEvent && !combat?.combatants?.some(c => c.id === myId) && (() => {
+        const koTime = combat.bossKnockedOut?.[myId];
+        if (!koTime) return null;
+        const secsLeft = Math.max(0, Math.ceil((koTime + 90000 - nowTick) / 1000));
+        const canRejoin = secsLeft === 0;
+        return (
+          <div style={{ position:"fixed", bottom:24, left:"50%", transform:"translateX(-50%)", zIndex:9500, background:"rgba(2,6,23,0.97)", border:`2px solid ${canRejoin ? "#ef4444" : "#7f1d1d"}`, borderRadius:12, padding:"1rem 1.5rem", display:"flex", flexDirection:"column", alignItems:"center", gap:8, boxShadow:"0 8px 32px rgba(0,0,0,0.6)", minWidth:260, textAlign:"center" }}>
+            <div style={{ fontSize:"1.8rem" }}>💀</div>
+            <div style={{ fontFamily:"'Cinzel',serif", color:"#fca5a5", fontSize:"0.9rem", fontWeight:700 }}>Eliminato dall'Arena</div>
+            {canRejoin ? (
+              <button onClick={enterBossArena} style={{ marginTop:4, padding:"0.5rem 1.2rem", background:"linear-gradient(135deg,#7f1d1d,#b91c1c)", border:"2px solid #ef4444", borderRadius:8, color:"#fee2e2", fontFamily:"'Cinzel',serif", fontSize:"0.85rem", cursor:"pointer", letterSpacing:"0.06em" }}>
+                ⚔️ Rientra nell'Arena
+              </button>
+            ) : (
+              <div style={{ color:"#94a3b8", fontSize:"0.8rem" }}>Rientro disponibile tra <strong style={{ color:"#fbbf24" }}>{secsLeft}s</strong></div>
+            )}
+          </div>
+        );
+      })()}
 
       {/* ── Rest Overlay ── */}
       {!!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date() && qs.rest.startedBy === myId) && (
