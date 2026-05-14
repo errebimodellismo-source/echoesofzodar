@@ -10273,8 +10273,8 @@ ${stepText(step)}`, "quest","Master");
                       </div>
                     )}
                     <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(250px,1fr))", gap:12, marginBottom:"1rem" }}>
-                  {combat.combatants.map((c,i)=>{
-                    const isActive = i===combat.turn%combat.combatants.length;
+                  {combat.combatants.filter(c => !c.isPlayer || c.isSummon || c.id === myId).map((c,i)=>{
+                    const isActive = combat.combatants.indexOf(c)===combat.turn%combat.combatants.length;
                     const isShaking = shakingIds.has(c.id);
                     return (
                       <div key={c.id||i} style={{ background:isActive?"linear-gradient(135deg, rgba(127,29,29,0.34), rgba(15,23,42,0.9))":c.isSummon?"rgba(10,40,20,0.82)":"rgba(15,23,42,0.82)", border:`2px solid ${isActive?"#ef4444":c.isSummon?"#22c55e":c.isPlayer?"#6d28d9":"#7f1d1d"}`, borderRadius:12, padding:"0.95rem", opacity:c.hp<=0?0.45:1, boxShadow:isActive?"0 16px 36px rgba(127,29,29,0.24)":"0 12px 30px rgba(0,0,0,0.16)", animation: isShaking ? "hitShake 0.5s ease, hitFlash 0.5s ease" : "none", willChange: isShaking ? "transform" : "auto" }}>
@@ -10562,12 +10562,12 @@ ${stepText(step)}`, "quest","Master");
 
                     <div style={{ background:"rgba(8,14,28,0.9)", border:"1px solid rgba(148,163,184,0.16)", borderRadius:12, overflow:"hidden", boxShadow:"0 16px 34px rgba(0,0,0,0.18)" }}>
                       <button onClick={()=>setShowCombatLog(v=>!v)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0.75rem 1rem", background:"transparent", border:"none", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", color:"#cbd5e1", letterSpacing:"0.08em" }}>
-                        <span>📜 LOG DI BATTAGLIA ({messages.filter(m=>m.type==="combat").slice(-50).length})</span>
+                        <span>📜 LOG DI BATTAGLIA ({messages.filter(m=>m.type==="combat" && (!combat?.startedAt || new Date(m.created_at).getTime() >= combat.startedAt - 5000)).slice(-50).length})</span>
                         <span style={{ fontSize:"0.9rem", color:"#94a3b8" }}>{showCombatLog ? "▲ chiudi" : "▼ apri"}</span>
                       </button>
                       {showCombatLog && (
                         <div style={{ maxHeight:320, overflowY:"auto", padding:"0 0.85rem 0.85rem", borderTop:"1px solid rgba(148,163,184,0.1)" }} onClick={()=>setShowCombatLog(false)}>
-                          {messages.filter(m=>m.type==="combat").slice(-50).map(m=>(
+                          {messages.filter(m=>m.type==="combat" && (!combat?.startedAt || new Date(m.created_at).getTime() >= combat.startedAt - 5000)).slice(-50).map(m=>(
                             <div key={m.id} style={{ padding:"0.65rem 0.75rem", background:"rgba(127,29,29,0.16)", border:"1px solid #7f1d1d", borderRadius:8, marginBottom:6, marginTop:6, fontSize:"0.82rem", color:"#fecaca", lineHeight:1.6 }}
                               dangerouslySetInnerHTML={{ __html:fmt(m.content) }} />
                           ))}
