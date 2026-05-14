@@ -1311,7 +1311,7 @@ function getEquippedWeapon(equipment, itemMap) {
 }
 function weaponAttackProfile(weapon, actor={}) {
   const key = `${weapon?.id || ""} ${weapon?.name || ""}`.toLowerCase();
-  const ranged = /bow|arco|crossbow|balestra|sling|fionda/.test(key);
+  const ranged = /bow|arco|crossbow|balestra|balista|sling|fionda/.test(key);
   const finesse = /dagger|pugnale|knife|coltello|rapier|frusta|whip/.test(key);
   const magical = /wand|bacchetta|staff|bastone|grimoire|grimorio|tome|tomo|orb|sfera|rod|verga/.test(key);
   const scores = getAbilityScores(actor);
@@ -4770,11 +4770,39 @@ function MarketView() {
   const [editItem, setEditItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
+  const [players, setPlayers] = useState([]);
+  const [donating, setDonating] = useState(null); // itemId being donated
+  const [donateTarget, setDonateTarget] = useState("");
+  const [donateQty, setDonateQty] = useState(1);
+  const [donateStatus, setDonateStatus] = useState("");
 
   useEffect(()=>{
-    const load = async () => { setLoading(true); setItems(await dbGetItems()); setLoading(false); };
+    const load = async () => {
+      setLoading(true);
+      const [items, { data: ps }] = await Promise.all([
+        dbGetItems(),
+        supabase.from("players").select("id,name,emoji,level,party_code").order("name", { ascending: true }),
+      ]);
+      setItems(items);
+      setPlayers(ps || []);
+      setLoading(false);
+    };
     load();
   },[]);
+
+  const handleDonate = async () => {
+    if(!donating || !donateTarget) return;
+    setDonateStatus("...");
+    try {
+      await dbAddPlayerItem(donateTarget, donating, Math.max(1, donateQty));
+      const item = items.find(i=>i.id===donating);
+      const player = players.find(p=>p.id===donateTarget);
+      setDonateStatus(`✅ "${item?.name}" donato a ${player?.name}`);
+      setTimeout(()=>{ setDonating(null); setDonateTarget(""); setDonateQty(1); setDonateStatus(""); }, 2500);
+    } catch(e) {
+      setDonateStatus("❌ Errore: " + (e?.message || e));
+    }
+  };
 
   const save = async (item) => {
     await dbSaveItem(item);
@@ -4832,6 +4860,32 @@ function MarketView() {
         </Card>
       )}
 
+      {donating && (
+        <Card title={`🎁 Dona oggetto a un giocatore`}>
+          <div style={{ fontSize:"0.85rem", color:"#c4b5fd", marginBottom:8 }}>
+            Stai donando: <strong>{items.find(i=>i.id===donating)?.emoji} {items.find(i=>i.id===donating)?.name}</strong>
+          </div>
+          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr auto", gap:8, alignItems:"end" }}>
+            <div>
+              <label style={labelStyle}>Giocatore destinatario</label>
+              <select style={{...inputStyle, cursor:"pointer"}} value={donateTarget} onChange={e=>setDonateTarget(e.target.value)}>
+                <option value="">— Scegli giocatore —</option>
+                {players.map(p=>(
+                  <option key={p.id} value={p.id}>{p.emoji||"🧙"} {p.name} (Lv.{p.level||1}) {p.party_code ? `[${p.party_code}]` : ""}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label style={labelStyle}>Quantità</label>
+              <input style={inputStyle} type="number" min="1" max="99" value={donateQty} onChange={e=>setDonateQty(Math.max(1,+e.target.value))} />
+            </div>
+            <BigBtn onClick={handleDonate} gold icon="🎁" disabled={!donateTarget}>Dona</BigBtn>
+          </div>
+          {donateStatus && <div style={{ marginTop:8, fontSize:"0.85rem", color: donateStatus.startsWith("✅") ? "#34d399" : "#fca5a5" }}>{donateStatus}</div>}
+          <SmallBtn onClick={()=>{ setDonating(null); setDonateStatus(""); }} style={{ marginTop:8 }}>Annulla</SmallBtn>
+        </Card>
+      )}
+
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:10 }}>
         {items.map(it=>(
           <div key={it.id} style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:6, padding:"0.8rem" }}>
@@ -4841,6 +4895,7 @@ function MarketView() {
                 <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{it.name}</div>
                 <div style={{ fontSize:"0.72rem", color:"#94a3b8" }}>{it.type}</div>
               </div>
+              <SmallBtn onClick={()=>{ setDonating(it.id); setDonateTarget(""); setDonateQty(1); setDonateStatus(""); }} title="Dona a un giocatore">🎁</SmallBtn>
               <SmallBtn onClick={()=>setEditItem(it)}>✏️</SmallBtn>
               <SmallBtn red onClick={()=>remove(it.id)}>🗑️</SmallBtn>
             </div>
@@ -4869,14 +4924,29 @@ function generateShopInventory(items, seed = 0) {
     return a;
   };
   const pick = (pool, n) => shuffle(pool).slice(0, Math.min(n, pool.length));
+  const isRanged = i => /bow|arco|crossbow|balestra|balista|sling|fionda/.test((i.id + " " + (i.name || "")).toLowerCase());
   const always = items.filter(i => i.id === "potion_escape");
   const equip = items.filter(i => i.type !== 'material' && i.id !== "potion_escape");
+
+  const commonPool    = equip.filter(i => i.rarity === "common");
+  const uncommonPool  = equip.filter(i => i.rarity === "uncommon");
+  const rareEpicPool  = equip.filter(i => i.rarity === "rare" || i.rarity === "epic");
+  const legendPool    = equip.filter(i => i.rarity === "legendary");
+  const rangedPool    = equip.filter(i => isRanged(i));
+
+  // Guarantee 1-2 ranged weapons across all rarities
+  const guaranteedRanged = pick(rangedPool, 2);
+  const guaranteedRangedIds = new Set(guaranteedRanged.map(i => i.id));
+
+  const filterOut = pool => pool.filter(i => !guaranteedRangedIds.has(i.id));
+
   return [
     ...always,
-    ...pick(equip.filter(i => i.rarity === "common"), 5),
-    ...pick(equip.filter(i => i.rarity === "uncommon"), 3),
-    ...pick(equip.filter(i => i.rarity === "rare" || i.rarity === "epic"), 1),
-    ...pick(equip.filter(i => i.rarity === "legendary"), 1),
+    ...guaranteedRanged,
+    ...pick(filterOut(commonPool), 5),
+    ...pick(filterOut(uncommonPool), 4),
+    ...pick(filterOut(rareEpicPool), 2),
+    ...pick(filterOut(legendPool), 1),
   ];
 }
 
@@ -8365,9 +8435,11 @@ ${stepText(step)}`, "quest","Master");
   async function completeQuest(q) {
     const myGuild = getPlayerGuild(guilds, myId);
     const goldMult = myGuild ? (1 + getGuildGoldBonus(myGuild.level||1) / 100) : 1;
-    const xpE = Math.floor(q.xpReward/Math.max(partyPlayers.length,1));
-    const goldE = Math.floor((q.goldReward/Math.max(partyPlayers.length,1)) * goldMult);
-    for(const p of partyPlayers) {
+    // Fetch fresh player data — endCombat may have updated stats in DB since partyPlayers was last set
+    const freshQuestPlayers = await dbGetPlayers(code);
+    const xpE = Math.floor(q.xpReward/Math.max(freshQuestPlayers.length,1));
+    const goldE = Math.floor((q.goldReward/Math.max(freshQuestPlayers.length,1)) * goldMult);
+    for(const p of freshQuestPlayers) {
       const oldStats = p.stats || {};
       const newStats = {
         ...oldStats,
@@ -8397,7 +8469,7 @@ ${stepText(step)}`, "quest","Master");
     };
     const newQuestLog = [...(qs.questLog || []).filter(e => e.date === today), logEntry];
     const diffLabel = q.difficulty==="difficile"?"difficile":q.difficulty==="facile"?"facile":"media";
-    const newDiaryQuest = appendDiary(qs.partyDiary, { type:'quest', icon:'📜', text:`«${q.title}» completata! Missione di difficoltà ${diffLabel}. Ricompensa: +${xpE} XP e +${goldE} 💰 a testa.`, players: partyPlayers.map(p=>p.name) });
+    const newDiaryQuest = appendDiary(qs.partyDiary, { type:'quest', icon:'📜', text:`«${q.title}» completata! Missione di difficoltà ${diffLabel}. Ricompensa: +${xpE} XP e +${goldE} 💰 a testa.`, players: freshQuestPlayers.map(p=>p.name) });
     const historyEntry = { id: q.id, title: q.title, difficulty: q.difficulty, completedAt: new Date().toISOString(), xpEach: xpE, goldEach: goldE };
     const newQuestHistory = [...(qs.questHistory || []), historyEntry].slice(-100);
     const newQs={...qs,active:false,step:0,currentId:null,completed:[...(qs.completed||[]),q.id],questDmgLog:{},questLog:newQuestLog,partyDiary:newDiaryQuest,questHistory:newQuestHistory};
