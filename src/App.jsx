@@ -2139,6 +2139,21 @@ export default function App() {
   const [myId, setMyId] = useState(() => localStorage.getItem("eoz_myId") || null);
   const [authUser, setAuthUser] = useState(null);
   const [authLoading, setAuthLoading] = useState(true);
+  const [appMaintenance, setAppMaintenance] = useState(false);
+  const [appMaintenanceMsg, setAppMaintenanceMsg] = useState("");
+
+  useEffect(() => {
+    async function checkAppMaintenance() {
+      try {
+        const { data } = await supabase.from("party_state").select("quest_active,quest_id").eq("party_code", MAINTENANCE_CODE).maybeSingle();
+        setAppMaintenance(!!(data?.quest_active));
+        setAppMaintenanceMsg(data?.quest_id || "");
+      } catch(e) { /* silent */ }
+    }
+    checkAppMaintenance();
+    const t = setInterval(checkAppMaintenance, 15_000);
+    return () => clearInterval(t);
+  }, []);
 
   // Try to autoplay BGM as soon as the app loads (falls back to first user gesture)
   useEffect(() => { audioManager.autoplayOnStartup('intro'); }, []);
@@ -2260,6 +2275,25 @@ export default function App() {
       <AnimatedBackground />
       <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)" }} />
       <div style={{ position:"relative", zIndex:1, color:"#e2d9c5", fontFamily:"'Cinzel',serif" }}>Caricamento...</div>
+    </div>
+  );
+
+  // Master can bypass maintenance to access the panel
+  const isMasterUser = canAccessMasterPanel(authUser);
+  if(appMaintenance && !isMasterUser) return (
+    <div style={{ minHeight:"100vh", width:"100vw", position:"relative", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"1.5rem", padding:"2rem", textAlign:"center" }}>
+      <AnimatedBackground />
+      <div style={{ position:"absolute", inset:0, background:"rgba(2,4,14,0.97)", zIndex:0 }} />
+      <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:"1.2rem" }}>
+        <div style={{ fontSize:"4rem" }}>🔧</div>
+        <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.6rem", fontWeight:700, letterSpacing:"0.04em" }}>Gioco in Manutenzione</div>
+        <div style={{ color:"#94a3b8", fontSize:"0.95rem", maxWidth:440, lineHeight:1.7 }}>
+          {appMaintenanceMsg || "Il Dungeon Master sta aggiornando il mondo. Riprova tra qualche minuto."}
+        </div>
+        <div style={{ padding:"0.6rem 1.4rem", background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.3)", borderRadius:8, color:"#fbbf24", fontSize:"0.78rem" }}>
+          La pagina si aggiornerà automaticamente quando il gioco sarà di nuovo disponibile.
+        </div>
+      </div>
     </div>
   );
 
