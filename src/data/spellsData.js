@@ -122,7 +122,7 @@ export const SPELLS = {
     3:[
       {id:"cl31",name:"Cura di Massa",emoji:"💚",dmg:"-3d8",type:"heal",area:true,slots:3,desc:"Cura 3d8 HP a TUTTI gli alleati contemporaneamente"},
       {id:"cl32",name:"Colpo Radioso",emoji:"✨",dmg:"6d8",type:"damage",slots:3,desc:"Esplosione di luce sacra devastante"},
-      {id:"cl33",name:"Animare Morti",emoji:"💀",dmg:"0",type:"summon",slots:3,desc:"Evoca uno scheletro alleato per combattere",summon:{name:"Scheletro",emoji:"💀",hp:28,atk:14,def:10,dmgDie:"1d8"}},
+      {id:"cl33",name:"Animare Morti",emoji:"💀",dmg:"0",type:"summon",slots:3,desc:"Evoca fino a 2 scheletri alleati per combattere",maxSummons:2,summon:{name:"Scheletro",emoji:"💀",hp:28,atk:14,def:10,dmgDie:"1d8"}},
       {id:"cl34",name:"Rimuovi Malediz.",emoji:"🌟",dmg:"0",type:"utility",slots:3,desc:"Rimuovi tutti gli effetti negativi dal party"},
     ],
     4:[

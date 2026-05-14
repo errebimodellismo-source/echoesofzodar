@@ -8127,14 +8127,18 @@ function GameScreen({ myId, setScreen, authUser }) {
       }
       setSelectedAllyTarget(null);
     } else if(spell.type === "summon" && spell.summon) {
-      // Remove any existing summon by this player
-      newCombatants = newCombatants.filter(c => !(c.isSummon && c.summonOwner === myId));
       const s = spell.summon;
       const levelScale = Math.max(1, Math.floor((me.level || 1) / 2));
       const summonHp = s.hp + levelScale * 4;
       const summonAtk = s.atk + levelScale * 2;
       const summonDef = s.def + levelScale;
-      // Insert after current attacker in initiative
+      // Allow up to 2 summons per player — remove oldest if already at limit
+      const myCurrentSummons = newCombatants.filter(c => c.isSummon && c.summonOwner === myId);
+      const maxSummons = spell.maxSummons || 1;
+      if(myCurrentSummons.length >= maxSummons) {
+        const oldest = myCurrentSummons[0];
+        newCombatants = newCombatants.filter(c => c.id !== oldest.id);
+      }
       const summonCombatant = {
         id: `summon_${myId}_${Date.now()}`,
         name: s.name,
@@ -8150,7 +8154,8 @@ function GameScreen({ myId, setScreen, authUser }) {
       };
       const attackerIdx = newCombatants.findIndex(c => c.id === attacker.id);
       newCombatants.splice(attackerIdx + 1, 0, summonCombatant);
-      log += `💀 **${s.name}** (Lv.${me.level||1}) evocato al fianco di ${attacker.name}!\n❤️ ${summonHp} HP · ⚔️ ${summonAtk} ATK · 🛡️ ${summonDef} DEF\nAttaccherà automaticamente ogni turno.`;
+      const countNow = myCurrentSummons.length < maxSummons ? myCurrentSummons.length + 1 : maxSummons;
+      log += `💀 **${s.name}** (Lv.${me.level||1}) evocato al fianco di ${attacker.name}! (${countNow}/${maxSummons})\n❤️ ${summonHp} HP · ⚔️ ${summonAtk} ATK · 🛡️ ${summonDef} DEF\nAttaccherà automaticamente ogni turno.`;
     } else {
       log += `${spell.desc || "Effetto speciale"}`;
     }
