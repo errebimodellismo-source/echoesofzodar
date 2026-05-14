@@ -1925,13 +1925,15 @@ async function dbGetMaintenanceMode() {
 }
 async function dbSetMaintenanceMode(active, message = "", patchNotes = "") {
   const ts = new Date().toISOString();
-  await supabase.from("party_state").upsert({
+  const payload = {
     party_code: MAINTENANCE_CODE,
     quest_active: active,
     quest_id: message || null,
-    state: patchNotes ? { patch_notes: patchNotes, patch_ts: ts } : null,
     updated_at: ts,
-  });
+  };
+  if(patchNotes) payload.state = { patch_notes: patchNotes, patch_ts: ts };
+  const { error } = await supabase.from("party_state").upsert(payload, { onConflict: "party_code" });
+  if(error) { console.error("dbSetMaintenanceMode error:", error); throw error; }
 }
 
 function getDailyResetSlot() {
@@ -3157,8 +3159,10 @@ function MasterPanel({ setScreen, authUser }) {
                 onClick={async () => {
                   if(!window.confirm("Metti il gioco in manutenzione?\nTutti i giocatori vedranno un overlay bloccante.")) return;
                   setMaintenanceBusy(true);
-                  await dbSetMaintenanceMode(true, maintenanceInput.trim(), patchNotesInput.trim());
-                  setMaintenance(true);
+                  try {
+                    await dbSetMaintenanceMode(true, maintenanceInput.trim(), patchNotesInput.trim());
+                    setMaintenance(true);
+                  } catch(e) { alert("Errore manutenzione: " + (e?.message || e)); }
                   setMaintenanceBusy(false);
                 }}
                 style={{ padding:"0.7rem 1.4rem", background: maintenance ? "rgba(100,100,100,0.2)" : "linear-gradient(135deg,#7f1d1d,#dc2626)", border:"1px solid #ef4444", borderRadius:8, color:"#fee2e2", fontFamily:"'Cinzel',serif", fontSize:"0.88rem", cursor: maintenance ? "not-allowed" : "pointer", fontWeight:700, opacity: maintenance ? 0.4 : 1 }}>
@@ -3168,8 +3172,10 @@ function MasterPanel({ setScreen, authUser }) {
                 disabled={maintenanceBusy || !maintenance}
                 onClick={async () => {
                   setMaintenanceBusy(true);
-                  await dbSetMaintenanceMode(false, "", patchNotesInput.trim());
-                  setMaintenance(false);
+                  try {
+                    await dbSetMaintenanceMode(false, "", patchNotesInput.trim());
+                    setMaintenance(false);
+                  } catch(e) { alert("Errore riapertura: " + (e?.message || e)); }
                   setMaintenanceBusy(false);
                 }}
                 style={{ padding:"0.7rem 1.4rem", background: !maintenance ? "rgba(100,100,100,0.2)" : "linear-gradient(135deg,#14532d,#16a34a)", border:"1px solid #22c55e", borderRadius:8, color:"#dcfce7", fontFamily:"'Cinzel',serif", fontSize:"0.88rem", cursor: !maintenance ? "not-allowed" : "pointer", fontWeight:700, opacity: !maintenance ? 0.4 : 1 }}>
