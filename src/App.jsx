@@ -8304,7 +8304,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       setSpecialQuestError("Questa missione richiede una password.");
       return;
     }
-    const newQs = { currentId:q.id, step:0, active:true, combat:null, completed:qs?.completed||[], questDmgLog:{} };
+    const newQs = { currentId:q.id, step:0, active:true, combat:null, completed:qs?.completed||[], questDmgLog:{}, currentDifficulty: q.difficulty };
     await saveQState(newQs);
     await addMsg(`📜 **MISSIONE: ${q.title}**
 
@@ -8412,9 +8412,21 @@ ${stepText(step)}`, "quest","Master");
   }
 
   async function startCombatStep(stepData) {
+    // Scale monsters to avg party level so combat stays challenging
+    const avgLevel = partyPlayers.length
+      ? Math.round(partyPlayers.reduce((s,p) => s + (p.level||1), 0) / partyPlayers.length)
+      : (me?.level || 1);
+    const diff = normalizeMissionDifficulty(qs?.currentDifficulty || stepData.difficulty || "medio");
+    const diffMult = diff === "facile" ? 0.85 : diff === "difficile" ? 1.45 : 1.15;
+    const hpMult   = (1 + (avgLevel - 1) * 0.18) * diffMult;
+    const atkBonus = Math.floor(avgLevel * 0.6 * diffMult);
+    const defBonus = Math.floor(avgLevel * 0.25 * diffMult);
     const monsters = (stepData.monsters||[]).map(e=>{
-      const maxHp = e.maxHp || e.hp;
-      return { ...e, hp:maxHp, maxHp, xp:monsterXpValue({ ...e, maxHp }), weaponDie:e.weaponDie || getCombatDamageDie(e) };
+      const baseHp = e.maxHp || e.hp;
+      const maxHp = Math.round(baseHp * hpMult);
+      const atk = (e.atk || 5) + atkBonus;
+      const def = (e.def || 0) + defBonus;
+      return { ...e, atk, def, hp:maxHp, maxHp, xp:monsterXpValue({ ...e, maxHp }), weaponDie:e.weaponDie || getCombatDamageDie({...e, atk}) };
     });
     const combatPartyPlayers = await getOnlinePartyPlayersForCombat();
     const players = combatPartyPlayers.map(p=>({
