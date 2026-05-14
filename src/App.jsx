@@ -4815,7 +4815,7 @@ function MarketView() {
       setLoading(true);
       const [items, { data: ps }] = await Promise.all([
         dbGetItems(),
-        supabase.from("players").select("id,name,emoji,level,party_code").order("name", { ascending: true }),
+        supabase.from("players").select("id,name,class,level,party_code").order("name", { ascending: true }),
       ]);
       setItems(items);
       setPlayers(ps || []);
@@ -4905,7 +4905,7 @@ function MarketView() {
               <select style={{...inputStyle, cursor:"pointer"}} value={donateTarget} onChange={e=>setDonateTarget(e.target.value)}>
                 <option value="">— Scegli giocatore —</option>
                 {players.map(p=>(
-                  <option key={p.id} value={p.id}>{p.emoji||"🧙"} {p.name} (Lv.{p.level||1}) {p.party_code ? `[${p.party_code}]` : ""}</option>
+                  <option key={p.id} value={p.id}>{CLASSES[p.class||"warrior"]?.emoji||"⚔️"} {p.name} (Lv.{p.level||1}) {p.party_code ? `[${p.party_code}]` : ""}</option>
                 ))}
               </select>
             </div>
