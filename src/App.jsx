@@ -155,6 +155,33 @@ function getPlayerTitle(stats) {
 const GUILD_REGISTRY_CODE = "__world_guilds__";
 const WORLD_EVENT_CODE = "__world_events__";
 
+const DAILY_REWARDS = [
+  { day:1, icon:"🪙", label:"50 Oro",                        gold:50,   xp:0,   item:null },
+  { day:2, icon:"🧪", label:"100 Oro + Pozione di Cura",     gold:100,  xp:0,   item:"potion_hp" },
+  { day:3, icon:"⚗️", label:"150 Oro + 2 Pozioni di Cura",   gold:150,  xp:50,  item:"potion_hp", itemQty:2 },
+  { day:4, icon:"📦", label:"200 Oro + 100 XP",              gold:200,  xp:100, item:null },
+  { day:5, icon:"💎", label:"350 Oro + 200 XP",              gold:350,  xp:200, item:null },
+  { day:6, icon:"🏅", label:"500 Oro + Pozione Potenziata",  gold:500,  xp:300, item:"potion_atk" },
+  { day:7, icon:"👑", label:"1000 Oro + 500 XP + Gemma Rara",gold:1000, xp:500, item:"gem_rare" },
+];
+
+function getDailyStreak(charId) {
+  const key = `dailyStreak_${charId}`;
+  try { return JSON.parse(localStorage.getItem(key)) || { streak:0, lastDate:"" }; }
+  catch { return { streak:0, lastDate:"" }; }
+}
+function setDailyStreak(charId, data) {
+  localStorage.setItem(`dailyStreak_${charId}`, JSON.stringify(data));
+}
+function checkDailyReward(charId) {
+  const today = new Date().toLocaleDateString('en-CA');
+  const { streak, lastDate } = getDailyStreak(charId);
+  if(lastDate === today) return null; // già riscosso oggi
+  const yesterday = new Date(Date.now() - 86400000).toLocaleDateString('en-CA');
+  const newStreak = lastDate === yesterday ? Math.min(streak + 1, 7) : 1;
+  return { reward: DAILY_REWARDS[newStreak - 1], newStreak, today };
+}
+
 const MEGA_BOSSES = [
   // ── Classici ──
   { id:"zarath",    name:"Zarath il Distruttore",      emoji:"🐉", hp:50000,  atk:35, def:18, dmgDie:"3d12", isBoss:true, desc:"Un antico drago oscuro risvegliato dalle profondità di Zodar. La sua fiamma corrompe tutto ciò che tocca.",                   rewards:{ xp:2000, gold:1500 } },
@@ -6093,6 +6120,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [maintenanceMsg, setMaintenanceMsg] = useState("");
   const [patchModal, setPatchModal] = useState(null); // { notes, ts }
   const [showDonation, setShowDonation] = useState(false);
+  const [dailyRewardModal, setDailyRewardModal] = useState(null); // { reward, newStreak, today }
   const [achievementNotif, setAchievementNotif] = useState([]);
   const [showSubclassModal, setShowSubclassModal] = useState(false);
   const isMobile = useMobile();
@@ -6246,7 +6274,11 @@ function GameScreen({ myId, setScreen, authUser }) {
       setPartyPlayers(players);
       setQs({ currentId:null, step:0, active:false, completed:[], combat:null, masterBuffs:null, rest:null, persistentSpellSlots:null, longRestSeed:0, ...state });
       const freshMe = players.find(p=>p.id===myId);
-      if(freshMe) setMeRaw(freshMe);
+      if(freshMe) {
+        setMeRaw(freshMe);
+        const pending = checkDailyReward(freshMe.id);
+        if(pending) setDailyRewardModal(pending);
+      }
     } catch(e) {
       console.error("Errore refreshAll:", e);
     }
@@ -8524,6 +8556,79 @@ ${stepText(step)}`, "quest","Master");
           </div>
         </div>
       )}
+      {/* ── Daily Reward modal ── */}
+      {!!dailyRewardModal && (
+        <div style={{ position:"fixed", inset:0, zIndex:99997, background:"rgba(2,6,23,0.88)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
+          <div style={{ width:"min(420px,100%)", background:"linear-gradient(180deg,rgba(20,12,2,0.99),rgba(8,10,24,0.99))", border:"1px solid rgba(251,191,36,0.5)", borderRadius:16, boxShadow:"0 32px 80px rgba(0,0,0,0.7), 0 0 60px rgba(251,191,36,0.12)", padding:"1.8rem", textAlign:"center" }}>
+            <div style={{ fontSize:"3rem", marginBottom:"0.4rem" }}>🎁</div>
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.2rem", fontWeight:700, letterSpacing:"0.04em", marginBottom:"0.3rem" }}>
+              Premio Giornaliero
+            </div>
+            <div style={{ color:"#94a3b8", fontSize:"0.78rem", marginBottom:"1.2rem" }}>
+              Giorno {dailyRewardModal.newStreak} di 7 — continua a tornare ogni giorno!
+            </div>
+
+            {/* 7-day strip */}
+            <div style={{ display:"flex", justifyContent:"center", gap:6, marginBottom:"1.4rem", flexWrap:"wrap" }}>
+              {DAILY_REWARDS.map(r => {
+                const done = r.day < dailyRewardModal.newStreak;
+                const active = r.day === dailyRewardModal.newStreak;
+                return (
+                  <div key={r.day} style={{
+                    width:44, padding:"6px 0",
+                    borderRadius:10,
+                    background: done ? "rgba(34,197,94,0.15)" : active ? "rgba(251,191,36,0.2)" : "rgba(255,255,255,0.04)",
+                    border: `2px solid ${done ? "#22c55e" : active ? "#fbbf24" : "rgba(255,255,255,0.08)"}`,
+                    opacity: done ? 0.7 : 1,
+                    transition:"all 0.2s",
+                  }}>
+                    <div style={{ fontSize:"1.3rem" }}>{done ? "✅" : r.icon}</div>
+                    <div style={{ fontSize:"0.55rem", color: active ? "#fbbf24" : "#64748b", fontFamily:"'Cinzel',serif", marginTop:2 }}>
+                      Gg {r.day}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Today's reward */}
+            <div style={{ background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.3)", borderRadius:12, padding:"1rem", marginBottom:"1.4rem" }}>
+              <div style={{ fontSize:"2rem", marginBottom:"0.3rem" }}>{dailyRewardModal.reward.icon}</div>
+              <div style={{ fontFamily:"'Cinzel',serif", color:"#fde68a", fontSize:"1rem", fontWeight:700 }}>
+                {dailyRewardModal.reward.label}
+              </div>
+            </div>
+
+            <button
+              onClick={async () => {
+                const { reward, newStreak, today } = dailyRewardModal;
+                setDailyRewardModal(null);
+                setDailyStreak(me.id, { streak: newStreak, lastDate: today });
+                // Applica ricompense
+                let updated = { ...me, gold: (me.gold || 0) + reward.gold, xp: (me.xp || 0) + reward.xp };
+                if(reward.item) {
+                  const qty = reward.itemQty || 1;
+                  const newItems = Array.from({ length: qty }, () => ({ id: reward.item + '_' + Date.now() + Math.random(), type: reward.item.startsWith('potion') ? 'potion' : 'material', itemId: reward.item, name: reward.item === 'potion_hp' ? 'Pozione di Cura' : reward.item === 'potion_atk' ? 'Pozione di Forza' : 'Gemma Rara', rarity:'uncommon' }));
+                  updated = { ...updated, inventory: [...(me.inventory || []), ...newItems] };
+                }
+                await dbSavePlayer(updated);
+                setMeRaw(updated);
+              }}
+              style={{ width:"100%", padding:"0.8rem", background:"linear-gradient(135deg,rgba(251,191,36,0.3),rgba(180,83,9,0.4))", border:"2px solid rgba(251,191,36,0.6)", borderRadius:10, color:"#fde68a", fontFamily:"'Cinzel',serif", fontSize:"0.95rem", fontWeight:700, cursor:"pointer", letterSpacing:"0.06em" }}
+            >
+              ✨ Ritira Premio!
+            </button>
+
+            {dailyRewardModal.newStreak < 7 && (
+              <div style={{ marginTop:"0.8rem", color:"#475569", fontSize:"0.68rem" }}>
+                Torna domani per il giorno {dailyRewardModal.newStreak + 1}!
+                {dailyRewardModal.newStreak === 6 && " 👑 Domani il premio finale!"}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* ── Patch Notes modal ── */}
       {!!patchModal && (
         <div style={{ position:"fixed", inset:0, zIndex:99998, background:"rgba(2,6,23,0.82)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
