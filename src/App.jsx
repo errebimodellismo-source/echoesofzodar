@@ -1239,7 +1239,7 @@ function applyEquipmentToPlayer(player, equipment, itemMap) {
     mag: base.mag + bonus.mag,
     init: base.init + bonus.init,
     maxHp,
-    hp: player.hp != null ? Math.min(maxHp, Math.max(0, Number(player.hp))) : maxHp,
+    hp: Math.min(maxHp, Math.max(0, Number(player.hp) || 0)),
   };
 }
 function normalizeQuestChoices(choices) {
@@ -6442,12 +6442,13 @@ function GameScreen({ myId, setScreen, authUser }) {
       const sourcePlayer = playerOverride;
       if(sourcePlayer) {
         const synced = applyEquipmentToPlayer(sourcePlayer, sanitizedEquipment, new Map(items.map(item => [item.id, item])));
-        const hpChanged = (sourcePlayer.hp || 0) > synced.maxHp;
         const statsChanged = ["atk","def","mag","init","maxHp"].some(key => (sourcePlayer[key] || 0) !== (synced[key] || 0));
-        if(hpChanged || statsChanged) {
-          // Re-fetch HP from DB to avoid stale local state overwriting combat-reduced HP
+        if(statsChanged) {
+          // Re-fetch HP from DB to avoid overwriting combat-reduced HP
           const { data: freshRow } = await supabase.from("players").select("hp,dead").eq("id", sourcePlayer.id).maybeSingle();
-          const freshHp = freshRow ? Math.min(synced.maxHp, Math.max(0, freshRow.hp ?? sourcePlayer.hp)) : Math.min(synced.maxHp, Math.max(0, sourcePlayer.hp));
+          const dbHp = freshRow?.hp ?? sourcePlayer.hp ?? synced.maxHp;
+          // NEVER increase HP here — only cap it if it exceeds new maxHp
+          const freshHp = Math.min(synced.maxHp, Math.max(0, dbHp));
           const toSave = { ...synced, hp: freshHp, dead: freshRow?.dead ?? synced.dead };
           await dbSavePlayer(toSave);
           if(sourcePlayer.id === myId) setMeRaw(toSave);
