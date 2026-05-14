@@ -7004,8 +7004,8 @@ function GameScreen({ myId, setScreen, authUser }) {
     await addMsg(`⚔️ **${me.name}** rientra nell'arena!`, "combat", "Sistema");
   }
 
-  // Auto-resolve summon turns (skeleton, animal, etc.)
-  async function doSummonTurn() {
+  // Summon attack — owner chooses target manually
+  async function doSummonAttack(targetId) {
     const latestQs = await dbGetPartyState(code);
     const latestCombat = latestQs?.combat;
     if(!latestCombat?.active || latestCombat.pendingLog) return;
@@ -7015,29 +7015,29 @@ function GameScreen({ myId, setScreen, authUser }) {
     if(!summon?.isSummon) return;
     const enemies = combatants.filter(c => !c.isPlayer && c.hp > 0);
     if(!enemies.length) { await endCombat(latestQs); return; }
-    const target = enemies[Math.floor(Math.random() * enemies.length)];
+    const target = (targetId && combatants.find(c => c.id === targetId && c.hp > 0)) || enemies[0];
     const atkRoll = parseDice("1d20") + Math.floor((summon.atk || 0) / 2);
     const rawDmg = parseDice(summon.dmgDie || "1d8");
     const dmg = Math.max(1, rawDmg + Math.floor((summon.atk || 0) / 2) - Math.floor((target.def || 0) / 2));
     const tidx = combatants.findIndex(c => c.id === target.id);
     combatants[tidx] = { ...target, hp: Math.max(0, target.hp - dmg) };
-    const log = `${summon.emoji} **${summon.name}** (evocato) attacca **${target.name}**!\n⚔️ Tiro: ${atkRoll}\n💥 Danno: **${dmg}**\n❤️ ${target.name}: ${combatants[tidx].hp}/${target.maxHp} HP`;
+    const log = `${summon.emoji} **${summon.name}** attacca **${target.name}**!\n⚔️ Tiro: ${atkRoll}\n💥 Danno: **${dmg}**\n❤️ ${target.name}: ${combatants[tidx].hp}/${target.maxHp} HP`;
     const { nextTurn, nextRound } = getNextCombatTurn(combatants, latestCombat.turn, latestCombat.round);
     const allDead = combatants.filter(c => !c.isPlayer).every(c => c.hp <= 0);
     if(allDead) { await endCombat({ ...latestQs, combat: { ...latestCombat, combatants } }); return; }
     await saveQState({ ...latestQs, combat: { ...latestCombat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
   }
 
+  // Auto-fallback: if owner doesn't act within 15s, auto-attack first enemy
   useEffect(() => {
     const c = qs?.combat;
     if(!c?.active || c.pendingLog) return;
     const combatants = c.combatants || [];
     const actor = combatants[c.turn % Math.max(1, combatants.length)];
     if(!actor?.isSummon) return;
-    // Summon owner handles their own summon; fallback to party leader if owner unknown
     const isOwner = actor.summonOwner === myId || (!actor.summonOwner && (partyPlayers.length === 0 || partyPlayers[0]?.id === myId));
     if(!isOwner) return;
-    const t = setTimeout(() => { doSummonTurn(); }, 1200);
+    const t = setTimeout(() => { doSummonAttack(null); }, 15000);
     return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qs?.combat?.turn, qs?.combat?.active, qs?.combat?.pendingLog]);
@@ -8619,6 +8619,7 @@ ${stepText(step)}`, "quest","Master");
   const myCombatant = combat?.combatants?.find(c => c.id === myId) || null;
   const myTurn = combat?.active && activeCombatant?.id===myId;
   const myDeathTurn = myTurn && isDyingCombatant(activeCombatant);
+  const isMySummonTurn = combat?.active && activeCombatant?.isSummon && activeCombatant?.summonOwner === myId;
   const isCaster = MAGIC_CLASSES.includes(me?.class);
   const spellSlots = (() => {
     const computed = getSpellSlots(me?.level || 1);
@@ -10275,7 +10276,24 @@ ${stepText(step)}`, "quest","Master");
                       </div>
                     )}
                     <div style={{ textAlign:"center", padding:"1.35rem 1.1rem", background:"linear-gradient(180deg, rgba(24,10,10,0.92), rgba(15,23,42,0.94))", border:"1px solid rgba(239,68,68,0.26)", borderRadius:12, boxShadow:"0 18px 40px rgba(0,0,0,0.22)" }}>
-                      {combat.pendingLog ? null : myTurn ? (
+                      {combat.pendingLog ? null : isMySummonTurn ? (
+                        <div style={{ textAlign:"center" }}>
+                          <div style={{ fontSize:"1.5rem", marginBottom:"0.4rem" }}>{activeCombatant?.emoji} </div>
+                          <p style={{ color:"#fca5a5", fontFamily:"'Cinzel Decorative',serif", marginBottom:"0.8rem", fontSize:"0.95rem" }}>
+                            Turno di <strong>{activeCombatant?.name}</strong> — scegli il bersaglio!
+                          </p>
+                          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+                            {(combat.combatants||[]).filter(c => !c.isPlayer && c.hp > 0).map(enemy => (
+                              <button key={enemy.id} onClick={() => doSummonAttack(enemy.id)}
+                                style={{ padding:"0.6rem 1rem", background:"rgba(127,29,29,0.3)", border:"1px solid #ef4444", borderRadius:8, color:"#fca5a5", fontFamily:"'Cinzel',serif", fontSize:"0.85rem", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                                <span>{enemy.emoji} {enemy.name}</span>
+                                <span style={{ fontSize:"0.72rem", color:"#94a3b8" }}>❤️ {enemy.hp}/{enemy.maxHp}</span>
+                              </button>
+                            ))}
+                          </div>
+                          <div style={{ marginTop:8, fontSize:"0.65rem", color:"#475569" }}>Auto-attacco tra 15s se non scegli</div>
+                        </div>
+                      ) : myTurn ? (
                         <>
                           <p style={{ color:"#fecaca", fontFamily:"'Cinzel Decorative',serif", marginBottom:"1rem", fontSize:"1.08rem", letterSpacing:"0.04em" }}>{myDeathTurn ? "🕯️ Sei a terra: tira la tua salvezza contro la morte." : "⚔️ Il campo si apre davanti a te."}</p>
                           {myDeathTurn ? (
