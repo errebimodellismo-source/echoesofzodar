@@ -5623,7 +5623,7 @@ function CharacterViewer({ me, equippedItems }) {
   const baseSprite = `/assets/equip/base_${race}_${gender}.png`;
   const overlaySlots = ["chest","legs","boots","gloves","head","weapon","offhand","cloak","amulet"];
   return (
-    <div style={{ position:"relative", width:160, height:320, margin:"0 auto" }}>
+    <div style={{ position:"relative", width:240, height:480, margin:"0 auto" }}>
       {/* Base character */}
       <img
         src={baseSprite}
@@ -5690,7 +5690,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, isMobile 
         </div>
 
         {/* ── Character doll ── */}
-        <div style={{ flex:1, display:"flex", gap:8, alignItems:"center", justifyContent:"center", minWidth:280 }}>
+        <div style={{ flex:1, display:"flex", gap:8, alignItems:"center", justifyContent:"center", minWidth:360 }}>
           {/* Left slots */}
           <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
             {leftSlots.map(k => {
