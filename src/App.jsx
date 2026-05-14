@@ -1858,10 +1858,18 @@ async function dbGetAccountCharacters(accountId) {
 }
 
 async function dbGetMessages(partyCode) {
-  let query = supabase.from("messages").select("*");
-  if(partyCode) query = query.eq("party_code", partyCode);
-  const { data } = await query.order("created_at", { ascending: true }).limit(partyCode ? 300 : 400);
-  return (data || []).filter(msg => !["player_meta","user_meta"].includes(msg.type));
+  if(!partyCode) {
+    const { data } = await supabase.from("messages").select("*").order("created_at", { ascending: true }).limit(400);
+    return (data || []).filter(msg => !["player_meta","user_meta"].includes(msg.type));
+  }
+  // Load chat and combat messages separately to avoid combat logs being pushed out by chat volume
+  const [chatRes, combatRes] = await Promise.all([
+    supabase.from("messages").select("*").eq("party_code", partyCode).not("type","eq","combat").order("created_at", { ascending: true }).limit(250),
+    supabase.from("messages").select("*").eq("party_code", partyCode).eq("type","combat").order("created_at", { ascending: true }).limit(200),
+  ]);
+  const all = [...(chatRes.data || []), ...(combatRes.data || [])];
+  all.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+  return all.filter(msg => !["player_meta","user_meta"].includes(msg.type));
 }
 
 async function dbSavePartyState(partyCode, state) {
@@ -10464,12 +10472,12 @@ ${stepText(step)}`, "quest","Master");
 
                     <div style={{ background:"rgba(8,14,28,0.9)", border:"1px solid rgba(148,163,184,0.16)", borderRadius:12, overflow:"hidden", boxShadow:"0 16px 34px rgba(0,0,0,0.18)" }}>
                       <button onClick={()=>setShowCombatLog(v=>!v)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0.75rem 1rem", background:"transparent", border:"none", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", color:"#cbd5e1", letterSpacing:"0.08em" }}>
-                        <span>📜 LOG DI BATTAGLIA ({messages.filter(m=>m.type==="combat"&&(!combat.startedAt||new Date(m.created_at||m.createdAt).getTime()>=(combat.startedAt-10000))).length})</span>
+                        <span>📜 LOG DI BATTAGLIA ({messages.filter(m=>m.type==="combat").slice(-50).length})</span>
                         <span style={{ fontSize:"0.9rem", color:"#94a3b8" }}>{showCombatLog ? "▲ chiudi" : "▼ apri"}</span>
                       </button>
                       {showCombatLog && (
                         <div style={{ maxHeight:320, overflowY:"auto", padding:"0 0.85rem 0.85rem", borderTop:"1px solid rgba(148,163,184,0.1)" }} onClick={()=>setShowCombatLog(false)}>
-                          {messages.filter(m=>m.type==="combat"&&(!combat.startedAt||new Date(m.created_at||m.createdAt).getTime()>=(combat.startedAt-10000))).map(m=>(
+                          {messages.filter(m=>m.type==="combat").slice(-50).map(m=>(
                             <div key={m.id} style={{ padding:"0.65rem 0.75rem", background:"rgba(127,29,29,0.16)", border:"1px solid #7f1d1d", borderRadius:8, marginBottom:6, marginTop:6, fontSize:"0.82rem", color:"#fecaca", lineHeight:1.6 }}
                               dangerouslySetInnerHTML={{ __html:fmt(m.content) }} />
                           ))}
