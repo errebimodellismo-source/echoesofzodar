@@ -8452,8 +8452,7 @@ ${q.desc}
     const nowMs = Date.now();
     const onlinePlayers = partyPlayers.filter(player =>
       player.id === myId ||
-      player.accountId === authUser?.id ||
-      isPartyPlayerOnline(player, userMeta, nowMs)
+      (player.accountId !== authUser?.id && isPartyPlayerOnline(player, userMeta, nowMs))
     );
     return onlinePlayers.length ? onlinePlayers : partyPlayers.filter(player => player.id === myId);
   }
