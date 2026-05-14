@@ -1174,8 +1174,15 @@ function equipmentKey(playerId) {
 function preparedSpellsKey(playerId) {
   return `eoz_prepared_spells_${playerId}`;
 }
+const EQUIP_SLOTS = ["weapon","offhand","head","chest","legs","boots","gloves","ring1","ring2","amulet","cloak"];
 function getStoredEquipment(playerId) {
-  return { weapon:null, armor:null, shield:null, accessory:null, ...lsGet(equipmentKey(playerId), {}) };
+  const defaults = Object.fromEntries(EQUIP_SLOTS.map(s => [s, null]));
+  // legacy compat: map old keys
+  const stored = lsGet(equipmentKey(playerId), {});
+  if(stored.armor && !stored.chest) stored.chest = stored.armor;
+  if(stored.shield && !stored.offhand) stored.offhand = stored.shield;
+  if(stored.accessory && !stored.amulet) stored.amulet = stored.accessory;
+  return { ...defaults, ...stored };
 }
 function saveStoredEquipment(playerId, equipment) {
   lsSet(equipmentKey(playerId), equipment);
@@ -1208,7 +1215,7 @@ function getBaseStats(player) {
   };
 }
 function getEquipmentBonuses(equipment, itemMap) {
-  const ids = [equipment?.weapon, equipment?.armor, equipment?.shield, equipment?.accessory].filter(Boolean);
+  const ids = EQUIP_SLOTS.map(s => equipment?.[s]).filter(Boolean);
   return ids.reduce((totals, itemId) => {
     const item = itemMap.get(itemId);
     if(!item) return totals;
@@ -5477,52 +5484,170 @@ function PartyTradeView({ me, players, groups, loading, equipment, onTrade }) {
   );
 }
 
-function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip }) {
-  const slots = [
-    { key:"weapon", label:"Arma", fallback:"Nessuna arma equipaggiata" },
-    { key:"armor", label:"Armatura", fallback:"Nessuna armatura equipaggiata" },
-    { key:"shield", label:"Scudo", fallback:"Nessuno scudo equipaggiato" },
-    { key:"accessory", label:"Accessorio", fallback:"Nessun accessorio equipaggiato" },
-  ];
+const SLOT_CONFIG = [
+  { key:"head",    label:"Testa",    icon:"⛑️",  pos:"top-left" },
+  { key:"chest",   label:"Petto",    icon:"🧥",  pos:"left" },
+  { key:"legs",    label:"Gambe",    icon:"👖",  pos:"bottom-left" },
+  { key:"boots",   label:"Stivali",  icon:"👢",  pos:"bottom-left2" },
+  { key:"gloves",  label:"Guanti",   icon:"🧤",  pos:"bottom-right2" },
+  { key:"weapon",  label:"Arma",     icon:"⚔️",  pos:"top-right" },
+  { key:"offhand", label:"Mano Sx",  icon:"🛡️",  pos:"right" },
+  { key:"amulet",  label:"Amuleto",  icon:"📿",  pos:"bottom-right" },
+  { key:"ring1",   label:"Anello 1", icon:"💍",  pos:"top-left2" },
+  { key:"ring2",   label:"Anello 2", icon:"💍",  pos:"top-right2" },
+  { key:"cloak",   label:"Mantello", icon:"🧣",  pos:"right2" },
+];
+
+function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect }) {
+  const isEmpty = !item;
+  const rarityColors = { common:"#94a3b8", uncommon:"#22c55e", rare:"#3b82f6", epic:"#a855f7", legendary:"#f59e0b" };
+  const borderColor = isEmpty ? "rgba(255,255,255,0.1)" : (rarityColors[item?.rarity] || "#94a3b8");
   return (
-    <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
-      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🎽 Equipaggiamento</h3>
-      <Card title="Statistiche Attive">
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(120px,1fr))", gap:8, color:"#e2d9c5" }}>
-          <div>⚔️ ATK: {me.atk}</div>
-          <div>🛡️ CA: {me.def}</div>
-          <div>✨ MAG: {me.mag}</div>
-          <div>🦶 DEX: {me.init}</div>
-          <div>❤️ HP Max: {me.maxHp}</div>
-          <div>🎲 Arma: {equippedWeapon.weapon_die}</div>
-        </div>
-      </Card>
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:10 }}>
-        {slots.map(slot=>{
-          const item = equippedItems[slot.key];
-          return (
-            <div key={slot.key} style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:6, padding:"0.8rem" }}>
-              <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:8 }}>{slot.label}</div>
-              {item ? (
-                <>
-                  <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
-                    <span style={{ fontSize:"1.6rem" }}>{item.emoji}</span>
-                    <div>
-                      <div style={{ color:"#e2d9c5", fontWeight:700 }}>{item.name}</div>
-                      <div style={{ fontSize:"0.72rem", color:"#94a3b8" }}>{itemRarityLabel(item.rarity)} • {itemTypeLabel(item.type)}</div>
-                    </div>
-                  </div>
-                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#94a3b8", marginBottom:10 }}>
-                    {itemStatSummary(item).map(stat => <span key={stat}>{stat}</span>)}
-                  </div>
-                  <SmallBtn red onClick={()=>onUnequip(slot.key)}>Rimuovi</SmallBtn>
-                </>
-              ) : (
-                <div style={{ color:"#94a3b8", fontSize:"0.82rem" }}>{slot.fallback}</div>
-              )}
+    <div
+      onClick={() => isEmpty ? null : onSelect(slotCfg.key)}
+      style={{
+        width:54, height:54, borderRadius:10,
+        background: isEmpty ? "rgba(0,0,0,0.35)" : "rgba(15,23,42,0.9)",
+        border: `2px solid ${isSelected ? "#fbbf24" : borderColor}`,
+        display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
+        cursor: isEmpty ? "default" : "pointer",
+        transition:"border-color 0.2s, transform 0.15s",
+        transform: isSelected ? "scale(1.08)" : "scale(1)",
+        boxShadow: isSelected ? "0 0 12px rgba(251,191,36,0.4)" : isEmpty ? "none" : `0 0 8px ${borderColor}44`,
+        position:"relative",
+      }}
+      title={slotCfg.label}
+    >
+      {isEmpty ? (
+        <>
+          <span style={{ fontSize:"1.2rem", opacity:0.3 }}>{slotCfg.icon}</span>
+          <span style={{ fontSize:"0.45rem", color:"#475569", marginTop:1, fontFamily:"'Cinzel',serif" }}>{slotCfg.label}</span>
+        </>
+      ) : (
+        <>
+          <span style={{ fontSize:"1.4rem" }}>{item.emoji || slotCfg.icon}</span>
+          <span style={{ fontSize:"0.42rem", color: rarityColors[item.rarity] || "#94a3b8", marginTop:1, fontFamily:"'Cinzel',serif", maxWidth:50, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.name}</span>
+        </>
+      )}
+    </div>
+  );
+}
+
+function CharacterViewer({ me, equippedItems }) {
+  const race = me?.race || "human";
+  const gender = me?.gender || "male";
+  const baseSprite = `/assets/equip/base_${race}_${gender}.png`;
+  const overlaySlots = ["chest","legs","boots","gloves","head","weapon","offhand","cloak","amulet"];
+  return (
+    <div style={{ position:"relative", width:160, height:320, margin:"0 auto" }}>
+      {/* Base character */}
+      <img
+        src={baseSprite}
+        alt="personaggio"
+        onError={e => { e.currentTarget.style.display="none"; }}
+        style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none" }}
+      />
+      {/* Equipment overlays */}
+      {overlaySlots.map(slot => {
+        const item = equippedItems[slot];
+        if(!item?.equipSprite) return null;
+        return (
+          <img
+            key={slot}
+            src={`/assets/equip/${item.equipSprite}.png`}
+            alt={item.name}
+            onError={e => { e.currentTarget.style.display="none"; }}
+            style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none", pointerEvents:"none" }}
+          />
+        );
+      })}
+      {/* Fallback silhouette if no base sprite */}
+      <div style={{
+        position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center",
+        fontSize:"5rem", opacity: 0.15, userSelect:"none", pointerEvents:"none",
+      }}>
+        👤
+      </div>
+    </div>
+  );
+}
+
+function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, isMobile }) {
+  const [selectedSlot, setSelectedSlot] = useState(null);
+  const selectedItem = selectedSlot ? equippedItems[selectedSlot] : null;
+  const rarityColors = { common:"#94a3b8", uncommon:"#22c55e", rare:"#3b82f6", epic:"#a855f7", legendary:"#f59e0b" };
+
+  const leftSlots  = ["head","chest","legs","boots","ring1"];
+  const rightSlots = ["weapon","offhand","amulet","gloves","ring2"];
+  const bottomSlots = ["cloak"];
+
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding: isMobile ? "0.6rem" : "1rem" }}>
+      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"0.8rem" }}>🎽 Equipaggiamento</h3>
+
+      <div style={{ display:"flex", gap:isMobile?8:16, alignItems:"flex-start", flexWrap:"wrap" }}>
+
+        {/* ── Stats panel ── */}
+        <div style={{ minWidth:130, background:"rgba(0,0,0,0.4)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, padding:"0.8rem", fontSize:"0.78rem" }}>
+          <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize:"0.68rem", letterSpacing:"0.1em", marginBottom:8 }}>STATISTICHE</div>
+          {[
+            ["⚔️","ATK", me.atk],
+            ["🛡️","DEF", me.def],
+            ["✨","MAG", me.mag],
+            ["🦶","INI", me.init],
+            ["❤️","HP",  me.maxHp],
+            ["🎲","Dado",equippedWeapon.weapon_die],
+          ].map(([icon,label,val]) => (
+            <div key={label} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"3px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
+              <span style={{ color:"#64748b" }}>{icon} {label}</span>
+              <span style={{ color:"#e2d9c5", fontWeight:700 }}>{val}</span>
             </div>
-          );
-        })}
+          ))}
+        </div>
+
+        {/* ── Character doll ── */}
+        <div style={{ flex:1, display:"flex", gap:8, alignItems:"center", justifyContent:"center", minWidth:280 }}>
+          {/* Left slots */}
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+            {leftSlots.map(k => {
+              const cfg = SLOT_CONFIG.find(s => s.key === k);
+              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} />;
+            })}
+          </div>
+
+          {/* Center character */}
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
+            <CharacterViewer me={me} equippedItems={equippedItems} />
+            {bottomSlots.map(k => {
+              const cfg = SLOT_CONFIG.find(s => s.key === k);
+              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} />;
+            })}
+          </div>
+
+          {/* Right slots */}
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+            {rightSlots.map(k => {
+              const cfg = SLOT_CONFIG.find(s => s.key === k);
+              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} />;
+            })}
+          </div>
+        </div>
+
+        {/* ── Selected item detail ── */}
+        {selectedItem && (
+          <div style={{ minWidth:160, maxWidth:200, background:"rgba(15,23,42,0.95)", border:`1px solid ${rarityColors[selectedItem.rarity]||"#334155"}`, borderRadius:12, padding:"1rem" }}>
+            <div style={{ textAlign:"center", fontSize:"2.2rem", marginBottom:4 }}>{selectedItem.emoji}</div>
+            <div style={{ fontFamily:"'Cinzel',serif", color: rarityColors[selectedItem.rarity]||"#e2d9c5", fontSize:"0.82rem", fontWeight:700, textAlign:"center", marginBottom:4 }}>{selectedItem.name}</div>
+            <div style={{ fontSize:"0.65rem", color:"#64748b", textAlign:"center", marginBottom:8 }}>{itemRarityLabel(selectedItem.rarity)} • {itemTypeLabel(selectedItem.type)}</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:3, marginBottom:10 }}>
+              {itemStatSummary(selectedItem).map(stat => (
+                <div key={stat} style={{ fontSize:"0.72rem", color:"#94a3b8", background:"rgba(255,255,255,0.04)", borderRadius:6, padding:"2px 6px" }}>{stat}</div>
+              ))}
+            </div>
+            {selectedItem.desc && <div style={{ fontSize:"0.7rem", color:"#64748b", fontStyle:"italic", marginBottom:8, lineHeight:1.5 }}>{selectedItem.desc}</div>}
+            <SmallBtn red onClick={() => { onUnequip(selectedSlot); setSelectedSlot(null); }}>Rimuovi</SmallBtn>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -6306,12 +6431,9 @@ function GameScreen({ myId, setScreen, authUser }) {
       const { entries } = await dbGetPlayerInventory(myId, items);
       const nextEquipment = getStoredEquipment(myId);
       const ownedIds = new Set(entries.map(entry => entry.itemId));
-      const sanitizedEquipment = {
-        weapon: ownedIds.has(nextEquipment.weapon) ? nextEquipment.weapon : null,
-        armor: ownedIds.has(nextEquipment.armor) ? nextEquipment.armor : null,
-        shield: ownedIds.has(nextEquipment.shield) ? nextEquipment.shield : null,
-        accessory: ownedIds.has(nextEquipment.accessory) ? nextEquipment.accessory : null,
-      };
+      const sanitizedEquipment = Object.fromEntries(
+        EQUIP_SLOTS.map(s => [s, ownedIds.has(nextEquipment[s]) ? nextEquipment[s] : null])
+      );
       saveStoredEquipment(myId, sanitizedEquipment);
       setCatalogItems(items);
       setInventory(entries);
@@ -8513,12 +8635,9 @@ ${stepText(step)}`, "quest","Master");
   const isLeaderForMonsterTurn = isMonsterTurn && combat.combatants.find(c => c.isPlayer && !c.isSummon && !c.dead)?.id === myId;
   const isSummonTurn = !!(combat?.active && !combat.pendingLog && activeCombatant?.isSummon);
   const isLeaderForSummonTurn = isSummonTurn && (activeCombatant?.summonOwner === myId || (!activeCombatant?.summonOwner && (partyPlayers[0]?.id === myId || partyPlayers.length === 0)));
-  const equippedItems = {
-    weapon: itemMap.get(equipment.weapon) || null,
-    armor: itemMap.get(equipment.armor) || null,
-    shield: itemMap.get(equipment.shield) || null,
-    accessory: itemMap.get(equipment.accessory) || null,
-  };
+  const equippedItems = Object.fromEntries(
+    EQUIP_SLOTS.map(s => [s, itemMap.get(equipment[s]) || null])
+  );
   const currentLevelGain = levelGainForClass(me?.class);
   const nextLevelXp = xpForLevel(me?.level || 1);
   const canLevelUp = (me?.xp || 0) >= nextLevelXp;
@@ -9245,6 +9364,7 @@ ${stepText(step)}`, "quest","Master");
             equippedItems={equippedItems}
             equippedWeapon={equippedWeapon}
             onUnequip={unequipItem}
+            isMobile={isMobile}
           />
         )}
         {tab==="spells" && isCaster && (
