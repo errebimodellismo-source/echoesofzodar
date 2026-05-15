@@ -1628,7 +1628,16 @@ function getMonsterImage(monster) {
   if(!monster) return "";
   if(monster.image) return monster.image;
   if(monster.image_url) return monster.image_url;
-  if(monster.id && monster.name && !monster.isSummon) return `/assets/monsters/${monster.id}-${slugifyAssetName(monster.name)}.png`;
+  if(!monster.isSummon && monster.name) {
+    // Try with monster's own id first (e.g. m1-goblin-delle-rovine.png)
+    if(monster.id && monster.id.startsWith("m")) return `/assets/monsters/${monster.id}-${slugifyAssetName(monster.name)}.png`;
+    // For quest-specific enemies (e1, e2...) look up matching monster in catalogue by name
+    const nameSlug = slugifyAssetName(monster.name);
+    const catalogMatch = DEFAULT_MONSTERS.find(m => slugifyAssetName(m.name) === nameSlug);
+    if(catalogMatch) return `/assets/monsters/${catalogMatch.id}-${nameSlug}.png`;
+    // Fallback: try by name slug alone (file might exist even without catalogue match)
+    return `/assets/monsters/${nameSlug}.png`;
+  }
   const key = `${monster.id || ""} ${monster.name || ""} ${monster.desc || ""}`.toLowerCase();
   const theme =
     /drago|dragon/.test(key) ? { icon:"🐉", title:"Drago", accent:"#ef4444", accent2:"#f59e0b", bg1:"#2b1010", bg2:"#120808", border:"#991b1b" } :
