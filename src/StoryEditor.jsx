@@ -101,7 +101,7 @@ function getNodeType(type) {
 }
 
 // ─── Main StoryEditorPanel ─────────────────────────────────────
-export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, STORIES: builtinStories = [], onLaunchPreview }) {
+export default function StoryEditorPanel({ supabase, dbGetPartyState, dbSavePartyState, STORIES: builtinStories = [], onLaunchPreview }) {
   const [library, setLibrary] = useState([]); // custom stories
   const [activeStoryId, setActiveStoryId] = useState(null);
   const [activeChapterId, setActiveChapterId] = useState(null);
