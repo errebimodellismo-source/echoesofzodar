@@ -6127,7 +6127,7 @@ function PlayerStoryLibrary({ stories, storyState, onStartSolo, onStartParty, se
   );
 }
 
-function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers, onAdvance, onChoice, onVote, onFight, onSkillCheck }) {
+function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers, onAdvance, onChoice, onVote, onFight, onSkillCheck, onLeave }) {
   if(!story || !scene) return (
     <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem", textAlign:"center" }}>
       <div>
@@ -6195,12 +6195,16 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
               <div style={{ color:col.accent }}>{scene.title}</div>
             </div>
           )}
-          {(storyState?.mode === "solo" || isLeader) && (
-            <button
-              onClick={()=>{ if(window.confirm("Abbandonare la storia? Il progresso verrà perso.")) onAdvance(null); }}
-              style={{ marginLeft: currentChapter ? "0.5rem" : "auto", padding:"0.25rem 0.7rem", background:"transparent", border:"1px solid #475569", borderRadius:6, color:"#64748b", cursor:"pointer", fontSize:"0.72rem", whiteSpace:"nowrap" }}
-            >✕ Abbandona</button>
-          )}
+          <button
+            onClick={()=>{
+              if(isLeader) {
+                if(window.confirm("Sei il leader — abbandonare termina la storia per tutto il party. Confermi?")) onAdvance(null);
+              } else {
+                if(window.confirm("Vuoi uscire dalla storia? Gli altri continueranno senza di te.")) onLeave();
+              }
+            }}
+            style={{ marginLeft: currentChapter ? "0.5rem" : "auto", padding:"0.25rem 0.7rem", background:"transparent", border:"1px solid #475569", borderRadius:6, color:"#64748b", cursor:"pointer", fontSize:"0.72rem", whiteSpace:"nowrap" }}
+          >✕ Abbandona</button>
         </div>
 
         {/* Scene card */}
@@ -10204,6 +10208,7 @@ ${stepText(step)}`, "quest","Master");
             onVote={castStoryVote}
             onFight={startStoryCombat}
             onSkillCheck={makeStorySkillCheck}
+            onLeave={()=>setTab("quest")}
           />
         )}
         {tab==="storylibrary" && (
