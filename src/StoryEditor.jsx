@@ -107,11 +107,15 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
   const [activeChapterId, setActiveChapterId] = useState(null);
   const [selectedSceneId, setSelectedSceneId] = useState(null);
   const [connectMode, setConnectMode] = useState(false);
-  const [connectFrom, setConnectFrom] = useState(null); // { sceneId, slot } slot = "next"|"success"|"failure"|"retry"|choiceIdx
-  const [dragging, setDragging] = useState(null); // { sceneId, ox, oy }
+  const [connectFrom, setConnectFrom] = useState(null);
+  const [dragging, setDragging] = useState(null);
   const [pan, setPan] = useState({ x:0, y:0 });
   const [panStart, setPanStart] = useState(null);
   const [zoom, setZoom] = useState(1);
+  const [fullscreen, setFullscreen] = useState(false); // overlay fullscreen
+  const [hideLeft, setHideLeft] = useState(false);     // collapse sidebar
+  const [hideRight, setHideRight] = useState(false);   // collapse right panel
+  const editorRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [importJson, setImportJson] = useState("");
@@ -127,6 +131,13 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
       setLibrary(data?.stories || []);
       setLoading(false);
     }).catch(() => setLoading(false));
+  }, []);
+
+  // Escape exits fullscreen
+  useEffect(() => {
+    const handler = (e) => { if(e.key === "Escape") setFullscreen(false); };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   }, []);
 
   async function saveLibrary(lib) {
@@ -378,7 +389,13 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
   if(loading) return <div style={{ padding:"2rem", color:"#64748b" }}>Caricamento...</div>;
 
   return (
-    <div style={{ display:"flex", flexDirection:"column", height:"100%", overflow:"hidden", background:"rgba(2,6,23,0.95)" }}>
+    <div ref={editorRef} style={{
+      display:"flex", flexDirection:"column", overflow:"hidden", background:"rgba(2,6,23,0.98)",
+      ...(fullscreen ? {
+        position:"fixed", inset:0, zIndex:9999,
+        boxShadow:"0 0 0 3px #6366f1",
+      } : { height:"100%" }),
+    }}>
 
       {/* ── TOP BAR ── */}
       <div style={{ display:"flex", gap:8, padding:"0.6rem 1rem", borderBottom:"1px solid #1e293b", background:"rgba(2,6,23,0.98)", flexShrink:0, flexWrap:"wrap", alignItems:"center" }}>
@@ -398,6 +415,12 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
         )}
         <button style={btn("#6366f1")} onClick={()=>setShowImport(s=>!s)}>📤 Importa JSON</button>
         <button style={btn("#22c55e",true)} onClick={createStory}>+ Nuova Storia</button>
+        <div style={{ width:1, height:20, background:"#1e293b", flexShrink:0 }}/>
+        <button title="Nascondi/mostra sidebar sinistra" style={btn("#475569")} onClick={()=>setHideLeft(v=>!v)}>{hideLeft?"▶":"◀"}</button>
+        <button title="Nascondi/mostra pannello proprietà" style={btn("#475569")} onClick={()=>setHideRight(v=>!v)}>{hideRight?"◀":"▶"}</button>
+        <button title={fullscreen?"Esci dal fullscreen (Esc)":"Espandi a tutto schermo"} style={btn(fullscreen?"#f87171":"#a78bfa", fullscreen)} onClick={()=>setFullscreen(v=>!v)}>
+          {fullscreen ? "✕ Esci" : "⛶ Fullscreen"}
+        </button>
       </div>
 
       {/* Import panel */}
@@ -415,7 +438,7 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
       <div style={{ display:"flex", flex:1, overflow:"hidden" }}>
 
         {/* ── LEFT SIDEBAR ── */}
-        <div style={{ width:240, flexShrink:0, borderRight:"1px solid #1e293b", display:"flex", flexDirection:"column", overflowY:"auto", background:"rgba(2,6,23,0.9)" }}>
+        {!hideLeft && <div style={{ width:240, flexShrink:0, borderRight:"1px solid #1e293b", display:"flex", flexDirection:"column", overflowY:"auto", background:"rgba(2,6,23,0.9)" }}>
           {/* Story list */}
           <div style={{ padding:"0.7rem", borderBottom:"1px solid #1e293b" }}>
             <div style={{ color:"#475569", fontSize:"0.64rem", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>Storie</div>
@@ -492,7 +515,7 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
               {activeStory.chapters?.length===0 && <div style={{ color:"#334155", fontSize:"0.74rem" }}>Nessun capitolo. Creane uno!</div>}
             </div>
           )}
-        </div>
+        </div>}
 
         {/* ── CANVAS ── */}
         <div style={{ flex:1, position:"relative", overflow:"hidden", background:"#020617", cursor:connectMode?"crosshair":panStart?"grabbing":"default" }}
@@ -635,7 +658,7 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
         </div>
 
         {/* ── RIGHT PANEL ── */}
-        <div style={{ width:320, flexShrink:0, borderLeft:"1px solid #1e293b", overflowY:"auto", background:"rgba(2,6,23,0.95)", padding:"0.8rem" }}>
+        {!hideRight && <div style={{ width:320, flexShrink:0, borderLeft:"1px solid #1e293b", overflowY:"auto", background:"rgba(2,6,23,0.95)", padding:"0.8rem" }}>
           {!selectedScene && activeChapter && (
             <ChapterEditor chapter={activeChapter} onUpdate={patch=>updateChapter(activeChapterId,patch)} scenes={chapterScenes} onSetStart={scId=>updateChapter(activeChapterId,{startScene:scId})} />
           )}
@@ -655,7 +678,7 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
               <div style={{ fontSize:"0.82rem" }}>Seleziona una storia e un capitolo</div>
             </div>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   );
