@@ -5,6 +5,7 @@ import { SPELL_SLOTS, SPELLS } from "./data/spellsData";
 import { DEFAULT_QUESTS } from "./data/questsData";
 import { DEFAULT_MONSTERS } from "./data/monstersData";
 import { DEFAULT_ITEMS, DEFAULT_WEAPON } from "./data/itemsData";
+import { STORIES } from "./data/storiesData";
 import DiceRoller from "./components/DiceRoller";
 import ParticleBackground from "./components/ParticleBackground";
 import CombatVisualizer from "./components/CombatVisualizer";
@@ -3106,7 +3107,7 @@ function MasterPanel({ setScreen, authUser }) {
     return ()=>{ alive = false; clearInterval(timer); };
   }, [tab]);
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"📊 Report"}];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"stories",l:"📖 Storie"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"📊 Report"}];
   const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
   const visibleQuests = quests.filter(q => {
     const term = questSearch.trim().toLowerCase();
@@ -3466,6 +3467,30 @@ function MasterPanel({ setScreen, authUser }) {
             </div>
           </Card>
         </div>
+      )}
+
+      {tab==="stories" && (
+        <MasterStoriesPanel
+          parties={parties}
+          stories={STORIES}
+          onStart={async (storyId, partyCode) => {
+            const story = STORIES.find(s => s.id === storyId);
+            if(!story || !partyCode) return;
+            const latestQs = await dbGetPartyState(partyCode);
+            const newStory = { active:true, storyId, chapterId:story.startChapter, startedAt:Date.now(), choiceLog:[], lootCollected:[], eventApplied:[], battlePending:false, battleNext:null, battleNextFail:null };
+            await dbSavePartyState(partyCode, { ...latestQs, story: newStory });
+            await supabase.from("messages").insert({ party_code:partyCode, author:"Master", content:`📖 **La storia inizia**: ${story.emoji} *${story.title}*`, type:"narration" });
+          }}
+          onStop={async (partyCode) => {
+            const latestQs = await dbGetPartyState(partyCode);
+            await dbSavePartyState(partyCode, { ...latestQs, story:{ active:false } });
+          }}
+          onJump={async (storyId, partyCode, chapterId) => {
+            const latestQs = await dbGetPartyState(partyCode);
+            await dbSavePartyState(partyCode, { ...latestQs, story:{ ...latestQs.story, chapterId } });
+          }}
+          dbGetPartyState={dbGetPartyState}
+        />
       )}
 
       {tab==="monsters" && !editM && (
@@ -5764,6 +5789,303 @@ function DonateView({ me, players, groups, loading, onTrade }) {
   );
 }
 
+// ─── StoryView ────────────────────────────────────────────────
+const STORY_TYPE_COLORS = {
+  narration: { accent:"#a78bfa", bg:"rgba(109,40,217,0.12)", border:"#6d28d9" },
+  choice:    { accent:"#fbbf24", bg:"rgba(180,83,9,0.12)",   border:"#b45309" },
+  battle:    { accent:"#f87171", bg:"rgba(127,29,29,0.18)",  border:"#991b1b" },
+  loot:      { accent:"#34d399", bg:"rgba(6,78,59,0.18)",    border:"#065f46" },
+  event:     { accent:"#60a5fa", bg:"rgba(30,58,138,0.18)",  border:"#1e40af" },
+  rest:      { accent:"#86efac", bg:"rgba(20,83,45,0.18)",   border:"#14532d" },
+  ending:    { accent:"#fde68a", bg:"rgba(120,53,15,0.22)",  border:"#92400e" },
+};
+const ENDING_ICONS = { good:"🏆", neutral:"🤝", fail:"💀" };
+
+function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, dbGetPartyState }) {
+  const [selectedStory, setSelectedStory] = useState(stories[0]?.id || "");
+  const [selectedParty, setSelectedParty] = useState("");
+  const [partyStoryStates, setPartyStoryStates] = useState({});
+  const [jumpChapter, setJumpChapter] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [expandedStory, setExpandedStory] = useState(null);
+
+  useEffect(() => {
+    if(!parties.length) return;
+    Promise.all(parties.map(async p => {
+      const qs = await dbGetPartyState(p).catch(()=>null);
+      return [p, qs?.story || null];
+    })).then(results => setPartyStoryStates(Object.fromEntries(results)));
+  }, [parties]);
+
+  const story = stories.find(s => s.id === selectedStory);
+  const ENDING_COLORS = { good:"#22c55e", neutral:"#f59e0b", fail:"#ef4444" };
+
+  return (
+    <div style={{ display:"grid", gap:"1.2rem" }}>
+      {/* ── Story list ── */}
+      <Card title="📚 Catalogo Storie">
+        <div style={{ display:"grid", gap:"0.8rem" }}>
+          {stories.map(s => (
+            <div key={s.id} style={{ background:"rgba(15,23,42,0.7)", border:"1px solid #1e293b", borderRadius:8, overflow:"hidden" }}>
+              <div style={{ display:"flex", alignItems:"center", gap:10, padding:"0.7rem 0.9rem", cursor:"pointer" }} onClick={()=>setExpandedStory(expandedStory===s.id?null:s.id)}>
+                <span style={{ fontSize:"1.5rem" }}>{s.emoji}</span>
+                <div style={{ flex:1 }}>
+                  <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700 }}>{s.title}</div>
+                  <div style={{ color:"#64748b", fontSize:"0.75rem" }}>Lv.{s.minLevel}+ · {s.estDuration} · {Object.keys(s.chapters).length} capitoli · {s.tags?.join(", ")}</div>
+                </div>
+                <span style={{ color:"#475569", fontSize:"0.8rem" }}>{expandedStory===s.id?"▲":"▼"}</span>
+              </div>
+              {expandedStory===s.id && (
+                <div style={{ padding:"0 0.9rem 0.9rem", borderTop:"1px solid #1e293b" }}>
+                  <p style={{ color:"#94a3b8", fontSize:"0.84rem", margin:"0.6rem 0 0.8rem" }}>{s.description}</p>
+                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
+                    {Object.values(s.chapters).map(ch => {
+                      const colMap = { narration:"#6366f1", choice:"#f59e0b", battle:"#ef4444", loot:"#22c55e", event:"#3b82f6", rest:"#86efac", ending:"#fde68a" };
+                      return (
+                        <span key={ch.id} style={{ fontSize:"0.7rem", padding:"3px 8px", borderRadius:4, background:"rgba(15,23,42,0.8)", border:`1px solid ${colMap[ch.type]||"#334155"}44`, color:colMap[ch.type]||"#94a3b8" }}>
+                          {ch.type==="narration"?"📜":ch.type==="choice"?"🔀":ch.type==="battle"?"⚔️":ch.type==="loot"?"💰":ch.type==="event"?"⚡":ch.type==="rest"?"🏕️":"🏁"} {ch.title}
+                        </span>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </Card>
+
+      {/* ── Avvia storia ── */}
+      <Card title="▶️ Avvia Storia per un Party">
+        <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:"0.8rem" }}>
+          <div>
+            <label style={labelStyle}>Storia</label>
+            <select style={{...inputStyle,cursor:"pointer"}} value={selectedStory} onChange={e=>setSelectedStory(e.target.value)}>
+              {stories.map(s=><option key={s.id} value={s.id}>{s.emoji} {s.title}</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Party</label>
+            <select style={{...inputStyle,cursor:"pointer"}} value={selectedParty} onChange={e=>setSelectedParty(e.target.value)}>
+              <option value="">— scegli party —</option>
+              {parties.map(p=><option key={p} value={p}>{p}</option>)}
+            </select>
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:8 }}>
+          <BigBtn gold disabled={!selectedParty||!selectedStory||busy} onClick={async()=>{ setBusy(true); await onStart(selectedStory,selectedParty); setBusy(false); }}>
+            ▶️ Avvia
+          </BigBtn>
+          <SmallBtn disabled={!selectedParty||busy} onClick={async()=>{ if(!window.confirm("Interrompere la storia in corso?")) return; setBusy(true); await onStop(selectedParty); setBusy(false); }}>
+            ⏹ Interrompi
+          </SmallBtn>
+        </div>
+      </Card>
+
+      {/* ── Stato attivo per party ── */}
+      <Card title="📊 Stato Storie in Corso">
+        {!parties.length && <div style={{ color:"#64748b", fontSize:"0.84rem" }}>Nessun party attivo.</div>}
+        {parties.map(p => {
+          const ps = partyStoryStates[p];
+          if(!ps?.active) return (
+            <div key={p} style={{ display:"flex", justifyContent:"space-between", padding:"0.5rem 0", borderBottom:"1px solid #1e293b", color:"#475569", fontSize:"0.82rem" }}>
+              <span style={{ fontFamily:"'Cinzel',serif" }}>{p}</span><span>Nessuna storia attiva</span>
+            </div>
+          );
+          const st = STORIES.find(s=>s.id===ps.storyId);
+          const ch = st?.chapters?.[ps.chapterId];
+          return (
+            <div key={p} style={{ background:"rgba(15,23,42,0.5)", border:"1px solid #312e81", borderRadius:6, padding:"0.7rem", marginBottom:6 }}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:6 }}>
+                <div>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#a5b4fc", fontWeight:700 }}>{p}</div>
+                  <div style={{ color:"#e2d9c5", fontSize:"0.84rem" }}>{st?.emoji} {st?.title}</div>
+                  <div style={{ color:"#fbbf24", fontSize:"0.78rem", marginTop:2 }}>Capitolo attuale: <strong>{ch?.title}</strong> ({ch?.type})</div>
+                </div>
+                <div style={{ display:"flex", gap:6, flexDirection:"column", alignItems:"flex-end" }}>
+                  <select style={{...inputStyle,fontSize:"0.74rem",padding:"4px 6px",cursor:"pointer"}} value={jumpChapter} onChange={e=>setJumpChapter(e.target.value)}>
+                    <option value="">— salta a capitolo —</option>
+                    {st && Object.values(st.chapters).map(c=><option key={c.id} value={c.id}>{c.title} ({c.type})</option>)}
+                  </select>
+                  <SmallBtn disabled={!jumpChapter||busy} onClick={async()=>{ setBusy(true); await onJump(ps.storyId,p,jumpChapter); setJumpChapter(""); setBusy(false); }}>
+                    ⏩ Salta
+                  </SmallBtn>
+                </div>
+              </div>
+              {ps.choiceLog?.length > 0 && (
+                <div style={{ marginTop:"0.6rem", borderTop:"1px solid #1e293b", paddingTop:"0.5rem" }}>
+                  <div style={{ color:"#475569", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:3 }}>Scelte:</div>
+                  {ps.choiceLog.slice(-4).map((log,i)=>(
+                    <div key={i} style={{ fontSize:"0.74rem", color:"#64748b" }}>→ <span style={{ color:"#94a3b8" }}>{log.chapterTitle}</span>: <em style={{ color:"#fbbf24" }}>{log.choiceText}</em></div>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </Card>
+    </div>
+  );
+}
+
+function StoryView({ story, chapter, storyState, isLeader, me, partyPlayers, onAdvance, onChoice, onFight }) {
+  if(!story || !chapter) return (
+    <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem", textAlign:"center" }}>
+      <div>
+        <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>📖</div>
+        <div style={{ color:"#475569", fontFamily:"'Cinzel',serif" }}>Nessuna storia in corso.</div>
+        <div style={{ color:"#334155", fontSize:"0.82rem", marginTop:"0.5rem" }}>Il Master deve avviare una storia dal suo pannello.</div>
+      </div>
+    </div>
+  );
+
+  const col = STORY_TYPE_COLORS[chapter.type] || STORY_TYPE_COLORS.narration;
+  const paragraphs = (chapter.text || "").split("\n").filter(Boolean);
+  const lootCollected = storyState?.lootCollected?.includes(chapter.id);
+  const eventApplied = storyState?.eventApplied?.includes(chapter.id);
+
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(2,6,23,0.45)" }}>
+      <div style={{ maxWidth:760, margin:"0 auto", display:"flex", flexDirection:"column", gap:"1rem" }}>
+
+        {/* Story header */}
+        <div style={{ display:"flex", alignItems:"center", gap:10, padding:"0.6rem 0.9rem", background:"rgba(15,23,42,0.6)", borderRadius:8, border:"1px solid #1e293b" }}>
+          <span style={{ fontSize:"1.4rem" }}>{story.emoji}</span>
+          <div>
+            <div style={{ color:"#94a3b8", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>Storia in corso</div>
+            <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontSize:"0.9rem", fontWeight:700 }}>{story.title}</div>
+          </div>
+          <div style={{ marginLeft:"auto", fontSize:"0.72rem", color:"#475569", fontFamily:"'Cinzel',serif" }}>
+            Capitolo: <span style={{ color:col.accent }}>{chapter.title}</span>
+          </div>
+        </div>
+
+        {/* Chapter card */}
+        <div style={{ background:col.bg, border:`1px solid ${col.border}`, borderRadius:10, overflow:"hidden" }}>
+          {/* Chapter title */}
+          <div style={{ padding:"0.8rem 1.1rem", borderBottom:`1px solid ${col.border}44`, display:"flex", alignItems:"center", gap:8 }}>
+            <span style={{ fontSize:"1.1rem" }}>
+              { chapter.type==="narration"?"📜": chapter.type==="choice"?"🔀": chapter.type==="battle"?"⚔️":
+                chapter.type==="loot"?"💰": chapter.type==="event"?"⚡": chapter.type==="rest"?"🏕️":"🏁" }
+            </span>
+            <span style={{ fontFamily:"'Cinzel',serif", color:col.accent, fontSize:"1rem", fontWeight:700 }}>{chapter.title}</span>
+          </div>
+
+          {/* Chapter text */}
+          <div style={{ padding:"1.1rem", display:"flex", flexDirection:"column", gap:"0.8rem" }}>
+            {paragraphs.map((p, i) => {
+              const isQuote = p.startsWith('"') || p.startsWith('"');
+              return (
+                <p key={i} style={{
+                  margin:0, lineHeight:1.75, fontSize:"0.95rem",
+                  color: isQuote ? "#fde68a" : "#e2d9c5",
+                  fontFamily: isQuote ? "'Crimson Pro',Georgia,serif" : "inherit",
+                  fontStyle: isQuote ? "italic" : "normal",
+                  paddingLeft: isQuote ? "1rem" : 0,
+                  borderLeft: isQuote ? `3px solid ${col.border}` : "none",
+                }}>{p}</p>
+              );
+            })}
+          </div>
+
+          {/* Effects / Rewards preview */}
+          {chapter.type === "event" && chapter.effects?.length > 0 && (
+            <div style={{ margin:"0 1.1rem 1rem", display:"flex", flexWrap:"wrap", gap:6 }}>
+              {chapter.effects.map((ef, i) => (
+                <span key={i} style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(96,165,250,0.15)", border:"1px solid #1e40af", color:"#93c5fd" }}>
+                  {ef.text}
+                </span>
+              ))}
+            </div>
+          )}
+          {(chapter.type === "loot") && (
+            <div style={{ margin:"0 1.1rem 1rem", display:"flex", flexWrap:"wrap", gap:6 }}>
+              {chapter.rewards?.xp > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(6,78,59,0.2)", border:"1px solid #065f46", color:"#6ee7b7" }}>⭐ +{chapter.rewards.xp} XP a testa</span>}
+              {chapter.rewards?.gold > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(6,78,59,0.2)", border:"1px solid #065f46", color:"#6ee7b7" }}>💰 +{chapter.rewards.gold} oro a testa</span>}
+            </div>
+          )}
+          {chapter.type === "ending" && (
+            <div style={{ margin:"0 1.1rem 1rem", display:"flex", flexWrap:"wrap", gap:6 }}>
+              {chapter.rewards?.xp > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(120,53,15,0.2)", border:"1px solid #92400e", color:"#fde68a" }}>⭐ +{chapter.rewards.xp} XP a testa</span>}
+              {chapter.rewards?.gold > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(120,53,15,0.2)", border:"1px solid #92400e", color:"#fde68a" }}>💰 +{chapter.rewards.gold} oro a testa</span>}
+            </div>
+          )}
+
+          {/* Battle monsters preview */}
+          {chapter.type === "battle" && chapter.monsters?.length > 0 && (
+            <div style={{ margin:"0 1.1rem 1rem", display:"flex", flexWrap:"wrap", gap:6 }}>
+              {chapter.monsters.map(m => (
+                <div key={m.id} style={{ fontSize:"0.78rem", padding:"6px 10px", borderRadius:6, background:"rgba(127,29,29,0.2)", border:"1px solid #991b1b", color:"#fca5a5", display:"flex", gap:5, alignItems:"center" }}>
+                  <span>{m.emoji}</span>
+                  <span style={{ fontFamily:"'Cinzel',serif", fontWeight:700 }}>{m.name}</span>
+                  <span style={{ color:"#dc2626" }}>❤️{m.hp}</span>
+                  <span style={{ color:"#f87171" }}>⚔️{m.atk}</span>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {/* Actions */}
+          <div style={{ padding:"0 1.1rem 1.1rem", display:"flex", gap:8, justifyContent:"flex-end", flexWrap:"wrap" }}>
+            {!isLeader && chapter.type !== "ending" && (
+              <span style={{ color:"#475569", fontSize:"0.78rem", alignSelf:"center" }}>In attesa del capo-party…</span>
+            )}
+            {chapter.type === "narration" && isLeader && (
+              <BigBtn onClick={()=>onAdvance(chapter.next)} gold>📜 Continua</BigBtn>
+            )}
+            {chapter.type === "choice" && chapter.choices?.map((c, i) => (
+              <BigBtn key={i} onClick={()=>onChoice(i, c.next)} gold={i===0} style={i>0?{background:"rgba(15,23,42,0.8)",border:"1px solid #334155",color:"#e2e8f0"}:undefined}>
+                {c.text}
+              </BigBtn>
+            ))}
+            {chapter.type === "battle" && isLeader && (
+              <BigBtn onClick={()=>onFight(chapter)} gold>⚔️ Affronta il nemico</BigBtn>
+            )}
+            {chapter.type === "battle" && !isLeader && (
+              <span style={{ color:"#f87171", fontSize:"0.82rem", alignSelf:"center" }}>Il capo-party deve avviare il combattimento.</span>
+            )}
+            {chapter.type === "loot" && isLeader && !lootCollected && (
+              <BigBtn onClick={()=>onAdvance(chapter.next, true)} gold>💰 Raccogliete il bottino</BigBtn>
+            )}
+            {chapter.type === "loot" && lootCollected && (
+              <BigBtn onClick={()=>onAdvance(chapter.next)} gold>📜 Continua</BigBtn>
+            )}
+            {chapter.type === "event" && isLeader && !eventApplied && (
+              <BigBtn onClick={()=>onAdvance(chapter.next, true)} gold>⚡ Procedi</BigBtn>
+            )}
+            {chapter.type === "event" && eventApplied && (
+              <BigBtn onClick={()=>onAdvance(chapter.next)} gold>📜 Continua</BigBtn>
+            )}
+            {chapter.type === "rest" && isLeader && (
+              <BigBtn onClick={()=>onAdvance(chapter.next)} gold>🏕️ Riposate</BigBtn>
+            )}
+            {chapter.type === "ending" && (
+              <div style={{ width:"100%", textAlign:"center", padding:"0.5rem 0" }}>
+                <div style={{ fontSize:"2.5rem", marginBottom:"0.4rem" }}>{ENDING_ICONS[chapter.endingType]||"🏁"}</div>
+                <div style={{ fontFamily:"'Cinzel',serif", color:col.accent, fontSize:"1rem", fontWeight:700, marginBottom:"0.4rem" }}>Storia Completata</div>
+                {isLeader && <BigBtn onClick={()=>onAdvance(null)} gold>✅ Concludi la storia</BigBtn>}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Choice log */}
+        {storyState?.choiceLog?.length > 0 && (
+          <div style={{ background:"rgba(15,23,42,0.5)", border:"1px solid #1e293b", borderRadius:8, padding:"0.8rem" }}>
+            <div style={{ color:"#475569", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:"0.5rem" }}>📋 Scelte precedenti</div>
+            {storyState.choiceLog.slice(-5).map((log, i) => (
+              <div key={i} style={{ fontSize:"0.76rem", color:"#64748b", padding:"2px 0" }}>
+                → <span style={{ color:"#94a3b8" }}>{log.chapterTitle}</span>: <em style={{ color:"#fbbf24" }}>{log.choiceText}</em>
+              </div>
+            ))}
+          </div>
+        )}
+
+      </div>
+    </div>
+  );
+}
+
 function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, isMobile }) {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const selectedItem = selectedSlot ? equippedItems[selectedSlot] : null;
@@ -7773,6 +8095,124 @@ function GameScreen({ myId, setScreen, authUser }) {
     await addMsg(`💰 **${me.name}** vende **${group.item.name}** per ${sellPrice} oro.`, "info", "Sistema");
   }
 
+  // ── STORY FUNCTIONS ─────────────────────────────────────────
+  function getStory(id) { return STORIES.find(s => s.id === id) || null; }
+  const storyState = qs?.story || null;
+  const activeStory = storyState?.active ? getStory(storyState.storyId) : null;
+  const activeStoryChapter = activeStory ? activeStory.chapters[storyState.chapterId] : null;
+  const isStoryLeader = partyPlayers.length === 0 || partyPlayers[0]?.id === myId;
+
+  async function startStory(storyId) {
+    const story = getStory(storyId);
+    if(!story || !code) return;
+    const newStory = { active:true, storyId, chapterId:story.startChapter, startedAt:Date.now(), choiceLog:[], lootCollected:[], eventApplied:[], battlePending:false, battleNext:null, battleNextFail:null };
+    const latestQs = await dbGetPartyState(code);
+    await dbSavePartyState(code, { ...latestQs, story: newStory });
+    await addMsg(`📖 **La storia inizia**: ${story.emoji} *${story.title}*`, "narration", "Master");
+  }
+
+  async function stopStory() {
+    if(!code) return;
+    const latestQs = await dbGetPartyState(code);
+    await dbSavePartyState(code, { ...latestQs, story: { active:false } });
+    await addMsg(`📖 Storia interrotta dal Master.`, "info", "Sistema");
+  }
+
+  async function advanceStoryChapter(nextChapterId, applyRewards = false) {
+    if(!code || !activeStory || !storyState) return;
+    const latestQs = await dbGetPartyState(code);
+    const chapter = activeStory.chapters[storyState.chapterId];
+
+    let updatedStory = { ...latestQs.story };
+
+    // Apply loot rewards
+    if(applyRewards && chapter?.type === "loot" && !storyState.lootCollected?.includes(chapter.id)) {
+      const freshPlayers = await dbGetPlayers(code);
+      const count = Math.max(freshPlayers.length, 1);
+      const xpEach = Math.floor((chapter.rewards?.xp || 0) / count);
+      const goldEach = Math.floor((chapter.rewards?.gold || 0) / count);
+      for(const p of freshPlayers) {
+        const up = { ...p, xp:(p.xp||0)+xpEach, gold:(p.gold||0)+goldEach };
+        await dbSavePlayer(up);
+        if(p.id === myId) setMeRaw(up);
+      }
+      updatedStory = { ...updatedStory, lootCollected:[...(updatedStory.lootCollected||[]), chapter.id] };
+      if(xpEach > 0 || goldEach > 0) await addMsg(`💰 **Bottino**: ${xpEach>0?`+${xpEach} XP`:''} ${goldEach>0?`+${goldEach} oro`:''} a testa.`, "victory", "Sistema");
+    }
+
+    // Apply event effects
+    if(applyRewards && chapter?.type === "event" && !storyState.eventApplied?.includes(chapter.id)) {
+      const freshPlayers = await dbGetPlayers(code);
+      for(const ef of (chapter.effects || [])) {
+        if(ef.type === "gold") {
+          for(const p of freshPlayers) { const up={...p,gold:(p.gold||0)+ef.amount}; await dbSavePlayer(up); if(p.id===myId) setMeRaw(up); }
+        } else if(ef.type === "xp") {
+          const each = Math.floor(ef.amount / Math.max(freshPlayers.length,1));
+          for(const p of freshPlayers) { const up={...p,xp:(p.xp||0)+each}; await dbSavePlayer(up); if(p.id===myId) setMeRaw(up); }
+        } else if(ef.type === "heal") {
+          for(const p of freshPlayers) { const up={...p,hp:Math.min(p.maxHp||p.hp,p.hp+ef.amount)}; await dbSavePlayer(up); if(p.id===myId) setMeRaw(up); }
+        }
+        await addMsg(`⚡ ${ef.text}`, "info", "Sistema");
+      }
+      updatedStory = { ...updatedStory, eventApplied:[...(updatedStory.eventApplied||[]), chapter.id] };
+    }
+
+    if(!nextChapterId) {
+      // Ending: apply final rewards and close story
+      if(chapter?.type === "ending") {
+        const freshPlayers = await dbGetPlayers(code);
+        const count = Math.max(freshPlayers.length,1);
+        const xpE = Math.floor((chapter.rewards?.xp||0)/count);
+        const goldE = Math.floor((chapter.rewards?.gold||0)/count);
+        for(const p of freshPlayers) { const up={...p,xp:(p.xp||0)+xpE,gold:(p.gold||0)+goldE}; await dbSavePlayer(up); if(p.id===myId) setMeRaw(up); }
+        await addMsg(`🏆 **Storia conclusa**: *${activeStory.title}* — ${xpE>0?`+${xpE} XP`:''} ${goldE>0?`+${goldE} oro`:''} a testa.`, "victory", "Sistema");
+      }
+      await dbSavePartyState(code, { ...latestQs, story: { active:false, lastCompleted: storyState.storyId } });
+      setQs(prev => ({ ...prev, story: { active:false } }));
+      return;
+    }
+
+    const nextChapter = activeStory.chapters[nextChapterId];
+    updatedStory = { ...updatedStory, chapterId: nextChapterId };
+    await dbSavePartyState(code, { ...latestQs, story: updatedStory });
+    if(nextChapter) await addMsg(`📖 *${nextChapter.title}*`, "narration", "Master");
+  }
+
+  async function makeStoryChoice(choiceIdx, nextChapterId) {
+    if(!activeStory || !activeStoryChapter || !storyState) return;
+    const choiceText = activeStoryChapter.choices?.[choiceIdx]?.text || "";
+    const latestQs = await dbGetPartyState(code);
+    const newLog = [...(storyState.choiceLog||[]), { chapterId: storyState.chapterId, chapterTitle: activeStoryChapter.title, choiceIdx, choiceText, at: Date.now() }];
+    await dbSavePartyState(code, { ...latestQs, story: { ...latestQs.story, choiceLog: newLog } });
+    await addMsg(`🔀 **${me?.name}** sceglie: *${choiceText}*`, "info", "Sistema");
+    await advanceStoryChapter(nextChapterId);
+  }
+
+  async function startStoryCombat(chapter) {
+    if(!code || !me || !activeStory) return;
+    const latestQs = await dbGetPartyState(code);
+    if(latestQs.combat?.active) return;
+    const partyForCombat = await getOnlinePartyPlayersForCombat(latestQs);
+    const playerCombatants = partyForCombat.map(p => ({
+      id:p.id, name:p.name, emoji:CLASSES[p.class||"warrior"]?.emoji||"⚔️",
+      hp:p.hp, max_hp:p.maxHp, atk:p.atk+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_atk,
+      def:p.def+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_def,
+      mag:p.mag+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_mag,
+      init:p.init+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_init,
+      isPlayer:true, isSummon:false, dead:false, dying:false, stable:false,
+      rollInit: (p.init||0) + Math.floor(Math.random()*20),
+    }));
+    const monsterCombatants = chapter.monsters.map(m => ({
+      ...m, rollInit: (m.init||0) + Math.floor(Math.random()*20),
+    }));
+    const allCombatants = [...playerCombatants, ...monsterCombatants].sort((a,b)=>b.rollInit-a.rollInit);
+    const newCombat = { active:true, combatants:allCombatants, turn:0, round:1, spellSlots:{}, startedAt:Date.now(), questDmgLog:{} };
+    const newStory = { ...latestQs.story, battlePending:true, battleNext:chapter.next, battleNextFail:chapter.nextFail||null };
+    await dbSavePartyState(code, { ...latestQs, combat:newCombat, story:newStory });
+    await addMsg(`⚔️ **${chapter.title}** — Inizia il combattimento!`, "combat", "Sistema");
+    setTab("combat");
+  }
+
   async function handlePartyTrade(group, targetId, price=0) {
     if(!group?.item || !group?.entries?.length || !me || !code) return;
     const target = partyPlayers.find(p => p.id === targetId);
@@ -8479,9 +8919,18 @@ function GameScreen({ myId, setScreen, authUser }) {
       const allDone = newRooms.every(r => r.cleared);
       newDungeon = { ...newDungeon, rooms:newRooms, currentRoom:Math.min(nextRoom, newRooms.length-1), pendingCombatRoom:null, ...(allDone?{completedAt:new Date().toISOString()}:{}) };
     }
-    const newQs = { ...latestQs, combat: newCombat, persistentSpellSlots: newPersistentSlots, partyDiary: newDiaryCombat, dungeon: newDungeon };
+    // Story: advance chapter after battle victory
+    let newStoryState = latestQs.story;
+    if(latestQs.story?.battlePending) {
+      const battleNextChapter = latestQs.story.battleNext;
+      newStoryState = { ...latestQs.story, battlePending:false, battleNext:null, battleNextFail:null, chapterId: battleNextChapter };
+      const storyObj = STORIES.find(s => s.id === latestQs.story.storyId);
+      const nextChapterObj = storyObj?.chapters?.[battleNextChapter];
+      if(nextChapterObj) await addMsg(`📖 *${nextChapterObj.title}*`, "narration", "Master");
+    }
+    const newQs = { ...latestQs, combat: newCombat, persistentSpellSlots: newPersistentSlots, partyDiary: newDiaryCombat, dungeon: newDungeon, story: newStoryState };
     await dbSavePartyState(code, newQs);
-    setQs(prev => ({ ...prev, combat: newCombat, dungeon: newDungeon }));
+    setQs(prev => ({ ...prev, combat: newCombat, dungeon: newDungeon, story: newStoryState }));
     if (newDungeon?.active && newDungeon.completedAt && !latestQs.dungeon?.completedAt) {
       await addMsg(`🏆 **DUNGEON COMPLETATO!** ${newDungeon.name} — tutti i segreti svelati!`, 'victory', 'Sistema');
     }
@@ -9241,7 +9690,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🤝 Scambi"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["quest","📜 Missioni"],["story","📖 Storia"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🤝 Scambi"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
@@ -9336,6 +9785,19 @@ ${stepText(step)}`, "quest","Master");
             </div>
           );
         })()}
+        {tab==="story" && (
+          <StoryView
+            story={activeStory}
+            chapter={activeStoryChapter}
+            storyState={storyState}
+            isLeader={isStoryLeader}
+            me={me}
+            partyPlayers={partyPlayers}
+            onAdvance={advanceStoryChapter}
+            onChoice={makeStoryChoice}
+            onFight={startStoryCombat}
+          />
+        )}
         {tab==="level" && (
           <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(2,6,23,0.45)" }}>
             <div style={{ maxWidth:760, margin:"0 auto" }}>
