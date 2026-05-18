@@ -37,7 +37,7 @@ export const RACES = {
   succubus:  { name:"Succube",   emoji:"😈", hpB:5,  atkB:4,  defB:2,  magB:15, initB:6,  _secret:true, desc:"Creatura infernale. Velocità e potere magico fuori dal comune." },
 };
 
-export const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','paladin','ranger','necromancer','summoner'];
+export const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','paladin','ranger','necromancer','summoner','artificer'];
 
 export const SECRET_UNLOCK_KEY = 'eoz_secret_unlocked';
 export const SECRET_PASSWORD   = 'the chosen one';

@@ -475,7 +475,7 @@ function canAccessMasterPanel(user) {
   return !!email && MASTER_EMAILS.includes(email);
 }
 
-const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','paladin','ranger'];
+const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','paladin','ranger','necromancer','summoner','artificer'];
 
 const STATUS_EFFECTS = {
   poison: { label: 'Avvelenato',  emoji: '🐍', color: '#4ade80', damagePerRound: 3 },
@@ -9316,6 +9316,55 @@ function GameScreen({ myId, setScreen, authUser }) {
       newCombatants.splice(attackerIdx + 1, 0, summonCombatant);
       const countNow = myCurrentSummons.length < maxSummons ? myCurrentSummons.length + 1 : maxSummons;
       log += `💀 **${s.name}** (Lv.${me.level||1}) evocato al fianco di ${attacker.name}! (${countNow}/${maxSummons})\n❤️ ${summonHp} HP · ⚔️ ${summonAtk} ATK · 🛡️ ${summonDef} DEF\nAttaccherà automaticamente ogni turno.`;
+    } else if(spell.type === "reanimate") {
+      // Anima l'ultimo nemico caduto come alleato non-morto
+      const deadEnemy = [...newCombatants].reverse().find(c => !c.isPlayer && c.hp <= 0);
+      if(deadEnemy) {
+        const reanimated = {
+          ...deadEnemy,
+          id: `summon_${myId}_${Date.now()}`,
+          hp: Math.floor((deadEnemy.maxHp || deadEnemy.hp || 30) * 0.6),
+          maxHp: Math.floor((deadEnemy.maxHp || deadEnemy.hp || 30) * 0.6),
+          isPlayer: true, isSummon: true, summonOwner: myId,
+          name: `${deadEnemy.name} (Non-Morto)`,
+          rollInit: (attacker.rollInit || 10) - 0.5,
+        };
+        newCombatants = newCombatants.filter(c => c.id !== deadEnemy.id);
+        const attackerIdx = newCombatants.findIndex(c => c.id === attacker.id);
+        newCombatants.splice(Math.max(0, attackerIdx + 1), 0, reanimated);
+        log += `☠️ **${deadEnemy.name}** viene animato dalla morte e combatte al tuo fianco!\n❤️ ${reanimated.hp} HP · ⚔️ ${reanimated.atk} ATK · 🛡️ ${reanimated.def} DEF`;
+      } else {
+        log += `☠️ Nessun nemico caduto da animare sul campo.`;
+      }
+    } else if(spell.type === "resurrect") {
+      // Riporta in vita il primo alleato caduto
+      const deadAlly = newCombatants.find(c => c.isPlayer && !c.isSummon && (c.dead || c.hp <= 0));
+      if(deadAlly) {
+        const reviveHp = Math.floor((deadAlly.maxHp || 50) * 0.6);
+        newCombatants = newCombatants.map(c =>
+          c.id === deadAlly.id
+            ? { ...c, hp: reviveHp, dead: false, dying: false, stable: false, deathSuccesses: 0, deathFailures: 0 }
+            : c
+        );
+        log += `✝️ **${deadAlly.name}** risorge dalla morte con ${reviveHp} HP!\nIl potere della Necromanza sfida le leggi del mondo.`;
+      } else {
+        log += `✝️ Nessun alleato caduto da riportare in vita.`;
+      }
+    } else if(spell.type === "resurrect_all") {
+      // Riporta in vita TUTTI gli alleati caduti
+      const deadAllies = newCombatants.filter(c => c.isPlayer && !c.isSummon && (c.dead || c.hp <= 0));
+      if(deadAllies.length) {
+        newCombatants = newCombatants.map(c => {
+          if(c.isPlayer && !c.isSummon && (c.dead || c.hp <= 0)) {
+            const reviveHp = Math.floor((c.maxHp || 50) * 0.5);
+            return { ...c, hp: reviveHp, dead: false, dying: false, stable: false, deathSuccesses: 0, deathFailures: 0 };
+          }
+          return c;
+        });
+        log += `✝️ **Resurrezione di Massa!**\n${deadAllies.map(a => `• ${a.name} risorge`).join("\n")}\nLa morte stessa trema davanti al Negromante.`;
+      } else {
+        log += `✝️ Nessun alleato caduto da riportare in vita.`;
+      }
     } else {
       log += `${spell.desc || "Effetto speciale"}`;
     }

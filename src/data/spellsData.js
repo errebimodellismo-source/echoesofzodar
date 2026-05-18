@@ -300,4 +300,107 @@ export const SPELLS = {
       {id:"ra53",name:"Istinto del Predatore",emoji:"🐺",dmg:"0",type:"buff",slots:5,desc:"Sensi animali al massimo: attacchi automatici per 2 round"},
     ],
   },
+
+  // ══════════════════════════════════════════
+  //  CLASSI SEGRETE — abilità rotte
+  // ══════════════════════════════════════════
+
+  necromancer:{
+    0:[
+      {id:"nc00",name:"Tocco Necrotico",emoji:"💀",dmg:"2d8",type:"damage",slots:0,desc:"Energia della morte che drena la vitalità nemica — gratuito ogni turno"},
+      {id:"nc01",name:"Dito della Morte",emoji:"🖤",dmg:"1d10",type:"damage",slots:0,desc:"Un dito puntato che emette energia letale, senza costo"},
+    ],
+    1:[
+      {id:"nc11",name:"Raggio Vitale",emoji:"🩸",dmg:"3d8",type:"damage",slots:1,desc:"Raggio che prosciuga la vita nemica e la trasferisce al Negromante (+MAG/4 HP)"},
+      {id:"nc12",name:"Paura",emoji:"😱",dmg:"0",type:"control",slots:1,desc:"Il nemico più potente è paralizzato dal terrore e salta il prossimo turno"},
+      {id:"nc13",name:"Ossa Frantumate",emoji:"🦴",dmg:"4d6",type:"damage",slots:1,desc:"Frantuma le ossa del bersaglio riducendo DEF di 3 permanentemente"},
+      {id:"nc14",name:"Evoca Scheletro",emoji:"💀",dmg:"0",type:"summon",slots:1,desc:"Evoca uno Scheletro Guerriero obbediente",summon:{name:"Scheletro Guerriero",emoji:"💀",hp:50,atk:14,def:8,dmgDie:"2d8"},maxSummons:3},
+    ],
+    2:[
+      {id:"nc21",name:"Anima il Morto",emoji:"☠️",dmg:"0",type:"reanimate",slots:2,desc:"Anima l'ultimo nemico caduto — combatterà al tuo fianco come non-morto"},
+      {id:"nc22",name:"Drenaggio Vitale",emoji:"💉",dmg:"5d8",type:"damage",slots:2,desc:"Assorbe massicci HP nemici — cura il Negromante per metà del danno inflitto"},
+      {id:"nc23",name:"Maledizione Putrescente",emoji:"🤢",dmg:"3d10",type:"damage",slots:2,desc:"Maledizione progressiva: il nemico subisce il doppio del danno per 2 round"},
+    ],
+    3:[
+      {id:"nc31",name:"Risurrezione",emoji:"✝️",dmg:"0",type:"resurrect",slots:3,desc:"Riporta in vita il primo alleato caduto con il 60% degli HP massimi"},
+      {id:"nc32",name:"Ondata di Non-Morti",emoji:"💀",dmg:"0",type:"summon",slots:3,desc:"Evoca tre Scheletri d'Elite contemporaneamente",summon:{name:"Scheletro d'Elite",emoji:"💀",hp:70,atk:20,def:12,dmgDie:"3d8"},maxSummons:4},
+      {id:"nc33",name:"Esplosione di Anime",emoji:"👻",dmg:"8d10",type:"damage",slots:3,desc:"Libera le anime dei caduti in un'esplosione devastante contro tutti i nemici"},
+    ],
+    4:[
+      {id:"nc41",name:"Legione degli Scheletri",emoji:"💀",dmg:"0",type:"summon",slots:4,desc:"Evoca un Signore Non-Morto potenziato dal livello del Negromante",summon:{name:"Signore Non-Morto",emoji:"👑",hp:120,atk:28,def:16,dmgDie:"4d10"},maxSummons:5},
+      {id:"nc42",name:"Morte Istantanea",emoji:"💀",dmg:"0",type:"control",slots:4,desc:"Il nemico con meno HP muore istantaneamente (se sotto il 40% HP massimi)"},
+      {id:"nc43",name:"Aura della Morte",emoji:"🌑",dmg:"6d12",type:"damage",slots:4,desc:"Aura necrotica che avvolge il campo e danneggia tutti i nemici per 2 round"},
+    ],
+    5:[
+      {id:"nc51",name:"Apocalisse dei Morti",emoji:"☠️",dmg:"12d12",type:"damage",slots:5,desc:"Il potere assoluto della morte: danno devastante su TUTTI i nemici"},
+      {id:"nc52",name:"Lich Form",emoji:"💀",dmg:"0",type:"summon",slots:5,desc:"Evoca il Lich Campione, avatar della morte",summon:{name:"Lich Campione",emoji:"💀",hp:200,atk:40,def:22,dmgDie:"5d12"},maxSummons:6},
+      {id:"nc53",name:"Resurrezione di Massa",emoji:"✝️",dmg:"0",type:"resurrect_all",slots:5,desc:"Riporta in vita TUTTI gli alleati caduti con il 50% degli HP massimi"},
+    ],
+  },
+
+  summoner:{
+    0:[
+      {id:"sm00",name:"Frammento Planare",emoji:"🌀",dmg:"2d6",type:"damage",slots:0,desc:"Scaglia un frammento di energia planare — gratuito ogni turno"},
+      {id:"sm01",name:"Manifestazione",emoji:"✨",dmg:"1d8",type:"damage",slots:0,desc:"Una breve manifestazione di potere evocativo, senza costo"},
+    ],
+    1:[
+      {id:"sm11",name:"Evoca Lupo Spettrale",emoji:"🐺",dmg:"0",type:"summon",slots:1,desc:"Evoca un Lupo Spettrale che attacca con ferocia",summon:{name:"Lupo Spettrale",emoji:"🐺",hp:55,atk:16,def:8,dmgDie:"2d8"},maxSummons:2},
+      {id:"sm12",name:"Evoca Elementale Minore",emoji:"🔥",dmg:"0",type:"summon",slots:1,desc:"Porta un elementale del fuoco dal piano elementale",summon:{name:"Elementale del Fuoco",emoji:"🔥",hp:60,atk:18,def:6,dmgDie:"2d10"},maxSummons:2},
+      {id:"sm13",name:"Legame Planare",emoji:"🌀",dmg:"3d8",type:"damage",slots:1,desc:"Apri un varco instabile che squarcia il nemico con energia planare"},
+    ],
+    2:[
+      {id:"sm21",name:"Evoca Demone delle Ombre",emoji:"😈",dmg:"0",type:"summon",slots:2,desc:"Richiami un demone dal piano delle ombre",summon:{name:"Demone delle Ombre",emoji:"😈",hp:80,atk:22,def:12,dmgDie:"3d10"},maxSummons:2},
+      {id:"sm22",name:"Portale Esplosivo",emoji:"🌀",dmg:"6d8",type:"damage",slots:2,desc:"Apri un portale instabile che esplode in faccia ai nemici"},
+      {id:"sm23",name:"Evoca Grifone da Guerra",emoji:"🦅",dmg:"0",type:"summon",slots:2,desc:"Un grifone alato obbedisce ai tuoi comandi",summon:{name:"Grifone da Guerra",emoji:"🦅",hp:75,atk:24,def:14,dmgDie:"2d12"},maxSummons:2},
+    ],
+    3:[
+      {id:"sm31",name:"Evoca Drago Minore",emoji:"🐉",dmg:"0",type:"summon",slots:3,desc:"Apri un varco e un giovane drago emerge — devastante",summon:{name:"Drago Minore",emoji:"🐉",hp:110,atk:30,def:18,dmgDie:"3d12"},maxSummons:3},
+      {id:"sm32",name:"Tempesta Planare",emoji:"⚡",dmg:"9d10",type:"damage",slots:3,desc:"Convochi l'energia pura di altri piani in una tempesta devastante"},
+      {id:"sm33",name:"Evoca Idra",emoji:"🐍",dmg:"0",type:"summon",slots:3,desc:"L'Idra a più teste non smette mai di attaccare",summon:{name:"Idra Evocata",emoji:"🐍",hp:100,atk:26,def:16,dmgDie:"4d10"},maxSummons:3},
+    ],
+    4:[
+      {id:"sm41",name:"Evoca Golem di Cristallo",emoji:"💎",dmg:"0",type:"summon",slots:4,desc:"Un costrutto indistruttibile risponde alla tua chiamata",summon:{name:"Golem di Cristallo",emoji:"💎",hp:150,atk:35,def:24,dmgDie:"4d12"},maxSummons:4},
+      {id:"sm42",name:"Convocazione di Massa",emoji:"🌀",dmg:"0",type:"summon",slots:4,desc:"Evoca simultaneamente due potenti creature alleate",summon:{name:"Guardiano Planare",emoji:"👁️",hp:90,atk:28,def:18,dmgDie:"3d12"},maxSummons:4},
+      {id:"sm43",name:"Implosione Dimensionale",emoji:"🌌",dmg:"10d10",type:"damage",slots:4,desc:"Il vuoto tra i piani collassa su tutti i nemici con forza distruttiva"},
+    ],
+    5:[
+      {id:"sm51",name:"Evoca Titano",emoji:"🗿",dmg:"0",type:"summon",slots:5,desc:"Il Titano — la creatura più potente dei piani — obbedisce ai tuoi ordini",summon:{name:"Titano Evocato",emoji:"🗿",hp:220,atk:45,def:28,dmgDie:"5d12"},maxSummons:5},
+      {id:"sm52",name:"Apocalisse Planare",emoji:"🌌",dmg:"14d10",type:"damage",slots:5,desc:"Apri tutti i portali contemporaneamente: energia pura di ogni piano distrugge ogni nemico"},
+      {id:"sm53",name:"Legione Infinita",emoji:"⚔️",dmg:"0",type:"summon",slots:5,desc:"Evoca il Campione dei Piani, l'alleato definitivo",summon:{name:"Campione dei Piani",emoji:"⚔️",hp:180,atk:40,def:25,dmgDie:"4d12"},maxSummons:6},
+    ],
+  },
+
+  artificer:{
+    0:[
+      {id:"af00",name:"Granata Mini",emoji:"💣",dmg:"2d8",type:"damage",slots:0,desc:"Piccola granata artigianale — sempre disponibile"},
+      {id:"af01",name:"Scossa Elettrica",emoji:"⚡",dmg:"1d10",type:"damage",slots:0,desc:"Guanto elettrico di costruzione propria, senza consumo"},
+    ],
+    1:[
+      {id:"af11",name:"Bomba a Frammentazione",emoji:"💥",dmg:"4d8",type:"damage",slots:1,desc:"Esplode colpendo tutti i nemici nell'area"},
+      {id:"af12",name:"Torretta Automatica",emoji:"🤖",dmg:"0",type:"summon",slots:1,desc:"Deploya una torretta da combattimento automatica",summon:{name:"Torretta da Combattimento",emoji:"🤖",hp:60,atk:16,def:10,dmgDie:"2d8"},maxSummons:2},
+      {id:"af13",name:"Granata Fumogena",emoji:"💨",dmg:"0",type:"control",slots:1,desc:"Fumo che disorienta i nemici: -4 ATK per 2 round a tutti"},
+      {id:"af14",name:"Scudo Energetico",emoji:"🔵",dmg:"0",type:"defense",slots:1,desc:"+8 DEF fino al prossimo turno grazie all'armatura potenziata"},
+    ],
+    2:[
+      {id:"af21",name:"Bomba Termica",emoji:"🌡️",dmg:"6d10",type:"damage",slots:2,desc:"Temperatura estrema che fonde armature e brucia la carne"},
+      {id:"af22",name:"Granata Magnetica",emoji:"🧲",dmg:"0",type:"control",slots:2,desc:"Attira i nemici metallici e li immobilizza per 1 round"},
+      {id:"af23",name:"Drone d'Attacco",emoji:"🚁",dmg:"0",type:"summon",slots:2,desc:"Drone volante armato che colpisce dall'alto",summon:{name:"Drone d'Attacco",emoji:"🚁",hp:50,atk:20,def:8,dmgDie:"3d8"},maxSummons:2},
+      {id:"af24",name:"Esoscheletro Potenziato",emoji:"⚙️",dmg:"0",type:"buff",slots:2,desc:"+5 ATK e +5 DEF per 3 round grazie all'esoscheletro servomotorizzato"},
+    ],
+    3:[
+      {id:"af31",name:"Missile Devastante",emoji:"🚀",dmg:"8d12",type:"damage",slots:3,desc:"Missile telecomandato ad alta carica esplosiva su un singolo bersaglio"},
+      {id:"af32",name:"Bomba EMP",emoji:"💡",dmg:"5d10",type:"damage",slots:3,desc:"Impulso elettromagnetico devastante — bypassa completamente la DEF nemica"},
+      {id:"af33",name:"Drago Meccanico",emoji:"🤖",dmg:"0",type:"summon",slots:3,desc:"Il pezzo forte: un drago meccanico costruito in segreto",summon:{name:"Drago Meccanico",emoji:"🤖",hp:130,atk:34,def:20,dmgDie:"4d10"},maxSummons:3},
+    ],
+    4:[
+      {id:"af41",name:"Cannone di Plasma",emoji:"🔫",dmg:"10d10",type:"damage",slots:4,desc:"Raggio di plasma che vaporizza tutto ciò che colpisce"},
+      {id:"af42",name:"Protocollo Nemesi",emoji:"🎯",dmg:"8d10",type:"damage",slots:4,desc:"Analizza i punti deboli e colpisce con precisione chirurgica — danno raddoppiato"},
+      {id:"af43",name:"Mech da Battaglia",emoji:"🦾",dmg:"0",type:"summon",slots:4,desc:"Deploya un mech da battaglia completamente armato",summon:{name:"Mech da Battaglia",emoji:"🦾",hp:170,atk:38,def:22,dmgDie:"4d12"},maxSummons:4},
+    ],
+    5:[
+      {id:"af51",name:"Protocollo Overkill",emoji:"💥",dmg:"14d12",type:"damage",slots:5,desc:"Attiva TUTTI i sistemi d'arma contemporaneamente su ogni nemico presente"},
+      {id:"af52",name:"Bomba Nucleare Arcana",emoji:"☢️",dmg:"12d12",type:"damage",slots:5,desc:"La bomba definitiva — distrugge l'intero campo di battaglia"},
+      {id:"af53",name:"Titano Meccanico",emoji:"🤖",dmg:"0",type:"summon",slots:5,desc:"Il capolavoro dell'Artefice: un titano meccanico invincibile",summon:{name:"Titano Meccanico",emoji:"🤖",hp:250,atk:48,def:30,dmgDie:"6d12"},maxSummons:5},
+    ],
+  },
 };
