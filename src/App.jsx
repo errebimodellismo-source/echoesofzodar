@@ -11328,9 +11328,6 @@ ${stepText(step)}`, "quest","Master");
                           🔔 Notifiche
                         </button>
                       )}
-                      <button onClick={()=>setCombatView(v=>v==='visual'?'cards':'visual')} style={{ padding:"0.25rem 0.8rem", background: combatView==='visual'?"rgba(239,68,68,0.2)":"rgba(30,41,59,0.5)", border:`1px solid ${combatView==='visual'?"#ef4444":"#475569"}`, borderRadius:6, color: combatView==='visual'?"#fca5a5":"#94a3b8", cursor:"pointer", fontSize:"0.68rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.05em", transition:"all 0.2s" }}>
-                        {combatView==='visual'?"🗺️ Vista Campo":"📋 Vista Schede"}
-                      </button>
                     </div>
                   </div>
                   {myTurn&&(
@@ -11347,74 +11344,16 @@ ${stepText(step)}`, "quest","Master");
 
                 <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1.7fr) minmax(320px,0.95fr)", gap:"1rem", alignItems:"start" }}>
                   <div>
-                    {combatView==='visual' && (
-                      <div style={{ marginBottom:"1rem", padding:"1rem", background:"rgba(10,15,30,0.7)", border:"1px solid rgba(127,29,29,0.3)", borderRadius:14 }}>
-                        <CombatVisualizer combat={combat} myId={myId} isMobile={isMobile} />
-                      </div>
-                    )}
-                    <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "repeat(auto-fill,minmax(250px,1fr))", gap:12, marginBottom:"1rem" }}>
-                  {combat.combatants.filter(c => !c.isPlayer || c.isSummon || c.id === myId).map((c,i)=>{
-                    const isActive = combat.combatants.indexOf(c)===combat.turn%combat.combatants.length;
-                    const isShaking = shakingIds.has(c.id);
-                    return (
-                      <div key={c.id||i} style={{ background:isActive?"linear-gradient(135deg, rgba(127,29,29,0.34), rgba(15,23,42,0.9))":c.isSummon?"rgba(10,40,20,0.82)":"rgba(15,23,42,0.82)", border:`2px solid ${isActive?"#ef4444":c.isSummon?"#22c55e":c.isPlayer?"#6d28d9":"#7f1d1d"}`, borderRadius:12, padding:"0.95rem", opacity:c.hp<=0?0.45:1, boxShadow:isActive?"0 16px 36px rgba(127,29,29,0.24)":"0 12px 30px rgba(0,0,0,0.16)", animation: isShaking ? "hitShake 0.5s ease, hitFlash 0.5s ease" : "none", willChange: isShaking ? "transform" : "auto" }}>
-                        <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:8 }}>
-                          <ArtThumb src={c.isSummon ? getMonsterImage(c) : c.isPlayer ? getPlayerPortrait(c) : getMonsterImage(c)} alt={c.name} size={70} radius={16} />
-                          <div style={{ flex:1 }}>
-                            <div style={{ fontFamily:"'Cinzel',serif", color:c.isPlayer?"#ddd6fe":"#fecaca", fontSize:"0.98rem", fontWeight:700, marginBottom:2 }}>{c.name}{c.isBoss?" ⭐":""}</div>
-                            <div style={{ fontSize:"0.75rem", color:"#94a3b8" }}>Iniziativa: {c.rollInit}</div>
-                          </div>
-                          {isActive&&(
-                            <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3 }}>
-                              <span style={{ fontSize:"0.7rem", padding:"0.22rem 0.45rem", background:"#7f1d1d", borderRadius:999, color:"#fca5a5", fontFamily:"'Cinzel',serif" }}>ATTIVO</span>
-                              {c.isPlayer && turnTimeLeft!==null && (
-                                <span style={{ fontSize:"0.78rem", fontWeight:700, color:turnTimeLeft<=5?"#ef4444":turnTimeLeft<=10?"#f97316":"#94a3b8", transition:"color 0.3s" }}>⏱ {turnTimeLeft}s</span>
-                              )}
-                            </div>
-                          )}
-                        </div>
-                        {(c.dying || c.stable || c.dead || (c.statusEffects||[]).length > 0) && (
-                          <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:8, fontSize:"0.68rem" }}>
-                            {c.dying && <span style={{ padding:"2px 6px", borderRadius:999, background:"rgba(127,29,29,0.35)", border:"1px solid #ef4444", color:"#fecaca" }}>🕯️ Morente</span>}
-                            {c.stable && <span style={{ padding:"2px 6px", borderRadius:999, background:"rgba(30,41,59,0.5)", border:"1px solid #64748b", color:"#cbd5e1" }}>😵 Stabile</span>}
-                            {c.dead && <span style={{ padding:"2px 6px", borderRadius:999, background:"rgba(24,24,27,0.7)", border:"1px solid #71717a", color:"#e4e4e7" }}>☠️ Morto</span>}
-                            {(c.dying || c.stable) && <span style={{ color:"#fecaca" }}>{c.deathSuccesses || 0}/3 ✓ • {c.deathFailures || 0}/3 ✗</span>}
-                            {(c.statusEffects||[]).map(fx => {
-                              const def = STATUS_EFFECTS[fx.type];
-                              if(!def) return null;
-                              return <span key={fx.type} style={{ padding:"2px 6px", borderRadius:999, background:"rgba(0,0,0,0.4)", border:`1px solid ${def.color}`, color:def.color }}>{def.emoji} {def.label} {fx.duration}t</span>;
-                            })}
-                          </div>
-                        )}
-                        <HpBar cur={c.hp} max={c.maxHp} red={!c.isPlayer} />
-                        {c.isPlayer && MAGIC_CLASSES.includes(c.class) && (() => {
-                          const playerLvl = partyPlayers.find(p=>p.id===c.id)?.level || c.level || 1;
-                          const maxSlots = getSpellSlots(playerLvl);
-                          const max = totalSlots(maxSlots);
-                          if(max <= 0) return null;
-                          const rawStored = combat?.spellSlots?.[c.id] || qs?.persistentSpellSlots?.[c.id];
-                          const curSlots = rawStored ? Object.fromEntries([1,2,3,4,5].map(k=>[k, rawStored[k]!==undefined?rawStored[k]:(maxSlots[k]??0)])) : maxSlots;
-                          const cur = totalSlots(curSlots);
-                          const pct = Math.min(100, Math.round((cur/max)*100));
-                          return (
-                            <div style={{ marginTop:5 }}>
-                              <div style={{ height:4, background:"rgba(30,41,59,0.6)", borderRadius:2, overflow:"hidden" }}>
-                                <div style={{ height:"100%", width:`${pct}%`, background:`linear-gradient(90deg,${cur===0?"#4b0082":"#6d28d9"},${cur===0?"#7c3aed":"#a78bfa"})`, borderRadius:2, transition:"width .4s" }}/>
-                              </div>
-                              <div style={{ display:"flex", justifyContent:"space-between", marginTop:2, fontSize:"0.62rem", color:"#a78bfa" }}>
-                                <span>✨ Mana</span>
-                                <span>{cur}</span>
-                              </div>
-                            </div>
-                          );
-                        })()}
-                        <div style={{ display:"flex", justifyContent:"space-between", marginTop:6, fontSize:"0.74rem" }}>
-                          <span style={{ color:c.isSummon?"#4ade80":c.isPlayer?"#c4b5fd":"#fca5a5" }}>{c.isSummon?"🔮 Evocato":c.isPlayer?"Alleato":"Nemico"}</span>
-                          <span style={{ color:"#e2e8f0", fontWeight:700 }}>{c.hp}/{c.maxHp} HP</span>
-                        </div>
-                      </div>
-                    );
-                  })}
+                    <div style={{ marginBottom:"1rem", padding:"1rem", background:"rgba(10,15,30,0.7)", border:"1px solid rgba(127,29,29,0.3)", borderRadius:14 }}>
+                      <CombatVisualizer
+                        combat={combat}
+                        myId={myId}
+                        isMobile={isMobile}
+                        images={Object.fromEntries(combat.combatants.map(c => [
+                          c.id,
+                          c.isSummon ? getMonsterImage(c) : c.isPlayer ? getPlayerPortrait(c) : getMonsterImage(c)
+                        ]))}
+                      />
                     </div>
                   </div>
 

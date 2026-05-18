@@ -38,9 +38,10 @@ function FloatNumber({ value, onDone }) {
   );
 }
 
-function CombatantCard({ c, isActive, floats, isMobile }) {
+function CombatantCard({ c, isActive, floats, isMobile, imgSrc }) {
   const isDead = c.dead || c.hp <= 0;
   const isDying = c.dying && !c.dead;
+  const [imgErr, setImgErr] = useState(false);
 
   const borderColor = isDead ? '#374151'
     : isActive ? (c.isPlayer ? '#fbbf24' : '#ef4444')
@@ -55,6 +56,7 @@ function CombatantCard({ c, isActive, floats, isMobile }) {
     : 'rgba(15,23,42,0.88)';
 
   const cardFloats = floats.filter(f => f.id === c.id);
+  const imgSize = isMobile ? 72 : 96;
 
   return (
     <div style={{
@@ -74,21 +76,41 @@ function CombatantCard({ c, isActive, floats, isMobile }) {
         <FloatNumber key={f.key} value={f.dmg} onDone={f.onDone} />
       ))}
 
-      {/* Header: emoji + name */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 6 }}>
-        <span style={{
-          fontSize: isMobile ? '1.8rem' : '2.2rem',
-          filter: isDead ? 'grayscale(1)' : isActive ? 'drop-shadow(0 0 6px gold)' : 'none',
-          transition: 'filter 0.3s',
-          lineHeight: 1,
+      {/* Portrait */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+        <div style={{
+          width: imgSize, height: imgSize, minWidth: imgSize, flexShrink: 0,
+          borderRadius: 12, overflow: 'hidden',
+          border: `2px solid ${borderColor}`,
+          background: 'rgba(15,23,42,0.8)',
+          boxShadow: isActive ? `0 0 14px ${c.isPlayer ? '#fbbf2466' : '#ef444466'}` : '0 4px 12px rgba(0,0,0,0.4)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          filter: isDead ? 'grayscale(1)' : 'none',
+          transition: 'filter 0.4s',
         }}>
-          {isDead ? '💀' : c.emoji || (c.isPlayer ? '🧙' : '👾')}
-        </span>
+          {imgSrc && !imgErr ? (
+            <img
+              src={imgSrc}
+              alt={c.name}
+              onError={() => setImgErr(true)}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+            />
+          ) : (
+            <span style={{
+              fontSize: isMobile ? '2.2rem' : '2.8rem',
+              filter: isDead ? 'grayscale(1)' : isActive ? 'drop-shadow(0 0 6px gold)' : 'none',
+              lineHeight: 1,
+            }}>
+              {isDead ? '💀' : c.emoji || (c.isPlayer ? '🧙' : '👾')}
+            </span>
+          )}
+        </div>
+
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{
             fontFamily: "'Cinzel',serif",
             color: isDead ? '#6b7280' : c.isPlayer ? '#ddd6fe' : '#fecaca',
-            fontSize: isMobile ? '0.78rem' : '0.88rem',
+            fontSize: isMobile ? '0.8rem' : '0.92rem',
             fontWeight: 700,
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
           }}>
@@ -97,19 +119,20 @@ function CombatantCard({ c, isActive, floats, isMobile }) {
           <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: 1 }}>
             {isDead ? 'Eliminato' : isDying ? '🕯️ Morente' : c.isSummon ? '🔮 Evocato' : c.isPlayer ? 'Alleato' : 'Nemico'}
           </div>
+          {isActive && !isDead && (
+            <span style={{
+              display: 'inline-block', marginTop: 4,
+              fontSize: '0.6rem', padding: '2px 6px',
+              background: c.isPlayer ? 'rgba(251,191,36,0.2)' : 'rgba(239,68,68,0.2)',
+              border: `1px solid ${c.isPlayer ? '#fbbf24' : '#ef4444'}`,
+              borderRadius: 999, color: c.isPlayer ? '#fbbf24' : '#ef4444',
+              fontFamily: "'Cinzel',serif", letterSpacing: '0.06em',
+              animation: 'pulse 1s ease infinite',
+            }}>
+              ▶ ATTIVO
+            </span>
+          )}
         </div>
-        {isActive && !isDead && (
-          <span style={{
-            fontSize: '0.6rem', padding: '2px 6px',
-            background: c.isPlayer ? 'rgba(251,191,36,0.2)' : 'rgba(239,68,68,0.2)',
-            border: `1px solid ${c.isPlayer ? '#fbbf24' : '#ef4444'}`,
-            borderRadius: 999, color: c.isPlayer ? '#fbbf24' : '#ef4444',
-            fontFamily: "'Cinzel',serif", letterSpacing: '0.06em',
-            animation: 'pulse 1s ease infinite',
-          }}>
-            ▶ ATTIVO
-          </span>
-        )}
       </div>
 
       {/* HP */}
@@ -150,11 +173,10 @@ function CombatantCard({ c, isActive, floats, isMobile }) {
   );
 }
 
-export default function CombatVisualizer({ combat, myId, isMobile }) {
+export default function CombatVisualizer({ combat, myId, isMobile, images = {} }) {
   const { combatants = [], turn = 0, round = 1 } = combat || {};
   const activeIdx = turn % Math.max(1, combatants.length);
 
-  // Floating damage numbers
   const prevHpRef = useRef({});
   const [floats, setFloats] = useState([]);
 
@@ -229,6 +251,7 @@ export default function CombatVisualizer({ combat, myId, isMobile }) {
               isActive={combatants[activeIdx]?.id === c.id}
               floats={floats}
               isMobile={isMobile}
+              imgSrc={images[c.id] || ''}
             />
           ))}
           {players.length === 0 && (
@@ -270,6 +293,7 @@ export default function CombatVisualizer({ combat, myId, isMobile }) {
               isActive={combatants[activeIdx]?.id === c.id}
               floats={floats}
               isMobile={isMobile}
+              imgSrc={images[c.id] || ''}
             />
           ))}
           {monsters.length === 0 && (
