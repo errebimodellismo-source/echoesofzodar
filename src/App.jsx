@@ -6184,7 +6184,9 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
         <div style={{ display:"flex", alignItems:"center", gap:10, padding:"0.6rem 0.9rem", background:"rgba(15,23,42,0.6)", borderRadius:8, border:"1px solid #1e293b" }}>
           <span style={{ fontSize:"1.4rem" }}>{story.emoji}</span>
           <div>
-            <div style={{ color:"#94a3b8", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>Storia in corso</div>
+            <div style={{ color:"#94a3b8", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>
+              Storia in corso · {storyState?.mode === "solo" ? "🧍 Solitaria" : "👥 Party"}
+            </div>
             <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontSize:"0.9rem", fontWeight:700 }}>{story.title}</div>
           </div>
           {currentChapter && (
@@ -6192,6 +6194,12 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
               <div>{currentChapter.title}</div>
               <div style={{ color:col.accent }}>{scene.title}</div>
             </div>
+          )}
+          {isLeader && (
+            <button
+              onClick={()=>{ if(window.confirm("Abbandonare la storia? Il progresso verrà perso.")) onAdvance(null); }}
+              style={{ marginLeft: currentChapter ? "0.5rem" : "auto", padding:"0.25rem 0.7rem", background:"transparent", border:"1px solid #475569", borderRadius:6, color:"#64748b", cursor:"pointer", fontSize:"0.72rem", whiteSpace:"nowrap" }}
+            >✕ Abbandona</button>
           )}
         </div>
 
