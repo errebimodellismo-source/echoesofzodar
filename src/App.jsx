@@ -1157,11 +1157,12 @@ function mergeCatalogItems(items=[]) {
   return Array.from(merged.values()).sort((a,b)=>a.name.localeCompare(b.name, "it"));
 }
 function itemSlot(item) {
-  if(item?.slot) return item.slot;
+  const raw = item?.slot;
+  if(raw && raw !== "armor" && raw !== "shield" && raw !== "accessory") return raw;
   if(item?.type === "weapon" || item?.weapon_die) return "weapon";
-  if(item?.type === "armor") return "armor";
-  if(item?.type === "shield") return "shield";
-  if(item?.type === "accessory") return "accessory";
+  if(item?.type === "armor" || raw === "armor") return "chest";
+  if(item?.type === "shield" || raw === "shield") return "offhand";
+  if(item?.type === "accessory" || raw === "accessory") return "amulet";
   if(item?.type === "magic") return "weapon";
   return null;
 }
