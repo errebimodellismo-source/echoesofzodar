@@ -3481,7 +3481,9 @@ function MasterPanel({ setScreen, authUser }) {
             const story = STORIES.find(s => s.id === storyId);
             if(!story || !partyCode) return;
             const latestQs = await dbGetPartyState(partyCode);
-            const newStory = { active:true, storyId, chapterId:story.startChapter, startedAt:Date.now(), choiceLog:[], lootCollected:[], eventApplied:[], battlePending:false, battleNext:null, battleNextFail:null };
+            const firstChapter = story.chapters[0];
+            const firstSceneId = firstChapter?.startScene;
+            const newStory = { active:true, storyId, currentChapterId:firstChapter?.id, currentSceneId:firstSceneId, storyFlags:{}, choiceLog:[], visitedScenes:[firstSceneId].filter(Boolean), rewardCollected:[], battlePending:false, battleNext:null, battleNextFail:null, startedAt:Date.now() };
             await dbSavePartyState(partyCode, { ...latestQs, story: newStory });
             await supabase.from("messages").insert({ party_code:partyCode, author:"Master", content:`📖 **La storia inizia**: ${story.emoji} *${story.title}*`, type:"narration" });
           }}
@@ -3489,9 +3491,11 @@ function MasterPanel({ setScreen, authUser }) {
             const latestQs = await dbGetPartyState(partyCode);
             await dbSavePartyState(partyCode, { ...latestQs, story:{ active:false } });
           }}
-          onJump={async (storyId, partyCode, chapterId) => {
+          onJump={async (storyId, partyCode, sceneId) => {
             const latestQs = await dbGetPartyState(partyCode);
-            await dbSavePartyState(partyCode, { ...latestQs, story:{ ...latestQs.story, chapterId } });
+            const story = STORIES.find(s => s.id === storyId);
+            const scene = story?.scenes?.[sceneId];
+            await dbSavePartyState(partyCode, { ...latestQs, story:{ ...latestQs.story, currentSceneId:sceneId, currentChapterId:scene?.chapterId||latestQs.story?.currentChapterId } });
           }}
           dbGetPartyState={dbGetPartyState}
         />
@@ -5793,25 +5797,32 @@ function DonateView({ me, players, groups, loading, onTrade }) {
   );
 }
 
-// ─── StoryView ────────────────────────────────────────────────
+// ─── StoryView v2 ─────────────────────────────────────────────
 const STORY_TYPE_COLORS = {
-  narration: { accent:"#a78bfa", bg:"rgba(109,40,217,0.12)", border:"#6d28d9" },
-  choice:    { accent:"#fbbf24", bg:"rgba(180,83,9,0.12)",   border:"#b45309" },
-  battle:    { accent:"#f87171", bg:"rgba(127,29,29,0.18)",  border:"#991b1b" },
-  loot:      { accent:"#34d399", bg:"rgba(6,78,59,0.18)",    border:"#065f46" },
-  event:     { accent:"#60a5fa", bg:"rgba(30,58,138,0.18)",  border:"#1e40af" },
-  rest:      { accent:"#86efac", bg:"rgba(20,83,45,0.18)",   border:"#14532d" },
-  ending:    { accent:"#fde68a", bg:"rgba(120,53,15,0.22)",  border:"#92400e" },
+  story:       { accent:"#a78bfa", bg:"rgba(109,40,217,0.12)", border:"#6d28d9" },
+  narration:   { accent:"#a78bfa", bg:"rgba(109,40,217,0.12)", border:"#6d28d9" },
+  choice:      { accent:"#fbbf24", bg:"rgba(180,83,9,0.12)",   border:"#b45309" },
+  skillCheck:  { accent:"#c084fc", bg:"rgba(88,28,135,0.18)",  border:"#7e22ce" },
+  combat:      { accent:"#f87171", bg:"rgba(127,29,29,0.18)",  border:"#991b1b" },
+  reward:      { accent:"#34d399", bg:"rgba(6,78,59,0.18)",    border:"#065f46" },
+  loot:        { accent:"#34d399", bg:"rgba(6,78,59,0.18)",    border:"#065f46" },
+  event:       { accent:"#60a5fa", bg:"rgba(30,58,138,0.18)",  border:"#1e40af" },
+  rest:        { accent:"#86efac", bg:"rgba(20,83,45,0.18)",   border:"#14532d" },
+  ending:      { accent:"#fde68a", bg:"rgba(120,53,15,0.22)",  border:"#92400e" },
+  gameOver:    { accent:"#ff4444", bg:"rgba(80,0,0,0.3)",      border:"#7f1d1d" },
+  returnPoint: { accent:"#fb923c", bg:"rgba(120,53,15,0.14)",  border:"#92400e" },
 };
-const ENDING_ICONS = { good:"🏆", neutral:"🤝", fail:"💀" };
+const SCENE_ICON = { story:"📜", narration:"📜", choice:"🔀", skillCheck:"🎲", combat:"⚔️", reward:"💰", loot:"💰", event:"⚡", rest:"🏕️", ending:"🏁", gameOver:"💀", returnPoint:"🔁" };
+const ENDING_ICONS = { good:"🏆", neutral:"🤝", fail:"💀", secret:"✨" };
 
 function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, dbGetPartyState }) {
   const [selectedStory, setSelectedStory] = useState(stories[0]?.id || "");
   const [selectedParty, setSelectedParty] = useState("");
   const [partyStoryStates, setPartyStoryStates] = useState({});
-  const [jumpChapter, setJumpChapter] = useState("");
+  const [jumpScene, setJumpScene] = useState("");
   const [busy, setBusy] = useState(false);
   const [expandedStory, setExpandedStory] = useState(null);
+  const [showDiagram, setShowDiagram] = useState(null);
 
   useEffect(() => {
     if(!parties.length) return;
@@ -5822,11 +5833,10 @@ function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, dbGetPa
   }, [parties]);
 
   const story = stories.find(s => s.id === selectedStory);
-  const ENDING_COLORS = { good:"#22c55e", neutral:"#f59e0b", fail:"#ef4444" };
+  const TYPE_COLOR = { story:"#6366f1", choice:"#f59e0b", skillCheck:"#c084fc", combat:"#ef4444", reward:"#22c55e", ending:"#fde68a", gameOver:"#ff4444", returnPoint:"#fb923c" };
 
   return (
     <div style={{ display:"grid", gap:"1.2rem" }}>
-      {/* ── Story list ── */}
       <Card title="📚 Catalogo Storie">
         <div style={{ display:"grid", gap:"0.8rem" }}>
           {stories.map(s => (
@@ -5835,23 +5845,31 @@ function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, dbGetPa
                 <span style={{ fontSize:"1.5rem" }}>{s.emoji}</span>
                 <div style={{ flex:1 }}>
                   <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700 }}>{s.title}</div>
-                  <div style={{ color:"#64748b", fontSize:"0.75rem" }}>Lv.{s.minLevel}+ · {s.estDuration} · {Object.keys(s.chapters).length} capitoli · {s.tags?.join(", ")}</div>
+                  <div style={{ color:"#64748b", fontSize:"0.75rem" }}>{s.difficulty} · {s.chapters?.length} capitoli · {Object.keys(s.scenes||{}).length} scene · {s.tags?.join(", ")}</div>
                 </div>
+                <SmallBtn onClick={e=>{e.stopPropagation();setShowDiagram(showDiagram===s.id?null:s.id);}}>🗺️ Mappa</SmallBtn>
                 <span style={{ color:"#475569", fontSize:"0.8rem" }}>{expandedStory===s.id?"▲":"▼"}</span>
               </div>
               {expandedStory===s.id && (
                 <div style={{ padding:"0 0.9rem 0.9rem", borderTop:"1px solid #1e293b" }}>
                   <p style={{ color:"#94a3b8", fontSize:"0.84rem", margin:"0.6rem 0 0.8rem" }}>{s.description}</p>
-                  <div style={{ display:"flex", flexWrap:"wrap", gap:6 }}>
-                    {Object.values(s.chapters).map(ch => {
-                      const colMap = { narration:"#6366f1", choice:"#f59e0b", battle:"#ef4444", loot:"#22c55e", event:"#3b82f6", rest:"#86efac", ending:"#fde68a" };
-                      return (
-                        <span key={ch.id} style={{ fontSize:"0.7rem", padding:"3px 8px", borderRadius:4, background:"rgba(15,23,42,0.8)", border:`1px solid ${colMap[ch.type]||"#334155"}44`, color:colMap[ch.type]||"#94a3b8" }}>
-                          {ch.type==="narration"?"📜":ch.type==="choice"?"🔀":ch.type==="battle"?"⚔️":ch.type==="loot"?"💰":ch.type==="event"?"⚡":ch.type==="rest"?"🏕️":"🏁"} {ch.title}
-                        </span>
-                      );
-                    })}
-                  </div>
+                  {s.chapters?.map(ch => (
+                    <div key={ch.id} style={{ marginBottom:8 }}>
+                      <div style={{ color:"#fbbf24", fontSize:"0.74rem", fontFamily:"'Cinzel',serif", marginBottom:4 }}>📖 {ch.title}</div>
+                      <div style={{ display:"flex", flexWrap:"wrap", gap:4 }}>
+                        {Object.values(s.scenes||{}).filter(sc=>sc.chapterId===ch.id).map(sc => (
+                          <span key={sc.id} style={{ fontSize:"0.68rem", padding:"2px 7px", borderRadius:4, background:"rgba(15,23,42,0.8)", border:`1px solid ${TYPE_COLOR[sc.type]||"#334155"}55`, color:TYPE_COLOR[sc.type]||"#94a3b8" }}>
+                            {SCENE_ICON[sc.type]||"•"} {sc.title}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+              {showDiagram===s.id && (
+                <div style={{ borderTop:"1px solid #1e293b", padding:"0.8rem" }}>
+                  <StoryDiagram story={s} />
                 </div>
               )}
             </div>
@@ -5859,7 +5877,6 @@ function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, dbGetPa
         </div>
       </Card>
 
-      {/* ── Avvia storia ── */}
       <Card title="▶️ Avvia Storia per un Party">
         <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10, marginBottom:"0.8rem" }}>
           <div>
@@ -5877,16 +5894,11 @@ function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, dbGetPa
           </div>
         </div>
         <div style={{ display:"flex", gap:8 }}>
-          <BigBtn gold disabled={!selectedParty||!selectedStory||busy} onClick={async()=>{ setBusy(true); await onStart(selectedStory,selectedParty); setBusy(false); }}>
-            ▶️ Avvia
-          </BigBtn>
-          <SmallBtn disabled={!selectedParty||busy} onClick={async()=>{ if(!window.confirm("Interrompere la storia in corso?")) return; setBusy(true); await onStop(selectedParty); setBusy(false); }}>
-            ⏹ Interrompi
-          </SmallBtn>
+          <BigBtn gold disabled={!selectedParty||!selectedStory||busy} onClick={async()=>{ setBusy(true); await onStart(selectedStory,selectedParty); setBusy(false); }}>▶️ Avvia</BigBtn>
+          <SmallBtn disabled={!selectedParty||busy} onClick={async()=>{ if(!window.confirm("Interrompere la storia in corso?")) return; setBusy(true); await onStop(selectedParty); setBusy(false); }}>⏹ Interrompi</SmallBtn>
         </div>
       </Card>
 
-      {/* ── Stato attivo per party ── */}
       <Card title="📊 Stato Storie in Corso">
         {!parties.length && <div style={{ color:"#64748b", fontSize:"0.84rem" }}>Nessun party attivo.</div>}
         {parties.map(p => {
@@ -5897,30 +5909,47 @@ function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, dbGetPa
             </div>
           );
           const st = STORIES.find(s=>s.id===ps.storyId);
-          const ch = st?.chapters?.[ps.chapterId];
+          const currentScene = st?.scenes?.[ps.currentSceneId];
+          const currentChap = st?.chapters?.find(c=>c.id===ps.currentChapterId);
           return (
             <div key={p} style={{ background:"rgba(15,23,42,0.5)", border:"1px solid #312e81", borderRadius:6, padding:"0.7rem", marginBottom:6 }}>
               <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", flexWrap:"wrap", gap:6 }}>
                 <div>
                   <div style={{ fontFamily:"'Cinzel',serif", color:"#a5b4fc", fontWeight:700 }}>{p}</div>
                   <div style={{ color:"#e2d9c5", fontSize:"0.84rem" }}>{st?.emoji} {st?.title}</div>
-                  <div style={{ color:"#fbbf24", fontSize:"0.78rem", marginTop:2 }}>Capitolo attuale: <strong>{ch?.title}</strong> ({ch?.type})</div>
+                  <div style={{ color:"#fbbf24", fontSize:"0.78rem", marginTop:2 }}>
+                    {currentChap?.title} → <strong>{currentScene?.title}</strong>
+                    <span style={{ color:TYPE_COLOR[currentScene?.type]||"#94a3b8", marginLeft:5 }}>({SCENE_ICON[currentScene?.type]||"?"} {currentScene?.type})</span>
+                  </div>
+                  {Object.keys(ps.storyFlags||{}).length > 0 && (
+                    <div style={{ marginTop:4, display:"flex", flexWrap:"wrap", gap:4 }}>
+                      {Object.entries(ps.storyFlags).map(([k,v])=>(
+                        <span key={k} style={{ fontSize:"0.64rem", padding:"1px 6px", borderRadius:4, background:"rgba(99,102,241,0.15)", border:"1px solid #312e81", color:"#a5b4fc" }}>
+                          {k}: {String(v)}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div style={{ display:"flex", gap:6, flexDirection:"column", alignItems:"flex-end" }}>
-                  <select style={{...inputStyle,fontSize:"0.74rem",padding:"4px 6px",cursor:"pointer"}} value={jumpChapter} onChange={e=>setJumpChapter(e.target.value)}>
-                    <option value="">— salta a capitolo —</option>
-                    {st && Object.values(st.chapters).map(c=><option key={c.id} value={c.id}>{c.title} ({c.type})</option>)}
+                  <select style={{...inputStyle,fontSize:"0.74rem",padding:"4px 6px",cursor:"pointer"}} value={jumpScene} onChange={e=>setJumpScene(e.target.value)}>
+                    <option value="">— salta a scena —</option>
+                    {st && st.chapters?.map(ch=>(
+                      <optgroup key={ch.id} label={`📖 ${ch.title}`}>
+                        {Object.values(st.scenes||{}).filter(sc=>sc.chapterId===ch.id).map(sc=>(
+                          <option key={sc.id} value={sc.id}>{SCENE_ICON[sc.type]||"•"} {sc.title}</option>
+                        ))}
+                      </optgroup>
+                    ))}
                   </select>
-                  <SmallBtn disabled={!jumpChapter||busy} onClick={async()=>{ setBusy(true); await onJump(ps.storyId,p,jumpChapter); setJumpChapter(""); setBusy(false); }}>
-                    ⏩ Salta
-                  </SmallBtn>
+                  <SmallBtn disabled={!jumpScene||busy} onClick={async()=>{ setBusy(true); await onJump(ps.storyId,p,jumpScene); setJumpScene(""); setBusy(false); }}>⏩ Salta</SmallBtn>
                 </div>
               </div>
               {ps.choiceLog?.length > 0 && (
                 <div style={{ marginTop:"0.6rem", borderTop:"1px solid #1e293b", paddingTop:"0.5rem" }}>
                   <div style={{ color:"#475569", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.06em", marginBottom:3 }}>Scelte:</div>
                   {ps.choiceLog.slice(-4).map((log,i)=>(
-                    <div key={i} style={{ fontSize:"0.74rem", color:"#64748b" }}>→ <span style={{ color:"#94a3b8" }}>{log.chapterTitle}</span>: <em style={{ color:"#fbbf24" }}>{log.choiceText}</em></div>
+                    <div key={i} style={{ fontSize:"0.74rem", color:"#64748b" }}>→ <span style={{ color:"#94a3b8" }}>{log.sceneTitle}</span>: <em style={{ color:"#fbbf24" }}>{log.choiceText}</em></div>
                   ))}
                 </div>
               )}
@@ -5932,8 +5961,61 @@ function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, dbGetPa
   );
 }
 
-function StoryView({ story, chapter, storyState, isLeader, me, partyPlayers, onAdvance, onChoice, onFight }) {
-  if(!story || !chapter) return (
+function StoryDiagram({ story }) {
+  const ref = React.useRef(null);
+  const [error, setError] = React.useState(null);
+
+  React.useEffect(() => {
+    if(!ref.current || !story?.scenes) return;
+
+    // Build diagram inline
+    const TYPE_COLOR = { story:"#4a7c59", choice:"#7c5a4a", skillCheck:"#5a4a7c", combat:"#7c1a1a", reward:"#4a6a7c", ending:"#2d6a4f", gameOver:"#333", returnPoint:"#7c6a1a" };
+    const safeId = id => id.replace(/-/g,"_");
+    const nodeLabel = (id, sc) => {
+      const icon = SCENE_ICON[sc.type]||"•";
+      return `"${icon} ${(sc.title||id).replace(/"/g,"'").slice(0,28)}"`;
+    };
+    const lines = ["flowchart TD"];
+    const edges = [];
+    const styles = [];
+    Object.entries(story.scenes).forEach(([id, sc]) => {
+      const sid = safeId(id);
+      let shape;
+      if(sc.type==="returnPoint"||sc.isReturnPoint) shape=`(((${nodeLabel(id,sc)})))`;
+      else if(sc.type==="gameOver") shape=`[/${nodeLabel(id,sc)}/]`;
+      else if(sc.type==="ending") shape=`([${nodeLabel(id,sc)}])`;
+      else if(sc.type==="choice") shape=`{${nodeLabel(id,sc)}}`;
+      else shape=`[${nodeLabel(id,sc)}]`;
+      lines.push(`  ${sid}${shape}`);
+      styles.push(`  style ${sid} fill:${TYPE_COLOR[sc.type]||"#334155"},color:#fff`);
+      if(sc.nextScene) edges.push(`  ${sid} --> ${safeId(sc.nextScene)}`);
+      sc.choices?.forEach(c=>{ edges.push(`  ${sid} -->|"${c.text.slice(0,18).replace(/"/g,"'")}..."| ${safeId(c.nextScene)}`); });
+      if(sc.skillCheck) {
+        edges.push(`  ${sid} -->|"✅"| ${safeId(sc.skillCheck.successScene)}`);
+        edges.push(`  ${sid} -->|"❌"| ${safeId(sc.skillCheck.failureScene)}`);
+      }
+      if(sc.combat) {
+        edges.push(`  ${sid} -->|"⚔️"| ${safeId(sc.combat.successScene)}`);
+        edges.push(`  ${sid} -->|"💀"| ${safeId(sc.combat.failureScene)}`);
+      }
+      if(sc.gameOver?.retryScene) edges.push(`  ${sid} -.->|"🔄"| ${safeId(sc.gameOver.retryScene)}`);
+    });
+    const diagram = [...lines,...edges,...styles].join("\n");
+
+    import("mermaid").then(({ default: mermaid }) => {
+      mermaid.initialize({ startOnLoad:false, theme:"dark", securityLevel:"loose" });
+      const id = "mermaid-" + story.id;
+      ref.current.innerHTML = `<div class="mermaid" id="${id}">${diagram}</div>`;
+      mermaid.run({ nodes: [ref.current.querySelector(".mermaid")] }).catch(e => setError(e.message));
+    }).catch(e => setError("Mermaid non disponibile: " + e.message));
+  }, [story]);
+
+  if(error) return <div style={{ color:"#f87171", fontSize:"0.78rem", padding:"0.5rem" }}>Errore diagramma: {error}</div>;
+  return <div ref={ref} style={{ background:"rgba(2,6,23,0.6)", borderRadius:8, padding:"0.5rem", overflowX:"auto", minHeight:60 }} />;
+}
+
+function StoryView({ story, scene, storyState, isLeader, me, partyPlayers, onAdvance, onChoice, onFight, onSkillCheck }) {
+  if(!story || !scene) return (
     <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem", textAlign:"center" }}>
       <div>
         <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>📖</div>
@@ -5943,82 +6025,90 @@ function StoryView({ story, chapter, storyState, isLeader, me, partyPlayers, onA
     </div>
   );
 
-  const col = STORY_TYPE_COLORS[chapter.type] || STORY_TYPE_COLORS.narration;
-  const paragraphs = (chapter.text || "").split("\n").filter(Boolean);
-  const lootCollected = storyState?.lootCollected?.includes(chapter.id);
-  const eventApplied = storyState?.eventApplied?.includes(chapter.id);
+  const col = STORY_TYPE_COLORS[scene.type] || STORY_TYPE_COLORS.story;
+  const storyFlags = storyState?.storyFlags || {};
+
+  const meetsRequirements = (req) => {
+    if(!req) return true;
+    if(req.flags) {
+      for(const [k,v] of Object.entries(req.flags)) {
+        if(storyFlags[k] !== v) return false;
+      }
+    }
+    if(req.minLevel && me?.level < req.minLevel) return false;
+    return true;
+  };
+
+  const paragraphs = (scene.text || "").split("\n").filter(p => p.trim());
+
+  const renderText = () => (
+    <div style={{ padding:"1.1rem", display:"flex", flexDirection:"column", gap:"0.8rem" }}>
+      {paragraphs.map((p, i) => {
+        const isItalic = p.startsWith("*") && p.endsWith("*");
+        const isQuote = p.startsWith('"') || p.startsWith('“');
+        const text = isItalic ? p.slice(1,-1) : p;
+        return (
+          <p key={i} style={{
+            margin:0, lineHeight:1.8, fontSize:"0.95rem",
+            color: isQuote ? "#fde68a" : isItalic ? "#94a3b8" : "#e2d9c5",
+            fontFamily: isQuote ? "'Crimson Pro',Georgia,serif" : "inherit",
+            fontStyle: (isQuote||isItalic) ? "italic" : "normal",
+            paddingLeft: isQuote ? "1rem" : 0,
+            borderLeft: isQuote ? `3px solid ${col.border}` : "none",
+          }}>{text}</p>
+        );
+      })}
+    </div>
+  );
+
+  const currentChapter = story.chapters?.find(c => c.id === storyState?.currentChapterId);
 
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(2,6,23,0.45)" }}>
       <div style={{ maxWidth:760, margin:"0 auto", display:"flex", flexDirection:"column", gap:"1rem" }}>
 
-        {/* Story header */}
+        {/* Header */}
         <div style={{ display:"flex", alignItems:"center", gap:10, padding:"0.6rem 0.9rem", background:"rgba(15,23,42,0.6)", borderRadius:8, border:"1px solid #1e293b" }}>
           <span style={{ fontSize:"1.4rem" }}>{story.emoji}</span>
           <div>
             <div style={{ color:"#94a3b8", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>Storia in corso</div>
             <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontSize:"0.9rem", fontWeight:700 }}>{story.title}</div>
           </div>
-          <div style={{ marginLeft:"auto", fontSize:"0.72rem", color:"#475569", fontFamily:"'Cinzel',serif" }}>
-            Capitolo: <span style={{ color:col.accent }}>{chapter.title}</span>
-          </div>
+          {currentChapter && (
+            <div style={{ marginLeft:"auto", fontSize:"0.72rem", color:"#475569", fontFamily:"'Cinzel',serif", textAlign:"right" }}>
+              <div>{currentChapter.title}</div>
+              <div style={{ color:col.accent }}>{scene.title}</div>
+            </div>
+          )}
         </div>
 
-        {/* Chapter card */}
+        {/* Scene card */}
         <div style={{ background:col.bg, border:`1px solid ${col.border}`, borderRadius:10, overflow:"hidden" }}>
-          {/* Chapter title */}
           <div style={{ padding:"0.8rem 1.1rem", borderBottom:`1px solid ${col.border}44`, display:"flex", alignItems:"center", gap:8 }}>
-            <span style={{ fontSize:"1.1rem" }}>
-              { chapter.type==="narration"?"📜": chapter.type==="choice"?"🔀": chapter.type==="battle"?"⚔️":
-                chapter.type==="loot"?"💰": chapter.type==="event"?"⚡": chapter.type==="rest"?"🏕️":"🏁" }
-            </span>
-            <span style={{ fontFamily:"'Cinzel',serif", color:col.accent, fontSize:"1rem", fontWeight:700 }}>{chapter.title}</span>
+            <span style={{ fontSize:"1.1rem" }}>{SCENE_ICON[scene.type]||"📜"}</span>
+            <span style={{ fontFamily:"'Cinzel',serif", color:col.accent, fontSize:"1rem", fontWeight:700 }}>{scene.title}</span>
           </div>
 
-          {/* Chapter text */}
-          <div style={{ padding:"1.1rem", display:"flex", flexDirection:"column", gap:"0.8rem" }}>
-            {paragraphs.map((p, i) => {
-              const isQuote = p.startsWith('"') || p.startsWith('"');
-              return (
-                <p key={i} style={{
-                  margin:0, lineHeight:1.75, fontSize:"0.95rem",
-                  color: isQuote ? "#fde68a" : "#e2d9c5",
-                  fontFamily: isQuote ? "'Crimson Pro',Georgia,serif" : "inherit",
-                  fontStyle: isQuote ? "italic" : "normal",
-                  paddingLeft: isQuote ? "1rem" : 0,
-                  borderLeft: isQuote ? `3px solid ${col.border}` : "none",
-                }}>{p}</p>
-              );
-            })}
-          </div>
+          {renderText()}
 
-          {/* Effects / Rewards preview */}
-          {chapter.type === "event" && chapter.effects?.length > 0 && (
-            <div style={{ margin:"0 1.1rem 1rem", display:"flex", flexWrap:"wrap", gap:6 }}>
-              {chapter.effects.map((ef, i) => (
-                <span key={i} style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(96,165,250,0.15)", border:"1px solid #1e40af", color:"#93c5fd" }}>
-                  {ef.text}
-                </span>
-              ))}
-            </div>
-          )}
-          {(chapter.type === "loot") && (
-            <div style={{ margin:"0 1.1rem 1rem", display:"flex", flexWrap:"wrap", gap:6 }}>
-              {chapter.rewards?.xp > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(6,78,59,0.2)", border:"1px solid #065f46", color:"#6ee7b7" }}>⭐ +{chapter.rewards.xp} XP a testa</span>}
-              {chapter.rewards?.gold > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(6,78,59,0.2)", border:"1px solid #065f46", color:"#6ee7b7" }}>💰 +{chapter.rewards.gold} oro a testa</span>}
-            </div>
-          )}
-          {chapter.type === "ending" && (
-            <div style={{ margin:"0 1.1rem 1rem", display:"flex", flexWrap:"wrap", gap:6 }}>
-              {chapter.rewards?.xp > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(120,53,15,0.2)", border:"1px solid #92400e", color:"#fde68a" }}>⭐ +{chapter.rewards.xp} XP a testa</span>}
-              {chapter.rewards?.gold > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(120,53,15,0.2)", border:"1px solid #92400e", color:"#fde68a" }}>💰 +{chapter.rewards.gold} oro a testa</span>}
+          {/* Skill check info */}
+          {scene.type === "skillCheck" && scene.skillCheck && (
+            <div style={{ margin:"0 1.1rem 1rem", padding:"0.7rem", background:"rgba(88,28,135,0.2)", border:"1px solid #7e22ce", borderRadius:8 }}>
+              <div style={{ color:"#c084fc", fontSize:"0.82rem", fontWeight:700, marginBottom:4 }}>🎲 Prova di Abilità</div>
+              <div style={{ color:"#a78bfa", fontSize:"0.78rem" }}>
+                Stat: <strong>{scene.skillCheck.stat?.toUpperCase()}</strong> · DC: <strong>{scene.skillCheck.dc}</strong>
+              </div>
+              <div style={{ color:"#7c3aed", fontSize:"0.74rem", marginTop:4 }}>
+                {scene.skillCheck.successText && <div>✅ {scene.skillCheck.successText}</div>}
+                {scene.skillCheck.failureText && <div>❌ {scene.skillCheck.failureText}</div>}
+              </div>
             </div>
           )}
 
-          {/* Battle monsters preview */}
-          {chapter.type === "battle" && chapter.monsters?.length > 0 && (
+          {/* Combat monsters */}
+          {scene.type === "combat" && scene.combat?.monsters?.length > 0 && (
             <div style={{ margin:"0 1.1rem 1rem", display:"flex", flexWrap:"wrap", gap:6 }}>
-              {chapter.monsters.map(m => (
+              {scene.combat.monsters.map(m => (
                 <div key={m.id} style={{ fontSize:"0.78rem", padding:"6px 10px", borderRadius:6, background:"rgba(127,29,29,0.2)", border:"1px solid #991b1b", color:"#fca5a5", display:"flex", gap:5, alignItems:"center" }}>
                   <span>{m.emoji}</span>
                   <span style={{ fontFamily:"'Cinzel',serif", fontWeight:700 }}>{m.name}</span>
@@ -6029,49 +6119,92 @@ function StoryView({ story, chapter, storyState, isLeader, me, partyPlayers, onA
             </div>
           )}
 
+          {/* Rewards preview */}
+          {(scene.type==="reward"||scene.type==="ending") && scene.rewards && (
+            <div style={{ margin:"0 1.1rem 1rem", display:"flex", flexWrap:"wrap", gap:6 }}>
+              {scene.rewards.xp > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(6,78,59,0.2)", border:"1px solid #065f46", color:"#6ee7b7" }}>⭐ +{scene.rewards.xp} XP a testa</span>}
+              {scene.rewards.gold > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(6,78,59,0.2)", border:"1px solid #065f46", color:"#6ee7b7" }}>💰 +{scene.rewards.gold} oro a testa</span>}
+            </div>
+          )}
+
           {/* Actions */}
           <div style={{ padding:"0 1.1rem 1.1rem", display:"flex", gap:8, justifyContent:"flex-end", flexWrap:"wrap" }}>
-            {!isLeader && chapter.type !== "ending" && (
+            {/* story / returnPoint / reward */}
+            {(scene.type==="story"||scene.type==="narration"||scene.type==="returnPoint"||scene.type==="rest") && isLeader && scene.nextScene && (
+              <BigBtn onClick={()=>onAdvance(scene.nextScene)} gold>📜 Continua</BigBtn>
+            )}
+            {(scene.type==="story"||scene.type==="narration"||scene.type==="returnPoint"||scene.type==="rest") && !isLeader && (
               <span style={{ color:"#475569", fontSize:"0.78rem", alignSelf:"center" }}>In attesa del capo-party…</span>
             )}
-            {chapter.type === "narration" && isLeader && (
-              <BigBtn onClick={()=>onAdvance(chapter.next)} gold>📜 Continua</BigBtn>
+
+            {/* choice */}
+            {scene.type==="choice" && (
+              <div style={{ width:"100%", display:"flex", flexDirection:"column", gap:8 }}>
+                {scene.choices?.map((c, i) => {
+                  const locked = !meetsRequirements(c.requirements);
+                  return (
+                    <button key={i} disabled={locked} onClick={()=>onChoice(i)}
+                      style={{ textAlign:"left", padding:"0.7rem 1rem", borderRadius:8, cursor:locked?"not-allowed":"pointer", opacity:locked?0.4:1, background:locked?"rgba(15,23,42,0.5)":i===0?"rgba(120,53,15,0.3)":"rgba(15,23,42,0.7)", border:`1px solid ${locked?"#334155":i===0?"#b45309":"#334155"}`, color:locked?"#475569":"#e2d9c5", fontSize:"0.9rem", transition:"background 0.15s" }}>
+                      {c.text}
+                      {locked && <span style={{ marginLeft:8, fontSize:"0.72rem", color:"#475569" }}>(richiede condizioni)</span>}
+                    </button>
+                  );
+                })}
+              </div>
             )}
-            {chapter.type === "choice" && chapter.choices?.map((c, i) => (
-              <BigBtn key={i} onClick={()=>onChoice(i, c.next)} gold={i===0} style={i>0?{background:"rgba(15,23,42,0.8)",border:"1px solid #334155",color:"#e2e8f0"}:undefined}>
-                {c.text}
-              </BigBtn>
-            ))}
-            {chapter.type === "battle" && isLeader && (
-              <BigBtn onClick={()=>onFight(chapter)} gold>⚔️ Affronta il nemico</BigBtn>
+
+            {/* skillCheck */}
+            {scene.type==="skillCheck" && isLeader && (
+              <BigBtn onClick={()=>onSkillCheck(scene)} gold>🎲 Effettua la prova</BigBtn>
             )}
-            {chapter.type === "battle" && !isLeader && (
+            {scene.type==="skillCheck" && !isLeader && (
+              <span style={{ color:"#475569", fontSize:"0.78rem", alignSelf:"center" }}>Il capo-party effettua la prova…</span>
+            )}
+
+            {/* combat */}
+            {scene.type==="combat" && isLeader && (
+              <BigBtn onClick={()=>onFight(scene)} gold>⚔️ Affronta il nemico</BigBtn>
+            )}
+            {scene.type==="combat" && !isLeader && (
               <span style={{ color:"#f87171", fontSize:"0.82rem", alignSelf:"center" }}>Il capo-party deve avviare il combattimento.</span>
             )}
-            {chapter.type === "loot" && isLeader && !lootCollected && (
-              <BigBtn onClick={()=>onAdvance(chapter.next, true)} gold>💰 Raccogliete il bottino</BigBtn>
-            )}
-            {chapter.type === "loot" && lootCollected && (
-              <BigBtn onClick={()=>onAdvance(chapter.next)} gold>📜 Continua</BigBtn>
-            )}
-            {chapter.type === "event" && isLeader && !eventApplied && (
-              <BigBtn onClick={()=>onAdvance(chapter.next, true)} gold>⚡ Procedi</BigBtn>
-            )}
-            {chapter.type === "event" && eventApplied && (
-              <BigBtn onClick={()=>onAdvance(chapter.next)} gold>📜 Continua</BigBtn>
-            )}
-            {chapter.type === "rest" && isLeader && (
-              <BigBtn onClick={()=>onAdvance(chapter.next)} gold>🏕️ Riposate</BigBtn>
-            )}
-            {chapter.type === "ending" && (
+
+            {/* ending */}
+            {scene.type==="ending" && (
               <div style={{ width:"100%", textAlign:"center", padding:"0.5rem 0" }}>
-                <div style={{ fontSize:"2.5rem", marginBottom:"0.4rem" }}>{ENDING_ICONS[chapter.endingType]||"🏁"}</div>
-                <div style={{ fontFamily:"'Cinzel',serif", color:col.accent, fontSize:"1rem", fontWeight:700, marginBottom:"0.4rem" }}>Storia Completata</div>
-                {isLeader && <BigBtn onClick={()=>onAdvance(null)} gold>✅ Concludi la storia</BigBtn>}
+                <div style={{ fontSize:"2.5rem", marginBottom:"0.4rem" }}>{ENDING_ICONS[scene.endingType]||"🏁"}</div>
+                <div style={{ fontFamily:"'Cinzel',serif", color:col.accent, fontSize:"1rem", fontWeight:700, marginBottom:"0.4rem" }}>
+                  {scene.endingType==="good"?"Fine Gloriosa":scene.endingType==="fail"?"Fine Amara":"Fine della Storia"}
+                </div>
+                {scene.nextScene && isLeader && <BigBtn onClick={()=>onAdvance(scene.nextScene)} gold>📖 Prossimo capitolo</BigBtn>}
+                {!scene.nextScene && isLeader && <BigBtn onClick={()=>onAdvance(null)} gold>✅ Concludi la storia</BigBtn>}
+              </div>
+            )}
+
+            {/* gameOver */}
+            {scene.type==="gameOver" && (
+              <div style={{ width:"100%", textAlign:"center", padding:"0.5rem 0" }}>
+                <div style={{ fontSize:"2.5rem", marginBottom:"0.4rem" }}>💀</div>
+                <div style={{ fontFamily:"'Cinzel',serif", color:"#ff4444", fontSize:"1rem", fontWeight:700, marginBottom:"0.4rem" }}>Game Over</div>
+                {scene.gameOver?.retryScene && isLeader && (
+                  <BigBtn onClick={()=>onAdvance(scene.gameOver.retryScene)} gold>🔄 Riprova</BigBtn>
+                )}
               </div>
             )}
           </div>
         </div>
+
+        {/* Flags attivi */}
+        {Object.keys(storyFlags).length > 0 && (
+          <div style={{ background:"rgba(15,23,42,0.5)", border:"1px solid #1e293b", borderRadius:8, padding:"0.7rem" }}>
+            <div style={{ color:"#475569", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:"0.4rem" }}>🚩 Flag storia</div>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
+              {Object.entries(storyFlags).map(([k,v])=>(
+                <span key={k} style={{ fontSize:"0.7rem", padding:"2px 8px", borderRadius:4, background:"rgba(99,102,241,0.15)", border:"1px solid #312e81", color:"#a5b4fc" }}>{k}: {String(v)}</span>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Choice log */}
         {storyState?.choiceLog?.length > 0 && (
@@ -6079,7 +6212,7 @@ function StoryView({ story, chapter, storyState, isLeader, me, partyPlayers, onA
             <div style={{ color:"#475569", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:"0.5rem" }}>📋 Scelte precedenti</div>
             {storyState.choiceLog.slice(-5).map((log, i) => (
               <div key={i} style={{ fontSize:"0.76rem", color:"#64748b", padding:"2px 0" }}>
-                → <span style={{ color:"#94a3b8" }}>{log.chapterTitle}</span>: <em style={{ color:"#fbbf24" }}>{log.choiceText}</em>
+                → <span style={{ color:"#94a3b8" }}>{log.sceneTitle}</span>: <em style={{ color:"#fbbf24" }}>{log.choiceText}</em>
               </div>
             ))}
           </div>
@@ -8103,16 +8236,29 @@ function GameScreen({ myId, setScreen, authUser }) {
   function getStory(id) { return STORIES.find(s => s.id === id) || null; }
   const storyState = qs?.story || null;
   const activeStory = storyState?.active ? getStory(storyState.storyId) : null;
-  const activeStoryChapter = activeStory ? activeStory.chapters[storyState.chapterId] : null;
+  const activeStoryScene = activeStory ? activeStory.scenes?.[storyState.currentSceneId] : null;
   const isStoryLeader = partyPlayers.length === 0 || partyPlayers[0]?.id === myId;
 
   async function startStory(storyId) {
     const story = getStory(storyId);
     if(!story || !code) return;
-    const newStory = { active:true, storyId, chapterId:story.startChapter, startedAt:Date.now(), choiceLog:[], lootCollected:[], eventApplied:[], battlePending:false, battleNext:null, battleNextFail:null };
+    const firstChapter = story.chapters[0];
+    const firstSceneId = firstChapter?.startScene;
+    const newStory = {
+      active:true, storyId,
+      currentChapterId: firstChapter?.id,
+      currentSceneId: firstSceneId,
+      storyFlags: {},
+      choiceLog: [],
+      visitedScenes: [firstSceneId].filter(Boolean),
+      rewardCollected: [],
+      battlePending:false, battleNext:null, battleNextFail:null,
+      startedAt:Date.now(),
+    };
     const latestQs = await dbGetPartyState(code);
     await dbSavePartyState(code, { ...latestQs, story: newStory });
-    await addMsg(`📖 **La storia inizia**: ${story.emoji} *${story.title}*`, "narration", "Master");
+    const firstScene = story.scenes?.[firstSceneId];
+    await addMsg(`📖 **La storia inizia**: ${story.emoji} *${story.title}*\n*${firstScene?.title||""}*`, "narration", "Master");
   }
 
   async function stopStory() {
@@ -8122,78 +8268,99 @@ function GameScreen({ myId, setScreen, authUser }) {
     await addMsg(`📖 Storia interrotta dal Master.`, "info", "Sistema");
   }
 
-  async function advanceStoryChapter(nextChapterId, applyRewards = false) {
-    if(!code || !activeStory || !storyState) return;
-    const latestQs = await dbGetPartyState(code);
-    const chapter = activeStory.chapters[storyState.chapterId];
-
-    let updatedStory = { ...latestQs.story };
-
-    // Apply loot rewards
-    if(applyRewards && chapter?.type === "loot" && !storyState.lootCollected?.includes(chapter.id)) {
-      const freshPlayers = await dbGetPlayers(code);
-      const count = Math.max(freshPlayers.length, 1);
-      const xpEach = Math.floor((chapter.rewards?.xp || 0) / count);
-      const goldEach = Math.floor((chapter.rewards?.gold || 0) / count);
+  async function _applySceneRewards(scene, freshPlayers) {
+    if(!scene?.rewards) return;
+    const count = Math.max(freshPlayers.length, 1);
+    const xpEach = Math.floor((scene.rewards.xp || 0) / count);
+    const goldEach = Math.floor((scene.rewards.gold || 0) / count);
+    if(xpEach > 0 || goldEach > 0) {
       for(const p of freshPlayers) {
         const up = { ...p, xp:(p.xp||0)+xpEach, gold:(p.gold||0)+goldEach };
         await dbSavePlayer(up);
         if(p.id === myId) setMeRaw(up);
       }
-      updatedStory = { ...updatedStory, lootCollected:[...(updatedStory.lootCollected||[]), chapter.id] };
-      if(xpEach > 0 || goldEach > 0) await addMsg(`💰 **Bottino**: ${xpEach>0?`+${xpEach} XP`:''} ${goldEach>0?`+${goldEach} oro`:''} a testa.`, "victory", "Sistema");
+      await addMsg(`💰 ${xpEach>0?`+${xpEach} XP`:''} ${goldEach>0?`+${goldEach} oro`:''} a testa.`, "victory", "Sistema");
     }
+  }
 
-    // Apply event effects
-    if(applyRewards && chapter?.type === "event" && !storyState.eventApplied?.includes(chapter.id)) {
-      const freshPlayers = await dbGetPlayers(code);
-      for(const ef of (chapter.effects || [])) {
-        if(ef.type === "gold") {
-          for(const p of freshPlayers) { const up={...p,gold:(p.gold||0)+ef.amount}; await dbSavePlayer(up); if(p.id===myId) setMeRaw(up); }
-        } else if(ef.type === "xp") {
-          const each = Math.floor(ef.amount / Math.max(freshPlayers.length,1));
-          for(const p of freshPlayers) { const up={...p,xp:(p.xp||0)+each}; await dbSavePlayer(up); if(p.id===myId) setMeRaw(up); }
-        } else if(ef.type === "heal") {
-          for(const p of freshPlayers) { const up={...p,hp:Math.min(p.maxHp||p.hp,p.hp+ef.amount)}; await dbSavePlayer(up); if(p.id===myId) setMeRaw(up); }
-        }
-        await addMsg(`⚡ ${ef.text}`, "info", "Sistema");
-      }
-      updatedStory = { ...updatedStory, eventApplied:[...(updatedStory.eventApplied||[]), chapter.id] };
-    }
+  async function advanceStoryScene(nextSceneId, mergeFlags = {}) {
+    if(!code || !activeStory || !storyState) return;
+    const latestQs = await dbGetPartyState(code);
 
-    if(!nextChapterId) {
-      // Ending: apply final rewards and close story
-      if(chapter?.type === "ending") {
+    if(!nextSceneId) {
+      // Ending: apply rewards and close
+      const scene = activeStory.scenes?.[storyState.currentSceneId];
+      if(scene?.type === "ending" || scene?.type === "reward") {
         const freshPlayers = await dbGetPlayers(code);
-        const count = Math.max(freshPlayers.length,1);
-        const xpE = Math.floor((chapter.rewards?.xp||0)/count);
-        const goldE = Math.floor((chapter.rewards?.gold||0)/count);
-        for(const p of freshPlayers) { const up={...p,xp:(p.xp||0)+xpE,gold:(p.gold||0)+goldE}; await dbSavePlayer(up); if(p.id===myId) setMeRaw(up); }
-        await addMsg(`🏆 **Storia conclusa**: *${activeStory.title}* — ${xpE>0?`+${xpE} XP`:''} ${goldE>0?`+${goldE} oro`:''} a testa.`, "victory", "Sistema");
+        await _applySceneRewards(scene, freshPlayers);
       }
+      await addMsg(`🏆 **Storia conclusa**: *${activeStory.title}*`, "victory", "Sistema");
       await dbSavePartyState(code, { ...latestQs, story: { active:false, lastCompleted: storyState.storyId } });
       setQs(prev => ({ ...prev, story: { active:false } }));
       return;
     }
 
-    const nextChapter = activeStory.chapters[nextChapterId];
-    updatedStory = { ...updatedStory, chapterId: nextChapterId };
+    const nextScene = activeStory.scenes?.[nextSceneId];
+    const newFlags = { ...(latestQs.story?.storyFlags||{}), ...mergeFlags, ...(nextScene?.setFlags||{}) };
+    const visited = [...new Set([...(latestQs.story?.visitedScenes||[]), nextSceneId])];
+
+    let updatedStory = {
+      ...latestQs.story,
+      currentSceneId: nextSceneId,
+      currentChapterId: nextScene?.chapterId || latestQs.story?.currentChapterId,
+      storyFlags: newFlags,
+      visitedScenes: visited,
+    };
+
+    // Auto-apply rewards on reward/ending scenes
+    if(nextScene?.type === "reward" && !latestQs.story?.rewardCollected?.includes(nextSceneId)) {
+      const freshPlayers = await dbGetPlayers(code);
+      await _applySceneRewards(nextScene, freshPlayers);
+      updatedStory.rewardCollected = [...(updatedStory.rewardCollected||[]), nextSceneId];
+      // auto-advance if has nextScene
+      if(nextScene.nextScene) {
+        await dbSavePartyState(code, { ...latestQs, story: updatedStory });
+        await advanceStoryScene(nextScene.nextScene, nextScene.setFlags||{});
+        return;
+      }
+    }
+
     await dbSavePartyState(code, { ...latestQs, story: updatedStory });
-    if(nextChapter) await addMsg(`📖 *${nextChapter.title}*`, "narration", "Master");
+    if(nextScene) await addMsg(`📖 *${nextScene.title}*`, "narration", "Master");
+    setQs(prev => ({ ...prev, story: updatedStory }));
   }
 
-  async function makeStoryChoice(choiceIdx, nextChapterId) {
-    if(!activeStory || !activeStoryChapter || !storyState) return;
-    const choiceText = activeStoryChapter.choices?.[choiceIdx]?.text || "";
+  async function makeStoryChoice(choiceIdx) {
+    if(!activeStory || !activeStoryScene || !storyState) return;
+    const choice = activeStoryScene.choices?.[choiceIdx];
+    if(!choice) return;
+    const choiceText = choice.text || "";
     const latestQs = await dbGetPartyState(code);
-    const newLog = [...(storyState.choiceLog||[]), { chapterId: storyState.chapterId, chapterTitle: activeStoryChapter.title, choiceIdx, choiceText, at: Date.now() }];
+    const newLog = [...(storyState.choiceLog||[]), {
+      sceneId: storyState.currentSceneId, sceneTitle: activeStoryScene.title,
+      choiceIdx, choiceText, at: Date.now()
+    }];
     await dbSavePartyState(code, { ...latestQs, story: { ...latestQs.story, choiceLog: newLog } });
     await addMsg(`🔀 **${me?.name}** sceglie: *${choiceText}*`, "info", "Sistema");
-    await advanceStoryChapter(nextChapterId);
+    await advanceStoryScene(choice.nextScene, choice.setFlags||{});
   }
 
-  async function startStoryCombat(chapter) {
-    if(!code || !me || !activeStory) return;
+  async function makeStorySkillCheck(scene) {
+    if(!code || !me || !activeStory || !scene?.skillCheck) return;
+    const { stat, dc, successScene, failureScene, successText, failureText } = scene.skillCheck;
+    const roll = Math.floor(Math.random()*20) + 1;
+    const statVal = me[stat] || 0;
+    const total = roll + statVal;
+    const success = total >= dc;
+    const resultText = success
+      ? `🎲 Prova di ${stat.toUpperCase()} — tiro ${roll}+${statVal}=${total} vs DC${dc}: **SUCCESSO!** ${successText||""}`
+      : `🎲 Prova di ${stat.toUpperCase()} — tiro ${roll}+${statVal}=${total} vs DC${dc}: *Fallimento.* ${failureText||""}`;
+    await addMsg(resultText, "info", "Sistema");
+    await advanceStoryScene(success ? successScene : failureScene);
+  }
+
+  async function startStoryCombat(scene) {
+    if(!code || !me || !activeStory || !scene?.combat) return;
     const latestQs = await dbGetPartyState(code);
     if(latestQs.combat?.active) return;
     const partyForCombat = await getOnlinePartyPlayersForCombat(latestQs);
@@ -8206,14 +8373,14 @@ function GameScreen({ myId, setScreen, authUser }) {
       isPlayer:true, isSummon:false, dead:false, dying:false, stable:false,
       rollInit: (p.init||0) + Math.floor(Math.random()*20),
     }));
-    const monsterCombatants = chapter.monsters.map(m => ({
+    const monsterCombatants = scene.combat.monsters.map(m => ({
       ...m, rollInit: (m.init||0) + Math.floor(Math.random()*20),
     }));
     const allCombatants = [...playerCombatants, ...monsterCombatants].sort((a,b)=>b.rollInit-a.rollInit);
     const newCombat = { active:true, combatants:allCombatants, turn:0, round:1, spellSlots:{}, startedAt:Date.now(), questDmgLog:{} };
-    const newStory = { ...latestQs.story, battlePending:true, battleNext:chapter.next, battleNextFail:chapter.nextFail||null };
+    const newStory = { ...latestQs.story, battlePending:true, battleNext:scene.combat.successScene, battleNextFail:scene.combat.failureScene||null };
     await dbSavePartyState(code, { ...latestQs, combat:newCombat, story:newStory });
-    await addMsg(`⚔️ **${chapter.title}** — Inizia il combattimento!`, "combat", "Sistema");
+    await addMsg(`⚔️ **${scene.title}** — Inizia il combattimento!`, "combat", "Sistema");
     setTab("combat");
   }
 
@@ -8923,14 +9090,16 @@ function GameScreen({ myId, setScreen, authUser }) {
       const allDone = newRooms.every(r => r.cleared);
       newDungeon = { ...newDungeon, rooms:newRooms, currentRoom:Math.min(nextRoom, newRooms.length-1), pendingCombatRoom:null, ...(allDone?{completedAt:new Date().toISOString()}:{}) };
     }
-    // Story: advance chapter after battle victory
+    // Story: advance scene after battle victory
     let newStoryState = latestQs.story;
     if(latestQs.story?.battlePending) {
-      const battleNextChapter = latestQs.story.battleNext;
-      newStoryState = { ...latestQs.story, battlePending:false, battleNext:null, battleNextFail:null, chapterId: battleNextChapter };
+      const nextSceneId = latestQs.story.battleNext;
       const storyObj = STORIES.find(s => s.id === latestQs.story.storyId);
-      const nextChapterObj = storyObj?.chapters?.[battleNextChapter];
-      if(nextChapterObj) await addMsg(`📖 *${nextChapterObj.title}*`, "narration", "Master");
+      const nextScene = storyObj?.scenes?.[nextSceneId];
+      const newFlags = { ...(latestQs.story.storyFlags||{}), ...(nextScene?.setFlags||{}) };
+      const visited = [...new Set([...(latestQs.story.visitedScenes||[]), nextSceneId].filter(Boolean))];
+      newStoryState = { ...latestQs.story, battlePending:false, battleNext:null, battleNextFail:null, currentSceneId: nextSceneId, currentChapterId: nextScene?.chapterId||latestQs.story.currentChapterId, storyFlags: newFlags, visitedScenes: visited };
+      if(nextScene) await addMsg(`📖 *${nextScene.title}*`, "narration", "Master");
     }
     const newQs = { ...latestQs, combat: newCombat, persistentSpellSlots: newPersistentSlots, partyDiary: newDiaryCombat, dungeon: newDungeon, story: newStoryState };
     await dbSavePartyState(code, newQs);
@@ -9792,14 +9961,15 @@ ${stepText(step)}`, "quest","Master");
         {tab==="story" && (
           <StoryView
             story={activeStory}
-            chapter={activeStoryChapter}
+            scene={activeStoryScene}
             storyState={storyState}
             isLeader={isStoryLeader}
             me={me}
             partyPlayers={partyPlayers}
-            onAdvance={advanceStoryChapter}
+            onAdvance={advanceStoryScene}
             onChoice={makeStoryChoice}
             onFight={startStoryCombat}
+            onSkillCheck={makeStorySkillCheck}
           />
         )}
         {tab==="level" && (
