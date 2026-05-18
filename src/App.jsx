@@ -6,6 +6,7 @@ import { DEFAULT_QUESTS } from "./data/questsData";
 import { DEFAULT_MONSTERS } from "./data/monstersData";
 import { DEFAULT_ITEMS, DEFAULT_WEAPON } from "./data/itemsData";
 import { STORIES } from "./data/storiesData";
+import StoryEditorPanel from "./StoryEditor";
 import DiceRoller from "./components/DiceRoller";
 import ParticleBackground from "./components/ParticleBackground";
 import CombatVisualizer from "./components/CombatVisualizer";
@@ -2966,7 +2967,7 @@ function MasterPanel({ setScreen, authUser }) {
   useEffect(() => {
     dbGetMaintenanceMode().then(setMaintenance);
     supabase.from("party_state").select("party_code").then(({ data }) => {
-      setMasterParties((data || []).map(r => r.party_code).filter(c => !["__world_guilds__","__world__","__master__","__maintenance__"].includes(c)));
+      setMasterParties((data || []).map(r => r.party_code).filter(c => !["__world_guilds__","__world__","__master__","__maintenance__","__story_library__"].includes(c)));
     });
   }, []);
 
@@ -3112,7 +3113,7 @@ function MasterPanel({ setScreen, authUser }) {
     return ()=>{ alive = false; clearInterval(timer); };
   }, [tab]);
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"stories",l:"📖 Storie"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"📊 Report"}];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"stories",l:"📖 Storie"},{k:"editor",l:"✏️ Editor"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"📊 Report"}];
   const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
   const visibleQuests = quests.filter(q => {
     const term = questSearch.trim().toLowerCase();
@@ -3475,31 +3476,43 @@ function MasterPanel({ setScreen, authUser }) {
       )}
 
       {tab==="stories" && (
-        <MasterStoriesPanel
+        <MasterStoriesWrapper
           parties={masterParties}
-          stories={STORIES}
-          onStart={async (storyId, partyCode) => {
-            const story = STORIES.find(s => s.id === storyId);
-            if(!story || !partyCode) return;
-            const latestQs = await dbGetPartyState(partyCode);
-            const firstChapter = story.chapters[0];
-            const firstSceneId = firstChapter?.startScene;
-            const newStory = { active:true, storyId, currentChapterId:firstChapter?.id, currentSceneId:firstSceneId, storyFlags:{}, choiceLog:[], visitedScenes:[firstSceneId].filter(Boolean), rewardCollected:[], battlePending:false, battleNext:null, battleNextFail:null, startedAt:Date.now() };
-            await dbSavePartyState(partyCode, { ...latestQs, story: newStory });
-            await supabase.from("messages").insert({ party_code:partyCode, author:"Master", content:`📖 **La storia inizia**: ${story.emoji} *${story.title}*`, type:"narration" });
-          }}
-          onStop={async (partyCode) => {
-            const latestQs = await dbGetPartyState(partyCode);
-            await dbSavePartyState(partyCode, { ...latestQs, story:{ active:false } });
-          }}
-          onJump={async (storyId, partyCode, sceneId) => {
-            const latestQs = await dbGetPartyState(partyCode);
-            const story = STORIES.find(s => s.id === storyId);
-            const scene = story?.scenes?.[sceneId];
-            await dbSavePartyState(partyCode, { ...latestQs, story:{ ...latestQs.story, currentSceneId:sceneId, currentChapterId:scene?.chapterId||latestQs.story?.currentChapterId } });
-          }}
+          builtinStories={STORIES}
           dbGetPartyState={dbGetPartyState}
+          dbSavePartyState={dbSavePartyState}
+          supabase={supabase}
         />
+      )}
+
+      {tab==="editor" && (
+        <div style={{ flex:1, overflow:"hidden", display:"flex", flexDirection:"column" }}>
+          <StoryEditorPanel
+            dbGetPartyState={dbGetPartyState}
+            dbSavePartyState={dbSavePartyState}
+            STORIES={STORIES}
+            onLaunchPreview={async (story, chapterId) => {
+              // Save story to library temp + launch for a selected party
+              const firstChap = story.chapters?.find(c=>c.id===chapterId);
+              const firstSceneId = firstChap?.startScene;
+              if(!firstSceneId) { alert("Imposta una scena iniziale per il capitolo prima di provarlo."); return; }
+              const partyCode = window.prompt("Codice party su cui lanciare la preview:");
+              if(!partyCode) return;
+              const latestQs = await dbGetPartyState(partyCode.toUpperCase());
+              // Merge custom story into party_state temporarily
+              const newStoryState = {
+                active:true, storyId:story.id,
+                currentChapterId:chapterId, currentSceneId:firstSceneId,
+                storyFlags:{}, choiceLog:[], visitedScenes:[firstSceneId], rewardCollected:[],
+                battlePending:false, battleNext:null, battleNextFail:null, startedAt:Date.now(),
+                _previewStory: story, // embed for lookup
+              };
+              await dbSavePartyState(partyCode.toUpperCase(), { ...latestQs, story:newStoryState });
+              await supabase.from("messages").insert({ party_code:partyCode.toUpperCase(), author:"Master", content:`📖 **Preview**: ${story.emoji} *${story.title}* — ${firstChap?.title}`, type:"narration" });
+              alert(`Preview avviata per il party ${partyCode.toUpperCase()}.`);
+            }}
+          />
+        </div>
       )}
 
       {tab==="monsters" && !editM && (
@@ -5815,6 +5828,43 @@ const STORY_TYPE_COLORS = {
 };
 const SCENE_ICON = { story:"📜", narration:"📜", choice:"🔀", skillCheck:"🎲", combat:"⚔️", reward:"💰", loot:"💰", event:"⚡", rest:"🏕️", ending:"🏁", gameOver:"💀", returnPoint:"🔁" };
 const ENDING_ICONS = { good:"🏆", neutral:"🤝", fail:"💀", secret:"✨" };
+
+function MasterStoriesWrapper({ parties, builtinStories, dbGetPartyState, dbSavePartyState, supabase }) {
+  const [customStories, setCustomStories] = useState([]);
+  useEffect(() => {
+    dbGetPartyState("__story_library__").then(d=>{ if(d?.stories) setCustomStories(d.stories); }).catch(()=>{});
+  }, []);
+  const allStories = [...builtinStories, ...customStories];
+  const findStory = id => allStories.find(s=>s.id===id);
+  return (
+    <MasterStoriesPanel
+      parties={parties}
+      stories={allStories}
+      onStart={async (storyId, partyCode) => {
+        const story = findStory(storyId);
+        if(!story || !partyCode) return;
+        const latestQs = await dbGetPartyState(partyCode);
+        const firstChapter = story.chapters[0];
+        const firstSceneId = firstChapter?.startScene;
+        const isCustom = !!customStories.find(s=>s.id===storyId);
+        const newStory = { active:true, storyId, currentChapterId:firstChapter?.id, currentSceneId:firstSceneId, storyFlags:{}, choiceLog:[], visitedScenes:[firstSceneId].filter(Boolean), rewardCollected:[], battlePending:false, battleNext:null, battleNextFail:null, startedAt:Date.now(), ...(isCustom?{_previewStory:story}:{}) };
+        await dbSavePartyState(partyCode, { ...latestQs, story: newStory });
+        await supabase.from("messages").insert({ party_code:partyCode, author:"Master", content:`📖 **La storia inizia**: ${story.emoji} *${story.title}*`, type:"narration" });
+      }}
+      onStop={async (partyCode) => {
+        const latestQs = await dbGetPartyState(partyCode);
+        await dbSavePartyState(partyCode, { ...latestQs, story:{ active:false } });
+      }}
+      onJump={async (storyId, partyCode, sceneId) => {
+        const latestQs = await dbGetPartyState(partyCode);
+        const story = findStory(storyId);
+        const scene = story?.scenes?.[sceneId];
+        await dbSavePartyState(partyCode, { ...latestQs, story:{ ...latestQs.story, currentSceneId:sceneId, currentChapterId:scene?.chapterId||latestQs.story?.currentChapterId } });
+      }}
+      dbGetPartyState={dbGetPartyState}
+    />
+  );
+}
 
 function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, dbGetPartyState }) {
   const [selectedStory, setSelectedStory] = useState(stories[0]?.id || "");
@@ -8234,7 +8284,17 @@ function GameScreen({ myId, setScreen, authUser }) {
   }
 
   // ── STORY FUNCTIONS ─────────────────────────────────────────
-  function getStory(id) { return STORIES.find(s => s.id === id) || null; }
+  const [customStories, setCustomStories] = useState([]);
+  useEffect(() => {
+    dbGetPartyState("__story_library__").then(data => {
+      if(data?.stories) setCustomStories(data.stories);
+    }).catch(()=>{});
+  }, []);
+  function getStory(id) {
+    // Check preview story embedded in storyState first
+    if(qs?.story?._previewStory?.id === id) return qs.story._previewStory;
+    return STORIES.find(s => s.id === id) || customStories.find(s => s.id === id) || null;
+  }
   const storyState = qs?.story || null;
   const activeStory = storyState?.active ? getStory(storyState.storyId) : null;
   const activeStoryScene = activeStory ? activeStory.scenes?.[storyState.currentSceneId] : null;
@@ -9095,7 +9155,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     let newStoryState = latestQs.story;
     if(latestQs.story?.battlePending) {
       const nextSceneId = latestQs.story.battleNext;
-      const storyObj = STORIES.find(s => s.id === latestQs.story.storyId);
+      const storyObj = latestQs.story?._previewStory || STORIES.find(s => s.id === latestQs.story.storyId) || customStories.find(s => s.id === latestQs.story.storyId);
       const nextScene = storyObj?.scenes?.[nextSceneId];
       const newFlags = { ...(latestQs.story.storyFlags||{}), ...(nextScene?.setFlags||{}) };
       const visited = [...new Set([...(latestQs.story.visitedScenes||[]), nextSceneId].filter(Boolean))];
