@@ -695,8 +695,8 @@ function _buildDungeonRoom(type, idx, theme, rng, partyLevel) {
   const dc = 10 + Math.floor(partyLevel / 2) * 2;
   const gold = Math.floor((30 + partyLevel * 20) * (0.8 + rng() * 0.4));
   if (type === 'combat') {
-    const pool = DEFAULT_MONSTERS.filter(m => m.tier <= monTier + 1 && m.tier >= Math.max(1, monTier - 1));
-    const base = pool.length ? pool : DEFAULT_MONSTERS.filter(m => m.tier <= 2);
+    const pool = DEFAULT_MONSTERS.filter(m => m.tier && m.tier <= monTier + 1 && m.tier >= Math.max(1, monTier - 1));
+    const base = pool.length ? pool : DEFAULT_MONSTERS;
     const count = 1 + Math.floor(rng() * 2) + (partyLevel >= 5 ? 1 : 0) + (partyLevel >= 9 ? 1 : 0);
     // Scale HP and ATK with party level so monsters stay threatening at high levels
     const hpMult = 1 + (partyLevel - 1) * 0.13;
@@ -3708,8 +3708,14 @@ function MasterDungeonView() {
 
   // ── Procedural generate ──
   function handleGenerate() {
-    setPreview(generateDungeon({ roomCount, themeId, partyLevel, difficulty, seed:Date.now() }));
-    setStatus('');
+    try {
+      const d = generateDungeon({ roomCount, themeId, partyLevel, difficulty, seed:Date.now() });
+      setPreview(d);
+      setStatus('');
+    } catch(e) {
+      setStatus('❌ Errore generazione: ' + (e?.message || String(e)));
+      console.error('generateDungeon error:', e);
+    }
   }
 
   // ── Build dungeon from manual rooms ──
