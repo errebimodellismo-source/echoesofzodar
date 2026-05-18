@@ -5958,6 +5958,7 @@ function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, dbGetPa
           </select>
           <BigBtn gold disabled={!selectedParty||!selectedStory||busy} onClick={async()=>{ setBusy(true); await onStart(selectedStory,selectedParty,selectedMode); setBusy(false); }}>▶️ Avvia</BigBtn>
           <SmallBtn disabled={!selectedParty||busy} onClick={async()=>{ if(!window.confirm("Interrompere la storia in corso?")) return; setBusy(true); await onStop(selectedParty); setBusy(false); }}>⏹ Interrompi</SmallBtn>
+          <SmallBtn disabled={!selectedParty||!selectedStory||busy} onClick={async()=>{ if(!window.confirm("Resettare la storia dall'inizio?")) return; setBusy(true); await onStop(selectedParty); await new Promise(r=>setTimeout(r,300)); await onStart(selectedStory,selectedParty,selectedMode); setBusy(false); }}>🔄 Resetta</SmallBtn>
         </div>
       </Card>
 
