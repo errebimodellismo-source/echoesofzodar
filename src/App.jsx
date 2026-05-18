@@ -6398,6 +6398,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   }
   const [messages, setMessages] = useState([]);
   const [worldMessages, setWorldMessages] = useState([]);
+  const [masterMessages, setMasterMessages] = useState([]);
   const [chatChannel, setChatChannel] = useState("party");
   const [partyPlayers, setPartyPlayers] = useState([]);
   const [qs, setQs] = useState({ currentId:null, step:0, active:false, completed:[], combat:null });
@@ -6682,14 +6683,18 @@ function GameScreen({ myId, setScreen, authUser }) {
         await refreshAll(p.partyCode);
         await refreshInventory(p);
         refreshGuilds();
-        // Load world chat
+        // Load world chat and master chat (last 7 days)
+        const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
         dbGetMessages("__world__").then(wm => setWorldMessages(wm.filter(m => m.type === "chat")));
+        dbGetMessages("__master__").then(mm => setMasterMessages(mm.filter(m => m.type === "chat" && new Date(m.created_at).getTime() >= sevenDaysAgo)));
         // Realtime subscription
         subRef.current = supabase.channel("party_"+p.partyCode)
           .on("postgres_changes", { event:"INSERT", schema:"public", table:"messages", filter:`party_code=eq.${p.partyCode}` },
             () => refreshAll(p.partyCode))
           .on("postgres_changes", { event:"INSERT", schema:"public", table:"messages", filter:`party_code=eq.__world__` },
             () => dbGetMessages("__world__").then(wm => setWorldMessages(wm.filter(m => m.type === "chat"))))
+          .on("postgres_changes", { event:"INSERT", schema:"public", table:"messages", filter:`party_code=eq.__master__` },
+            () => { const ago = Date.now() - 7*24*60*60*1000; dbGetMessages("__master__").then(mm => setMasterMessages(mm.filter(m => m.type==="chat" && new Date(m.created_at).getTime()>=ago))); })
           .on("postgres_changes", { event:"*", schema:"public", table:"players", filter:`party_code=eq.${p.partyCode}` },
             () => refreshAll(p.partyCode))
           .on("postgres_changes", { event:"*", schema:"public", table:"player_items" },
@@ -8770,6 +8775,11 @@ ${stepText(step)}`, "quest","Master");
       await dbSendMessage({ party_code:"__world__", author:me?.name, content:raw, type:"chat" });
       const wm = await dbGetMessages("__world__");
       setWorldMessages(wm.filter(m => m.type === "chat"));
+    } else if(chatChannel === "master") {
+      await dbSendMessage({ party_code:"__master__", author:me?.name, content:raw, type:"chat" });
+      const ago = Date.now() - 7*24*60*60*1000;
+      const mm = await dbGetMessages("__master__");
+      setMasterMessages(mm.filter(m => m.type === "chat" && new Date(m.created_at).getTime() >= ago));
     } else { await addMsg(raw, "chat", me?.name); await refreshAll(code); }
     inputRef.current?.focus();
   }
@@ -9231,7 +9241,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🤝 Scambi"],["combat","⚔️ Battaglia"],["donate","🎁 Dona"]].map(([k,l])=>{
+          {[["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🤝 Scambi"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
@@ -9263,43 +9273,49 @@ ${stepText(step)}`, "quest","Master");
 
         <div key={tab} style={{ flex:1, display:"contents", animation:"tabFadeIn 0.18s ease" }}>
         {tab==="chat" && (() => {
-          const isParty = chatChannel === "party";
-          const shownMsgs = isParty ? visibleChatMessages : worldMessages;
-          const accentColor = isParty ? "#6366f1" : "#10b981";
-          const borderColor = isParty ? "#4338ca" : "#059669";
+          const CHANNELS = [
+            { key:"party",  label:"⚔️ Party",  accent:"#6366f1", bg:"rgba(99,102,241,0.2)",  icon:"⚔️",  hint:`Codice: ${code||"—"}` },
+            { key:"world",  label:"🌍 Mondo",  accent:"#10b981", bg:"rgba(16,185,129,0.18)", icon:"🌍",  hint:"Visibile a tutti" },
+            { key:"master", label:"📯 Master", accent:"#f59e0b", bg:"rgba(245,158,11,0.18)", icon:"📯",  hint:"Si azzera ogni settimana" },
+          ];
+          const ch = CHANNELS.find(c => c.key === chatChannel) || CHANNELS[0];
+          const shownMsgs = chatChannel === "party" ? visibleChatMessages : chatChannel === "world" ? worldMessages : masterMessages;
           return (
             <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
               {/* Channel selector */}
-              <div style={{ flexShrink:0, display:"flex", gap:8, padding:"0.65rem 1rem", background:"rgba(2,6,23,0.9)", borderBottom:"1px solid #1e293b" }}>
-                {[["party","⚔️ Party"],["world","🌍 Mondo"]].map(([ch,label])=>(
-                  <button key={ch} onClick={()=>setChatChannel(ch)} style={{
-                    padding:"0.45rem 1.1rem", borderRadius:6, cursor:"pointer",
-                    fontFamily:"'Cinzel',serif", fontSize:"0.8rem", fontWeight:700, letterSpacing:"0.04em",
-                    background: chatChannel===ch ? (ch==="party"?"rgba(99,102,241,0.25)":"rgba(16,185,129,0.2)") : "rgba(15,23,42,0.6)",
-                    border: `1px solid ${chatChannel===ch ? (ch==="party"?"#6366f1":"#10b981") : "#334155"}`,
-                    color: chatChannel===ch ? (ch==="party"?"#a5b4fc":"#6ee7b7") : "#64748b",
+              <div style={{ flexShrink:0, display:"flex", gap:6, padding:"0.6rem 0.8rem", background:"rgba(2,6,23,0.92)", borderBottom:"1px solid #1e293b", flexWrap:"wrap", alignItems:"center" }}>
+                {CHANNELS.map(c => (
+                  <button key={c.key} onClick={()=>setChatChannel(c.key)} style={{
+                    padding:"0.4rem 1rem", borderRadius:6, cursor:"pointer",
+                    fontFamily:"'Cinzel',serif", fontSize:"0.78rem", fontWeight:700, letterSpacing:"0.04em",
+                    background: chatChannel===c.key ? c.bg : "rgba(15,23,42,0.6)",
+                    border: `1px solid ${chatChannel===c.key ? c.accent : "#334155"}`,
+                    color: chatChannel===c.key ? c.accent : "#64748b",
                     transition:"all 0.15s",
-                  }}>{label}</button>
+                  }}>{c.label}</button>
                 ))}
-                {isParty && <span style={{ marginLeft:"auto", color:"#475569", fontSize:"0.72rem", alignSelf:"center" }}>Codice party: {code || "—"}</span>}
-                {!isParty && <span style={{ marginLeft:"auto", color:"#475569", fontSize:"0.72rem", alignSelf:"center" }}>Visibile a tutti i giocatori</span>}
+                <span style={{ marginLeft:"auto", color:"#475569", fontSize:"0.7rem", alignSelf:"center" }}>{ch.hint}</span>
               </div>
+              {/* Master notice banner */}
+              {chatChannel === "master" && (
+                <div style={{ flexShrink:0, padding:"0.5rem 1rem", background:"rgba(120,80,0,0.18)", borderBottom:"1px solid rgba(245,158,11,0.2)", color:"#92400e", fontSize:"0.74rem" }}>
+                  📯 Canale Master — fai domande al Master o leggi i suoi comunicati. I messaggi si azzerano ogni domenica.
+                </div>
+              )}
               {/* Messages */}
               <div style={{ flex:1, overflowY:"auto", padding:"0.8rem", display:"flex", flexDirection:"column", gap:6, background:"rgba(2,6,23,0.45)" }}>
                 {shownMsgs.length === 0 && (
                   <div style={{ textAlign:"center", padding:"3rem 1rem" }}>
-                    <div style={{ fontSize:"2.5rem", marginBottom:"0.6rem" }}>{isParty ? "⚔️" : "🌍"}</div>
+                    <div style={{ fontSize:"2.5rem", marginBottom:"0.6rem" }}>{ch.icon}</div>
                     <div style={{ color:"#475569", fontSize:"0.86rem" }}>Nessun messaggio ancora.</div>
                     <div style={{ color:"#334155", fontSize:"0.78rem", marginTop:"0.4rem" }}>Sii il primo a scrivere.</div>
                   </div>
                 )}
                 {shownMsgs.map(msg => (
-                  <div key={msg.id} style={{ padding:"0.55rem 0.85rem", borderRadius:6, background:"rgba(15,23,42,0.82)", borderLeft:`3px solid ${accentColor}`, display:"flex", flexDirection:"column", gap:2 }}>
+                  <div key={msg.id} style={{ padding:"0.55rem 0.85rem", borderRadius:6, background:"rgba(15,23,42,0.82)", borderLeft:`3px solid ${ch.accent}`, display:"flex", flexDirection:"column", gap:2 }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:8 }}>
-                      <span style={{ fontSize:"0.68rem", letterSpacing:"0.1em", textTransform:"uppercase", color:accentColor, fontFamily:"'Cinzel',serif", fontWeight:700 }}>{msg.author || "Anonimo"}</span>
-                      {!isParty && msg.party_code && msg.party_code !== "__world__" && (
-                        <span style={{ fontSize:"0.62rem", color:"#334155" }}>[{msg.party_code}]</span>
-                      )}
+                      <span style={{ fontSize:"0.68rem", letterSpacing:"0.1em", textTransform:"uppercase", color:ch.accent, fontFamily:"'Cinzel',serif", fontWeight:700 }}>{msg.author || "Anonimo"}</span>
+                      <span style={{ fontSize:"0.62rem", color:"#334155" }}>{new Date(msg.created_at).toLocaleString("it-IT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</span>
                     </div>
                     <div style={{ fontSize:"0.88rem", lineHeight:1.6, color:"#e2e8f0" }} dangerouslySetInnerHTML={{ __html: fmt(msg.content) }} />
                   </div>
@@ -9307,14 +9323,14 @@ ${stepText(step)}`, "quest","Master");
                 <div ref={msgEnd} />
               </div>
               {/* Input */}
-              <div style={{ display:"flex", gap:8, padding:"0.65rem 0.8rem", borderTop:`1px solid ${borderColor}33`, background:"rgba(2,6,23,0.95)", flexShrink:0 }}>
+              <div style={{ display:"flex", gap:8, padding:"0.65rem 0.8rem", borderTop:`1px solid ${ch.accent}33`, background:"rgba(2,6,23,0.95)", flexShrink:0 }}>
                 <input ref={inputRef}
-                  style={{ flex:1, padding:"0.6rem 0.85rem", background:"rgba(15,23,42,0.7)", border:`1px solid ${borderColor}55`, borderRadius:6, color:"#e2e8f0", fontSize:"0.9rem", outline:"none" }}
-                  placeholder={isParty ? `${me?.name || "Tu"} al party…` : `${me?.name || "Tu"} al mondo…`}
+                  style={{ flex:1, padding:"0.6rem 0.85rem", background:"rgba(15,23,42,0.7)", border:`1px solid ${ch.accent}55`, borderRadius:6, color:"#e2e8f0", fontSize:"0.9rem", outline:"none" }}
+                  placeholder={chatChannel==="party" ? `${me?.name||"Tu"} al party…` : chatChannel==="world" ? `${me?.name||"Tu"} al mondo…` : `${me?.name||"Tu"} al Master…`}
                   value={input} onChange={e=>setInput(e.target.value)}
                   onKeyDown={e=>e.key==="Enter"&&handleInput()} autoComplete="off" />
-                <button onClick={handleInput} style={{ padding:"0.6rem 1rem", background:isParty?"rgba(99,102,241,0.3)":"rgba(16,185,129,0.3)", border:`1px solid ${accentColor}`, borderRadius:6, color:isParty?"#a5b4fc":"#6ee7b7", cursor:"pointer", fontSize:"1rem", flexShrink:0 }}>
-                  {isParty ? "⚔️" : "🌍"}
+                <button onClick={handleInput} style={{ padding:"0.6rem 1rem", background:ch.bg, border:`1px solid ${ch.accent}`, borderRadius:6, color:ch.accent, cursor:"pointer", fontSize:"1rem", flexShrink:0 }}>
+                  {ch.icon}
                 </button>
               </div>
             </div>
