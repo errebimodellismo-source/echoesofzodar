@@ -34,7 +34,7 @@ export const RACES = {
   // ── Razze Segrete ── sbloccabili solo con password
   minotaur:  { name:"Minotauro", emoji:"🐂", hpB:50, atkB:10, defB:4, magB:0,  initB:-1, _secret:true, desc:"Colosso delle pianure. Forza devastante e resistenza leggendaria." },
   angel:     { name:"Angelo",    emoji:"😇", hpB:15, atkB:3,  defB:10, magB:12, initB:3,  _secret:true, desc:"Essere celeste. Equilibrio perfetto tra luce divina e combattimento." },
-  succubus:  { name:"Succube",   emoji:"😈", hpB:5,  atkB:4,  defB:2,  magB:15, initB:6,  _secret:true, desc:"Creatura infernale. Velocità e potere magico fuori dal comune." },
+  succubus:  { name:"Succube",   emoji:"😈", hpB:5,  atkB:4,  defB:2,  magB:15, initB:6,  _secret:true, _femaleOnly:true, desc:"Creatura infernale. Velocità e potere magico fuori dal comune." },
 };
 
 export const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','paladin','ranger','necromancer','summoner','artificer'];

@@ -2931,14 +2931,21 @@ function CreateChar({ setScreen, goGame, authUser }) {
       )}
       {step===2 && (
         <Card title="🌍 Scegli Razza e Genere">
-          <div style={{ display:"flex", gap:"1rem", marginBottom:"1rem" }}>
-            <button onClick={()=>setGender("male")} style={{ flex:1, padding:"0.8rem", background:gender==="male"?"rgba(59,130,246,0.3)":"rgba(255,255,255,0.03)", border:`2px solid ${gender==="male"?"#60a5fa":"#1f2937"}`, borderRadius:6, cursor:"pointer", color:gender==="male"?"#bfdbfe":"#9ca3af", fontFamily:"'Cinzel',serif" }}>♂️ Maschile</button>
-            <button onClick={()=>setGender("female")} style={{ flex:1, padding:"0.8rem", background:gender==="female"?"rgba(236,72,153,0.3)":"rgba(255,255,255,0.03)", border:`2px solid ${gender==="female"?"#f472b6":"#1f2937"}`, borderRadius:6, cursor:"pointer", color:gender==="female"?"#fbcfe8":"#9ca3af", fontFamily:"'Cinzel',serif" }}>♀️ Femminile</button>
-          </div>
+          {RACES[race]?._femaleOnly ? (
+            <div style={{ padding:"0.6rem 0.8rem", background:"rgba(236,72,153,0.12)", border:"1px solid #f472b6", borderRadius:8, marginBottom:"1rem", color:"#fbcfe8", fontSize:"0.78rem", fontFamily:"'Cinzel',serif" }}>
+              😈 La razza <strong>{RACES[race].name}</strong> è esclusivamente femminile.
+            </div>
+          ) : (
+            <div style={{ display:"flex", gap:"1rem", marginBottom:"1rem" }}>
+              <button onClick={()=>setGender("male")} style={{ flex:1, padding:"0.8rem", background:gender==="male"?"rgba(59,130,246,0.3)":"rgba(255,255,255,0.03)", border:`2px solid ${gender==="male"?"#60a5fa":"#1f2937"}`, borderRadius:6, cursor:"pointer", color:gender==="male"?"#bfdbfe":"#9ca3af", fontFamily:"'Cinzel',serif" }}>♂️ Maschile</button>
+              <button onClick={()=>setGender("female")} style={{ flex:1, padding:"0.8rem", background:gender==="female"?"rgba(236,72,153,0.3)":"rgba(255,255,255,0.03)", border:`2px solid ${gender==="female"?"#f472b6":"#1f2937"}`, borderRadius:6, cursor:"pointer", color:gender==="female"?"#fbcfe8":"#9ca3af", fontFamily:"'Cinzel',serif" }}>♀️ Femminile</button>
+            </div>
+          )}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))", gap:8 }}>
             {Object.entries(RACES).filter(([,v]) => !v._secret || secretUnlocked).map(([k,v])=>(
-              <button key={k} onClick={()=>setRace(k)} style={{ padding:"0.7rem 0.4rem", background:race===k?`rgba(109,40,217,0.3)`:"rgba(255,255,255,0.03)", border:`2px solid ${race===k?"#a78bfa":v._secret?"#4b0082":"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:3, position:"relative" }}>
+              <button key={k} onClick={()=>{ setRace(k); if(v._femaleOnly) setGender("female"); }} style={{ padding:"0.7rem 0.4rem", background:race===k?`rgba(109,40,217,0.3)`:"rgba(255,255,255,0.03)", border:`2px solid ${race===k?"#a78bfa":v._secret?"#4b0082":"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:3, position:"relative" }}>
                 {v._secret && <span style={{ position:"absolute", top:3, right:3, fontSize:"0.45rem", color:"#a78bfa", fontFamily:"'Cinzel',serif" }}>✦</span>}
+                {v._femaleOnly && <span style={{ position:"absolute", top:3, left:3, fontSize:"0.45rem", color:"#f472b6" }}>♀</span>}
                 <span style={{ fontSize:"1.5rem", filter:v._secret?"drop-shadow(0 0 5px #a78bfa)":"none" }}>{v.emoji}</span>
                 <strong style={{ fontFamily:"'Cinzel',serif", color:v._secret?"#c4b5fd":"#d1d5db", fontSize:"0.78rem" }}>{v.name}</strong>
                 {race===k && <small style={{ fontSize:"0.6rem", color:"#a78bfa", textAlign:"center", lineHeight:1.3 }}>
