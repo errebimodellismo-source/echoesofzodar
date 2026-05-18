@@ -5840,12 +5840,23 @@ function MasterStoriesWrapper({ parties, builtinStories, dbGetPartyState, dbSave
     supabase.from("party_state").select("combat").eq("party_code","__story_library__").maybeSingle()
       .then(({ data }) => { if(data?.combat?.stories) setCustomStories(data.combat.stories); }).catch(()=>{});
   }, []);
-  const allStories = [...builtinStories, ...customStories];
+  const allStories = [
+    ...builtinStories.map(s=>({...s, _builtin:true})),
+    ...customStories,
+  ];
   const findStory = id => allStories.find(s=>s.id===id);
   return (
     <MasterStoriesPanel
       parties={parties}
       stories={allStories}
+      onDelete={async (storyId) => {
+        const updated = customStories.filter(s=>s.id!==storyId);
+        setCustomStories(updated);
+        await supabase.from("party_state").upsert(
+          { party_code:"__story_library__", combat:{ stories: updated }, updated_at: new Date().toISOString() },
+          { onConflict:"party_code" }
+        );
+      }}
       onStart={async (storyId, partyCode, mode = "party") => {
         const story = findStory(storyId);
         if(!story || !partyCode) return;
@@ -5872,7 +5883,7 @@ function MasterStoriesWrapper({ parties, builtinStories, dbGetPartyState, dbSave
   );
 }
 
-function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, dbGetPartyState }) {
+function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, onDelete, dbGetPartyState }) {
   const [selectedStory, setSelectedStory] = useState(stories[0]?.id || "");
   const [selectedParty, setSelectedParty] = useState("");
   const [selectedMode, setSelectedMode] = useState("party");
@@ -5906,6 +5917,7 @@ function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, dbGetPa
                   <div style={{ color:"#64748b", fontSize:"0.75rem" }}>{s.difficulty} · {s.chapters?.length} capitoli · {Object.keys(s.scenes||{}).length} scene · {s.tags?.join(", ")}</div>
                 </div>
                 <SmallBtn onClick={e=>{e.stopPropagation();setShowDiagram(showDiagram===s.id?null:s.id);}}>🗺️ Mappa</SmallBtn>
+                {onDelete && !s._builtin && <SmallBtn onClick={e=>{e.stopPropagation(); if(window.confirm(`Eliminare "${s.title}"?`)) onDelete(s.id);}} style={{color:"#f87171",borderColor:"#f87171"}}>🗑️</SmallBtn>}
                 <span style={{ color:"#475569", fontSize:"0.8rem" }}>{expandedStory===s.id?"▲":"▼"}</span>
               </div>
               {expandedStory===s.id && (
@@ -10194,23 +10206,39 @@ ${stepText(step)}`, "quest","Master");
             </div>
           );
         })()}
-        {tab==="story" && (
-          <StoryView
-            story={activeStory}
-            scene={activeStoryScene}
-            storyState={storyState}
-            isLeader={isStoryLeader}
-            me={me}
-            myId={myId}
-            partyPlayers={partyPlayers}
-            onAdvance={advanceStoryScene}
-            onChoice={makeStoryChoice}
-            onVote={castStoryVote}
-            onFight={startStoryCombat}
-            onSkillCheck={makeStorySkillCheck}
-            onLeave={()=>setTab("quest")}
-          />
-        )}
+        {tab==="story" && (() => {
+          const abandonedKey = `eoz_story_abandoned_${myId}`;
+          const abandonedId = localStorage.getItem(abandonedKey);
+          const hasAbandoned = abandonedId && abandonedId === storyState?.storyId;
+          // Clear flag if story changed or ended
+          if(abandonedId && abandonedId !== storyState?.storyId) localStorage.removeItem(abandonedKey);
+          if(hasAbandoned) return (
+            <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem", textAlign:"center" }}>
+              <div>
+                <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>📖</div>
+                <div style={{ color:"#475569", fontFamily:"'Cinzel',serif" }}>Hai abbandonato questa storia.</div>
+                <div style={{ color:"#334155", fontSize:"0.82rem", marginTop:"0.5rem" }}>Gli altri stanno continuando senza di te.</div>
+              </div>
+            </div>
+          );
+          return (
+            <StoryView
+              story={activeStory}
+              scene={activeStoryScene}
+              storyState={storyState}
+              isLeader={isStoryLeader}
+              me={me}
+              myId={myId}
+              partyPlayers={partyPlayers}
+              onAdvance={advanceStoryScene}
+              onChoice={makeStoryChoice}
+              onVote={castStoryVote}
+              onFight={startStoryCombat}
+              onSkillCheck={makeStorySkillCheck}
+              onLeave={()=>{ localStorage.setItem(`eoz_story_abandoned_${myId}`, storyState?.storyId); setTab("quest"); }}
+            />
+          );
+        })()}
         {tab==="storylibrary" && (
           <PlayerStoryLibrary
             stories={[...STORIES, ...customStories]}
