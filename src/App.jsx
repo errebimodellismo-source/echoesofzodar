@@ -1901,6 +1901,7 @@ async function dbSavePartyState(partyCode, state) {
     __battleChat: state.battleChat || [],
     __questHistory: state.questHistory || [],
     __lastDailyReset: state.lastDailyReset || null,
+    __story: state.story || null,
   };
   const { error } = await supabase.from("party_state").upsert({
     party_code: partyCode,
@@ -1937,6 +1938,7 @@ async function dbGetPartyState(partyCode) {
     battleChat: (isV2 ? raw.__battleChat : null) || [],
     questHistory: (isV2 ? raw.__questHistory : null) || [],
     lastDailyReset: (isV2 ? raw.__lastDailyReset : null) || null,
+    story: (isV2 ? raw.__story : null) || null,
   };
 }
 
