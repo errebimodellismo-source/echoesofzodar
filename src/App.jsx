@@ -1692,12 +1692,13 @@ function resolveLootItem(spec, items) {
    SUPABASE HELPERS
 ---------------------------------------------- */
 async function dbSendMessage(msg) {
-  await supabase.from("messages").insert({
+  const { error } = await supabase.from("messages").insert({
     party_code: msg.party_code,
     author: msg.author,
     content: msg.content,
     type: msg.type || "chat",
   });
+  if(error) console.error("[dbSendMessage] errore:", error.message, msg);
 }
 
 function parsePlayerMasterMeta(msg) {
@@ -9388,21 +9389,29 @@ ${stepText(step)}`, "quest","Master");
     const raw=input.trim(); if(!raw) return;
     setInput("");
     const c=raw.toLowerCase();
-    if(c==="avanza") await advanceQuest();
-    else if(c==="aiuto") await addMsg(`⚔️ **Comandi:**\n� **avanza** � prosegui nella missione\n� **stato** � il tuo personaggio\n� **party** � chi c'� nel party\n� **classifica** � punti e livelli\n� Qualsiasi testo ? chat`, "system","Sistema");
-    else if(c==="stato") { if(me) await addMsg(`${CLASSES[me?.class||'warrior']?.emoji} **${me.name}** � ${RACES[me?.race||'human']?.name} ${CLASSES[me?.class||'warrior']?.name} � Lv.${me.level}\n❤️${me.hp||0}/${me.maxHp||0} ⚔️${me.atk||0} 🛡️${me.def||0} ✨${me.mag||0}\n⭐XP ${me.xp||0}/${xpForLevel(me.level||1)} | 💰${me.gold||0} oro`,`info`,me.name); }
-    else if(c==="party") { const lines=partyPlayers.map(p=>`${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} ❤️${p?.hp||0}/${p?.maxHp||0}`); await addMsg(`⚔️ **Party [${code}]**\n${lines.join("\n")}`,"info","Master"); }
-    else if(c==="classifica") { const sorted=[...partyPlayers].sort((a,b)=>b.level-a.level); await addMsg(`⚔️ **Classifica**\n${sorted.map((p,i)=>`${["⭐","⭐","⭐"][i]||"  "} ${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} � ${p.xp||0}XP`).join("\n")}`,"info","Master"); }
-    else if(chatChannel === "world") {
-      await dbSendMessage({ party_code:"__world__", author:me?.name, content:raw, type:"chat" });
-      const wm = await dbGetMessages("__world__");
-      setWorldMessages(wm.filter(m => m.type === "chat"));
-    } else if(chatChannel === "master") {
-      await dbSendMessage({ party_code:"__master__", author:me?.name, content:raw, type:"chat" });
-      const ago = Date.now() - 7*24*60*60*1000;
-      const mm = await dbGetMessages("__master__");
-      setMasterMessages(mm.filter(m => m.type === "chat" && new Date(m.created_at).getTime() >= ago));
-    } else { await addMsg(raw, "chat", me?.name); await refreshAll(code); }
+    try {
+      if(c==="avanza") await advanceQuest();
+      else if(c==="aiuto") await addMsg(`⚔️ **Comandi:** avanza · stato · party · classifica`, "system","Sistema");
+      else if(c==="stato") { if(me) await addMsg(`${CLASSES[me?.class||'warrior']?.emoji} **${me.name}** Lv.${me.level} ❤️${me.hp||0}/${me.maxHp||0} ⚔️${me.atk||0} 🛡️${me.def||0} ✨${me.mag||0} 💰${me.gold||0}`,`info`,me.name); }
+      else if(c==="party") { const lines=partyPlayers.map(p=>`${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} ❤️${p?.hp||0}/${p?.maxHp||0}`); await addMsg(`⚔️ **Party [${code}]**\n${lines.join("\n")}`,"info","Master"); }
+      else if(c==="classifica") { const sorted=[...partyPlayers].sort((a,b)=>b.level-a.level); await addMsg(`⚔️ **Classifica**\n${sorted.map((p,i)=>`${i===0?"🥇":i===1?"🥈":"🥉"} ${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} — ${p.xp||0}XP`).join("\n")}`,"info","Master"); }
+      else if(chatChannel === "world") {
+        await dbSendMessage({ party_code:"__world__", author:me?.name, content:raw, type:"chat" });
+        const wm = await dbGetMessages("__world__");
+        setWorldMessages(wm.filter(m => m.type === "chat"));
+      } else if(chatChannel === "master") {
+        await dbSendMessage({ party_code:"__master__", author:me?.name, content:raw, type:"chat" });
+        const ago = Date.now() - 7*24*60*60*1000;
+        const mm = await dbGetMessages("__master__");
+        setMasterMessages(mm.filter(m => m.type === "chat" && new Date(m.created_at).getTime() >= ago));
+      } else {
+        await addMsg(raw, "chat", me?.name);
+        const msgs = await dbGetMessages(code);
+        setMessages(msgs);
+      }
+    } catch(e) {
+      console.error("[handleInput] errore chat:", e);
+    }
     inputRef.current?.focus();
   }
 
