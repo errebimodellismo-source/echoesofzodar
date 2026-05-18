@@ -5846,14 +5846,14 @@ function MasterStoriesWrapper({ parties, builtinStories, dbGetPartyState, dbSave
     <MasterStoriesPanel
       parties={parties}
       stories={allStories}
-      onStart={async (storyId, partyCode) => {
+      onStart={async (storyId, partyCode, mode = "party") => {
         const story = findStory(storyId);
         if(!story || !partyCode) return;
         const latestQs = await dbGetPartyState(partyCode);
         const firstChapter = story.chapters[0];
         const firstSceneId = firstChapter?.startScene;
         const isCustom = !!customStories.find(s=>s.id===storyId);
-        const newStory = { active:true, storyId, currentChapterId:firstChapter?.id, currentSceneId:firstSceneId, storyFlags:{}, choiceLog:[], visitedScenes:[firstSceneId].filter(Boolean), rewardCollected:[], battlePending:false, battleNext:null, battleNextFail:null, startedAt:Date.now(), ...(isCustom?{_previewStory:story}:{}) };
+        const newStory = { active:true, storyId, mode, soloPlayerId: null, votes:{}, currentChapterId:firstChapter?.id, currentSceneId:firstSceneId, storyFlags:{}, choiceLog:[], visitedScenes:[firstSceneId].filter(Boolean), rewardCollected:[], battlePending:false, battleNext:null, battleNextFail:null, startedAt:Date.now(), ...(isCustom?{_previewStory:story}:{}) };
         await dbSavePartyState(partyCode, { ...latestQs, story: newStory });
         await supabase.from("messages").insert({ party_code:partyCode, author:"Master", content:`📖 **La storia inizia**: ${story.emoji} *${story.title}*`, type:"narration" });
       }}
@@ -5875,6 +5875,7 @@ function MasterStoriesWrapper({ parties, builtinStories, dbGetPartyState, dbSave
 function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, dbGetPartyState }) {
   const [selectedStory, setSelectedStory] = useState(stories[0]?.id || "");
   const [selectedParty, setSelectedParty] = useState("");
+  const [selectedMode, setSelectedMode] = useState("party");
   const [partyStoryStates, setPartyStoryStates] = useState({});
   const [jumpScene, setJumpScene] = useState("");
   const [busy, setBusy] = useState(false);
@@ -5950,8 +5951,12 @@ function MasterStoriesPanel({ parties, stories, onStart, onStop, onJump, dbGetPa
             </select>
           </div>
         </div>
-        <div style={{ display:"flex", gap:8 }}>
-          <BigBtn gold disabled={!selectedParty||!selectedStory||busy} onClick={async()=>{ setBusy(true); await onStart(selectedStory,selectedParty); setBusy(false); }}>▶️ Avvia</BigBtn>
+        <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
+          <select style={{...inputStyle, cursor:"pointer", width:"auto"}} value={selectedMode} onChange={e=>setSelectedMode(e.target.value)}>
+            <option value="party">👥 Party (voto maggioranza)</option>
+            <option value="solo">🧍 Solitaria</option>
+          </select>
+          <BigBtn gold disabled={!selectedParty||!selectedStory||busy} onClick={async()=>{ setBusy(true); await onStart(selectedStory,selectedParty,selectedMode); setBusy(false); }}>▶️ Avvia</BigBtn>
           <SmallBtn disabled={!selectedParty||busy} onClick={async()=>{ if(!window.confirm("Interrompere la storia in corso?")) return; setBusy(true); await onStop(selectedParty); setBusy(false); }}>⏹ Interrompi</SmallBtn>
         </div>
       </Card>
@@ -6071,7 +6076,57 @@ function StoryDiagram({ story }) {
   return <div ref={ref} style={{ background:"rgba(2,6,23,0.6)", borderRadius:8, padding:"0.5rem", overflowX:"auto", minHeight:60 }} />;
 }
 
-function StoryView({ story, scene, storyState, isLeader, me, partyPlayers, onAdvance, onChoice, onFight, onSkillCheck }) {
+function PlayerStoryLibrary({ stories, storyState, onStartSolo, onStartParty, setTab }) {
+  const [expanded, setExpanded] = useState(null);
+  const isActive = storyState?.active;
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
+      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"0.3rem" }}>📚 Libreria Storie</h3>
+      <p style={{ color:"#64748b", fontSize:"0.8rem", marginBottom:"1rem" }}>Scegli una storia e come vuoi giocarla.</p>
+      {isActive && (
+        <div style={{ background:"rgba(99,102,241,0.1)", border:"1px solid #6366f1", borderRadius:8, padding:"0.7rem 1rem", marginBottom:"1rem", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+          <span style={{ color:"#a5b4fc", fontSize:"0.85rem" }}>📖 Storia in corso — <strong>{storyState.mode==="solo"?"Solitaria":"Party"}</strong></span>
+          <button style={{ padding:"0.3rem 0.9rem", background:"#6366f1", border:"none", borderRadius:6, color:"#fff", cursor:"pointer", fontSize:"0.8rem" }} onClick={()=>setTab("story")}>▶ Vai alla storia</button>
+        </div>
+      )}
+      <div style={{ display:"grid", gap:"0.7rem" }}>
+        {stories.map(s => (
+          <div key={s.id} style={{ background:"rgba(15,23,42,0.8)", border:"1px solid #1e293b", borderRadius:10, overflow:"hidden" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:10, padding:"0.8rem 1rem", cursor:"pointer" }} onClick={()=>setExpanded(expanded===s.id?null:s.id)}>
+              <span style={{ fontSize:"1.6rem" }}>{s.emoji}</span>
+              <div style={{ flex:1 }}>
+                <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:"0.95rem" }}>{s.title}</div>
+                <div style={{ color:"#64748b", fontSize:"0.73rem" }}>{s.difficulty} · {s.chapters?.length||0} capitoli · {Object.keys(s.scenes||{}).length} scene</div>
+              </div>
+              <span style={{ color:"#475569" }}>{expanded===s.id?"▲":"▼"}</span>
+            </div>
+            {expanded===s.id && (
+              <div style={{ padding:"0 1rem 1rem", borderTop:"1px solid #1e293b" }}>
+                <p style={{ color:"#94a3b8", fontSize:"0.84rem", margin:"0.6rem 0 1rem" }}>{s.description || "Nessuna descrizione."}</p>
+                <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                  <button
+                    style={{ padding:"0.5rem 1.2rem", background:"linear-gradient(135deg,#6366f1,#4f46e5)", border:"none", borderRadius:8, color:"#fff", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.82rem", fontWeight:700 }}
+                    onClick={()=>{ onStartSolo(s.id); setTab("story"); }}
+                    disabled={isActive}
+                  >🧍 Gioca in Solitaria</button>
+                  <button
+                    style={{ padding:"0.5rem 1.2rem", background:"linear-gradient(135deg,#f59e0b,#d97706)", border:"none", borderRadius:8, color:"#fff", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.82rem", fontWeight:700 }}
+                    onClick={()=>{ onStartParty(s.id); setTab("story"); }}
+                    disabled={isActive}
+                  >👥 Gioca in Party</button>
+                </div>
+                {isActive && <div style={{ color:"#64748b", fontSize:"0.75rem", marginTop:6 }}>Termina la storia in corso prima di iniziarne una nuova.</div>}
+              </div>
+            )}
+          </div>
+        ))}
+        {stories.length === 0 && <div style={{ color:"#475569", textAlign:"center", padding:"2rem" }}>Nessuna storia disponibile.</div>}
+      </div>
+    </div>
+  );
+}
+
+function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers, onAdvance, onChoice, onVote, onFight, onSkillCheck }) {
   if(!story || !scene) return (
     <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem", textAlign:"center" }}>
       <div>
@@ -6202,20 +6257,42 @@ function StoryView({ story, scene, storyState, isLeader, me, partyPlayers, onAdv
             )}
 
             {/* choice */}
-            {scene.type==="choice" && (
-              <div style={{ width:"100%", display:"flex", flexDirection:"column", gap:8 }}>
-                {scene.choices?.map((c, i) => {
-                  const locked = !meetsRequirements(c.requirements);
-                  return (
-                    <button key={i} disabled={locked} onClick={()=>onChoice(i)}
-                      style={{ textAlign:"left", padding:"0.7rem 1rem", borderRadius:8, cursor:locked?"not-allowed":"pointer", opacity:locked?0.4:1, background:locked?"rgba(15,23,42,0.5)":i===0?"rgba(120,53,15,0.3)":"rgba(15,23,42,0.7)", border:`1px solid ${locked?"#334155":i===0?"#b45309":"#334155"}`, color:locked?"#475569":"#e2d9c5", fontSize:"0.9rem", transition:"background 0.15s" }}>
-                      {c.text}
-                      {locked && <span style={{ marginLeft:8, fontSize:"0.72rem", color:"#475569" }}>(richiede condizioni)</span>}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            {scene.type==="choice" && (() => {
+              const isPartyMode = storyState?.mode === "party";
+              const votes = storyState?.votes || {};
+              const myVote = votes[myId];
+              const totalPlayers = partyPlayers.length || 1;
+              const allVoted = Object.keys(votes).length >= totalPlayers;
+              return (
+                <div style={{ width:"100%", display:"flex", flexDirection:"column", gap:8 }}>
+                  {isPartyMode && (
+                    <div style={{ fontSize:"0.75rem", color:"#64748b", marginBottom:2 }}>
+                      🗳️ Votazione — {Object.keys(votes).length}/{totalPlayers} hanno votato
+                      {allVoted && <span style={{ color:"#22c55e", marginLeft:6 }}>✓ Risoluzione in corso…</span>}
+                    </div>
+                  )}
+                  {scene.choices?.map((c, i) => {
+                    const locked = !meetsRequirements(c.requirements);
+                    const voteCount = isPartyMode ? Object.values(votes).filter(v=>v===i).length : 0;
+                    const iMyVote = isPartyMode && myVote === i;
+                    const bg = locked ? "rgba(15,23,42,0.5)" : iMyVote ? "rgba(99,102,241,0.3)" : i===0 ? "rgba(120,53,15,0.3)" : "rgba(15,23,42,0.7)";
+                    const border = locked ? "#334155" : iMyVote ? "#6366f1" : i===0 ? "#b45309" : "#334155";
+                    return (
+                      <button key={i} disabled={locked}
+                        onClick={()=> isPartyMode ? onVote(i) : (isLeader ? onChoice(i) : null)}
+                        style={{ textAlign:"left", padding:"0.7rem 1rem", borderRadius:8, cursor:(locked||(!isPartyMode&&!isLeader))?"not-allowed":"pointer", opacity:locked?0.4:1, background:bg, border:`1px solid ${border}`, color:locked?"#475569":"#e2d9c5", fontSize:"0.9rem", transition:"background 0.15s", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                        <span>{c.text}{locked && <span style={{ marginLeft:8, fontSize:"0.72rem", color:"#475569" }}>(richiede condizioni)</span>}</span>
+                        {isPartyMode && voteCount > 0 && <span style={{ background:"rgba(99,102,241,0.4)", borderRadius:6, padding:"1px 8px", fontSize:"0.75rem", color:"#a5b4fc", flexShrink:0 }}>{voteCount} 🗳️</span>}
+                        {iMyVote && <span style={{ fontSize:"0.72rem", color:"#818cf8", marginLeft:4 }}>✓ tuo voto</span>}
+                      </button>
+                    );
+                  })}
+                  {!isPartyMode && !isLeader && (
+                    <span style={{ color:"#64748b", fontSize:"0.78rem", alignSelf:"center" }}>In attesa del capo-party…</span>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* skillCheck */}
             {scene.type==="skillCheck" && isLeader && (
@@ -8322,21 +8399,26 @@ function GameScreen({ myId, setScreen, authUser }) {
   const storyState = qs?.story || null;
   const activeStory = storyState?.active ? getStory(storyState.storyId) : null;
   const activeStoryScene = activeStory ? activeStory.scenes?.[storyState.currentSceneId] : null;
-  const isStoryLeader = partyPlayers.length === 0 || partyPlayers[0]?.id === myId;
+  const isStoryLeader = storyState?.mode === "solo"
+    ? storyState?.soloPlayerId === myId
+    : (partyPlayers.length === 0 || partyPlayers[0]?.id === myId);
 
-  async function startStory(storyId) {
+  async function startStory(storyId, mode = "party") {
     const story = getStory(storyId);
     if(!story || !code) return;
     const firstChapter = story.chapters[0];
     const firstSceneId = firstChapter?.startScene;
     const newStory = {
       active:true, storyId,
+      mode,
+      soloPlayerId: mode === "solo" ? myId : null,
       currentChapterId: firstChapter?.id,
       currentSceneId: firstSceneId,
       storyFlags: {},
       choiceLog: [],
       visitedScenes: [firstSceneId].filter(Boolean),
       rewardCollected: [],
+      votes: {},
       battlePending:false, battleNext:null, battleNextFail:null,
       startedAt:Date.now(),
     };
@@ -8449,6 +8531,33 @@ function GameScreen({ myId, setScreen, authUser }) {
     await dbSavePartyState(code, { ...latestQs, story: { ...latestQs.story, choiceLog: newLog } });
     await addMsg(`🔀 **${me?.name}** sceglie: *${choiceText}*`, "info", "Sistema");
     await advanceStoryScene(choice.nextScene, choice.setFlags||{});
+  }
+
+  async function castStoryVote(choiceIdx) {
+    if(!code || !me || !activeStory || !activeStoryScene) return;
+    const latestQs = await dbGetPartyState(code);
+    const currentVotes = { ...(latestQs.story?.votes || {}), [myId]: choiceIdx };
+    const updatedStory = { ...latestQs.story, votes: currentVotes };
+    await dbSavePartyState(code, { ...latestQs, story: updatedStory });
+    setQs(prev => ({ ...prev, story: updatedStory }));
+    // Auto-resolve when all party members voted
+    const total = partyPlayers.length || 1;
+    if(Object.keys(currentVotes).length >= total) {
+      const tally = {};
+      Object.values(currentVotes).forEach(idx => { tally[idx] = (tally[idx]||0)+1; });
+      const winnerIdx = parseInt(Object.entries(tally).sort((a,b)=>b[1]-a[1])[0][0]);
+      const choice = activeStoryScene.choices?.[winnerIdx];
+      if(!choice) return;
+      const votes = Object.entries(tally).map(([i,n])=>`${activeStoryScene.choices[i]?.text}: ${n}🗳️`).join(" · ");
+      const freshQs = await dbGetPartyState(code);
+      const newLog = [...(freshQs.story?.choiceLog||[]), {
+        sceneId: storyState.currentSceneId, sceneTitle: activeStoryScene.title,
+        choiceIdx: winnerIdx, choiceText: choice.text, at: Date.now()
+      }];
+      await dbSavePartyState(code, { ...freshQs, story: { ...freshQs.story, choiceLog: newLog, votes: {} } });
+      await addMsg(`🗳️ **Voto maggioranza**: *${choice.text}* (${votes})`, "info", "Sistema");
+      await advanceStoryScene(choice.nextScene, choice.setFlags||{});
+    }
   }
 
   async function makeStorySkillCheck(scene) {
@@ -9977,7 +10086,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["quest","📜 Missioni"],["story","📖 Storia"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🤝 Scambi"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["quest","📜 Missioni"],["story","📖 Storia"],["storylibrary","📚 Storie"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🤝 Scambi"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
@@ -10079,11 +10188,22 @@ ${stepText(step)}`, "quest","Master");
             storyState={storyState}
             isLeader={isStoryLeader}
             me={me}
+            myId={myId}
             partyPlayers={partyPlayers}
             onAdvance={advanceStoryScene}
             onChoice={makeStoryChoice}
+            onVote={castStoryVote}
             onFight={startStoryCombat}
             onSkillCheck={makeStorySkillCheck}
+          />
+        )}
+        {tab==="storylibrary" && (
+          <PlayerStoryLibrary
+            stories={[...STORIES, ...customStories]}
+            storyState={storyState}
+            onStartSolo={storyId => startStory(storyId, "solo")}
+            onStartParty={storyId => startStory(storyId, "party")}
+            setTab={setTab}
           />
         )}
         {tab==="level" && (
