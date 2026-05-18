@@ -126,12 +126,13 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
 
   const LIBRARY_KEY = "__story_library__";
 
-  // Load
+  // Load — lettura diretta dalla colonna combat di Supabase
   useEffect(() => {
-    dbGetPartyState(LIBRARY_KEY).then(data => {
-      setLibrary(data?.stories || []);
-      setLoading(false);
-    }).catch(() => setLoading(false));
+    supabase.from("party_state").select("combat").eq("party_code", LIBRARY_KEY).maybeSingle()
+      .then(({ data }) => {
+        setLibrary(data?.combat?.stories || []);
+        setLoading(false);
+      }).catch(() => setLoading(false));
   }, []);
 
   // Escape exits fullscreen
@@ -144,9 +145,14 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
   async function saveLibrary(lib, showConfirm = false) {
     setSaving(true);
     try {
-      const current = await dbGetPartyState(LIBRARY_KEY) || {};
-      await dbSavePartyState(LIBRARY_KEY, { ...current, stories: lib });
+      const { error } = await supabase.from("party_state").upsert(
+        { party_code: LIBRARY_KEY, combat: { stories: lib }, updated_at: new Date().toISOString() },
+        { onConflict: "party_code" }
+      );
+      if(error) throw error;
       if(showConfirm) { setSaveOk(true); setTimeout(()=>setSaveOk(false), 2000); }
+    } catch(e) {
+      alert("Errore salvataggio libreria: " + (e?.message || e));
     } finally { setSaving(false); }
   }
 

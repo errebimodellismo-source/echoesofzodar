@@ -5836,7 +5836,8 @@ const ENDING_ICONS = { good:"🏆", neutral:"🤝", fail:"💀", secret:"✨" };
 function MasterStoriesWrapper({ parties, builtinStories, dbGetPartyState, dbSavePartyState, supabase }) {
   const [customStories, setCustomStories] = useState([]);
   useEffect(() => {
-    dbGetPartyState("__story_library__").then(d=>{ if(d?.stories) setCustomStories(d.stories); }).catch(()=>{});
+    supabase.from("party_state").select("combat").eq("party_code","__story_library__").maybeSingle()
+      .then(({ data }) => { if(data?.combat?.stories) setCustomStories(data.combat.stories); }).catch(()=>{});
   }, []);
   const allStories = [...builtinStories, ...customStories];
   const findStory = id => allStories.find(s=>s.id===id);
@@ -8309,9 +8310,8 @@ function GameScreen({ myId, setScreen, authUser }) {
   // ── STORY FUNCTIONS ─────────────────────────────────────────
   const [customStories, setCustomStories] = useState([]);
   useEffect(() => {
-    dbGetPartyState("__story_library__").then(data => {
-      if(data?.stories) setCustomStories(data.stories);
-    }).catch(()=>{});
+    supabase.from("party_state").select("combat").eq("party_code","__story_library__").maybeSingle()
+      .then(({ data }) => { if(data?.combat?.stories) setCustomStories(data.combat.stories); }).catch(()=>{});
   }, []);
   function getStory(id) {
     // Check preview story embedded in storyState first
