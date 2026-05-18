@@ -2199,10 +2199,10 @@ export default function App() {
     return () => clearInterval(timer);
   }, [authUser, myId]);
 
-  // Inactivity timeout — 5 minutes no interaction → full signOut (not hero selection)
+  // Inactivity timeout — 30 minutes no interaction → full signOut
   useEffect(() => {
     if (!authUser) return;
-    const INACTIVITY_MS = 5 * 60 * 1000;
+    const INACTIVITY_MS = 30 * 60 * 1000;
     let lastActivity = Date.now();
     const resetActivity = () => { lastActivity = Date.now(); };
     const events = ['mousemove', 'mousedown', 'keydown', 'touchstart', 'scroll', 'click'];
@@ -4224,8 +4224,8 @@ function PlayersView({ authUser }) {
       const codes = [...new Set((data||[]).map(p=>p.party_code).filter(Boolean))];
       const states = {};
       await Promise.all(codes.map(async code=>{
-        const { data: ps } = await supabase.from("party_state").select("state").eq("party_code", code).single();
-        if(ps?.state) states[code] = ps.state;
+        const ps = await dbGetPartyState(code).catch(()=>null);
+        if(ps) states[code] = ps;
       }));
       setPartyStates(states);
     };
