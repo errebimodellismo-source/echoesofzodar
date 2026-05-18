@@ -2960,9 +2960,13 @@ function MasterPanel({ setScreen, authUser }) {
   const [maintenanceBusy, setMaintenanceBusy] = useState(false);
   const [maintenanceInput, setMaintenanceInput] = useState("");
   const [patchNotesInput, setPatchNotesInput] = useState("");
+  const [masterParties, setMasterParties] = useState([]);
 
   useEffect(() => {
     dbGetMaintenanceMode().then(setMaintenance);
+    supabase.from("party_state").select("party_code").then(({ data }) => {
+      setMasterParties((data || []).map(r => r.party_code).filter(c => !["__world_guilds__","__world__","__master__","__maintenance__"].includes(c)));
+    });
   }, []);
 
   async function refreshAllQuestSeeds() {
@@ -3471,7 +3475,7 @@ function MasterPanel({ setScreen, authUser }) {
 
       {tab==="stories" && (
         <MasterStoriesPanel
-          parties={parties}
+          parties={masterParties}
           stories={STORIES}
           onStart={async (storyId, partyCode) => {
             const story = STORIES.find(s => s.id === storyId);
