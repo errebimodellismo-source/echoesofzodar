@@ -5000,177 +5000,289 @@ function UsersView({ authUser }) {
   );
 }
 
+function ItemEditForm({ item, onSave, onCancel }) {
+  const [ei, setEi] = useState(item);
+  return (
+    <div style={{ marginTop:10, padding:"0.8rem", background:"rgba(15,23,42,0.6)", borderRadius:8, border:"1px solid #334155" }}>
+      <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8 }}>
+        <div><label style={labelStyle}>Nome</label><input style={inputStyle} value={ei.name} onChange={e=>setEi(i=>({...i,name:e.target.value}))} /></div>
+        <div><label style={labelStyle}>Emoji</label><input style={inputStyle} value={ei.emoji} onChange={e=>setEi(i=>({...i,emoji:e.target.value}))} /></div>
+        <div>
+          <label style={labelStyle}>Tipo</label>
+          <select style={{...inputStyle,cursor:"pointer"}} value={ei.type} onChange={e=>setEi(i=>({...i,type:e.target.value}))}>
+            <option value="weapon">Arma</option>
+            <option value="armor">Armatura</option>
+            <option value="accessory">Accessorio</option>
+          </select>
+        </div>
+        <div>
+          <label style={labelStyle}>Rarità</label>
+          <select style={{...inputStyle,cursor:"pointer"}} value={ei.rarity||"common"} onChange={e=>setEi(i=>({...i,rarity:e.target.value}))}>
+            <option value="common">⬜ Comune</option>
+            <option value="uncommon">🟩 Non comune</option>
+            <option value="rare">🟦 Raro</option>
+            <option value="epic">🟪 Epico</option>
+            <option value="legendary">🟨 Leggendario</option>
+          </select>
+        </div>
+        <div><label style={labelStyle}>Prezzo</label><input style={inputStyle} type="number" value={ei.price} onChange={e=>setEi(i=>({...i,price:+e.target.value}))} /></div>
+        {ei.type==="weapon" && (
+          <div>
+            <label style={labelStyle}>Dado danno</label>
+            <select style={{...inputStyle,cursor:"pointer"}} value={ei.weapon_die||"1d6"} onChange={e=>setEi(i=>({...i,weapon_die:e.target.value}))}>
+              {["1d4","1d6","1d8","1d10","1d12","1d20",
+                "2d4","2d6","2d8","2d10","2d12","2d20",
+                "3d4","3d6","3d8","3d10","3d12","3d20",
+                "4d4","4d6","4d8","4d10","4d12","4d20",
+                "5d6","5d8","5d10","5d12","5d20",
+                "6d6","6d8","6d10","6d12","6d20",
+                "8d6","8d8","8d10","8d12","8d20",
+                "10d6","10d8","10d10","10d12","10d20",
+              ].map(d=><option key={d} value={d}>{d}</option>)}
+            </select>
+          </div>
+        )}
+      </div>
+      <label style={{...labelStyle,marginTop:8}}>Descrizione</label>
+      <textarea style={{...inputStyle,height:55,resize:"vertical"}} value={ei.description} onChange={e=>setEi(i=>({...i,description:e.target.value}))} />
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:8, marginTop:8 }}>
+        <div><label style={labelStyle}>+ATK</label><input style={inputStyle} type="number" value={ei.bonus_atk} onChange={e=>setEi(i=>({...i,bonus_atk:+e.target.value}))} /></div>
+        <div><label style={labelStyle}>+DEF</label><input style={inputStyle} type="number" value={ei.bonus_def} onChange={e=>setEi(i=>({...i,bonus_def:+e.target.value}))} /></div>
+        <div><label style={labelStyle}>+MAG</label><input style={inputStyle} type="number" value={ei.bonus_mag} onChange={e=>setEi(i=>({...i,bonus_mag:+e.target.value}))} /></div>
+        <div><label style={labelStyle}>+HP</label><input style={inputStyle} type="number" value={ei.bonus_hp} onChange={e=>setEi(i=>({...i,bonus_hp:+e.target.value}))} /></div>
+      </div>
+      <div style={{ display:"flex", gap:8, marginTop:10 }}>
+        <BigBtn onClick={()=>onSave(ei)} gold icon="⭐">Salva</BigBtn>
+        <SmallBtn onClick={onCancel}>Annulla</SmallBtn>
+      </div>
+    </div>
+  );
+}
+
+const RARITY_COLOR_MAP = { common:"#9ca3af", uncommon:"#34d399", rare:"#60a5fa", epic:"#a78bfa", legendary:"#fbbf24" };
+const TYPE_GROUPS = { weapon:"⚔️ Armi", armor:"🛡️ Armature", accessory:"💍 Accessori" };
+
 function MarketView() {
   const [items, setItems] = useState([]);
-  const [editItem, setEditItem] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
   const [players, setPlayers] = useState([]);
-  const [donating, setDonating] = useState(null); // itemId being donated
-  const [donateTarget, setDonateTarget] = useState("");
+  const [tab, setTab] = useState("items");
+  const [itemSearch, setItemSearch] = useState("");
+  const [playerSearch, setPlayerSearch] = useState("");
+  const [expandedItem, setExpandedItem] = useState(null);
+  const [editingItem, setEditingItem] = useState(null);
+  const [expandedPlayer, setExpandedPlayer] = useState(null);
+  const [donateItemId, setDonateItemId] = useState("");
   const [donateQty, setDonateQty] = useState(1);
   const [donateStatus, setDonateStatus] = useState("");
+  const [donateItemSearch, setDonateItemSearch] = useState("");
 
   useEffect(()=>{
     const load = async () => {
       setLoading(true);
-      const [items, { data: ps }] = await Promise.all([
+      const [its, { data: ps }] = await Promise.all([
         dbGetItems(),
-        supabase.from("players").select("id,name,class,level,party_code").order("name", { ascending: true }),
+        supabase.from("players").select("id,name,class,level,party_code,race").order("name", { ascending: true }),
       ]);
-      setItems(items);
+      setItems(its);
       setPlayers(ps || []);
       setLoading(false);
     };
     load();
   },[]);
 
-  const handleDonate = async () => {
-    if(!donating || !donateTarget) return;
-    setDonateStatus("...");
-    try {
-      await dbAddPlayerItem(donateTarget, donating, Math.max(1, donateQty));
-      const item = items.find(i=>i.id===donating);
-      const player = players.find(p=>p.id===donateTarget);
-      setDonateStatus(`✅ "${item?.name}" donato a ${player?.name}`);
-      setTimeout(()=>{ setDonating(null); setDonateTarget(""); setDonateQty(1); setDonateStatus(""); }, 2500);
-    } catch(e) {
-      setDonateStatus("❌ Errore: " + (e?.message || e));
-    }
-  };
-
-  const save = async (item) => {
+  const saveItem = async (item) => {
     await dbSaveItem(item);
     setSaved(true);
-    setTimeout(()=>setSaved(false),2200);
-    setEditItem(null);
-    setItems(await dbGetItems());
+    setTimeout(()=>setSaved(false), 2200);
+    setEditingItem(null);
+    const fresh = await dbGetItems();
+    setItems(fresh);
+    setExpandedItem(item.id);
   };
 
-  const remove = async (itemId) => {
+  const removeItem = async (itemId) => {
     if(!window.confirm("Eliminare questo oggetto dal catalogo?")) return;
     await dbDeleteItem(itemId);
     setItems(prev=>prev.filter(i=>i.id!==itemId));
+    if(expandedItem===itemId) setExpandedItem(null);
   };
+
+  const handleDonate = async (playerId) => {
+    if(!donateItemId) return;
+    setDonateStatus("...");
+    try {
+      await dbAddPlayerItem(playerId, donateItemId, Math.max(1, donateQty));
+      const item = items.find(i=>i.id===donateItemId);
+      setDonateStatus(`✅ "${item?.name}" donato!`);
+      setTimeout(()=>{ setDonateStatus(""); setDonateItemId(""); setDonateQty(1); setDonateItemSearch(""); }, 2500);
+    } catch(e) {
+      setDonateStatus("❌ " + (e?.message || e));
+    }
+  };
+
+  const newItemBlank = () => ({
+    id:`i_${Date.now()}`,name:"",emoji:"",type:"weapon",description:"",
+    bonus_atk:0,bonus_def:0,bonus_mag:0,bonus_hp:0,price:100,rarity:"common",weapon_die:"1d6",available:true
+  });
+
+  const searchStyle = { ...inputStyle, marginBottom:8, width:"100%", boxSizing:"border-box" };
+  const rowBase = { display:"flex", alignItems:"center", gap:8, padding:"0.45rem 0.6rem", borderRadius:6, cursor:"pointer", userSelect:"none" };
+
+  // ── Items tab ─────────────────────────────────────────────────────────
+  const filteredItems = items.filter(it =>
+    (it.name||"").toLowerCase().includes(itemSearch.toLowerCase()) ||
+    (it.type||"").toLowerCase().includes(itemSearch.toLowerCase()) ||
+    (it.rarity||"").toLowerCase().includes(itemSearch.toLowerCase())
+  );
+  const groupedItems = Object.entries(TYPE_GROUPS).map(([type, label]) => ({
+    type, label, list: filteredItems.filter(it => it.type === type)
+  })).filter(g => g.list.length > 0);
+
+  // ── Players tab ───────────────────────────────────────────────────────
+  const filteredPlayers = players.filter(p =>
+    (p.name||"").toLowerCase().includes(playerSearch.toLowerCase()) ||
+    (p.party_code||"").toLowerCase().includes(playerSearch.toLowerCase())
+  );
+  const donateFilteredItems = items.filter(it =>
+    (it.name||"").toLowerCase().includes(donateItemSearch.toLowerCase())
+  );
 
   return (
     <div>
-      <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
-        <div>
-          <div style={{ fontFamily:"'Cinzel',serif", fontWeight:700, color:"#e2d9c5" }}>🏪 Market</div>
-          <div style={{ fontSize:"0.85rem", color:"#94a3b8" }}>{items.length} oggetti</div>
-        </div>
-        <BigBtn onClick={()=>setEditItem({id:`i_${Date.now()}`,name:"",emoji:"",type:"weapon",description:"",bonus_atk:0,bonus_def:0,bonus_mag:0,bonus_hp:0,price:100,rarity:"common",weapon_die:"1d6",available:true})} gold icon="?">+ Nuovo</BigBtn>
+      {/* Tabs */}
+      <div style={{ display:"flex", gap:6, marginBottom:"1rem" }}>
+        {[["items","🏪 Oggetti"],["players","👥 Giocatori"]].map(([k,l])=>(
+          <button key={k} onClick={()=>setTab(k)} style={{
+            padding:"0.4rem 1rem", borderRadius:6, border:"none", cursor:"pointer", fontSize:"0.85rem", fontFamily:"'Cinzel',serif",
+            background: tab===k ? "rgba(251,191,36,0.15)" : "rgba(30,41,59,0.6)",
+            color: tab===k ? "#fbbf24" : "#94a3b8",
+            borderBottom: tab===k ? "2px solid #fbbf24" : "2px solid transparent",
+          }}>{l}</button>
+        ))}
       </div>
 
       {loading && <div style={{ color:"#94a3b8" }}>Caricamento...</div>}
 
-      {editItem && (
-        <Card title={editItem.id?"Modifica Oggetto":"Nuovo Oggetto"}>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
-            <div><label style={labelStyle}>Nome</label><input style={inputStyle} value={editItem.name} onChange={e=>setEditItem(i=>({...i,name:e.target.value}))} /></div>
-            <div><label style={labelStyle}>Emoji</label><input style={inputStyle} value={editItem.emoji} onChange={e=>setEditItem(i=>({...i,emoji:e.target.value}))} /></div>
-            <div>
-              <label style={labelStyle}>Tipo</label>
-              <select style={{...inputStyle,cursor:"pointer"}} value={editItem.type} onChange={e=>setEditItem(i=>({...i,type:e.target.value}))}>
-                <option value="weapon">Arma</option>
-                <option value="armor">Armatura</option>
-                <option value="accessory">Accessorio</option>
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>Rarità</label>
-              <select style={{...inputStyle,cursor:"pointer"}} value={editItem.rarity||"common"} onChange={e=>setEditItem(i=>({...i,rarity:e.target.value}))}>
-                <option value="common">⬜ Comune</option>
-                <option value="uncommon">🟩 Non comune</option>
-                <option value="rare">🟦 Raro</option>
-                <option value="epic">🟪 Epico</option>
-                <option value="legendary">🟨 Leggendario</option>
-              </select>
-            </div>
-            <div><label style={labelStyle}>Prezzo</label><input style={inputStyle} type="number" value={editItem.price} onChange={e=>setEditItem(i=>({...i,price:+e.target.value}))} /></div>
-            {editItem.type==="weapon" && (
-              <div>
-                <label style={labelStyle}>Dado danno</label>
-                <select style={{...inputStyle,cursor:"pointer"}} value={editItem.weapon_die||"1d6"} onChange={e=>setEditItem(i=>({...i,weapon_die:e.target.value}))}>
-                  {["1d4","1d6","1d8","1d10","1d12","1d20",
-                    "2d4","2d6","2d8","2d10","2d12","2d20",
-                    "3d4","3d6","3d8","3d10","3d12","3d20",
-                    "4d4","4d6","4d8","4d10","4d12","4d20",
-                    "5d6","5d8","5d10","5d12","5d20",
-                    "6d6","6d8","6d10","6d12","6d20",
-                    "8d6","8d8","8d10","8d12","8d20",
-                    "10d6","10d8","10d10","10d12","10d20",
-                  ].map(d=><option key={d} value={d}>{d}</option>)}
-                </select>
+      {/* ── ITEMS TAB ── */}
+      {tab==="items" && !loading && (
+        <div>
+          <div style={{ display:"flex", gap:8, marginBottom:"0.6rem", alignItems:"center" }}>
+            <input style={{...searchStyle, marginBottom:0, flex:1}} placeholder="🔍 Cerca oggetto, tipo, rarità..." value={itemSearch} onChange={e=>setItemSearch(e.target.value)} />
+            <BigBtn onClick={()=>{ setExpandedItem("__new__"); setEditingItem(newItemBlank()); }} gold icon="➕" style={{ whiteSpace:"nowrap" }}>Nuovo</BigBtn>
+          </div>
+
+          {/* New item form */}
+          {expandedItem==="__new__" && editingItem && (
+            <ItemEditForm item={editingItem} onSave={saveItem} onCancel={()=>{ setExpandedItem(null); setEditingItem(null); }} />
+          )}
+
+          {groupedItems.map(({ type, label, list }) => (
+            <div key={type} style={{ marginBottom:"1rem" }}>
+              <div style={{ fontSize:"0.7rem", color:"#64748b", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:4 }}>
+                {label} ({list.length})
               </div>
-            )}
-          </div>
-          <label style={{...labelStyle,marginTop:10}}>Descrizione</label>
-          <textarea style={{...inputStyle,height:70,resize:"vertical"}} value={editItem.description} onChange={e=>setEditItem(i=>({...i,description:e.target.value}))} />
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(4,1fr)", gap:10, marginTop:10 }}>
-            <div><label style={labelStyle}>Bonus ATK</label><input style={inputStyle} type="number" value={editItem.bonus_atk} onChange={e=>setEditItem(i=>({...i,bonus_atk:+e.target.value}))} /></div>
-            <div><label style={labelStyle}>Bonus DEF</label><input style={inputStyle} type="number" value={editItem.bonus_def} onChange={e=>setEditItem(i=>({...i,bonus_def:+e.target.value}))} /></div>
-            <div><label style={labelStyle}>Bonus MAG</label><input style={inputStyle} type="number" value={editItem.bonus_mag} onChange={e=>setEditItem(i=>({...i,bonus_mag:+e.target.value}))} /></div>
-            <div><label style={labelStyle}>Bonus HP</label><input style={inputStyle} type="number" value={editItem.bonus_hp} onChange={e=>setEditItem(i=>({...i,bonus_hp:+e.target.value}))} /></div>
-          </div>
-          <div style={{ display:"flex", gap:10, marginTop:12 }}>
-            <BigBtn onClick={()=>save(editItem)} gold icon="⭐">Salva</BigBtn>
-            <SmallBtn onClick={()=>setEditItem(null)}>Annulla</SmallBtn>
-          </div>
-        </Card>
+              <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+                {list.map(it => {
+                  const isOpen = expandedItem === it.id;
+                  const rc = RARITY_COLOR_MAP[it.rarity] || "#9ca3af";
+                  return (
+                    <div key={it.id} style={{ background: isOpen ? "rgba(30,41,59,0.8)" : "rgba(15,23,42,0.5)", border:`1px solid ${isOpen ? rc+"55" : "#1e293b"}`, borderRadius:7 }}>
+                      {/* Row */}
+                      <div style={{...rowBase, background:"transparent"}} onClick={()=>{ setExpandedItem(isOpen ? null : it.id); setEditingItem(null); }}>
+                        <span style={{ fontSize:"1.1rem", minWidth:22 }}>{it.emoji||"⭐"}</span>
+                        <span style={{ flex:1, fontSize:"0.85rem", color:"#e2d9c5", fontWeight:600 }}>{it.name}</span>
+                        <span style={{ fontSize:"0.68rem", color:rc, minWidth:60 }}>{it.rarity||"—"}</span>
+                        {it.weapon_die && <span style={{ fontSize:"0.68rem", color:"#94a3b8", minWidth:32 }}>{it.weapon_die}</span>}
+                        <span style={{ fontSize:"0.68rem", color:"#c4b5fd" }}>💰{it.price}</span>
+                        <span style={{ fontSize:"0.75rem", color:"#475569", marginLeft:4 }}>{isOpen?"▲":"▼"}</span>
+                      </div>
+                      {/* Expanded */}
+                      {isOpen && (
+                        <div style={{ padding:"0 0.7rem 0.7rem" }}>
+                          {editingItem?.id === it.id ? (
+                            <ItemEditForm item={editingItem} onSave={saveItem} onCancel={()=>setEditingItem(null)} />
+                          ) : (
+                            <>
+                              <div style={{ fontSize:"0.75rem", color:"#94a3b8", marginBottom:6 }}>{it.description}</div>
+                              <div style={{ display:"flex", gap:10, fontSize:"0.72rem", color:"#64748b", marginBottom:8 }}>
+                                {it.bonus_atk!==0 && <span>⚔️+{it.bonus_atk}</span>}
+                                {it.bonus_def!==0 && <span>🛡️+{it.bonus_def}</span>}
+                                {it.bonus_mag!==0 && <span>✨+{it.bonus_mag}</span>}
+                                {it.bonus_hp!==0 && <span>❤️+{it.bonus_hp}</span>}
+                              </div>
+                              <div style={{ display:"flex", gap:6 }}>
+                                <SmallBtn onClick={()=>setEditingItem({...it})}>✏️ Modifica</SmallBtn>
+                                <SmallBtn red onClick={()=>removeItem(it.id)}>🗑️ Elimina</SmallBtn>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ))}
+          {filteredItems.length===0 && !loading && <div style={{ color:"#4b5563", fontSize:"0.85rem", textAlign:"center", padding:"1rem" }}>Nessun oggetto trovato</div>}
+        </div>
       )}
 
-      {donating && (
-        <Card title={`🎁 Dona oggetto a un giocatore`}>
-          <div style={{ fontSize:"0.85rem", color:"#c4b5fd", marginBottom:8 }}>
-            Stai donando: <strong>{items.find(i=>i.id===donating)?.emoji} {items.find(i=>i.id===donating)?.name}</strong>
-          </div>
-          <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr auto", gap:8, alignItems:"end" }}>
-            <div>
-              <label style={labelStyle}>Giocatore destinatario</label>
-              <select style={{...inputStyle, cursor:"pointer"}} value={donateTarget} onChange={e=>setDonateTarget(e.target.value)}>
-                <option value="">— Scegli giocatore —</option>
-                {players.map(p=>(
-                  <option key={p.id} value={p.id}>{CLASSES[p.class||"warrior"]?.emoji||"⚔️"} {p.name} (Lv.{p.level||1}) {p.party_code ? `[${p.party_code}]` : ""}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label style={labelStyle}>Quantità</label>
-              <input style={inputStyle} type="number" min="1" max="99" value={donateQty} onChange={e=>setDonateQty(Math.max(1,+e.target.value))} />
-            </div>
-            <BigBtn onClick={handleDonate} gold icon="🎁" disabled={!donateTarget}>Dona</BigBtn>
-          </div>
-          {donateStatus && <div style={{ marginTop:8, fontSize:"0.85rem", color: donateStatus.startsWith("✅") ? "#34d399" : "#fca5a5" }}>{donateStatus}</div>}
-          <SmallBtn onClick={()=>{ setDonating(null); setDonateStatus(""); }} style={{ marginTop:8 }}>Annulla</SmallBtn>
-        </Card>
-      )}
-
-      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(240px,1fr))", gap:10 }}>
-        {items.map(it=>(
-          <div key={it.id} style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:6, padding:"0.8rem" }}>
-            <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:6 }}>
-              <span style={{ fontSize:"1.5rem" }}>{it.emoji||"⭐"}</span>
-              <div style={{ flex:1 }}>
-                <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{it.name}</div>
-                <div style={{ fontSize:"0.72rem", color: it.rarity==="legendary"?"#fbbf24":it.rarity==="epic"?"#a78bfa":it.rarity==="rare"?"#60a5fa":it.rarity==="uncommon"?"#34d399":"#9ca3af" }}>
-                  {it.type}{it.rarity ? ` · ${it.rarity}` : ""}{it.weapon_die ? ` · ${it.weapon_die}` : ""}
+      {/* ── PLAYERS TAB ── */}
+      {tab==="players" && !loading && (
+        <div>
+          <input style={searchStyle} placeholder="🔍 Cerca giocatore o party..." value={playerSearch} onChange={e=>setPlayerSearch(e.target.value)} />
+          <div style={{ display:"flex", flexDirection:"column", gap:2 }}>
+            {filteredPlayers.map(p => {
+              const isOpen = expandedPlayer === p.id;
+              const cls = CLASSES[p.class||"warrior"];
+              return (
+                <div key={p.id} style={{ background: isOpen ? "rgba(30,41,59,0.8)" : "rgba(15,23,42,0.5)", border:`1px solid ${isOpen ? "#6d28d955" : "#1e293b"}`, borderRadius:7 }}>
+                  {/* Row */}
+                  <div style={{...rowBase}} onClick={()=>{ setExpandedPlayer(isOpen ? null : p.id); setDonateItemId(""); setDonateStatus(""); setDonateItemSearch(""); }}>
+                    <span style={{ fontSize:"1rem" }}>{cls?.emoji||"⚔️"}</span>
+                    <span style={{ flex:1, fontSize:"0.85rem", color:"#e2d9c5", fontWeight:600 }}>{p.name}</span>
+                    <span style={{ fontSize:"0.68rem", color:"#94a3b8" }}>Lv.{p.level||1}</span>
+                    {p.party_code && <span style={{ fontSize:"0.62rem", color:"#475569", background:"rgba(255,255,255,0.05)", padding:"1px 5px", borderRadius:4 }}>{p.party_code}</span>}
+                    <span style={{ fontSize:"0.75rem", color:"#475569", marginLeft:4 }}>{isOpen?"▲":"▼"}</span>
+                  </div>
+                  {/* Expanded */}
+                  {isOpen && (
+                    <div style={{ padding:"0 0.7rem 0.8rem" }}>
+                      <div style={{ fontSize:"0.72rem", color:"#64748b", marginBottom:8 }}>
+                        {cls?.name||p.class} · {p.race||"—"} · Party: {p.party_code||"nessuno"}
+                      </div>
+                      <div style={{ fontSize:"0.75rem", color:"#94a3b8", marginBottom:6, fontWeight:600 }}>🎁 Dona oggetto</div>
+                      <input
+                        style={{...inputStyle, marginBottom:6}}
+                        placeholder="🔍 Cerca oggetto da donare..."
+                        value={donateItemSearch}
+                        onChange={e=>setDonateItemSearch(e.target.value)}
+                      />
+                      <div style={{ display:"flex", gap:6, alignItems:"center", flexWrap:"wrap" }}>
+                        <select style={{...inputStyle, flex:1, cursor:"pointer", marginBottom:0}} value={donateItemId} onChange={e=>setDonateItemId(e.target.value)}>
+                          <option value="">— Scegli oggetto —</option>
+                          {donateFilteredItems.map(it=>(
+                            <option key={it.id} value={it.id}>{it.emoji||"⭐"} {it.name} ({it.rarity||"comune"})</option>
+                          ))}
+                        </select>
+                        <input style={{...inputStyle, width:60, marginBottom:0}} type="number" min="1" max="99" value={donateQty} onChange={e=>setDonateQty(Math.max(1,+e.target.value))} />
+                        <BigBtn onClick={()=>handleDonate(p.id)} gold icon="🎁" disabled={!donateItemId}>Dona</BigBtn>
+                      </div>
+                      {donateStatus && <div style={{ marginTop:6, fontSize:"0.8rem", color: donateStatus.startsWith("✅")?"#34d399":"#fca5a5" }}>{donateStatus}</div>}
+                    </div>
+                  )}
                 </div>
-              </div>
-              <SmallBtn onClick={()=>{ setDonating(it.id); setDonateTarget(""); setDonateQty(1); setDonateStatus(""); }} title="Dona a un giocatore">🎁</SmallBtn>
-              <SmallBtn onClick={()=>setEditItem(it)}>✏️</SmallBtn>
-              <SmallBtn red onClick={()=>remove(it.id)}>🗑️</SmallBtn>
-            </div>
-            <div style={{ fontSize:"0.75rem", color:"#94a3b8", marginBottom:6 }}>{it.description}</div>
-            <div style={{ display:"flex", gap:8, fontSize:"0.72rem", color:"#94a3b8" }}>
-              <span>⚔️+{it.bonus_atk||0}</span><span>🛡️+{it.bonus_def||0}</span><span>✨+{it.bonus_mag||0}</span><span>❤️+{it.bonus_hp||0}</span>
-            </div>
-            <div style={{ marginTop:8, fontSize:"0.75rem", color:"#c4b5fd" }}>💰 {it.price} oro</div>
+              );
+            })}
+            {filteredPlayers.length===0 && <div style={{ color:"#4b5563", fontSize:"0.85rem", textAlign:"center", padding:"1rem" }}>Nessun giocatore trovato</div>}
           </div>
-        ))}
-      </div>
-      {saved && <div style={{ position:"fixed", bottom:16, right:16, padding:"0.8rem 1rem", background:"rgba(52,211,153,0.15)", border:"1px solid #065f46", borderRadius:6, color:"#065f46" }}>Salvataggio completato!</div>}
+        </div>
+      )}
+
+      {saved && <div style={{ position:"fixed", bottom:16, right:16, padding:"0.8rem 1rem", background:"rgba(52,211,153,0.15)", border:"1px solid #065f46", borderRadius:6, color:"#34d399" }}>✅ Salvato!</div>}
     </div>
   );
 }
