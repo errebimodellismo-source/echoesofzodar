@@ -10219,7 +10219,11 @@ ${stepText(step)}`, "quest","Master");
               <div>
                 <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>📖</div>
                 <div style={{ color:"#475569", fontFamily:"'Cinzel',serif" }}>Hai abbandonato questa storia.</div>
-                <div style={{ color:"#334155", fontSize:"0.82rem", marginTop:"0.5rem" }}>Gli altri stanno continuando senza di te.</div>
+                <div style={{ color:"#334155", fontSize:"0.82rem", marginTop:"0.5rem", marginBottom:"1.2rem" }}>La storia è ancora in corso.</div>
+                <button
+                  onClick={()=>{ localStorage.removeItem(abandonedKey); setTab("story"); }}
+                  style={{ padding:"0.6rem 1.4rem", background:"linear-gradient(135deg,#6366f1,#4f46e5)", border:"none", borderRadius:8, color:"#fff", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.85rem", fontWeight:700 }}
+                >📖 Rientra nella storia</button>
               </div>
             </div>
           );
