@@ -350,11 +350,93 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
     URL.revokeObjectURL(url);
   }
 
+  function normalizeImportedStory(parsed) {
+    const newId = "storia_" + uid();
+    const base = {
+      ...newStory(),
+      id: newId,
+      title: parsed.title || "Storia importata",
+      description: parsed.description || parsed.longDescription || parsed.shortDescription || "",
+      emoji: parsed.emoji || "📖",
+      difficulty: parsed.difficulty || "normal",
+      tags: parsed.tags || [],
+      updatedAt: Date.now(),
+    };
+
+    // Already internal v2 format
+    if (parsed.scenes && typeof parsed.scenes === "object" && !Array.isArray(parsed.scenes)) {
+      return { ...base, version: "v2", chapters: parsed.chapters || [], scenes: parsed.scenes, nodePositions: parsed.nodePositions || {} };
+    }
+
+    // ChatGPT format: chapters[].nodes[]
+    if (Array.isArray(parsed.chapters) && parsed.chapters.some(c => Array.isArray(c.nodes))) {
+      const scenes = {};
+      const nodePositions = {};
+      const chapters = [];
+
+      for (const ch of parsed.chapters) {
+        chapters.push({ id: ch.id, title: ch.title || ch.id, startScene: ch.startNodeId || ch.startScene || ch.nodes?.[0]?.id });
+        for (const node of (ch.nodes || [])) {
+          if (node.position) nodePositions[node.id] = { x: node.position.x, y: node.position.y };
+          const scene = {
+            id: node.id, chapterId: ch.id, type: node.type || "story",
+            title: node.title || node.id, text: node.text || node.description || "",
+          };
+          if (node.nextScene) scene.nextScene = node.nextScene;
+          if (node.setFlags) scene.setFlags = node.setFlags;
+          if (node.requiredFlags) scene.requirements = { flags: node.requiredFlags };
+          if (node.requirements) scene.requirements = { ...(scene.requirements||{}), ...node.requirements };
+
+          if (node.type === "skillCheck") {
+            const sk = node.skillCheck || {};
+            scene.skillCheck = {
+              stat: sk.stat || node.stat || "strength",
+              dc: sk.dc ?? node.dc ?? 12,
+              successScene: sk.successScene || node.successScene || "",
+              failureScene: sk.failureScene || node.failureScene || "",
+              successText: sk.successText || node.successText || "",
+              failureText: sk.failureText || node.failureText || "",
+            };
+          }
+
+          if (node.type === "combat") {
+            const c = node.combat || {};
+            scene.combat = {
+              monsters: c.monsters || (c.enemies ? c.enemies.map(e => typeof e === "string" ? { name: e, hp: 10, atk: 3, def: 1, xp: 20, gold: 5 } : e) : []),
+              successScene: c.successScene || c.onVictory || "",
+              failureScene: c.failureScene || c.onDefeat || "",
+              deathScene: c.deathScene || c.onDeath || "",
+              difficulty: c.difficulty || "normal",
+            };
+          }
+
+          if (node.type === "choice" && Array.isArray(node.choices)) {
+            scene.choices = node.choices.map(ch => ({
+              text: ch.text || ch.label || "",
+              nextScene: ch.nextScene || ch.next || "",
+              setFlags: ch.setFlags || {},
+              ...(ch.requiredFlags ? { requirements: { flags: ch.requiredFlags } } : {}),
+              ...(ch.requirements ? { requirements: ch.requirements } : {}),
+            })).filter(c => c.text);
+          }
+
+          if (node.type === "reward") scene.rewards = node.rewards || { xp: 0, gold: 0, items: [] };
+          scenes[node.id] = scene;
+        }
+      }
+      return { ...base, version: "v2", chapters, scenes, nodePositions };
+    }
+
+    alert("Formato JSON non riconosciuto. Assicurati che abbia 'scenes' (formato interno) o 'chapters[].nodes' (formato ChatGPT).");
+    return null;
+  }
+
   function importStory() {
     try {
       const parsed = JSON.parse(importJson);
-      if(!parsed.id || !parsed.title) { alert("JSON non valido: mancano id o title"); return; }
-      const story = { ...newStory(), ...parsed, id:"storia_"+uid(), updatedAt:Date.now() };
+      if(!parsed.title) { alert("JSON non valido: manca il campo 'title'"); return; }
+      const story = normalizeImportedStory(parsed);
+      if (!story) return;
       updateLibrary(lib => [...lib, story]);
       setActiveStoryId(story.id);
       setShowImport(false);
@@ -861,12 +943,30 @@ function SceneEditor({ scene, allScenes, onUpdate, onClose }) {
       {scene.type==="ending" && (
         <>
           <div style={section}>
-            <label style={label}>Tipo finale</label>
+            <label style={label}>Tipo finale (visivo)</label>
             <select style={inp} value={scene.endingType||"good"} onChange={e=>onUpdate({endingType:e.target.value})}>
               {ENDING_TYPES.map(t=><option key={t} value={t}>{t}</option>)}
             </select>
           </div>
-          <RewardsEditor rewards={scene.rewards} onChange={r=>onUpdate({rewards:r})} />
+          <div style={section}>
+            <label style={label}>Esito ricompense</label>
+            <select style={inp} value={scene.outcomeType||"success"} onChange={e=>onUpdate({outcomeType:e.target.value})}>
+              <option value="success">✅ Successo pieno — 100% XP + oro</option>
+              <option value="partial">📖 Fallimento narrativo — 30% XP, 0 oro</option>
+            </select>
+            <div style={{ color:"#94a3b8", fontSize:"0.72rem", marginTop:4 }}>
+              {(scene.outcomeType||"success")==="partial"
+                ? "Il party sopravvive ma non ottiene tutto. Es: il re muore, la missione fallisce parzialmente."
+                : "La missione è completata con pieno successo."}
+            </div>
+          </div>
+          {(scene.outcomeType||"success")==="success" && <RewardsEditor rewards={scene.rewards} onChange={r=>onUpdate({rewards:r})} />}
+          {scene.outcomeType==="partial" && (
+            <div style={section}>
+              <label style={label}>XP parziale (verrà applicato al 30%)</label>
+              <input type="number" style={inp} min={0} value={scene.rewards?.xp||0} onChange={e=>onUpdate({rewards:{...(scene.rewards||{}),xp:+e.target.value,gold:0}})} />
+            </div>
+          )}
           <div style={section}>
             <label style={label}>Prossimo capitolo (scena iniziale)</label>
             <SceneSelect value={scene.nextScene} onChange={v=>onUpdate({nextScene:v})} />

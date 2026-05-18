@@ -6171,10 +6171,17 @@ function StoryView({ story, scene, storyState, isLeader, me, partyPlayers, onAdv
           )}
 
           {/* Rewards preview */}
-          {(scene.type==="reward"||scene.type==="ending") && scene.rewards && (
+          {(scene.type==="reward"||scene.type==="ending") && scene.rewards && scene.outcomeType !== "partial" && scene.outcomeType !== "defeat" && (
             <div style={{ margin:"0 1.1rem 1rem", display:"flex", flexWrap:"wrap", gap:6 }}>
               {scene.rewards.xp > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(6,78,59,0.2)", border:"1px solid #065f46", color:"#6ee7b7" }}>⭐ +{scene.rewards.xp} XP a testa</span>}
               {scene.rewards.gold > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(6,78,59,0.2)", border:"1px solid #065f46", color:"#6ee7b7" }}>💰 +{scene.rewards.gold} oro a testa</span>}
+            </div>
+          )}
+          {/* Partial failure rewards preview */}
+          {scene.type==="ending" && scene.outcomeType==="partial" && scene.rewards?.xp > 0 && (
+            <div style={{ margin:"0 1.1rem 1rem", display:"flex", flexWrap:"wrap", gap:6 }}>
+              <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(120,53,15,0.2)", border:"1px solid #92400e", color:"#fcd34d" }}>⭐ +{Math.floor(scene.rewards.xp * 0.3)} XP a testa (30%)</span>
+              <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(71,85,105,0.2)", border:"1px solid #475569", color:"#94a3b8" }}>💰 0 oro</span>
             </div>
           )}
 
@@ -6220,25 +6227,37 @@ function StoryView({ story, scene, storyState, isLeader, me, partyPlayers, onAdv
               <span style={{ color:"#f87171", fontSize:"0.82rem", alignSelf:"center" }}>Il capo-party deve avviare il combattimento.</span>
             )}
 
-            {/* ending */}
-            {scene.type==="ending" && (
-              <div style={{ width:"100%", textAlign:"center", padding:"0.5rem 0" }}>
-                <div style={{ fontSize:"2.5rem", marginBottom:"0.4rem" }}>{ENDING_ICONS[scene.endingType]||"🏁"}</div>
-                <div style={{ fontFamily:"'Cinzel',serif", color:col.accent, fontSize:"1rem", fontWeight:700, marginBottom:"0.4rem" }}>
-                  {scene.endingType==="good"?"Fine Gloriosa":scene.endingType==="fail"?"Fine Amara":"Fine della Storia"}
+            {/* ending — successo pieno o fallimento narrativo */}
+            {scene.type==="ending" && (() => {
+              const isPartial = scene.outcomeType === "partial";
+              const icon = isPartial ? "📖" : (ENDING_ICONS[scene.endingType] || "🏆");
+              const label = isPartial ? "Fallimento Narrativo" : (scene.endingType==="good" ? "Fine Gloriosa" : scene.endingType==="fail" ? "Fine Amara" : "Fine della Storia");
+              const labelColor = isPartial ? "#fbbf24" : col.accent;
+              const rewardNote = isPartial
+                ? "Il party sopravvive e porta a casa alcune informazioni. XP parziale, nessun oro."
+                : "La missione è completata con successo!";
+              return (
+                <div style={{ width:"100%", textAlign:"center", padding:"0.5rem 0" }}>
+                  <div style={{ fontSize:"2.5rem", marginBottom:"0.4rem" }}>{icon}</div>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:labelColor, fontSize:"1rem", fontWeight:700, marginBottom:"0.2rem" }}>{label}</div>
+                  <div style={{ color:"#94a3b8", fontSize:"0.8rem", marginBottom:"0.6rem" }}>{rewardNote}</div>
+                  {scene.nextScene && isLeader && <BigBtn onClick={()=>onAdvance(scene.nextScene)} gold>📖 Prossimo capitolo</BigBtn>}
+                  {!scene.nextScene && isLeader && <BigBtn onClick={()=>onAdvance(null)} gold>✅ Concludi la storia</BigBtn>}
                 </div>
-                {scene.nextScene && isLeader && <BigBtn onClick={()=>onAdvance(scene.nextScene)} gold>📖 Prossimo capitolo</BigBtn>}
-                {!scene.nextScene && isLeader && <BigBtn onClick={()=>onAdvance(null)} gold>✅ Concludi la storia</BigBtn>}
-              </div>
-            )}
+              );
+            })()}
 
-            {/* gameOver */}
+            {/* gameOver — sconfitta totale, personaggio salvo */}
             {scene.type==="gameOver" && (
               <div style={{ width:"100%", textAlign:"center", padding:"0.5rem 0" }}>
                 <div style={{ fontSize:"2.5rem", marginBottom:"0.4rem" }}>💀</div>
-                <div style={{ fontFamily:"'Cinzel',serif", color:"#ff4444", fontSize:"1rem", fontWeight:700, marginBottom:"0.4rem" }}>Game Over</div>
+                <div style={{ fontFamily:"'Cinzel',serif", color:"#ef4444", fontSize:"1rem", fontWeight:700, marginBottom:"0.2rem" }}>Missione Fallita</div>
+                <div style={{ color:"#94a3b8", fontSize:"0.8rem", marginBottom:"0.6rem" }}>Il party è stato sconfitto. I personaggi sopravvivono ma tornano a mani vuote. Nessuna ricompensa.</div>
                 {scene.gameOver?.retryScene && isLeader && (
-                  <BigBtn onClick={()=>onAdvance(scene.gameOver.retryScene)} gold>🔄 Riprova</BigBtn>
+                  <BigBtn onClick={()=>onAdvance(scene.gameOver.retryScene)} gold>🔄 Riprova dall'ultimo punto</BigBtn>
+                )}
+                {!scene.gameOver?.retryScene && isLeader && (
+                  <BigBtn onClick={()=>onAdvance(null)}>💀 Chiudi la missione</BigBtn>
                 )}
               </div>
             )}
@@ -8329,11 +8348,14 @@ function GameScreen({ myId, setScreen, authUser }) {
     await addMsg(`📖 Storia interrotta dal Master.`, "info", "Sistema");
   }
 
-  async function _applySceneRewards(scene, freshPlayers) {
+  // outcomeType: "success" | "partial" | "defeat"
+  async function _applySceneRewards(scene, freshPlayers, outcomeType = "success") {
     if(!scene?.rewards) return;
+    const mult = outcomeType === "success" ? 1 : outcomeType === "partial" ? 0.3 : 0;
+    if(mult === 0) return;
     const count = Math.max(freshPlayers.length, 1);
-    const xpEach = Math.floor((scene.rewards.xp || 0) / count);
-    const goldEach = Math.floor((scene.rewards.gold || 0) / count);
+    const xpEach = Math.floor((scene.rewards.xp || 0) * mult / count);
+    const goldEach = mult === 1 ? Math.floor((scene.rewards.gold || 0) / count) : 0;
     if(xpEach > 0 || goldEach > 0) {
       for(const p of freshPlayers) {
         const up = { ...p, xp:(p.xp||0)+xpEach, gold:(p.gold||0)+goldEach };
@@ -8349,14 +8371,25 @@ function GameScreen({ myId, setScreen, authUser }) {
     const latestQs = await dbGetPartyState(code);
 
     if(!nextSceneId) {
-      // Ending: apply rewards and close
+      // Terminal scene with no nextScene — close story
       const scene = activeStory.scenes?.[storyState.currentSceneId];
-      if(scene?.type === "ending" || scene?.type === "reward") {
+      const sceneType = scene?.type;
+      const outcomeType = sceneType === "gameOver" ? "defeat"
+        : (scene?.outcomeType || "success");
+
+      if(sceneType === "gameOver") {
+        await addMsg(`💀 **Missione fallita**: *${activeStory.title}*\nIl party è stato sconfitto. I personaggi sopravvivono ma tornano a mani vuote.`, "danger", "Sistema");
+      } else if(outcomeType === "partial") {
         const freshPlayers = await dbGetPlayers(code);
-        await _applySceneRewards(scene, freshPlayers);
+        await _applySceneRewards(scene, freshPlayers, "partial");
+        await addMsg(`📖 **Storia conclusa** (esito parziale): *${activeStory.title}*\nIl party porta a casa qualcosa, ma non tutto è andato come sperato.`, "info", "Sistema");
+      } else {
+        const freshPlayers = await dbGetPlayers(code);
+        await _applySceneRewards(scene, freshPlayers, "success");
+        await addMsg(`🏆 **Storia conclusa**: *${activeStory.title}*`, "victory", "Sistema");
       }
-      await addMsg(`🏆 **Storia conclusa**: *${activeStory.title}*`, "victory", "Sistema");
-      await dbSavePartyState(code, { ...latestQs, story: { active:false, lastCompleted: storyState.storyId } });
+
+      await dbSavePartyState(code, { ...latestQs, story: { active:false, lastCompleted: storyState.storyId, lastOutcome: outcomeType } });
       setQs(prev => ({ ...prev, story: { active:false } }));
       return;
     }
@@ -8373,17 +8406,24 @@ function GameScreen({ myId, setScreen, authUser }) {
       visitedScenes: visited,
     };
 
-    // Auto-apply rewards on reward/ending scenes
+    // Auto-apply rewards on reward nodes
     if(nextScene?.type === "reward" && !latestQs.story?.rewardCollected?.includes(nextSceneId)) {
       const freshPlayers = await dbGetPlayers(code);
-      await _applySceneRewards(nextScene, freshPlayers);
+      await _applySceneRewards(nextScene, freshPlayers, "success");
       updatedStory.rewardCollected = [...(updatedStory.rewardCollected||[]), nextSceneId];
-      // auto-advance if has nextScene
       if(nextScene.nextScene) {
         await dbSavePartyState(code, { ...latestQs, story: updatedStory });
         await advanceStoryScene(nextScene.nextScene, nextScene.setFlags||{});
         return;
       }
+    }
+
+    // Auto-close on terminal nodes with no nextScene
+    if((nextScene?.type === "ending" || nextScene?.type === "gameOver") && !nextScene?.nextScene) {
+      await dbSavePartyState(code, { ...latestQs, story: updatedStory });
+      setQs(prev => ({ ...prev, story: updatedStory }));
+      // Let StoryView render the ending/gameOver, user clicks "Chiudi"
+      return;
     }
 
     await dbSavePartyState(code, { ...latestQs, story: updatedStory });
