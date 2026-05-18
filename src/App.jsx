@@ -5093,17 +5093,15 @@ function MarketView() {
               <div>
                 <label style={labelStyle}>Dado danno</label>
                 <select style={{...inputStyle,cursor:"pointer"}} value={editItem.weapon_die||"1d6"} onChange={e=>setEditItem(i=>({...i,weapon_die:e.target.value}))}>
-                  <option value="1d4">1d4</option>
-                  <option value="1d6">1d6</option>
-                  <option value="1d8">1d8</option>
-                  <option value="1d10">1d10</option>
-                  <option value="1d12">1d12</option>
-                  <option value="2d6">2d6</option>
-                  <option value="2d8">2d8</option>
-                  <option value="2d10">2d10</option>
-                  <option value="2d12">2d12</option>
-                  <option value="3d6">3d6</option>
-                  <option value="3d8">3d8</option>
+                  {["1d4","1d6","1d8","1d10","1d12","1d20",
+                    "2d4","2d6","2d8","2d10","2d12","2d20",
+                    "3d4","3d6","3d8","3d10","3d12","3d20",
+                    "4d4","4d6","4d8","4d10","4d12","4d20",
+                    "5d6","5d8","5d10","5d12","5d20",
+                    "6d6","6d8","6d10","6d12","6d20",
+                    "8d6","8d8","8d10","8d12","8d20",
+                    "10d6","10d8","10d10","10d12","10d20",
+                  ].map(d=><option key={d} value={d}>{d}</option>)}
                 </select>
               </div>
             )}
