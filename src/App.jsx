@@ -5700,6 +5700,70 @@ function CharacterViewer({ me, equippedItems }) {
   );
 }
 
+function DonateView({ me, players, groups, loading, onTrade }) {
+  const partyMates = (players || []).filter(p => p.id !== me?.id && !p.dead);
+  const [itemId, setItemId] = useState("");
+  const [targetId, setTargetId] = useState("");
+  const selectedGroup = groups.find(g => g.itemId === itemId) || null;
+
+  useEffect(() => {
+    if(groups.length && (!itemId || !groups.some(g => g.itemId === itemId))) setItemId(groups[0].itemId);
+  }, [groups, itemId]);
+  useEffect(() => {
+    if(partyMates.length && (!targetId || !partyMates.some(p => p.id === targetId))) setTargetId(partyMates[0].id);
+  }, [partyMates, targetId]);
+
+  const canDonate = !!selectedGroup && !!targetId && !loading;
+
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.5)" }}>
+      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🎁 Dona un Oggetto</h3>
+      <div style={{ maxWidth:640, margin:"0 auto", display:"grid", gap:"1rem" }}>
+        <Card title="Regalo al Compagno">
+          <p style={{ color:"#94a3b8", fontSize:"0.84rem", lineHeight:1.55, margin:"0 0 1rem" }}>
+            Scegli un compagno e un oggetto da regalare gratuitamente.
+          </p>
+          {!partyMates.length && <div style={{ color:"#64748b", padding:"1rem", border:"1px dashed #334155", borderRadius:6 }}>Nessun altro giocatore nel party.</div>}
+          {!loading && !groups.length && <div style={{ color:"#64748b", padding:"1rem", border:"1px dashed #334155", borderRadius:6 }}>Inventario vuoto.</div>}
+          {!!partyMates.length && !!groups.length && (
+            <>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(200px,1fr))", gap:10 }}>
+                <div>
+                  <label style={labelStyle}>Oggetto</label>
+                  <select style={{...inputStyle,cursor:"pointer"}} value={itemId} onChange={e=>setItemId(e.target.value)}>
+                    {groups.map(g => <option key={g.itemId} value={g.itemId}>{g.item.name} x{g.quantity}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label style={labelStyle}>A chi</label>
+                  <select style={{...inputStyle,cursor:"pointer"}} value={targetId} onChange={e=>setTargetId(e.target.value)}>
+                    {partyMates.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+                  </select>
+                </div>
+              </div>
+              {selectedGroup && (
+                <div style={{ marginTop:"1rem", background:"rgba(15,23,42,0.78)", border:"1px solid #334155", borderRadius:6, padding:"0.85rem", display:"flex", gap:10, alignItems:"center" }}>
+                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={selectedGroup.item.name} size={58} />
+                  <div style={{ flex:1 }}>
+                    <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700 }}>{selectedGroup.item.name}</div>
+                    <div style={{ color:"#94a3b8", fontSize:"0.78rem" }}>{itemStatSummary(selectedGroup.item).join(" • ") || selectedGroup.item.description}</div>
+                  </div>
+                  <div style={{ color:"#86efac", fontFamily:"'Cinzel',serif", fontWeight:700 }}>Gratis</div>
+                </div>
+              )}
+              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:"1rem" }}>
+                <BigBtn onClick={()=>onTrade(selectedGroup, targetId, 0)} gold disabled={!canDonate}>
+                  🎁 Regala
+                </BigBtn>
+              </div>
+            </>
+          )}
+        </Card>
+      </div>
+    </div>
+  );
+}
+
 function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, isMobile }) {
   const [selectedSlot, setSelectedSlot] = useState(null);
   const selectedItem = selectedSlot ? equippedItems[selectedSlot] : null;
@@ -9157,7 +9221,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["chat","🍺 Taverna"],["quest","📜 Missioni"],["level","⭐ Livello"],["inventory","🎒 Inventario"],["trade","🤝 Scambi"],["equipment","🎽 Equip"],["spells","✨ Magie"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["diary","📖 Diario"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","🍺 Taverna"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🤝 Scambi"],["combat","⚔️ Battaglia"],["donate","🎁 Dona"]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
@@ -9503,6 +9567,15 @@ ${stepText(step)}`, "quest","Master");
             groups={inventoryGroups}
             loading={inventoryLoading}
             equipment={equipment}
+            onTrade={handlePartyTrade}
+          />
+        )}
+        {tab==="donate" && (
+          <DonateView
+            me={me}
+            players={partyPlayers}
+            groups={inventoryGroups}
+            loading={inventoryLoading}
             onTrade={handlePartyTrade}
           />
         )}
