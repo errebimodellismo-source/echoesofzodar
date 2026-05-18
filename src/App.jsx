@@ -6089,9 +6089,11 @@ function StoryDiagram({ story }) {
   return <div ref={ref} style={{ background:"rgba(2,6,23,0.6)", borderRadius:8, padding:"0.5rem", overflowX:"auto", minHeight:60 }} />;
 }
 
-function PlayerStoryLibrary({ stories, storyState, onStartSolo, onStartParty, setTab }) {
+function PlayerStoryLibrary({ stories, storyState, myId, onStartSolo, onStartParty, setTab }) {
   const [expanded, setExpanded] = useState(null);
-  const isActive = storyState?.active;
+  const abandonedId = myId ? localStorage.getItem(`eoz_story_abandoned_${myId}`) : null;
+  const hasAbandoned = abandonedId && abandonedId === storyState?.storyId;
+  const isActive = storyState?.active && !hasAbandoned;
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
       <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"0.3rem" }}>📚 Libreria Storie</h3>
@@ -10243,6 +10245,7 @@ ${stepText(step)}`, "quest","Master");
           <PlayerStoryLibrary
             stories={[...STORIES, ...customStories]}
             storyState={storyState}
+            myId={myId}
             onStartSolo={storyId => startStory(storyId, "solo")}
             onStartParty={storyId => startStory(storyId, "party")}
             setTab={setTab}
