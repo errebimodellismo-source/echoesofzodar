@@ -922,6 +922,9 @@ function monsterThreatTier(monster) {
 function getPortraitPath(cls, race, gender) {
   return `/assets/portraits/${cls}_${race}_${gender}.png`;
 }
+function getRacePortraitPath(race, gender) {
+  return `/assets/portraits/${race}_${gender}.png`;
+}
 function getClassPortraitPath(cls, gender) {
   return `/assets/portraits/${cls}_${gender}.png`;
 }
@@ -1654,14 +1657,22 @@ function getMonsterImage(monster) {
     { icon:monster.emoji || "👾", title:"Creatura", accent:"#60a5fa", accent2:"#22c55e", bg1:"#172033", bg2:"#0b1120", border:"#334155" };
   return makeArchetypeImage({ ...theme, subtitle:monster.isBoss ? "Boss" : `${monster.hp || 0} HP` });
 }
-function ArtThumb({ src, alt, size=56, radius=12 }) {
+function ArtThumb({ src, alt, size=56, radius=12, race, gender, cls }) {
   return (
     <img
       src={src}
       alt={alt}
       onError={e => {
-        e.currentTarget.onerror = null;
-        e.currentTarget.src = makeArchetypeImage({ icon:"👾", title:alt || "Creatura", subtitle:"" });
+        // fallback chain: cls_race_gender → race_gender → cls_gender → archetype
+        const cur = e.currentTarget.src;
+        if(race && gender && cls && cur.includes(`${cls}_${race}_${gender}`)) {
+          e.currentTarget.src = getRacePortraitPath(race, gender);
+        } else if(race && gender && cur.includes(`${race}_${gender}`)) {
+          e.currentTarget.src = getClassPortraitPath(cls || 'warrior', gender);
+        } else {
+          e.currentTarget.onerror = null;
+          e.currentTarget.src = makeArchetypeImage({ icon:"👾", title:alt || "Creatura", subtitle:"" });
+        }
       }}
       style={{ width:size, height:size, minWidth:size, borderRadius:radius, objectFit:"cover", display:"block", background:"rgba(15,23,42,0.72)", border:"1px solid rgba(148,163,184,0.16)", boxShadow:"0 10px 24px rgba(0,0,0,0.22)" }}
     />
@@ -2965,7 +2976,9 @@ function CreateChar({ setScreen, goGame, authUser }) {
           <div style={{ background:"rgba(10,14,23,0.8)", border:"1px solid #374151", borderRadius:6, padding:"1.2rem", marginBottom:"1rem", display:"flex", flexDirection:"column", alignItems:"center", gap:15 }}>
             <div style={{ width: 140, height: 140, borderRadius: '50%', overflow: 'hidden', border: '3px solid #fbbf24', boxShadow: '0 0 20px rgba(251,191,36,0.3)', backgroundColor: '#000', position:'relative' }}>
               <img key={`${cls}-${race}-${gender}`} src={getPortraitPath(cls, race, gender)} alt={`${RACES[race].name} ${c.name} ${gender === "female" ? "femmina" : "maschio"}`} onError={(e)=>{
-                e.currentTarget.src = getClassPortraitPath(cls, gender);
+                const racePort = getRacePortraitPath(race, gender);
+                if(e.currentTarget.src.endsWith(racePort)) { e.currentTarget.src = getClassPortraitPath(cls, gender); }
+                else { e.currentTarget.src = racePort; }
               }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <div style={{ textAlign: 'center' }}>
