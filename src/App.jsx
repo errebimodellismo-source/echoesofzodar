@@ -5060,7 +5060,7 @@ function MarketView() {
           <div style={{ fontFamily:"'Cinzel',serif", fontWeight:700, color:"#e2d9c5" }}>🏪 Market</div>
           <div style={{ fontSize:"0.85rem", color:"#94a3b8" }}>{items.length} oggetti</div>
         </div>
-        <BigBtn onClick={()=>setEditItem({id:`i_${Date.now()}`,name:"",emoji:"",type:"weapon",description:"",bonus_atk:0,bonus_def:0,bonus_mag:0,bonus_hp:0,price:100,available:true})} gold icon="?">+ Nuovo</BigBtn>
+        <BigBtn onClick={()=>setEditItem({id:`i_${Date.now()}`,name:"",emoji:"",type:"weapon",description:"",bonus_atk:0,bonus_def:0,bonus_mag:0,bonus_hp:0,price:100,rarity:"common",weapon_die:"1d6",available:true})} gold icon="?">+ Nuovo</BigBtn>
       </div>
 
       {loading && <div style={{ color:"#94a3b8" }}>Caricamento...</div>}
@@ -5078,7 +5078,35 @@ function MarketView() {
                 <option value="accessory">Accessorio</option>
               </select>
             </div>
+            <div>
+              <label style={labelStyle}>Rarità</label>
+              <select style={{...inputStyle,cursor:"pointer"}} value={editItem.rarity||"common"} onChange={e=>setEditItem(i=>({...i,rarity:e.target.value}))}>
+                <option value="common">⬜ Comune</option>
+                <option value="uncommon">🟩 Non comune</option>
+                <option value="rare">🟦 Raro</option>
+                <option value="epic">🟪 Epico</option>
+                <option value="legendary">🟨 Leggendario</option>
+              </select>
+            </div>
             <div><label style={labelStyle}>Prezzo</label><input style={inputStyle} type="number" value={editItem.price} onChange={e=>setEditItem(i=>({...i,price:+e.target.value}))} /></div>
+            {editItem.type==="weapon" && (
+              <div>
+                <label style={labelStyle}>Dado danno</label>
+                <select style={{...inputStyle,cursor:"pointer"}} value={editItem.weapon_die||"1d6"} onChange={e=>setEditItem(i=>({...i,weapon_die:e.target.value}))}>
+                  <option value="1d4">1d4</option>
+                  <option value="1d6">1d6</option>
+                  <option value="1d8">1d8</option>
+                  <option value="1d10">1d10</option>
+                  <option value="1d12">1d12</option>
+                  <option value="2d6">2d6</option>
+                  <option value="2d8">2d8</option>
+                  <option value="2d10">2d10</option>
+                  <option value="2d12">2d12</option>
+                  <option value="3d6">3d6</option>
+                  <option value="3d8">3d8</option>
+                </select>
+              </div>
+            )}
           </div>
           <label style={{...labelStyle,marginTop:10}}>Descrizione</label>
           <textarea style={{...inputStyle,height:70,resize:"vertical"}} value={editItem.description} onChange={e=>setEditItem(i=>({...i,description:e.target.value}))} />
@@ -5128,7 +5156,9 @@ function MarketView() {
               <span style={{ fontSize:"1.5rem" }}>{it.emoji||"⭐"}</span>
               <div style={{ flex:1 }}>
                 <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{it.name}</div>
-                <div style={{ fontSize:"0.72rem", color:"#94a3b8" }}>{it.type}</div>
+                <div style={{ fontSize:"0.72rem", color: it.rarity==="legendary"?"#fbbf24":it.rarity==="epic"?"#a78bfa":it.rarity==="rare"?"#60a5fa":it.rarity==="uncommon"?"#34d399":"#9ca3af" }}>
+                  {it.type}{it.rarity ? ` · ${it.rarity}` : ""}{it.weapon_die ? ` · ${it.weapon_die}` : ""}
+                </div>
               </div>
               <SmallBtn onClick={()=>{ setDonating(it.id); setDonateTarget(""); setDonateQty(1); setDonateStatus(""); }} title="Dona a un giocatore">🎁</SmallBtn>
               <SmallBtn onClick={()=>setEditItem(it)}>✏️</SmallBtn>
