@@ -118,6 +118,7 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
   const editorRef = useRef(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [saveOk, setSaveOk] = useState(false);
   const [importJson, setImportJson] = useState("");
   const [showImport, setShowImport] = useState(false);
   const [showNodeMenu, setShowNodeMenu] = useState(false);
@@ -140,11 +141,12 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
     return () => window.removeEventListener("keydown", handler);
   }, []);
 
-  async function saveLibrary(lib) {
+  async function saveLibrary(lib, showConfirm = false) {
     setSaving(true);
     try {
       const current = await dbGetPartyState(LIBRARY_KEY) || {};
       await dbSavePartyState(LIBRARY_KEY, { ...current, stories: lib });
+      if(showConfirm) { setSaveOk(true); setTimeout(()=>setSaveOk(false), 2000); }
     } finally { setSaving(false); }
   }
 
@@ -490,8 +492,12 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
       {/* ── TOP BAR ── */}
       <div style={{ display:"flex", gap:8, padding:"0.6rem 1rem", borderBottom:"1px solid #1e293b", background:"rgba(2,6,23,0.98)", flexShrink:0, flexWrap:"wrap", alignItems:"center" }}>
         <span style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontWeight:700, fontSize:"0.9rem", marginRight:4 }}>✏️ Story Builder</span>
-        {saving && <span style={{ color:"#64748b", fontSize:"0.74rem" }}>Salvataggio...</span>}
         <div style={{ flex:1 }}/>
+        {activeStory && (
+          <button style={btn(saveOk ? "#22c55e" : "#0ea5e9", saveOk)} onClick={()=>saveLibrary(library, true)} disabled={saving}>
+            {saving ? "⏳ Salvataggio..." : saveOk ? "✅ Salvato!" : "💾 Salva"}
+          </button>
+        )}
         {activeStory && (
           <>
             <button style={btn("#c084fc")} onClick={()=>setConnectMode(m=>!m)}>
