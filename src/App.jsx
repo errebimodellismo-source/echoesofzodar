@@ -6195,7 +6195,7 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
               <div style={{ color:col.accent }}>{scene.title}</div>
             </div>
           )}
-          {isLeader && (
+          {(storyState?.mode === "solo" || isLeader) && (
             <button
               onClick={()=>{ if(window.confirm("Abbandonare la storia? Il progresso verrà perso.")) onAdvance(null); }}
               style={{ marginLeft: currentChapter ? "0.5rem" : "auto", padding:"0.25rem 0.7rem", background:"transparent", border:"1px solid #475569", borderRadius:6, color:"#64748b", cursor:"pointer", fontSize:"0.72rem", whiteSpace:"nowrap" }}
