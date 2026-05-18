@@ -1903,6 +1903,7 @@ async function dbSavePartyState(partyCode, state) {
     __lastDailyReset: state.lastDailyReset || null,
     __story: state.story || null,
     __stories: state.stories || null,
+    __dungeon: state.dungeon !== undefined ? state.dungeon : null,
   };
   const { error } = await supabase.from("party_state").upsert({
     party_code: partyCode,
@@ -1941,6 +1942,7 @@ async function dbGetPartyState(partyCode) {
     lastDailyReset: (isV2 ? raw.__lastDailyReset : null) || null,
     story: (isV2 ? raw.__story : null) || null,
     stories: (isV2 ? raw.__stories : null) || null,
+    dungeon: isV2 ? (raw.__dungeon ?? null) : null,
   };
 }
 
@@ -3634,10 +3636,41 @@ function MasterDungeonView() {
   const [preview, setPreview]       = useState(null);
   const [loading, setLoading]       = useState(false);
   const [status, setStatus]         = useState('');
+  const [library, setLibrary]       = useState([]);
+  const [libName, setLibName]       = useState('');
+  const [showLib, setShowLib]       = useState(false);
+
+  const DUNGEON_LIB_KEY = '__dungeon_library__';
+  useEffect(() => {
+    supabase.from('party_state').select('combat').eq('party_code', DUNGEON_LIB_KEY).maybeSingle()
+      .then(({ data }) => { if(data?.combat?.dungeons) setLibrary(data.combat.dungeons); }).catch(()=>{});
+  }, []);
+  async function saveToLibrary() {
+    if(!preview) { setStatus('⚠️ Genera o costruisci un dungeon prima di salvarlo.'); return; }
+    const name = libName.trim() || preview.name || 'Dungeon';
+    const entry = { ...preview, _savedName: name, _savedAt: Date.now() };
+    const updated = [...library.filter(d => d._savedName !== name), entry];
+    setLibrary(updated);
+    const { error } = await supabase.from('party_state').upsert(
+      { party_code: DUNGEON_LIB_KEY, combat: { dungeons: updated }, updated_at: new Date().toISOString() },
+      { onConflict: 'party_code' }
+    );
+    if(error) setStatus('❌ Errore salvataggio: ' + error.message);
+    else setStatus(`✅ Dungeon "${name}" salvato in libreria.`);
+  }
+  async function deleteFromLibrary(name) {
+    const updated = library.filter(d => d._savedName !== name);
+    setLibrary(updated);
+    await supabase.from('party_state').upsert(
+      { party_code: DUNGEON_LIB_KEY, combat: { dungeons: updated }, updated_at: new Date().toISOString() },
+      { onConflict: 'party_code' }
+    );
+  }
 
   useEffect(() => {
     supabase.from('party_state').select('party_code').then(({ data }) => {
-      setParties((data || []).map(r => r.party_code).filter(c => c !== '__world_guilds__'));
+      const SYSTEM = ['__world_guilds__','__world__','__master__','__maintenance__','__story_library__'];
+      setParties((data || []).map(r => r.party_code).filter(c => !SYSTEM.includes(c)));
     });
   }, []);
 
@@ -4056,6 +4089,39 @@ function MasterDungeonView() {
           </div>
         </section>
       )}
+
+      {/* ── Libreria Dungeon ── */}
+      <section style={{ background:'rgba(15,23,42,0.7)', border:'1px solid #1e3a5f', borderRadius:10, padding:'1rem', marginBottom:'1rem' }}>
+        <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:8 }}>
+          <div style={{ color:'#94a3b8', fontSize:'0.78rem', fontFamily:"'Cinzel',serif", letterSpacing:'0.05em' }}>📚 LIBRERIA DUNGEON ({library.length})</div>
+          <button onClick={()=>setShowLib(v=>!v)} style={{ background:'none', border:'none', color:'#64748b', cursor:'pointer', fontSize:'0.8rem' }}>{showLib?'▲':'▼'}</button>
+        </div>
+        {showLib && (
+          <div>
+            {library.length === 0 && <div style={{ color:'#475569', fontSize:'0.8rem', marginBottom:8 }}>Nessun dungeon salvato.</div>}
+            {library.map(d => (
+              <div key={d._savedName} style={{ display:'flex', gap:8, alignItems:'center', padding:'0.4rem 0', borderBottom:'1px solid #1e3a5f' }}>
+                <span style={{ fontSize:'1rem' }}>{d.emoji||'🗺️'}</span>
+                <span style={{ flex:1, color:'#e2d9c5', fontSize:'0.84rem' }}>{d._savedName}</span>
+                <span style={{ color:'#475569', fontSize:'0.72rem' }}>{d.rooms?.length} stanze</span>
+                <Btn onClick={()=>{ setPreview(d); setStatus(`📂 "${d._savedName}" caricato.`); }} color='#6366f1' bg='rgba(99,102,241,0.15)'>📂 Carica</Btn>
+                <button onClick={()=>{ if(window.confirm(`Eliminare "${d._savedName}"?`)) deleteFromLibrary(d._savedName); }} style={{ background:'rgba(127,29,29,0.2)', border:'1px solid #7f1d1d', borderRadius:6, color:'#fca5a5', cursor:'pointer', fontSize:'0.75rem', padding:'3px 8px' }}>🗑️</button>
+              </div>
+            ))}
+            <div style={{ display:'flex', gap:8, marginTop:10, alignItems:'center' }}>
+              <input value={libName} onChange={e=>setLibName(e.target.value)} placeholder='Nome da salvare (opz.)' style={{ ...IS, flex:1 }} />
+              <Btn onClick={saveToLibrary} disabled={!preview} color='#f59e0b' bg='rgba(245,158,11,0.15)'>💾 Salva in libreria</Btn>
+            </div>
+          </div>
+        )}
+        {!showLib && library.length > 0 && (
+          <div style={{ display:'flex', gap:6, flexWrap:'wrap' }}>
+            {library.map(d => (
+              <button key={d._savedName} onClick={()=>{ setPreview(d); setStatus(`📂 "${d._savedName}" caricato.`); }} style={{ padding:'3px 10px', background:'rgba(99,102,241,0.15)', border:'1px solid #6366f155', borderRadius:6, color:'#a5b4fc', cursor:'pointer', fontSize:'0.75rem' }}>{d.emoji||'🗺️'} {d._savedName}</button>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* ── Status & Actions ── */}
       {status && <div style={{ padding:'0.6rem 1rem', background:'rgba(15,23,42,0.8)', border:'1px solid #1e3a5f', borderRadius:8, color:'#e2d9c5', fontSize:'0.82rem', marginBottom:'0.8rem' }}>{status}</div>}
