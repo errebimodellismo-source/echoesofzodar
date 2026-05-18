@@ -1628,6 +1628,9 @@ function getPlayerPortrait(player) {
   const cls  = (player.class  || "warrior").toLowerCase();
   const race = (player.race   || "human").toLowerCase();
   const gender = player.gender || getStoredCharacterGender(player.id, "male");
+  // Secret races don't have class-specific portraits — use race_gender directly
+  const SECRET_RACES = ['minotaur','angel','succubus'];
+  if(SECRET_RACES.includes(race)) return getRacePortraitPath(race, gender);
   return getPortraitPath(cls, race, gender);
 }
 function getMonsterImage(monster) {
@@ -2975,11 +2978,17 @@ function CreateChar({ setScreen, goGame, authUser }) {
         <Card title="👥 Conferma Eroe & Party">
           <div style={{ background:"rgba(10,14,23,0.8)", border:"1px solid #374151", borderRadius:6, padding:"1.2rem", marginBottom:"1rem", display:"flex", flexDirection:"column", alignItems:"center", gap:15 }}>
             <div style={{ width: 140, height: 140, borderRadius: '50%', overflow: 'hidden', border: '3px solid #fbbf24', boxShadow: '0 0 20px rgba(251,191,36,0.3)', backgroundColor: '#000', position:'relative' }}>
-              <img key={`${cls}-${race}-${gender}`} src={getPortraitPath(cls, race, gender)} alt={`${RACES[race].name} ${c.name} ${gender === "female" ? "femmina" : "maschio"}`} onError={(e)=>{
-                const racePort = getRacePortraitPath(race, gender);
-                if(e.currentTarget.src.endsWith(racePort)) { e.currentTarget.src = getClassPortraitPath(cls, gender); }
-                else { e.currentTarget.src = racePort; }
-              }} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img key={`${cls}-${race}-${gender}`}
+                src={RACES[race]?._secret ? getRacePortraitPath(race, gender) : getPortraitPath(cls, race, gender)}
+                alt={`${RACES[race].name} ${c.name} ${gender === "female" ? "femmina" : "maschio"}`}
+                onError={(e)=>{
+                  const racePort = getRacePortraitPath(race, gender);
+                  const clsPort  = getClassPortraitPath(cls, gender);
+                  if(!e.currentTarget.src.includes(`${race}_${gender}`)) { e.currentTarget.src = racePort; }
+                  else if(!e.currentTarget.src.includes(`${cls}_${gender}`)) { e.currentTarget.src = clsPort; }
+                  else { e.currentTarget.onerror = null; }
+                }}
+                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             </div>
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize: "1.4rem", fontWeight:700 }}>{name||"Senza Nome"}</div>
