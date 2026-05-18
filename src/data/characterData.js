@@ -18,6 +18,7 @@ export const CLASSES = {
   necromancer: { name:"Negromante", emoji:"💀", color:"#6d28d9", hp:95,  atk:10, def:6,  mag:32, init:2, _secret:true, desc:"Signore della morte. Anima i cadaveri e comanda orde di non-morti." },
   artificer:   { name:"Artefice",   emoji:"⚙️", color:"#f59e0b", hp:115, atk:18, def:16, mag:10, init:4, _secret:true, desc:"Costruttore di gadget letali e armature potenziate. Scienza e magia fuse insieme." },
   summoner:    { name:"Evocatore",  emoji:"🌀", color:"#22d3ee", hp:80,  atk:4,  def:4,  mag:35, init:3, _secret:true, desc:"Apre varchi tra i piani e richiama creature potenti al suo fianco." },
+  seductress:  { name:"Seduttrice", emoji:"😈", color:"#f43f8e", hp:85,  atk:8,  def:6,  mag:38, init:7, _secret:true, _femaleOnly:true, desc:"Manipolazione, charme demoniaco e drenaggio vitale. Nessuno le resiste." },
 };
 
 export const RACES = {
@@ -37,7 +38,7 @@ export const RACES = {
   succubus:  { name:"Succube",   emoji:"😈", hpB:5,  atkB:4,  defB:2,  magB:15, initB:6,  _secret:true, _femaleOnly:true, desc:"Creatura infernale. Velocità e potere magico fuori dal comune." },
 };
 
-export const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','paladin','ranger','necromancer','summoner','artificer'];
+export const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','paladin','ranger','necromancer','summoner','artificer','seductress'];
 
 export const SECRET_UNLOCK_KEY = 'eoz_secret_unlocked';
 export const SECRET_PASSWORD   = 'the chosen one';

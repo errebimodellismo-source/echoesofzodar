@@ -397,6 +397,40 @@ export const SPELLS = {
       {id:"af42",name:"Protocollo Nemesi",emoji:"🎯",dmg:"8d10",type:"damage",slots:4,desc:"Analizza i punti deboli e colpisce con precisione chirurgica — danno raddoppiato"},
       {id:"af43",name:"Mech da Battaglia",emoji:"🦾",dmg:"0",type:"summon",slots:4,desc:"Deploya un mech da battaglia completamente armato",summon:{name:"Mech da Battaglia",emoji:"🦾",hp:170,atk:38,def:22,dmgDie:"4d12"},maxSummons:4},
     ],
+  seductress:{
+    0:[
+      {id:"sd00",name:"Tocco Infuocato",   emoji:"🔥",dmg:"2d8", type:"damage",slots:0,desc:"Carezza demoniaca che brucia l'anima — gratuita ogni turno"},
+      {id:"sd01",name:"Sguardo Ipnotico",  emoji:"👁️",dmg:"1d10",type:"damage",slots:0,desc:"Uno sguardo che paralizza brevemente il nemico, senza costo"},
+    ],
+    1:[
+      {id:"sd11",name:"Bacio della Morte",      emoji:"💋",dmg:"3d8", type:"drain",  slots:1,desc:"Drena la vita del nemico trasferendola alla Seduttrice — cura il 50% del danno inflitto"},
+      {id:"sd12",name:"Aura di Seduzione",      emoji:"💗",dmg:"0",   type:"control",slots:1,desc:"Aura demoniaca: tutti i nemici soffrono -5 ATK per 2 round, ammaliati dalla sua presenza"},
+      {id:"sd13",name:"Illusione Perfetta",     emoji:"🌫️",dmg:"0",   type:"defense",slots:1,desc:"Crea un'illusione che assorbe il prossimo attacco nemico — danno azzerato una volta"},
+      {id:"sd14",name:"Freccia del Desiderio",  emoji:"💘",dmg:"4d6", type:"damage", slots:1,desc:"Dardo di energia infernale che brucia dall'interno"},
+    ],
+    2:[
+      {id:"sd21",name:"Charme Irresistibile",   emoji:"💜",dmg:"0",    type:"control",slots:2,desc:"Il nemico più forte è ammaliato: salta il turno e attacca i propri alleati"},
+      {id:"sd22",name:"Drenaggio dell'Anima",   emoji:"🩸",dmg:"5d8",  type:"drain",  slots:2,desc:"Succhia l'essenza vitale — infligge danno massiccio e cura la Seduttrice per metà"},
+      {id:"sd23",name:"Patto Infernale",        emoji:"🔱",dmg:"0",    type:"buff",   slots:2,desc:"Sacrifica 20 HP propri per triplicare il danno del prossimo attacco"},
+      {id:"sd24",name:"Velo di Tenebra",        emoji:"🌑",dmg:"4d8",  type:"damage", slots:2,desc:"Avvolge il campo in un velo oscuro che soffoca i nemici"},
+    ],
+    3:[
+      {id:"sd31",name:"Dominazione Mentale",    emoji:"🧠",dmg:"0",    type:"control",slots:3,desc:"Prende il controllo del nemico più potente: salta il turno ed è costretto ad attaccare i suoi"},
+      {id:"sd32",name:"Esplosione di Charme",   emoji:"💥",dmg:"7d8",  type:"damage", slots:3,desc:"Rilascia tutta la sua energia demoniaca in un'esplosione di potere puro"},
+      {id:"sd33",name:"Suzione Vitale",         emoji:"💉",dmg:"6d8",  type:"drain",  slots:3,desc:"Drenaggio totale: infligge danno devastante e recupera il 60% come HP"},
+    ],
+    4:[
+      {id:"sd41",name:"Estasi Infernale",       emoji:"🌋",dmg:"9d10", type:"damage", slots:4,desc:"Energia demoniaca pura che travolge TUTTI i nemici con forza devastante"},
+      {id:"sd42",name:"Prigione di Charme",     emoji:"💞",dmg:"0",    type:"control",slots:4,desc:"Imprigiona tutti i nemici in uno stato di trance — saltano tutti il prossimo turno"},
+      {id:"sd43",name:"Vampirismo Assoluto",    emoji:"🦇",dmg:"8d10", type:"drain",  slots:4,desc:"Drena la vita di tutti i nemici contemporaneamente — cura per il 50% del danno totale"},
+    ],
+    5:[
+      {id:"sd51",name:"Forma Demoniaca",        emoji:"😈",dmg:"0",    type:"buff",   slots:5,desc:"Si trasforma nella sua vera forma: +15 MAG, +8 INIT, +10 ATK per 2 round"},
+      {id:"sd52",name:"Apocalisse del Desiderio",emoji:"💀",dmg:"14d10",type:"drain", slots:5,desc:"Il potere assoluto della seduzione: danno cosmico su tutti i nemici, cura totale della Seduttrice"},
+      {id:"sd53",name:"Dominio Totale",         emoji:"👑",dmg:"0",    type:"control",slots:5,desc:"Nessuno resiste: TUTTI i nemici saltano il turno e si attaccano a vicenda per 1 round"},
+    ],
+  },
+
     5:[
       {id:"af51",name:"Protocollo Overkill",emoji:"💥",dmg:"14d12",type:"damage",slots:5,desc:"Attiva TUTTI i sistemi d'arma contemporaneamente su ogni nemico presente"},
       {id:"af52",name:"Bomba Nucleare Arcana",emoji:"☢️",dmg:"12d12",type:"damage",slots:5,desc:"La bomba definitiva — distrugge l'intero campo di battaglia"},

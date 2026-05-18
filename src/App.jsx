@@ -475,7 +475,7 @@ function canAccessMasterPanel(user) {
   return !!email && MASTER_EMAILS.includes(email);
 }
 
-const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','paladin','ranger','necromancer','summoner','artificer'];
+const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','paladin','ranger','necromancer','summoner','artificer','seductress'];
 
 const STATUS_EFFECTS = {
   poison: { label: 'Avvelenato',  emoji: '🐍', color: '#4ade80', damagePerRound: 3 },
@@ -9345,6 +9345,20 @@ function GameScreen({ myId, setScreen, authUser }) {
       newCombatants.splice(attackerIdx + 1, 0, summonCombatant);
       const countNow = myCurrentSummons.length < maxSummons ? myCurrentSummons.length + 1 : maxSummons;
       log += `💀 **${s.name}** (Lv.${me.level||1}) evocato al fianco di ${attacker.name}! (${countNow}/${maxSummons})\n❤️ ${summonHp} HP · ⚔️ ${summonAtk} ATK · 🛡️ ${summonDef} DEF\nAttaccherà automaticamente ogni turno.`;
+    } else if(spell.type === "drain") {
+      // Danno al nemico + cura il caster per una % del danno
+      const drainPct = spell.drainPct || 0.5;
+      const base = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg,8), notation:spell.dmg, label:`Drenaggio ${spell.dmg}`, themeColor:"#f43f8e" });
+      const bonus = Math.floor((attacker.mag||0)/2);
+      const dmg = Math.max(1, base + bonus - Math.floor(target.def/2));
+      const heal = Math.floor(dmg * drainPct);
+      newCombatants[tidx] = { ...target, hp: Math.max(0, target.hp - dmg) };
+      const attackerCombIdx = newCombatants.findIndex(c => c.id === attacker.id);
+      if(attackerCombIdx !== -1) {
+        newCombatants[attackerCombIdx] = { ...newCombatants[attackerCombIdx], hp: Math.min(newCombatants[attackerCombIdx].maxHp, newCombatants[attackerCombIdx].hp + heal) };
+      }
+      spellDmgToLog = dmg;
+      log += `💋 **${spell.name}**\n💥 Danno: **${dmg}** a ${target.name}\n💗 Cura: **+${heal} HP** alla Seduttrice\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`;
     } else if(spell.type === "reanimate") {
       // Anima l'ultimo nemico caduto come alleato non-morto
       const deadEnemy = [...newCombatants].reverse().find(c => !c.isPlayer && c.hp <= 0);
