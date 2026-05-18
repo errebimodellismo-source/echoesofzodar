@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "./supabase";
-import { CLASSES, RACES } from "./data/characterData";
+import { CLASSES, RACES, SECRET_UNLOCK_KEY, SECRET_PASSWORD } from "./data/characterData";
 import { SPELL_SLOTS, SPELLS } from "./data/spellsData";
 import { DEFAULT_QUESTS } from "./data/questsData";
 import { DEFAULT_MONSTERS } from "./data/monstersData";
@@ -2786,7 +2786,22 @@ function CreateChar({ setScreen, goGame, authUser }) {
   const [code, setCode] = useState("");
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [secretInput, setSecretInput] = useState("");
+  const [secretUnlocked, setSecretUnlocked] = useState(() => localStorage.getItem(SECRET_UNLOCK_KEY) === "1");
+  const [secretError, setSecretError] = useState(false);
   const c = CLASSES[cls]; const r = RACES[race];
+
+  function tryUnlock() {
+    if (secretInput.trim().toLowerCase() === SECRET_PASSWORD) {
+      localStorage.setItem(SECRET_UNLOCK_KEY, "1");
+      setSecretUnlocked(true);
+      setSecretError(false);
+      setSecretInput("");
+    } else {
+      setSecretError(true);
+      setTimeout(() => setSecretError(false), 2000);
+    }
+  }
 
   async function create() {
     if(!name.trim() || !realPlayerName.trim() || loading) return;
@@ -2878,14 +2893,36 @@ function CreateChar({ setScreen, goGame, authUser }) {
       {step===1 && (
         <Card title="⚔️ Scegli la tua Classe">
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))", gap:8 }}>
-            {Object.entries(CLASSES).map(([k,v])=>(
-              <button key={k} onClick={()=>setCls(k)} style={{ padding:"0.8rem 0.5rem", background:cls===k?"rgba(109,40,217,0.3)":"rgba(255,255,255,0.03)", border:`2px solid ${cls===k?v.color:"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:4 }}>
-                <span style={{ fontSize:"1.8rem" }}>{v.emoji}</span>
-                <strong style={{ fontFamily:"'Cinzel',serif", color:cls===k?v.color:"#d1d5db", fontSize:"0.82rem" }}>{v.name}</strong>
+            {Object.entries(CLASSES).filter(([,v]) => !v._secret || secretUnlocked).map(([k,v])=>(
+              <button key={k} onClick={()=>setCls(k)} style={{ padding:"0.8rem 0.5rem", background:cls===k?`${v.color}30`:"rgba(255,255,255,0.03)", border:`2px solid ${cls===k?v.color:v._secret?"#4b0082":"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:4, position:"relative" }}>
+                {v._secret && <span style={{ position:"absolute", top:4, right:4, fontSize:"0.5rem", color:"#a78bfa", fontFamily:"'Cinzel',serif", letterSpacing:"0.05em" }}>✦ SEGRETO</span>}
+                <span style={{ fontSize:"1.8rem", filter:v._secret?"drop-shadow(0 0 6px #a78bfa)":"none" }}>{v.emoji}</span>
+                <strong style={{ fontFamily:"'Cinzel',serif", color:cls===k?v.color:v._secret?"#c4b5fd":"#d1d5db", fontSize:"0.82rem" }}>{v.name}</strong>
                 {cls===k && <div style={{ fontSize:"0.62rem", color:"#9ca3af", textAlign:"center" }}>❤️{v.hp} ⚔️{v.atk} 🛡️{v.def} ✨{v.mag}</div>}
               </button>
             ))}
           </div>
+          {!secretUnlocked && (
+            <div style={{ marginTop:"1rem", padding:"0.8rem", background:"rgba(109,40,217,0.08)", border:"1px solid #3b1f6e", borderRadius:8 }}>
+              <div style={{ color:"#7c3aed", fontSize:"0.72rem", fontFamily:"'Cinzel',serif", marginBottom:6 }}>🔒 Classi e Razze Segrete</div>
+              <div style={{ display:"flex", gap:6 }}>
+                <input
+                  value={secretInput}
+                  onChange={e=>setSecretInput(e.target.value)}
+                  onKeyDown={e=>e.key==="Enter"&&tryUnlock()}
+                  placeholder="Inserisci la parola d'ordine..."
+                  style={{ flex:1, padding:"0.4rem 0.6rem", background:"rgba(0,0,0,0.4)", border:`1px solid ${secretError?"#ef4444":"#3b1f6e"}`, borderRadius:6, color:"#e2d9c5", fontSize:"0.78rem", outline:"none" }}
+                />
+                <button onClick={tryUnlock} style={{ padding:"0.4rem 0.8rem", background:"rgba(109,40,217,0.25)", border:"1px solid #7c3aed", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontSize:"0.78rem" }}>
+                  Sblocca
+                </button>
+              </div>
+              {secretError && <div style={{ color:"#ef4444", fontSize:"0.7rem", marginTop:4 }}>Parola d'ordine errata.</div>}
+            </div>
+          )}
+          {secretUnlocked && (
+            <div style={{ marginTop:"0.5rem", color:"#a78bfa", fontSize:"0.7rem", fontFamily:"'Cinzel',serif" }}>✦ Classi e razze segrete sbloccate</div>
+          )}
           <div style={{ display:"flex", gap:8, marginTop:"1rem" }}>
             <SmallBtn onClick={()=>setStep(0)}>← Indietro</SmallBtn>
             <BigBtn onClick={()=>setStep(2)} gold>Avanti →</BigBtn>
@@ -2899,10 +2936,11 @@ function CreateChar({ setScreen, goGame, authUser }) {
             <button onClick={()=>setGender("female")} style={{ flex:1, padding:"0.8rem", background:gender==="female"?"rgba(236,72,153,0.3)":"rgba(255,255,255,0.03)", border:`2px solid ${gender==="female"?"#f472b6":"#1f2937"}`, borderRadius:6, cursor:"pointer", color:gender==="female"?"#fbcfe8":"#9ca3af", fontFamily:"'Cinzel',serif" }}>♀️ Femminile</button>
           </div>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))", gap:8 }}>
-            {Object.entries(RACES).map(([k,v])=>(
-              <button key={k} onClick={()=>setRace(k)} style={{ padding:"0.7rem 0.4rem", background:race===k?"rgba(109,40,217,0.3)":"rgba(255,255,255,0.03)", border:`2px solid ${race===k?"#a78bfa":"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:3 }}>
-                <span style={{ fontSize:"1.5rem" }}>{v.emoji}</span>
-                <strong style={{ fontFamily:"'Cinzel',serif", color:"#d1d5db", fontSize:"0.78rem" }}>{v.name}</strong>
+            {Object.entries(RACES).filter(([,v]) => !v._secret || secretUnlocked).map(([k,v])=>(
+              <button key={k} onClick={()=>setRace(k)} style={{ padding:"0.7rem 0.4rem", background:race===k?`rgba(109,40,217,0.3)`:"rgba(255,255,255,0.03)", border:`2px solid ${race===k?"#a78bfa":v._secret?"#4b0082":"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:3, position:"relative" }}>
+                {v._secret && <span style={{ position:"absolute", top:3, right:3, fontSize:"0.45rem", color:"#a78bfa", fontFamily:"'Cinzel',serif" }}>✦</span>}
+                <span style={{ fontSize:"1.5rem", filter:v._secret?"drop-shadow(0 0 5px #a78bfa)":"none" }}>{v.emoji}</span>
+                <strong style={{ fontFamily:"'Cinzel',serif", color:v._secret?"#c4b5fd":"#d1d5db", fontSize:"0.78rem" }}>{v.name}</strong>
                 {race===k && <small style={{ fontSize:"0.6rem", color:"#a78bfa", textAlign:"center", lineHeight:1.3 }}>
                   {[v.hpB&&`+${v.hpB}HP`,v.atkB&&`+${v.atkB}ATK`,v.defB&&`+${v.defB}DEF`,v.magB&&`+${v.magB}MAG`].filter(Boolean).join(" ")||"Versatile"}
                 </small>}
