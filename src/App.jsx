@@ -6397,6 +6397,8 @@ function GameScreen({ myId, setScreen, authUser }) {
     });
   }
   const [messages, setMessages] = useState([]);
+  const [worldMessages, setWorldMessages] = useState([]);
+  const [chatChannel, setChatChannel] = useState("party");
   const [partyPlayers, setPartyPlayers] = useState([]);
   const [qs, setQs] = useState({ currentId:null, step:0, active:false, completed:[], combat:null });
   const [input, setInput] = useState("");
@@ -6680,10 +6682,14 @@ function GameScreen({ myId, setScreen, authUser }) {
         await refreshAll(p.partyCode);
         await refreshInventory(p);
         refreshGuilds();
+        // Load world chat
+        dbGetMessages("__world__").then(wm => setWorldMessages(wm.filter(m => m.type === "chat")));
         // Realtime subscription
         subRef.current = supabase.channel("party_"+p.partyCode)
           .on("postgres_changes", { event:"INSERT", schema:"public", table:"messages", filter:`party_code=eq.${p.partyCode}` },
             () => refreshAll(p.partyCode))
+          .on("postgres_changes", { event:"INSERT", schema:"public", table:"messages", filter:`party_code=eq.__world__` },
+            () => dbGetMessages("__world__").then(wm => setWorldMessages(wm.filter(m => m.type === "chat"))))
           .on("postgres_changes", { event:"*", schema:"public", table:"players", filter:`party_code=eq.${p.partyCode}` },
             () => refreshAll(p.partyCode))
           .on("postgres_changes", { event:"*", schema:"public", table:"player_items" },
@@ -8760,7 +8766,11 @@ ${stepText(step)}`, "quest","Master");
     else if(c==="stato") { if(me) await addMsg(`${CLASSES[me?.class||'warrior']?.emoji} **${me.name}** � ${RACES[me?.race||'human']?.name} ${CLASSES[me?.class||'warrior']?.name} � Lv.${me.level}\n❤️${me.hp||0}/${me.maxHp||0} ⚔️${me.atk||0} 🛡️${me.def||0} ✨${me.mag||0}\n⭐XP ${me.xp||0}/${xpForLevel(me.level||1)} | 💰${me.gold||0} oro`,`info`,me.name); }
     else if(c==="party") { const lines=partyPlayers.map(p=>`${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} ❤️${p?.hp||0}/${p?.maxHp||0}`); await addMsg(`⚔️ **Party [${code}]**\n${lines.join("\n")}`,"info","Master"); }
     else if(c==="classifica") { const sorted=[...partyPlayers].sort((a,b)=>b.level-a.level); await addMsg(`⚔️ **Classifica**\n${sorted.map((p,i)=>`${["⭐","⭐","⭐"][i]||"  "} ${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} � ${p.xp||0}XP`).join("\n")}`,"info","Master"); }
-    else { await addMsg(raw, "chat", me?.name); await refreshAll(code); }
+    else if(chatChannel === "world") {
+      await dbSendMessage({ party_code:"__world__", author:me?.name, content:raw, type:"chat" });
+      const wm = await dbGetMessages("__world__");
+      setWorldMessages(wm.filter(m => m.type === "chat"));
+    } else { await addMsg(raw, "chat", me?.name); await refreshAll(code); }
     inputRef.current?.focus();
   }
 
@@ -9221,7 +9231,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","🍺 Taverna"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🤝 Scambi"],["combat","⚔️ Battaglia"],["donate","🎁 Dona"]].map(([k,l])=>{
+          {[["quest","📜 Missioni"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🤝 Scambi"],["combat","⚔️ Battaglia"],["donate","🎁 Dona"]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
@@ -9252,117 +9262,64 @@ ${stepText(step)}`, "quest","Master");
         </div>
 
         <div key={tab} style={{ flex:1, display:"contents", animation:"tabFadeIn 0.18s ease" }}>
-        {tab==="chat" && (
-          <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
-
-            {/* ── Pinned tavern intro ── */}
-            <div style={{ flexShrink:0, maxHeight:210, overflowY:"auto", background:"linear-gradient(180deg,rgba(20,10,2,0.98),rgba(15,8,2,0.97))", borderBottom:"1px solid rgba(180,100,20,0.4)", padding:"0.9rem 1.1rem" }}>
-              <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1rem", textAlign:"center", marginBottom:"0.55rem", letterSpacing:"0.06em" }}>🍺 Benvenuti alla Taverna Storta</div>
-              <div style={{ fontFamily:"'Crimson Pro',Georgia,serif", color:"#c49a5a", fontSize:"0.82rem", lineHeight:1.8 }}>
-                <p style={{ margin:"0 0 0.5rem" }}>L'odore di legno umido, arrosto speziato e birra forte riempie l'aria. Le travi del soffitto sembrano piegate dal tempo, il pavimento scricchiola a ogni passo e il grande lampadario ondeggia lentamente… anche se nessuno lo ha toccato.</p>
-                <p style={{ margin:"0 0 0.5rem" }}>Dietro al bancone, un oste dall'occhio storto pulisce lo stesso boccale da almeno mezz'ora. Con voce roca, vi squadra uno a uno.</p>
-                <blockquote style={{ margin:"0.4rem 0", padding:"0.4rem 0.8rem", borderLeft:"3px solid #b45309", color:"#fde68a", fontStyle:"italic" }}>
-                  "Ascoltate bene, viandanti… Qui dentro non si parla come fuori dal mondo. Niente voci divine, niente pensieri sospesi nel vuoto, niente parole senza volto."
-                </blockquote>
-                <p style={{ margin:"0.4rem 0 0.4rem" }}>L'oste punta il dito verso il centro della sala.</p>
-                <blockquote style={{ margin:"0.4rem 0", padding:"0.4rem 0.8rem", borderLeft:"3px solid #b45309", color:"#fde68a", fontStyle:"italic" }}>
-                  "Alla Taverna Storta esiste una sola legge: qui si parla <strong>SOLO ruolando.</strong>"
-                </blockquote>
-                <p style={{ margin:"0.4rem 0" }}>Un silenzio attraversa la sala. Poi un nano ubriaco cade dalla sedia. Nessuno sembra farci caso.</p>
-                <blockquote style={{ margin:"0.4rem 0", padding:"0.4rem 0.8rem", borderLeft:"3px solid #b45309", color:"#fde68a", fontStyle:"italic" }}>
-                  "Se volete parlare… dovete farlo come i vostri personaggi. Sedetevi, bevete, litigate, raccontate storie, fate accordi… ma restate nel mondo."
-                </blockquote>
-                <p style={{ margin:"0.4rem 0" }}>Con un colpo secco appoggia il boccale sul bancone.</p>
-                <blockquote style={{ margin:"0.4rem 0", padding:"0.4rem 0.8rem", borderLeft:"3px solid #92400e", color:"#fcd34d", fontStyle:"italic", fontWeight:600 }}>
-                  "La Taverna Storta apre le sue porte solo ai gruppi completi. Un avventuriero solitario qui non può entrare. Serve un Party."
-                </blockquote>
-                <p style={{ margin:"0.5rem 0 0", color:"#9a6630", fontSize:"0.78rem", textAlign:"center", fontStyle:"italic" }}>"Perché nessuno sopravvive a questo mondo da solo."</p>
+        {tab==="chat" && (() => {
+          const isParty = chatChannel === "party";
+          const shownMsgs = isParty ? visibleChatMessages : worldMessages;
+          const accentColor = isParty ? "#6366f1" : "#10b981";
+          const borderColor = isParty ? "#4338ca" : "#059669";
+          return (
+            <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+              {/* Channel selector */}
+              <div style={{ flexShrink:0, display:"flex", gap:8, padding:"0.65rem 1rem", background:"rgba(2,6,23,0.9)", borderBottom:"1px solid #1e293b" }}>
+                {[["party","⚔️ Party"],["world","🌍 Mondo"]].map(([ch,label])=>(
+                  <button key={ch} onClick={()=>setChatChannel(ch)} style={{
+                    padding:"0.45rem 1.1rem", borderRadius:6, cursor:"pointer",
+                    fontFamily:"'Cinzel',serif", fontSize:"0.8rem", fontWeight:700, letterSpacing:"0.04em",
+                    background: chatChannel===ch ? (ch==="party"?"rgba(99,102,241,0.25)":"rgba(16,185,129,0.2)") : "rgba(15,23,42,0.6)",
+                    border: `1px solid ${chatChannel===ch ? (ch==="party"?"#6366f1":"#10b981") : "#334155"}`,
+                    color: chatChannel===ch ? (ch==="party"?"#a5b4fc":"#6ee7b7") : "#64748b",
+                    transition:"all 0.15s",
+                  }}>{label}</button>
+                ))}
+                {isParty && <span style={{ marginLeft:"auto", color:"#475569", fontSize:"0.72rem", alignSelf:"center" }}>Codice party: {code || "—"}</span>}
+                {!isParty && <span style={{ marginLeft:"auto", color:"#475569", fontSize:"0.72rem", alignSelf:"center" }}>Visibile a tutti i giocatori</span>}
               </div>
-            </div>
-
-            {/* ── Rest panel ── */}
-            {code && !combat?.active && (
-              <div style={{ flexShrink:0, background:"rgba(2,10,2,0.9)", borderBottom:"1px solid rgba(34,197,94,0.2)", padding:"0.65rem 1rem" }}>
-                {qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date() ? (
-                  <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
-                    <div style={{ flex:1 }}>
-                      <div style={{ color:"#86efac", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>
-                        {qs.rest.type === "short" ? "🌙 Riposo Breve" : "🌅 Riposo Lungo"} in corso
-                      </div>
-                      <div style={{ color:"#4ade80", fontSize:"1.1rem", fontFamily:"'Cinzel',serif", fontWeight:700 }}>
-                        {restTimeLeft ? `${restTimeLeft.mm}:${String(restTimeLeft.ss).padStart(2,"0")}` : "Quasi finito..."}
-                      </div>
-                      <div style={{ color:"#166534", fontSize:"0.65rem" }}>
-                        {qs.rest.type === "short" ? "Mezza cura + metà incantesimi al termine" : "Cura completa + tutti gli incantesimi al termine"}
-                      </div>
-                    </div>
-                    {(partyPlayers.length === 0 || partyPlayers[0]?.id === myId) && (
-                      <button onClick={cancelRest} style={{ padding:"0.4rem 0.8rem", background:"rgba(127,29,29,0.5)", border:"1px solid #ef4444", borderRadius:4, color:"#fca5a5", cursor:"pointer", fontSize:"0.72rem", fontFamily:"inherit" }}>
-                        ✕ Interrompi
-                      </button>
-                    )}
-                  </div>
-                ) : (
-                  (() => {
-                    const isLeader = partyPlayers.length === 0 || partyPlayers[0]?.id === myId;
-                    return isLeader ? (
-                      <div style={{ display:"flex", gap:6, flexWrap:"wrap", alignItems:"center" }}>
-                        <span style={{ color:"#4ade80", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em", marginRight:4 }}>🏕️ Riposo:</span>
-                        <button onClick={()=>startRest("short")} style={{ padding:"0.35rem 0.8rem", background:"rgba(20,83,45,0.5)", border:"1px solid #16a34a", borderRadius:4, color:"#86efac", cursor:"pointer", fontSize:"0.72rem", fontFamily:"inherit", fontWeight:700 }}>
-                          🌙 Breve <span style={{ color:"#4ade80", fontSize:"0.65rem" }}>(30 min)</span>
-                        </button>
-                        <button onClick={()=>startRest("long")} style={{ padding:"0.35rem 0.8rem", background:"rgba(20,83,45,0.7)", border:"1px solid #15803d", borderRadius:4, color:"#4ade80", cursor:"pointer", fontSize:"0.72rem", fontFamily:"inherit", fontWeight:700 }}>
-                          🌅 Lungo <span style={{ color:"#86efac", fontSize:"0.65rem" }}>(1 ora)</span>
-                        </button>
-                        <span style={{ color:"#166534", fontSize:"0.62rem" }}>Solo fuori dal combattimento</span>
-                      </div>
-                    ) : null;
-                  })()
-                )}
-              </div>
-            )}
-
-            {/* ── Party gate OR messages + input ── */}
-            {!code ? (
-              <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"2rem", textAlign:"center", background:"rgba(10,5,1,0.7)" }}>
-                <div style={{ fontSize:"3rem", marginBottom:"1rem", filter:"grayscale(0.4)" }}>🚪</div>
-                <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#92400e", fontSize:"1rem", marginBottom:"0.7rem" }}>La porta è sbarrata</div>
-                <div style={{ color:"#78350f", fontSize:"0.85rem", maxWidth:300, lineHeight:1.7, fontFamily:"'Crimson Pro',Georgia,serif" }}>
-                  L'oste ti fissa senza muoversi.<br/>
-                  <em>"Torna con il tuo gruppo."</em><br/><br/>
-                  Unisciti a un Party per varcare la soglia della Taverna Storta.
-                </div>
-              </div>
-            ) : (<>
-              <div style={{ flex:1, overflowY:"auto", padding:"0.8rem", display:"flex", flexDirection:"column", gap:7, background:"rgba(10,5,1,0.62)" }}>
-                {visibleChatMessages.length === 0 && (
+              {/* Messages */}
+              <div style={{ flex:1, overflowY:"auto", padding:"0.8rem", display:"flex", flexDirection:"column", gap:6, background:"rgba(2,6,23,0.45)" }}>
+                {shownMsgs.length === 0 && (
                   <div style={{ textAlign:"center", padding:"3rem 1rem" }}>
-                    <div style={{ fontSize:"2.5rem", marginBottom:"0.6rem" }}>🍺</div>
-                    <div style={{ color:"#78350f", fontFamily:"'Crimson Pro',Georgia,serif", fontSize:"0.88rem", fontStyle:"italic" }}>Il camino crepita. Nessuno ha ancora aperto bocca.</div>
-                    <div style={{ color:"#6b5030", fontSize:"0.78rem", marginTop:"0.4rem" }}>Sii il primo a parlare — come il tuo personaggio.</div>
+                    <div style={{ fontSize:"2.5rem", marginBottom:"0.6rem" }}>{isParty ? "⚔️" : "🌍"}</div>
+                    <div style={{ color:"#475569", fontSize:"0.86rem" }}>Nessun messaggio ancora.</div>
+                    <div style={{ color:"#334155", fontSize:"0.78rem", marginTop:"0.4rem" }}>Sii il primo a scrivere.</div>
                   </div>
                 )}
-                {visibleChatMessages.map(msg => (
-                  <div key={msg.id} className="msg-in" style={{ padding:"0.6rem 0.9rem", borderRadius:6, background:"rgba(40,18,4,0.7)", borderLeft:"3px solid #92400e", boxShadow:"0 2px 8px rgba(0,0,0,0.3)" }}>
-                    {msg.author && (
-                      <div style={{ fontSize:"0.6rem", letterSpacing:"0.12em", textTransform:"uppercase", color:"#b45309", marginBottom:3, fontFamily:"'Cinzel',serif" }}>{msg.author}</div>
-                    )}
-                    <div style={{ fontSize:"0.9rem", lineHeight:1.7, color:"#e8d5b0", fontFamily:"'Crimson Pro',Georgia,serif", fontStyle:"italic" }} dangerouslySetInnerHTML={{ __html: fmt(msg.content) }} />
+                {shownMsgs.map(msg => (
+                  <div key={msg.id} style={{ padding:"0.55rem 0.85rem", borderRadius:6, background:"rgba(15,23,42,0.82)", borderLeft:`3px solid ${accentColor}`, display:"flex", flexDirection:"column", gap:2 }}>
+                    <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:8 }}>
+                      <span style={{ fontSize:"0.68rem", letterSpacing:"0.1em", textTransform:"uppercase", color:accentColor, fontFamily:"'Cinzel',serif", fontWeight:700 }}>{msg.author || "Anonimo"}</span>
+                      {!isParty && msg.party_code && msg.party_code !== "__world__" && (
+                        <span style={{ fontSize:"0.62rem", color:"#334155" }}>[{msg.party_code}]</span>
+                      )}
+                    </div>
+                    <div style={{ fontSize:"0.88rem", lineHeight:1.6, color:"#e2e8f0" }} dangerouslySetInnerHTML={{ __html: fmt(msg.content) }} />
                   </div>
                 ))}
                 <div ref={msgEnd} />
               </div>
-              <div style={{ display:"flex", gap:8, padding:"0.7rem", borderTop:"1px solid rgba(180,100,20,0.3)", background:"rgba(15,7,1,0.95)", flexShrink:0 }}>
+              {/* Input */}
+              <div style={{ display:"flex", gap:8, padding:"0.65rem 0.8rem", borderTop:`1px solid ${borderColor}33`, background:"rgba(2,6,23,0.95)", flexShrink:0 }}>
                 <input ref={inputRef}
-                  style={{ flex:1, padding:"0.65rem 0.9rem", background:"rgba(40,18,4,0.5)", border:"1px solid rgba(146,64,14,0.5)", borderRadius:4, color:"#e8d5b0", fontFamily:"'Crimson Pro',Georgia,serif", fontSize:"0.92rem", fontStyle:"italic" }}
-                  placeholder={`${me?.name || "Il tuo personaggio"} dice…`}
+                  style={{ flex:1, padding:"0.6rem 0.85rem", background:"rgba(15,23,42,0.7)", border:`1px solid ${borderColor}55`, borderRadius:6, color:"#e2e8f0", fontSize:"0.9rem", outline:"none" }}
+                  placeholder={isParty ? `${me?.name || "Tu"} al party…` : `${me?.name || "Tu"} al mondo…`}
                   value={input} onChange={e=>setInput(e.target.value)}
                   onKeyDown={e=>e.key==="Enter"&&handleInput()} autoComplete="off" />
-                <button onClick={handleInput} style={{ padding:"0.65rem 1.1rem", background:"#78350f", border:"1px solid #92400e", borderRadius:4, color:"#fde68a", cursor:"pointer", fontSize:"1rem" }}>🍺</button>
+                <button onClick={handleInput} style={{ padding:"0.6rem 1rem", background:isParty?"rgba(99,102,241,0.3)":"rgba(16,185,129,0.3)", border:`1px solid ${accentColor}`, borderRadius:6, color:isParty?"#a5b4fc":"#6ee7b7", cursor:"pointer", fontSize:"1rem", flexShrink:0 }}>
+                  {isParty ? "⚔️" : "🌍"}
+                </button>
               </div>
-            </>)}
-          </div>
-        )}
+            </div>
+          );
+        })()}
         {tab==="level" && (
           <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(2,6,23,0.45)" }}>
             <div style={{ maxWidth:760, margin:"0 auto" }}>
