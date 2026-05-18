@@ -350,12 +350,20 @@ export default function StoryEditorPanel({ dbGetPartyState, dbSavePartyState, ST
     URL.revokeObjectURL(url);
   }
 
+  function slugify(title) {
+    return (title || "storia").toLowerCase()
+      .replace(/[àáâã]/g,"a").replace(/[èéê]/g,"e").replace(/[ìíî]/g,"i")
+      .replace(/[òóô]/g,"o").replace(/[ùúû]/g,"u")
+      .replace(/[^a-z0-9]+/g,"_").replace(/^_+|_+$/g,"");
+  }
+
   function normalizeImportedStory(parsed) {
-    const newId = "storia_" + uid();
+    const title = parsed.title || "Storia importata";
+    const newId = parsed.id ? parsed.id : slugify(title);
     const base = {
       ...newStory(),
       id: newId,
-      title: parsed.title || "Storia importata",
+      title,
       description: parsed.description || parsed.longDescription || parsed.shortDescription || "",
       emoji: parsed.emoji || "📖",
       difficulty: parsed.difficulty || "normal",
