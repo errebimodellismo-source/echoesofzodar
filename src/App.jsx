@@ -114,8 +114,8 @@ const LEGENDARY_ITEMS = [
   { id:"leg_dito_strabo", name:"Dito di Strabo",      emoji:"☝️",  type:"weapon", weapon_die:"100d20", bonus_atk:20, desc:"Il dito puntato di Strabo — ogni colpo riscrive la realtà stessa" },
 ];
 
-const XP_TABLE = [0,0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000];
-function xpForLevel(l){ const lv = Math.max(1,Math.min(20,l)); return XP_TABLE[lv] ?? XP_TABLE[20]; }
+const XP_TABLE = [0,0,300,900,2700,6500,14000,23000,34000,48000,64000,85000,100000,120000,140000,165000,195000,225000,265000,305000,355000,415000,480000,550000,630000,720000,820000,930000,1050000,1180000,1320000,1470000,1630000,1800000,1980000,2170000,2370000,2580000,2800000,3030000,3270000];
+function xpForLevel(l){ const lv = Math.max(1,Math.min(40,l)); return XP_TABLE[lv] ?? XP_TABLE[40]; }
 
 const ACHIEVEMENTS = [
   { id:'first_blood',   tier:1, icon:'🩸', title:'Primo Sangue',      desc:'Uccidi il tuo primo mostro in battaglia',            check:(s)=>s.monstersKilled>=1 },
@@ -3441,7 +3441,7 @@ function MasterPanel({ setScreen, authUser }) {
               <div>
                 <label style={labelStyle}>Livello minimo</label>
                 <div style={{ color:"#64748b", fontSize:"0.7rem", marginBottom:4 }}>Chi è sotto questo livello non vede la missione. Usa 1 per tutti.</div>
-                <input style={inputStyle} type="number" min="1" max="20" value={editQ.minLevel || 1} onChange={e=>setEditQ(q=>({...q,minLevel:Math.max(1,+e.target.value)}))} />
+                <input style={inputStyle} type="number" min="1" max="40" value={editQ.minLevel || 1} onChange={e=>setEditQ(q=>({...q,minLevel:Math.max(1,+e.target.value)}))} />
               </div>
               <div>
                 <label style={labelStyle}>Luogo / Ambientazione</label>
@@ -3887,7 +3887,7 @@ function MasterDungeonView() {
             </div>
             <div>
               <label style={{ color:'#94a3b8', fontSize:'0.75rem', display:'block', marginBottom:4 }}>Livello party: {partyLevel}</label>
-              <input type='range' min={1} max={20} value={partyLevel} onChange={e=>setPartyLevel(+e.target.value)} style={{ width:'100%', marginTop:6 }} />
+              <input type='range' min={1} max={40} value={partyLevel} onChange={e=>setPartyLevel(+e.target.value)} style={{ width:'100%', marginTop:6 }} />
             </div>
             <div>
               <label style={{ color:'#94a3b8', fontSize:'0.75rem', display:'block', marginBottom:4 }}>Difficoltà</label>

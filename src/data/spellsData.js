@@ -397,6 +397,13 @@ export const SPELLS = {
       {id:"af42",name:"Protocollo Nemesi",emoji:"🎯",dmg:"8d10",type:"damage",slots:4,desc:"Analizza i punti deboli e colpisce con precisione chirurgica — danno raddoppiato"},
       {id:"af43",name:"Mech da Battaglia",emoji:"🦾",dmg:"0",type:"summon",slots:4,desc:"Deploya un mech da battaglia completamente armato",summon:{name:"Mech da Battaglia",emoji:"🦾",hp:170,atk:38,def:22,dmgDie:"4d12"},maxSummons:4},
     ],
+    5:[
+      {id:"af51",name:"Protocollo Overkill",emoji:"💥",dmg:"14d12",type:"damage",slots:5,desc:"Attiva TUTTI i sistemi d'arma contemporaneamente su ogni nemico presente"},
+      {id:"af52",name:"Bomba Nucleare Arcana",emoji:"☢️",dmg:"12d12",type:"damage",slots:5,desc:"La bomba definitiva — distrugge l'intero campo di battaglia"},
+      {id:"af53",name:"Titano Meccanico",emoji:"🤖",dmg:"0",type:"summon",slots:5,desc:"Il capolavoro dell'Artefice: un titano meccanico invincibile",summon:{name:"Titano Meccanico",emoji:"🤖",hp:250,atk:48,def:30,dmgDie:"6d12"},maxSummons:5},
+    ],
+  },
+
   seductress:{
     0:[
       {id:"sd00",name:"Tocco Infuocato",   emoji:"🔥",dmg:"2d8", type:"damage",slots:0,desc:"Carezza demoniaca che brucia l'anima — gratuita ogni turno"},
@@ -428,13 +435,6 @@ export const SPELLS = {
       {id:"sd51",name:"Forma Demoniaca",        emoji:"😈",dmg:"0",    type:"buff",   slots:5,desc:"Si trasforma nella sua vera forma: +15 MAG, +8 INIT, +10 ATK per 2 round"},
       {id:"sd52",name:"Apocalisse del Desiderio",emoji:"💀",dmg:"14d10",type:"drain", slots:5,desc:"Il potere assoluto della seduzione: danno cosmico su tutti i nemici, cura totale della Seduttrice"},
       {id:"sd53",name:"Dominio Totale",         emoji:"👑",dmg:"0",    type:"control",slots:5,desc:"Nessuno resiste: TUTTI i nemici saltano il turno e si attaccano a vicenda per 1 round"},
-    ],
-  },
-
-    5:[
-      {id:"af51",name:"Protocollo Overkill",emoji:"💥",dmg:"14d12",type:"damage",slots:5,desc:"Attiva TUTTI i sistemi d'arma contemporaneamente su ogni nemico presente"},
-      {id:"af52",name:"Bomba Nucleare Arcana",emoji:"☢️",dmg:"12d12",type:"damage",slots:5,desc:"La bomba definitiva — distrugge l'intero campo di battaglia"},
-      {id:"af53",name:"Titano Meccanico",emoji:"🤖",dmg:"0",type:"summon",slots:5,desc:"Il capolavoro dell'Artefice: un titano meccanico invincibile",summon:{name:"Titano Meccanico",emoji:"🤖",hp:250,atk:48,def:30,dmgDie:"6d12"},maxSummons:5},
     ],
   },
 };
