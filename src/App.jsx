@@ -9718,19 +9718,35 @@ function GameScreen({ myId, setScreen, authUser }) {
       const countNow = myCurrentSummons.length < maxSummons ? myCurrentSummons.length + 1 : maxSummons;
       log += `💀 **${s.name}** (Lv.${me.level||1}) evocato al fianco di ${attacker.name}! (${countNow}/${maxSummons})\n❤️ ${summonHp} HP · ⚔️ ${summonAtk} ATK · 🛡️ ${summonDef} DEF\nAttaccherà automaticamente ogni turno.`;
     } else if(spell.type === "drain") {
-      // Danno al nemico + cura il caster per una % del danno
       const drainPct = spell.drainPct || 0.5;
       const base = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg,8), notation:spell.dmg, label:`Drenaggio ${spell.dmg}`, themeColor:"#f43f8e" });
       const bonus = Math.floor((attacker.mag||0)/2);
-      const dmg = Math.max(1, base + bonus - Math.floor(target.def/2));
-      const heal = Math.floor(dmg * drainPct);
-      newCombatants[tidx] = { ...target, hp: Math.max(0, target.hp - dmg) };
-      const attackerCombIdx = newCombatants.findIndex(c => c.id === attacker.id);
-      if(attackerCombIdx !== -1) {
-        newCombatants[attackerCombIdx] = { ...newCombatants[attackerCombIdx], hp: Math.min(newCombatants[attackerCombIdx].maxHp, newCombatants[attackerCombIdx].hp + heal) };
+      // drain può colpire tutti i nemici (area) o uno solo
+      if(spell.area) {
+        const aliveEnemies = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
+        let totalHeal = 0;
+        let areaLog = "";
+        for(const en of aliveEnemies) {
+          const dmg = Math.max(1, base + bonus - Math.floor(en.def/2));
+          const idx = newCombatants.findIndex(c=>c.id===en.id);
+          newCombatants[idx] = {...en, hp:Math.max(0,en.hp-dmg)};
+          totalHeal += Math.floor(dmg * drainPct);
+          spellDmgToLog += dmg;
+          areaLog += `\n💥 ${en.name}: -${dmg} HP`;
+        }
+        const aidx = newCombatants.findIndex(c=>c.id===attacker.id);
+        if(aidx !== -1) newCombatants[aidx] = {...newCombatants[aidx], hp:Math.min(newCombatants[aidx].maxHp, newCombatants[aidx].hp+totalHeal)};
+        log += `💋 **${spell.name}** colpisce TUTTI i nemici!${areaLog}\n💗 Cura totale: **+${totalHeal} HP**`;
+      } else {
+        const dtidx = newCombatants.findIndex(c=>c.id===target.id);
+        const dmg = Math.max(1, base + bonus - Math.floor(target.def/2));
+        const heal = Math.floor(dmg * drainPct);
+        newCombatants[dtidx] = {...target, hp:Math.max(0,target.hp-dmg)};
+        const aidx = newCombatants.findIndex(c=>c.id===attacker.id);
+        if(aidx !== -1) newCombatants[aidx] = {...newCombatants[aidx], hp:Math.min(newCombatants[aidx].maxHp, newCombatants[aidx].hp+heal)};
+        spellDmgToLog = dmg;
+        log += `💋 **${spell.name}**\n💥 Danno: **${dmg}** a ${target.name}\n💗 Cura: **+${heal} HP**\n❤️ ${target.name}: ${newCombatants[dtidx].hp}/${target.maxHp} HP`;
       }
-      spellDmgToLog = dmg;
-      log += `💋 **${spell.name}**\n💥 Danno: **${dmg}** a ${target.name}\n💗 Cura: **+${heal} HP** alla Seduttrice\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`;
     } else if(spell.type === "reanimate") {
       // Anima l'ultimo nemico caduto come alleato non-morto
       const deadEnemy = [...newCombatants].reverse().find(c => !c.isPlayer && c.hp <= 0);
@@ -9780,6 +9796,37 @@ function GameScreen({ myId, setScreen, authUser }) {
       } else {
         log += `✝️ Nessun alleato caduto da riportare in vita.`;
       }
+    } else if(spell.type === "control") {
+      // Stordisce/ammagli il bersaglio più forte o tutti
+      if(spell.area) {
+        const aliveEnemies = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
+        newCombatants = newCombatants.map(c => (!c.isPlayer && c.hp>0) ? {...c, statusEffects:[...(c.statusEffects||[]),{type:"stun",duration:1}]} : c);
+        log += `💜 **${spell.name}**\nTutti i nemici sono ammaliati e saltano il prossimo turno!\n${aliveEnemies.map(e=>`• ${e.name}`).join("\n")}`;
+      } else {
+        const strongestEnemy = [...newCombatants.filter(c=>!c.isPlayer&&c.hp>0)].sort((a,b)=>(b.atk||0)-(a.atk||0))[0] || target;
+        const cidx = newCombatants.findIndex(c=>c.id===strongestEnemy.id);
+        newCombatants[cidx] = {...newCombatants[cidx], statusEffects:[...(newCombatants[cidx].statusEffects||[]),{type:"stun",duration:1}]};
+        log += `💜 **${spell.name}**\n${strongestEnemy.name} è ammaliato/stordito e salta il prossimo turno!`;
+      }
+    } else if(spell.type === "defense") {
+      // Buff difensivo temporaneo sul caster
+      const aidx = newCombatants.findIndex(c=>c.id===attacker.id);
+      if(aidx !== -1) newCombatants[aidx] = {...newCombatants[aidx], statusEffects:[...(newCombatants[aidx].statusEffects||[]),{type:"shield",duration:1}]};
+      log += `🌫️ **${spell.name}**\n${attacker.name} crea un'illusione protettiva — assorbirà il prossimo attacco nemico!`;
+    } else if(spell.type === "buff") {
+      // Potenzia il caster (es. Forma Demoniaca)
+      const aidx = newCombatants.findIndex(c=>c.id===attacker.id);
+      if(aidx !== -1) {
+        const boosted = {...newCombatants[aidx],
+          mag:  (newCombatants[aidx].mag||0)  + (spell.buffMag||15),
+          atk:  (newCombatants[aidx].atk||0)  + (spell.buffAtk||10),
+          init: (newCombatants[aidx].init||0)  + (spell.buffInit||8),
+          statusEffects:[...(newCombatants[aidx].statusEffects||[]),{type:"buff",duration:spell.buffDuration||2}]
+        };
+        newCombatants[aidx] = boosted;
+        newSpellMasterBuffs = {...spellMasterBuffs, [myId]: {...spellMyBuffs, crit: (spellMyBuffs.crit||0)+1}};
+      }
+      log += `😈 **${spell.name}**\n${attacker.name} si trasforma! +${spell.buffMag||15} MAG · +${spell.buffAtk||10} ATK · +${spell.buffInit||8} INIT per ${spell.buffDuration||2} round!`;
     } else {
       log += `${spell.desc || "Effetto speciale"}`;
     }
