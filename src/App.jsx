@@ -1770,6 +1770,52 @@ async function dbSaveUserMasterMeta(user, registeredAt, activeCharacterId, afk =
   if(error) console.warn("Impossibile salvare metadati utente:", error.message);
 }
 
+async function dbSaveSessionEvent(user, eventType) {
+  if(!user?.id || !user?.email) return;
+  await supabase.from("messages").insert({
+    party_code: "__users",
+    author: `session:${user.id}`,
+    content: JSON.stringify({ userId: user.id, email: user.email, event: eventType, ts: new Date().toISOString() }),
+    type: "user_session",
+  });
+}
+
+async function dbGetSessionHistory(limitDays = 7) {
+  const since = new Date(Date.now() - limitDays * 86400000).toISOString();
+  const { data } = await supabase
+    .from("messages")
+    .select("content,created_at")
+    .eq("type", "user_session")
+    .gte("created_at", since)
+    .order("created_at", { ascending: true })
+    .limit(2000);
+  // Group events into sessions per user
+  const sessionsByUser = {};
+  for(const row of (data || [])) {
+    let parsed;
+    try { parsed = JSON.parse(row.content); } catch { continue; }
+    const { userId, email, event, ts } = parsed;
+    if(!userId) continue;
+    if(!sessionsByUser[userId]) sessionsByUser[userId] = { email, sessions: [], openSession: null };
+    const u = sessionsByUser[userId];
+    if(event === "login") {
+      u.openSession = { start: ts, end: null };
+    } else if(event === "logout" && u.openSession) {
+      u.openSession.end = ts;
+      u.sessions.push({ ...u.openSession });
+      u.openSession = null;
+    }
+  }
+  // Close any open sessions (user still online or page not closed cleanly)
+  for(const u of Object.values(sessionsByUser)) {
+    if(u.openSession) {
+      u.sessions.push({ ...u.openSession, end: null });
+      u.openSession = null;
+    }
+  }
+  return sessionsByUser;
+}
+
 async function dbGetUserMasterMeta() {
   const { data, error } = await supabase
     .from("messages")
@@ -2200,12 +2246,16 @@ export default function App() {
   useEffect(()=>{
     supabase.auth.getSession().then(({data:{session}})=>{
       setAuthUser(session?.user || null);
-      if(session?.user) dbSaveUserMasterMeta(session.user);
+      if(session?.user) { dbSaveUserMasterMeta(session.user); dbSaveSessionEvent(session.user, "login"); }
       setAuthLoading(false);
     });
-    const {data:{subscription}} = supabase.auth.onAuthStateChange((_,session)=>{
+    const {data:{subscription}} = supabase.auth.onAuthStateChange((event, session)=>{
       setAuthUser(session?.user || null);
-      if(session?.user) dbSaveUserMasterMeta(session.user);
+      if(session?.user) {
+        dbSaveUserMasterMeta(session.user);
+        if(event === "SIGNED_IN") dbSaveSessionEvent(session.user, "login");
+        if(event === "SIGNED_OUT") dbSaveSessionEvent(session.user, "logout");
+      }
     });
     return ()=>subscription.unsubscribe();
   },[]);
@@ -2216,7 +2266,15 @@ export default function App() {
     const readAfk = () => activeId ? localStorage.getItem(`afk_${activeId}`) === '1' : false;
     dbSaveUserMasterMeta(authUser, null, activeId, readAfk());
     const timer = setInterval(() => dbSaveUserMasterMeta(authUser, null, activeId, readAfk()), USER_HEARTBEAT_MS);
-    return () => clearInterval(timer);
+    const handleUnload = () => dbSaveSessionEvent(authUser, "logout");
+    const handleVisibility = () => { if(document.visibilityState === "hidden") dbSaveSessionEvent(authUser, "logout"); };
+    window.addEventListener("beforeunload", handleUnload);
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => {
+      clearInterval(timer);
+      window.removeEventListener("beforeunload", handleUnload);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [authUser, myId]);
 
   // Inactivity timeout — 30 minutes no interaction → full signOut
@@ -5016,16 +5074,17 @@ function OnlineView() {
   const [players, setPlayers] = useState({});
   const [now, setNow] = useState(() => Date.now());
   const [loading, setLoading] = useState(true);
+  const [sessions, setSessions] = useState({});
 
   useEffect(() => {
     let alive = true;
     const load = async () => {
-      const [userMeta, { data: ps }] = await Promise.all([
+      const [userMeta, { data: ps }, sessionData] = await Promise.all([
         dbGetUserMasterMeta().catch(() => ({})),
         supabase.from("players").select("id,name,class,race,level,account_id,party_code"),
+        dbGetSessionHistory(7).catch(() => ({})),
       ]);
       if(!alive) return;
-      // Build lookup: accountId → characters
       const byAccount = {};
       for(const p of (ps || [])) {
         if(!p.account_id) continue;
@@ -5033,6 +5092,7 @@ function OnlineView() {
         byAccount[p.account_id].push(p);
       }
       setPlayers(byAccount);
+      setSessions(sessionData);
       const sorted = Object.values(userMeta)
         .sort((a, b) => Date.parse(b.lastSeenAt || 0) - Date.parse(a.lastSeenAt || 0));
       setUsers(sorted);
@@ -5114,6 +5174,53 @@ function OnlineView() {
 
       {!loading && users.length === 0 && (
         <div style={{ textAlign:"center", color:"#4b5563", padding:"2rem" }}>Nessun dato disponibile — gli utenti vengono tracciati dal primo login in poi.</div>
+      )}
+
+      {/* Session history */}
+      {Object.keys(sessions).length > 0 && (
+        <div style={{ marginTop:"1.5rem" }}>
+          <div style={{ fontSize:"0.7rem", color:"#6d28d9", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:10 }}>
+            📋 Cronologia sessioni — ultimi 7 giorni
+          </div>
+          {Object.entries(sessions)
+            .sort((a,b) => {
+              const al = a[1].sessions.at(-1)?.start || "";
+              const bl = b[1].sessions.at(-1)?.start || "";
+              return bl.localeCompare(al);
+            })
+            .map(([userId, data]) => (
+              <div key={userId} style={{ background:"rgba(15,23,42,0.9)", border:"1px solid #1e293b", borderRadius:8, padding:"0.75rem 0.9rem", marginBottom:8 }}>
+                <div style={{ color:"#c4b5fd", fontWeight:700, fontSize:"0.8rem", marginBottom:6 }}>{data.email || userId}</div>
+                <div style={{ display:"flex", flexDirection:"column", gap:3 }}>
+                  {[...data.sessions].reverse().slice(0, 10).map((s, i) => {
+                    const start = new Date(s.start);
+                    const end = s.end ? new Date(s.end) : null;
+                    const durMs = end ? end - start : (now - start);
+                    const isLive = !s.end;
+                    return (
+                      <div key={i} style={{ display:"flex", alignItems:"center", gap:8, fontSize:"0.72rem", padding:"3px 0", borderBottom:"1px solid #0f172a" }}>
+                        <span style={{ color:"#22c55e", minWidth:6 }}>{isLive ? "●" : "○"}</span>
+                        <span style={{ color:"#94a3b8", minWidth:100 }}>
+                          {start.toLocaleDateString("it-IT", { day:"2-digit", month:"2-digit" })} {start.toLocaleTimeString("it-IT", { hour:"2-digit", minute:"2-digit" })}
+                        </span>
+                        <span style={{ color:"#475569" }}>→</span>
+                        <span style={{ color: isLive ? "#22c55e" : "#94a3b8", minWidth:50 }}>
+                          {isLive ? "ora" : end.toLocaleTimeString("it-IT", { hour:"2-digit", minute:"2-digit" })}
+                        </span>
+                        <span style={{ color:"#fbbf24", fontWeight:600, marginLeft:4 }}>
+                          {formatDuration(durMs)}
+                        </span>
+                        {isLive && <span style={{ color:"#22c55e", fontSize:"0.62rem" }}>● LIVE</span>}
+                      </div>
+                    );
+                  })}
+                  {data.sessions.length > 10 && (
+                    <div style={{ fontSize:"0.65rem", color:"#475569", marginTop:2 }}>... e altre {data.sessions.length - 10} sessioni</div>
+                  )}
+                </div>
+              </div>
+            ))}
+        </div>
       )}
 
       <div style={{ marginTop:"1rem", fontSize:"0.65rem", color:"#334155", textAlign:"right" }}>
