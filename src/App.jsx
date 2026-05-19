@@ -11228,7 +11228,7 @@ ${stepText(step)}`, "quest","Master");
             <ShopView
               key={qs?.longRestSeed || 0}
               me={me}
-              items={catalogItems.filter(i=>i.available || i.id==="potion_escape")}
+              items={catalogItems.filter(i=>i.available || i.id==="potion_escape" || i.id==="crystal_sintonia")}
               loading={inventoryLoading}
               error={null}
               inventoryCounts={inventoryCounts}
