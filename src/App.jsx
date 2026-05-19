@@ -1254,6 +1254,7 @@ function normalizeQuestChoices(choices) {
   return Object.entries(choices).map(([key, value]) => ({
     label: value?.label || key,
     ...value,
+    quality: value?.quality || key, // preserve good/neutral/bad
     next: value?.next ?? (value?.nextStep ? Number(value.nextStep) - 1 : undefined),
   }));
 }
@@ -7594,6 +7595,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const isMobile = useMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [lootedStepKey, setLootedStepKey] = useState(null);
+  const [choiceFeedback, setChoiceFeedback] = useState(null); // { quality, label, xp, gold }
   const [catalogItems, setCatalogItems] = useState(DEFAULT_ITEMS);
   const [inventory, setInventory] = useState([]);
   const [equipment, setEquipment] = useState({ weapon:null, armor:null, shield:null, accessory:null });
@@ -10145,23 +10147,35 @@ ${stepText(step)}`, "quest","Master");
     const choice = stepData.choices[choiceIndex];
     if(!choice) return;
 
-    const isCorrect = choice.correct === true;
+    const quality = choice.quality || (choice.correct === true ? "good" : "bad");
+    const xpE = Math.max(0, Number(choice.xp)||0);
+    const goldE = Math.max(0, Number(choice.gold)||0);
     await addMsg(`🎯 **Scelta:** ${choice.label}`, "quest", "Master");
 
-    if(isCorrect) {
-      const xpE = Math.max(0, Number(choice.xp)||0);
-      const goldE = Math.max(0, Number(choice.gold)||0);
+    if(quality === "good" || choice.correct === true) {
       if(xpE||goldE) {
         for(const p of partyPlayers) {
           let up={...p,xp:p.xp+xpE,gold:p.gold+goldE};
           await dbSavePlayer(up);
           if(up.id===myId) setMeRaw(up);
         }
-        await addMsg(`✅ Scelta giusta! ⭐ +${xpE} XP a testa — 💰 +${goldE} oro a testa\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, "victory", "Master");
       }
+      await addMsg(`✅ Risposta giusta!${xpE ? ` ⭐ +${xpE} XP a testa` : ""}${goldE ? ` 💰 +${goldE} oro a testa` : ""}`, "victory", "Master");
+    } else if(quality === "neutral") {
+      if(xpE||goldE) {
+        for(const p of partyPlayers) {
+          let up={...p,xp:p.xp+xpE,gold:p.gold+goldE};
+          await dbSavePlayer(up);
+          if(up.id===myId) setMeRaw(up);
+        }
+      }
+      await addMsg(`🟡 Risposta quasi giusta!${xpE ? ` ⭐ +${xpE} XP a testa` : ""}${goldE ? ` 💰 +${goldE} oro a testa` : ""}`, "system", "Master");
     } else {
-      await addMsg(`❌ Hai scelto male... il party non guadagna nulla e avanza comunque.`, "system", "Sistema");
+      await addMsg(`❌ Risposta sbagliata... il party non guadagna nulla e avanza comunque.`, "system", "Sistema");
     }
+
+    setChoiceFeedback({ quality, label: choice.label, xp: xpE, gold: goldE });
+    setTimeout(() => setChoiceFeedback(null), 4000);
 
     const nextStep = choice.next != null ? Number(choice.next) : step+1;
     if(nextStep >= q.steps.length) {
@@ -11141,9 +11155,36 @@ ${stepText(step)}`, "quest","Master");
                     isChoiceStep(stepData) ? false :
                     true; // narrative
                   if(isChoiceStep(stepData)) {
+                    const fb = choiceFeedback;
+                    const fbCfg = fb ? {
+                      good:    { bg:"rgba(21,128,61,0.25)",  border:"#16a34a", color:"#4ade80", icon:"✅", title:"Risposta Giusta!" },
+                      neutral: { bg:"rgba(180,83,9,0.25)",   border:"#d97706", color:"#fbbf24", icon:"🟡", title:"Risposta Quasi Giusta" },
+                      bad:     { bg:"rgba(127,29,29,0.25)",  border:"#dc2626", color:"#f87171", icon:"❌", title:"Risposta Sbagliata" },
+                    }[fb.quality] || null : null;
                     return (
                       <div>
                         <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:12, lineHeight:1.5 }}>{stepData.text}</p>
+
+                        {/* Feedback banner */}
+                        {fb && fbCfg && (
+                          <div style={{ marginBottom:14, padding:"0.9rem 1.1rem", background:fbCfg.bg, border:`2px solid ${fbCfg.border}`, borderRadius:10, animation:"pulse 0.4s ease" }}>
+                            <div style={{ fontFamily:"'Cinzel',serif", color:fbCfg.color, fontSize:"1rem", fontWeight:700, marginBottom:4 }}>
+                              {fbCfg.icon} {fbCfg.title}
+                            </div>
+                            <div style={{ fontSize:"0.8rem", color:"#e2d9c5" }}>
+                              Hai scelto: <em>"{fb.label}"</em>
+                            </div>
+                            {(fb.xp > 0 || fb.gold > 0) ? (
+                              <div style={{ marginTop:6, fontSize:"0.82rem", color:fbCfg.color, fontWeight:600 }}>
+                                {fb.xp > 0 && <span>⭐ +{fb.xp} XP a testa  </span>}
+                                {fb.gold > 0 && <span>💰 +{fb.gold} oro a testa</span>}
+                              </div>
+                            ) : fb.quality !== "bad" ? null : (
+                              <div style={{ marginTop:4, fontSize:"0.78rem", color:"#94a3b8" }}>Nessuna ricompensa ottenuta.</div>
+                            )}
+                          </div>
+                        )}
+
                         <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
                           {stepData.choices?.map((c,i)=>(
                             <button key={i} onClick={()=>chooseQuestOption(i)}
