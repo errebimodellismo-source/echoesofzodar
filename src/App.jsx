@@ -1638,25 +1638,24 @@ function getMonsterImage(monster) {
   if(!monster) return "";
   if(monster.image) return monster.image;
   if(monster.image_url) return monster.image_url;
-  if(!monster.isSummon && monster.name) {
+  if(monster.name) {
     // Try with monster's own id first (e.g. m1-goblin-delle-rovine.png)
-    if(monster.id && monster.id.startsWith("m")) return `/assets/monsters/${monster.id}-${slugifyAssetName(monster.name)}.png`;
-    // For quest-specific enemies (e1, e2...) look up matching monster in catalogue by name
+    if(monster.id && monster.id.match(/^m\d+/)) return `/assets/monsters/${monster.id}-${slugifyAssetName(monster.name)}.png`;
+    // For quest-specific enemies look up matching monster in catalogue by name
     const nameSlug = slugifyAssetName(monster.name);
     const catalogMatch = DEFAULT_MONSTERS.find(m => slugifyAssetName(m.name) === nameSlug);
     if(catalogMatch) return `/assets/monsters/${catalogMatch.id}-${nameSlug}.png`;
-    // Fallback: try by name slug alone (file might exist even without catalogue match)
-    return `/assets/monsters/${nameSlug}.png`;
+    // No file match — fall through to archetype generated image below
   }
   const key = `${monster.id || ""} ${monster.name || ""} ${monster.desc || ""}`.toLowerCase();
   const theme =
     /drago|dragon/.test(key) ? { icon:"🐉", title:"Drago", accent:"#ef4444", accent2:"#f59e0b", bg1:"#2b1010", bg2:"#120808", border:"#991b1b" } :
-    /lich|scheletro|skeleton|spettro|vampir|undead|catacomb/.test(key) ? { icon:"💀", title:"Non-morto", accent:"#c4b5fd", accent2:"#60a5fa", bg1:"#19142c", bg2:"#090b16", border:"#5b21b6" } :
+    /lich|scheletro|skeleton|spettro|vampir|undead|catacomb|zombie|revenant|mummia|wraith|banshee|fantasma|wight|ghoul|ghast/.test(key) ? { icon:"💀", title:"Non-morto", accent:"#c4b5fd", accent2:"#60a5fa", bg1:"#19142c", bg2:"#090b16", border:"#5b21b6" } :
     /demone|demon/.test(key) ? { icon:"😈", title:"Demone", accent:"#fb7185", accent2:"#ef4444", bg1:"#2a0d18", bg2:"#13070c", border:"#9f1239" } :
     /golem|guardiano|guardian|titano|construct|runic/.test(key) ? { icon:"🗿", title:"Costrutto", accent:"#94a3b8", accent2:"#60a5fa", bg1:"#17202b", bg2:"#0a0f16", border:"#475569" } :
-    /ragno|spider|serpente|hydra|lupo|wolf|ratto|boar|cervo|beast|slime|melma/.test(key) ? { icon:monster.emoji || "🐾", title:"Bestia", accent:"#22c55e", accent2:"#84cc16", bg1:"#142218", bg2:"#09110c", border:"#166534" } :
+    /ragno|spider|serpente|hydra|idra|lupo|wolf|ratto|boar|cervo|beast|slime|melma|orso|tigre|leone|bestia|animale|cinghiale|basilisco|coccodrillo|corvo|aquila|grifone|wyvern|viverna/.test(key) ? { icon:monster.emoji || "🐾", title:"Bestia", accent:"#22c55e", accent2:"#84cc16", bg1:"#142218", bg2:"#09110c", border:"#166534" } :
     /mago|strega|cultista|oracle|witch/.test(key) ? { icon:monster.emoji || "🪄", title:"Incantatore", accent:"#a855f7", accent2:"#60a5fa", bg1:"#1e1634", bg2:"#0b0b16", border:"#6d28d9" } :
-    /goblin|orco|orc|gnoll|bandit|cobold|mercenario|knight|armigero/.test(key) ? { icon:monster.emoji || "🪓", title:"Predone", accent:"#f59e0b", accent2:"#ef4444", bg1:"#25160d", bg2:"#0f0908", border:"#92400e" } :
+    /goblin|orco|orc|gnoll|bandit|cobold|coboldo|mercenario|knight|armigero|brigante|pirata|assassin/.test(key) ? { icon:monster.emoji || "🪓", title:"Predone", accent:"#f59e0b", accent2:"#ef4444", bg1:"#25160d", bg2:"#0f0908", border:"#92400e" } :
     monster.isBoss ? { icon:monster.emoji || "👑", title:"Boss", accent:"#fbbf24", accent2:"#fb7185", bg1:"#271915", bg2:"#110b09", border:"#b45309" } :
     { icon:monster.emoji || "👾", title:"Creatura", accent:"#60a5fa", accent2:"#22c55e", bg1:"#172033", bg2:"#0b1120", border:"#334155" };
   return makeArchetypeImage({ ...theme, subtitle:monster.isBoss ? "Boss" : `${monster.hp || 0} HP` });
