@@ -1523,8 +1523,20 @@ function getItemImage(item) {
   if(!item) return "";
   if(item.image) return item.image;
   if(item.image_url) return item.image_url;
+  if(item.id) return `/assets/items/${item.id}.png`;
   const theme = itemImageTheme(item);
   return makeArchetypeImage({ ...theme, icon:item.emoji || theme.icon, title:itemTypeLabel(item.type), subtitle:itemRarityLabel(item.rarity) });
+}
+function ItemImg({ item, size=56, style={} }) {
+  const [useFallback, setUseFallback] = React.useState(false);
+  const src = !useFallback ? `/assets/items/${item?.id}.png` : null;
+  if (!item) return null;
+  if (useFallback || !item.id) {
+    const theme = itemImageTheme(item);
+    const svg = makeArchetypeImage({ ...theme, icon:item.emoji||theme.icon, title:itemTypeLabel(item.type), subtitle:itemRarityLabel(item.rarity) });
+    return <img src={svg} width={size} height={size} style={{ objectFit:'contain', borderRadius:6, ...style }} />;
+  }
+  return <img src={src} width={size} height={size} onError={()=>setUseFallback(true)} style={{ objectFit:'contain', borderRadius:6, ...style }} />;
 }
 function _darkenHex(hex, amt = 28) {
   const n = parseInt((hex||"#888888").replace("#",""), 16);
