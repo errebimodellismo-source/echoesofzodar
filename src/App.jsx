@@ -10601,6 +10601,7 @@ ${stepText(step)}`, "quest","Master");
           <button onClick={toggleAfk} title={isAfk ? "Sei in modalità AFK — non partecipi alle battaglie. Clicca per tornare attivo." : "Sei attivo — clicca per passare in modalità AFK e non essere incluso nelle battaglie."} style={{ marginTop:6, width:"100%", padding:"0.3rem 0.4rem", background: isAfk ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.1)", border:`1px solid ${isAfk ? "#7f1d1d" : "#14532d"}`, borderRadius:4, color: isAfk ? "#f87171" : "#4ade80", fontSize:"0.62rem", cursor:"pointer", letterSpacing:"0.06em", textAlign:"center" }}>
             {isAfk ? "⏸ AFK — Non in battaglia" : "✅ Attivo — Pronto a combattere"}
           </button>
+          <MusicToggleBtn />
         </div>
 
         <div style={{ background:PANEL_BG_SOFT, border:`1px solid ${PANEL_BORDER}`, borderRadius:4, padding:"0.5rem" }}>
@@ -12638,6 +12639,21 @@ function HpBar({ cur, max, red }) {
     </div>
   );
 }
+function MusicToggleBtn() {
+  const [on, setOn] = useState(() => audioManager.musicEnabled);
+  const toggle = () => {
+    const next = !on;
+    audioManager.toggleMusic(next);
+    setOn(next);
+  };
+  return (
+    <button onClick={toggle} title={on ? "Clicca per silenziare la musica" : "Clicca per riattivare la musica"}
+      style={{ marginTop:4, width:"100%", padding:"0.3rem 0.4rem", background: on ? "rgba(109,40,217,0.12)" : "rgba(75,85,99,0.15)", border:`1px solid ${on ? "#4c1d95" : "#374151"}`, borderRadius:4, color: on ? "#c4b5fd" : "#6b7280", fontSize:"0.62rem", cursor:"pointer", letterSpacing:"0.06em", textAlign:"center" }}>
+      {on ? "🎵 Musica ON" : "🔇 Musica OFF"}
+    </button>
+  );
+}
+
 function BigBtn({ children, onClick, gold, dark, icon, disabled }) {
   const base = { padding:"0.6rem 1.2rem", borderRadius:5, cursor:disabled?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.82rem", letterSpacing:"0.06em", border:"none", opacity:disabled?0.45:1, display:"inline-flex", alignItems:"center", gap:6, fontWeight:700, textShadow:"0 1px 2px rgba(0,0,0,0.75)", boxShadow:"0 8px 20px rgba(0,0,0,0.24)" };
   if(gold) return <button onClick={onClick} disabled={disabled} style={{...base,background:"linear-gradient(135deg,#92400e,#d97706)",color:"#fff7ed",border:"1px solid #fbbf24"}}>{icon&&<span>{icon}</span>}{children}</button>;
