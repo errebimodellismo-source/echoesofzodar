@@ -5681,8 +5681,25 @@ function DailyEventBanner({ event, claimed, onClaim, loading }) {
 }
 
 /* ─── DungeonView ─── */
+const DUNGEON_READ_DELAY = 15; // secondi prima che il bottone azione appaia
+
 function DungeonView({ dungeon, me, onRoomAction, loading }) {
   const [riddleAnswer, setRiddleAnswer] = React.useState('');
+  const [readyToAct, setReadyToAct] = React.useState(false);
+  const [countdown, setCountdown] = React.useState(DUNGEON_READ_DELAY);
+  const roomKey = dungeon?.rooms?.[dungeon?.currentRoom]?.id;
+
+  React.useEffect(() => {
+    setReadyToAct(false);
+    setCountdown(DUNGEON_READ_DELAY);
+    const interval = setInterval(() => {
+      setCountdown(c => {
+        if(c <= 1) { clearInterval(interval); setReadyToAct(true); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [roomKey]);
   if (!dungeon?.active) return (
     <div style={{ flex:1, display:'flex', alignItems:'center', justifyContent:'center', padding:'3rem', textAlign:'center' }}>
       <div>
@@ -5743,11 +5760,20 @@ function DungeonView({ dungeon, me, onRoomAction, loading }) {
           </div>
           <p style={{ color:'#cbd5e1', fontSize:'0.88rem', lineHeight:1.7, marginBottom:'1.4rem' }}>{room.desc}</p>
 
+          {/* Countdown badge */}
+          {!readyToAct && (
+            <div style={{ display:'flex', alignItems:'center', gap:8, marginBottom:'0.8rem', padding:'0.5rem 0.9rem', background:'rgba(15,23,42,0.7)', border:'1px solid #334155', borderRadius:8 }}>
+              <span style={{ fontSize:'1rem' }}>⏳</span>
+              <span style={{ color:'#94a3b8', fontSize:'0.82rem' }}>Leggi la stanza… l'azione sarà disponibile tra </span>
+              <span style={{ color:'#fbbf24', fontWeight:700, fontFamily:"'Cinzel',serif", minWidth:20, textAlign:'center' }}>{countdown}s</span>
+            </div>
+          )}
+
           {/* Room-specific UI */}
           {(room.type === 'combat' || room.type === 'boss') && (
             <div>
               <div style={{ color:'#94a3b8', fontSize:'0.78rem', marginBottom:'0.6rem' }}>Nemici: {room.monsters?.map(m=>`${m.emoji||'👾'} ${m.name}`).join(', ')}</div>
-              <button onClick={()=>onRoomAction(room,'combat')} disabled={loading} style={{ width:'100%', padding:'0.8rem', background:'linear-gradient(135deg,#7f1d1d,#dc2626)', border:'1px solid #ef4444', borderRadius:8, color:'#fee2e2', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor:'pointer', fontWeight:700 }}>
+              <button onClick={()=>onRoomAction(room,'combat')} disabled={loading||!readyToAct} style={{ width:'100%', padding:'0.8rem', background: readyToAct ? 'linear-gradient(135deg,#7f1d1d,#dc2626)' : 'rgba(30,30,40,0.5)', border:`1px solid ${readyToAct ? '#ef4444' : '#374151'}`, borderRadius:8, color: readyToAct ? '#fee2e2' : '#4b5563', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor: readyToAct ? 'pointer' : 'not-allowed', fontWeight:700, transition:'all 0.3s' }}>
                 ⚔️ Entra in Battaglia
               </button>
             </div>
@@ -5755,7 +5781,7 @@ function DungeonView({ dungeon, me, onRoomAction, loading }) {
           {room.type === 'trap' && (
             <div>
               <div style={{ color:'#fde68a', fontSize:'0.82rem', marginBottom:'0.6rem' }}>Tiro di {room.skillLabel} contro DC {room.dc} • Fallimento: -{room.failDmg} HP</div>
-              <button onClick={()=>onRoomAction(room,'trap')} disabled={loading} style={{ width:'100%', padding:'0.8rem', background:'linear-gradient(135deg,#78350f,#d97706)', border:'1px solid #f59e0b', borderRadius:8, color:'#fef3c7', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor:'pointer', fontWeight:700 }}>
+              <button onClick={()=>onRoomAction(room,'trap')} disabled={loading||!readyToAct} style={{ width:'100%', padding:'0.8rem', background: readyToAct ? 'linear-gradient(135deg,#78350f,#d97706)' : 'rgba(30,30,40,0.5)', border:`1px solid ${readyToAct ? '#f59e0b' : '#374151'}`, borderRadius:8, color: readyToAct ? '#fef3c7' : '#4b5563', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor: readyToAct ? 'pointer' : 'not-allowed', fontWeight:700, transition:'all 0.3s' }}>
                 ⚠️ Affrontare la Trappola ({room.skillLabel})
               </button>
             </div>
@@ -5763,7 +5789,7 @@ function DungeonView({ dungeon, me, onRoomAction, loading }) {
           {room.type === 'treasure' && (
             <div>
               <div style={{ color:'#fde68a', fontSize:'0.82rem', marginBottom:'0.6rem' }}>Tesoro: 💰 {room.gold} oro (divisi tra i presenti)</div>
-              <button onClick={()=>onRoomAction(room,'treasure')} disabled={loading} style={{ width:'100%', padding:'0.8rem', background:'linear-gradient(135deg,#78350f,#b45309)', border:'1px solid #fbbf24', borderRadius:8, color:'#fef3c7', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor:'pointer', fontWeight:700 }}>
+              <button onClick={()=>onRoomAction(room,'treasure')} disabled={loading||!readyToAct} style={{ width:'100%', padding:'0.8rem', background: readyToAct ? 'linear-gradient(135deg,#78350f,#b45309)' : 'rgba(30,30,40,0.5)', border:`1px solid ${readyToAct ? '#fbbf24' : '#374151'}`, borderRadius:8, color: readyToAct ? '#fef3c7' : '#4b5563', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor: readyToAct ? 'pointer' : 'not-allowed', fontWeight:700, transition:'all 0.3s' }}>
                 💰 Raccogliere il Tesoro
               </button>
             </div>
@@ -5771,7 +5797,7 @@ function DungeonView({ dungeon, me, onRoomAction, loading }) {
           {room.type === 'rest' && (
             <div>
               <div style={{ color:'#86efac', fontSize:'0.82rem', marginBottom:'0.6rem' }}>Recupero: +{room.healPct}% HP massimi</div>
-              <button onClick={()=>onRoomAction(room,'rest')} disabled={loading} style={{ width:'100%', padding:'0.8rem', background:'linear-gradient(135deg,#14532d,#16a34a)', border:'1px solid #22c55e', borderRadius:8, color:'#dcfce7', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor:'pointer', fontWeight:700 }}>
+              <button onClick={()=>onRoomAction(room,'rest')} disabled={loading||!readyToAct} style={{ width:'100%', padding:'0.8rem', background: readyToAct ? 'linear-gradient(135deg,#14532d,#16a34a)' : 'rgba(30,30,40,0.5)', border:`1px solid ${readyToAct ? '#22c55e' : '#374151'}`, borderRadius:8, color: readyToAct ? '#dcfce7' : '#4b5563', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor: readyToAct ? 'pointer' : 'not-allowed', fontWeight:700, transition:'all 0.3s' }}>
                 🔥 Riposare
               </button>
             </div>
@@ -5779,7 +5805,7 @@ function DungeonView({ dungeon, me, onRoomAction, loading }) {
           {room.type === 'choice' && (
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:10 }}>
               {room.options?.map((opt, oi) => (
-                <button key={oi} onClick={()=>onRoomAction(room,'choice',oi)} disabled={loading} style={{ padding:'0.8rem', background:'rgba(15,23,42,0.8)', border:'1px solid #1e3a5f', borderRadius:8, color:'#e2d9c5', fontFamily:"'Cinzel',serif", fontSize:'0.82rem', cursor:'pointer', lineHeight:1.5, textAlign:'left' }}>
+                <button key={oi} onClick={()=>onRoomAction(room,'choice',oi)} disabled={loading||!readyToAct} style={{ padding:'0.8rem', background: readyToAct ? 'rgba(15,23,42,0.8)' : 'rgba(30,30,40,0.4)', border:`1px solid ${readyToAct ? '#1e3a5f' : '#374151'}`, borderRadius:8, color: readyToAct ? '#e2d9c5' : '#4b5563', fontFamily:"'Cinzel',serif", fontSize:'0.82rem', cursor: readyToAct ? 'pointer' : 'not-allowed', lineHeight:1.5, textAlign:'left', transition:'all 0.3s' }}>
                   <div style={{ fontWeight:700, marginBottom:4 }}>{opt.label}</div>
                   <div style={{ color:'#64748b', fontSize:'0.72rem' }}>{opt.desc}</div>
                 </button>
@@ -5796,13 +5822,13 @@ function DungeonView({ dungeon, me, onRoomAction, loading }) {
                 <input
                   value={riddleAnswer}
                   onChange={e => setRiddleAnswer(e.target.value)}
-                  onKeyDown={e => { if(e.key==='Enter' && riddleAnswer.trim()) { onRoomAction(room,'riddle',riddleAnswer.trim()); setRiddleAnswer(''); }}}
+                  onKeyDown={e => { if(e.key==='Enter' && riddleAnswer.trim() && readyToAct) { onRoomAction(room,'riddle',riddleAnswer.trim()); setRiddleAnswer(''); }}}
                   placeholder="La tua risposta..."
                   disabled={loading}
                   style={{ flex:1, padding:'0.7rem 1rem', background:'rgba(15,23,42,0.9)', border:'1px solid #3730a3', borderRadius:8, color:'#e2d9c5', fontSize:'0.88rem', outline:'none' }}
                 />
                 <button
-                  onClick={()=>{ if(riddleAnswer.trim()) { onRoomAction(room,'riddle',riddleAnswer.trim()); setRiddleAnswer(''); }}}
+                  onClick={()=>{ if(riddleAnswer.trim() && readyToAct) { onRoomAction(room,'riddle',riddleAnswer.trim()); setRiddleAnswer(''); }}}
                   disabled={loading || !riddleAnswer.trim()}
                   style={{ padding:'0.7rem 1.2rem', background:'linear-gradient(135deg,#3730a3,#6d28d9)', border:'1px solid #a78bfa', borderRadius:8, color:'#ede9fe', fontFamily:"'Cinzel',serif", fontSize:'0.88rem', cursor:'pointer', fontWeight:700 }}>
                   Rispondere
@@ -5823,7 +5849,7 @@ function DungeonView({ dungeon, me, onRoomAction, loading }) {
                   {room.effect === 'dmg_pct' && `💔 Subisci il ${room.amount}% degli HP massimi come danno`}
                 </div>
               )}
-              <button onClick={()=>onRoomAction(room,'event')} disabled={loading} style={{ width:'100%', padding:'0.8rem', background:'linear-gradient(135deg,#0f172a,#1e293b)', border:'1px solid #475569', borderRadius:8, color:'#e2d9c5', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor:'pointer', fontWeight:700 }}>
+              <button onClick={()=>onRoomAction(room,'event')} disabled={loading||!readyToAct} style={{ width:'100%', padding:'0.8rem', background: readyToAct ? 'linear-gradient(135deg,#0f172a,#1e293b)' : 'rgba(30,30,40,0.5)', border:`1px solid ${readyToAct ? '#475569' : '#374151'}`, borderRadius:8, color: readyToAct ? '#e2d9c5' : '#4b5563', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor: readyToAct ? 'pointer' : 'not-allowed', fontWeight:700, transition:'all 0.3s' }}>
                 📖 Prosegui
               </button>
             </div>
@@ -5834,7 +5860,7 @@ function DungeonView({ dungeon, me, onRoomAction, loading }) {
                 <div style={{ color:'#fdba74', fontSize:'0.85rem', fontWeight:700, marginBottom:4 }}>Offerta richiesta: ❤️ -{room.hpCost}% HP massimi</div>
                 <div style={{ color:'#94a3b8', fontSize:'0.78rem' }}>In cambio: <span style={{ color:'#fcd34d' }}>{room.buffLabel}</span></div>
               </div>
-              <button onClick={()=>onRoomAction(room,'shrine')} disabled={loading} style={{ width:'100%', padding:'0.8rem', background:'linear-gradient(135deg,#431407,#ea580c)', border:'1px solid #fb923c', borderRadius:8, color:'#fff7ed', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor:'pointer', fontWeight:700 }}>
+              <button onClick={()=>onRoomAction(room,'shrine')} disabled={loading||!readyToAct} style={{ width:'100%', padding:'0.8rem', background: readyToAct ? 'linear-gradient(135deg,#431407,#ea580c)' : 'rgba(30,30,40,0.5)', border:`1px solid ${readyToAct ? '#fb923c' : '#374151'}`, borderRadius:8, color: readyToAct ? '#fff7ed' : '#4b5563', fontFamily:"'Cinzel',serif", fontSize:'0.9rem', cursor: readyToAct ? 'pointer' : 'not-allowed', fontWeight:700, transition:'all 0.3s' }}>
                 🕯️ Sacrifica e Ricevi il Benedizione
               </button>
             </div>
