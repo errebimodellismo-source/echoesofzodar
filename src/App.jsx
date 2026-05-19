@@ -2305,7 +2305,7 @@ export default function App() {
 
   if(authLoading) return (
     <div style={{ minHeight:"100vh", width:"100vw", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" }}>
-      <AnimatedBackground />
+      <AnimatedBackground screen={screen} />
       <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)" }} />
       <div style={{ position:"relative", zIndex:1, color:"#e2d9c5", fontFamily:"'Cinzel',serif" }}>Caricamento...</div>
     </div>
@@ -2315,7 +2315,7 @@ export default function App() {
   const isMasterUser = canAccessMasterPanel(authUser);
   if(appMaintenance && !isMasterUser) return (
     <div style={{ minHeight:"100vh", width:"100vw", position:"relative", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"1.5rem", padding:"2rem", textAlign:"center" }}>
-      <AnimatedBackground />
+      <AnimatedBackground screen={screen} />
       <div style={{ position:"absolute", inset:0, background:"rgba(2,4,14,0.97)", zIndex:0 }} />
       <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:"1.2rem" }}>
         <div style={{ fontSize:"4rem" }}>🔧</div>
@@ -2332,7 +2332,7 @@ export default function App() {
 
   return (
     <div style={{ minHeight:"100vh", width:"100vw", fontFamily:"'Crimson Pro',Georgia,serif", color:"#e2d9c5", position:"relative" }}>
-      <AnimatedBackground />
+      <AnimatedBackground screen={screen} />
       <style>{`
         *, *::before, *::after { box-sizing: border-box; }
         body { overflow-x: hidden; }
