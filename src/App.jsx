@@ -11973,7 +11973,7 @@ ${stepText(step)}`, "quest","Master");
                         </span>
                         {(currentQ?.difficulty || combat?.difficulty) && (
                           <span style={{ fontSize:"0.78rem", fontWeight:700, padding:"0.2rem 0.65rem", borderRadius:999, background:"rgba(0,0,0,0.4)", border:`1px solid ${DIFF_COLOR[normalizeMissionDifficulty(currentQ?.difficulty||combat?.difficulty)]||"#94a3b8"}`, color:DIFF_COLOR[normalizeMissionDifficulty(currentQ?.difficulty||combat?.difficulty)]||"#94a3b8", letterSpacing:"0.06em", textTransform:"capitalize" }}>
-                            {displayMissionDifficulty(currentQ?.difficulty||combat?.difficulty)}
+                            {{ facile:"Facile", medio:"Medio", difficile:"Difficile", epica:"Epica" }[normalizeMissionDifficulty(currentQ?.difficulty||combat?.difficulty)] || (currentQ?.difficulty||combat?.difficulty)}
                           </span>
                         )}
                       </div>
@@ -12628,7 +12628,7 @@ ${stepText(step)}`, "quest","Master");
                     <div style={{ color:"#e9d5ff", fontSize:"1.5rem", fontWeight:700, fontFamily:"'Cinzel Decorative',serif" }}>+{vd.xpEach}</div>
                   </div>
                   <div style={{ width:1, background:"rgba(255,255,255,0.08)" }} />
-                  <div style={{ textAlign:"center" }}>
+                  <div style={{ textAlign:"center" }}>m
                     <div style={{ fontSize:"1.8rem" }}>💰</div>
                     <div style={{ color:"#fcd34d", fontSize:"0.68rem", fontFamily:"'Cinzel',serif" }}>ORO</div>
                     <div style={{ color:"#fde68a", fontSize:"1.5rem", fontWeight:700, fontFamily:"'Cinzel Decorative',serif" }}>+{vd.goldEach}</div>
