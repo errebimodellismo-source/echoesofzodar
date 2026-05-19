@@ -3186,7 +3186,7 @@ function MasterPanel({ setScreen, authUser }) {
     return ()=>{ alive = false; clearInterval(timer); };
   }, [tab]);
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"stories",l:"📖 Storie"},{k:"editor",l:"✏️ Editor"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"users",l:"📊 Report"}];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"stories",l:"📖 Storie"},{k:"editor",l:"✏️ Editor"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"online",l:"👁️ Online"},{k:"users",l:"📊 Report"}];
   const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
   const visibleQuests = quests.filter(q => {
     const term = questSearch.trim().toLowerCase();
@@ -3670,6 +3670,7 @@ function MasterPanel({ setScreen, authUser }) {
       {tab==="party" && <PartiesView authUser={authUser} />}
       {tab==="guilds" && <MasterGuildsView />}
       {tab==="market" && <MarketView />}
+      {tab==="online" && <OnlineView />}
       {tab==="users" && <UsersView authUser={authUser} />}
       {tab==="dungeon" && <MasterDungeonView />}
       {tab==="leaderboard" && <GlobalLeaderboardView />}
@@ -4995,6 +4996,128 @@ function UsersView({ authUser }) {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function formatDuration(ms) {
+  if(!ms || ms < 0) return "—";
+  const s = Math.floor(ms / 1000);
+  if(s < 60) return `${s}s`;
+  const m = Math.floor(s / 60);
+  if(m < 60) return `${m}m ${s % 60}s`;
+  const h = Math.floor(m / 60);
+  return `${h}h ${m % 60}m`;
+}
+
+function OnlineView() {
+  const [users, setUsers] = useState([]);
+  const [players, setPlayers] = useState({});
+  const [now, setNow] = useState(() => Date.now());
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let alive = true;
+    const load = async () => {
+      const [userMeta, { data: ps }] = await Promise.all([
+        dbGetUserMasterMeta().catch(() => ({})),
+        supabase.from("players").select("id,name,class,race,level,account_id,party_code"),
+      ]);
+      if(!alive) return;
+      // Build lookup: accountId → characters
+      const byAccount = {};
+      for(const p of (ps || [])) {
+        if(!p.account_id) continue;
+        if(!byAccount[p.account_id]) byAccount[p.account_id] = [];
+        byAccount[p.account_id].push(p);
+      }
+      setPlayers(byAccount);
+      const sorted = Object.values(userMeta)
+        .sort((a, b) => Date.parse(b.lastSeenAt || 0) - Date.parse(a.lastSeenAt || 0));
+      setUsers(sorted);
+      setLoading(false);
+    };
+    load();
+    const dataTimer = setInterval(load, 15000);
+    const clockTimer = setInterval(() => setNow(Date.now()), 1000);
+    return () => { alive = false; clearInterval(dataTimer); clearInterval(clockTimer); };
+  }, []);
+
+  const online = users.filter(u => isRecentlyOnline(u.lastSeenAt, now));
+  const offline = users.filter(u => !isRecentlyOnline(u.lastSeenAt, now));
+
+  const UserRow = ({ u, isOnline }) => {
+    const seenMs = Date.parse(u.lastSeenAt || "");
+    const ago = Number.isFinite(seenMs) ? now - seenMs : null;
+    const chars = players[u.userId] || [];
+    const dot = isOnline ? (u.afk ? "#f59e0b" : "#22c55e") : "#374151";
+    const dotLabel = isOnline ? (u.afk ? "AFK" : "Online") : "Offline";
+    return (
+      <div style={{ background:"rgba(15,23,42,0.9)", border:`1px solid ${isOnline ? (u.afk?"#78350f":"#14532d") : "#1e293b"}`, borderRadius:8, padding:"0.75rem 0.9rem", marginBottom:6 }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10 }}>
+          <div style={{ width:10, height:10, borderRadius:"50%", background:dot, flexShrink:0, boxShadow: isOnline ? `0 0 6px ${dot}` : "none" }} />
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ color:"#e2d9c5", fontWeight:700, fontSize:"0.85rem", wordBreak:"break-word" }}>{u.email || "Utente anonimo"}</div>
+            {chars.length > 0 && (
+              <div style={{ color:"#64748b", fontSize:"0.7rem", marginTop:2 }}>
+                {chars.map(c => `${CLASSES[c.class]?.emoji||"⚔️"} ${c.name} Lv.${c.level||1}`).join("  ·  ")}
+              </div>
+            )}
+          </div>
+          <div style={{ textAlign:"right", flexShrink:0 }}>
+            <div style={{ fontSize:"0.72rem", color: isOnline ? (u.afk?"#f59e0b":"#22c55e") : "#475569", fontWeight:700 }}>{dotLabel}</div>
+            <div style={{ fontSize:"0.65rem", color:"#475569", marginTop:1 }}>
+              {ago !== null ? (isOnline ? `da ${formatDuration(ago)}` : `${formatDuration(ago)} fa`) : "—"}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(140px,1fr))", gap:10, marginBottom:"1.2rem" }}>
+        {[
+          ["🟢 Online ora", online.filter(u=>!u.afk).length, "#22c55e"],
+          ["🟡 AFK", online.filter(u=>u.afk).length, "#f59e0b"],
+          ["⚫ Offline", offline.length, "#475569"],
+          ["👤 Totale account", users.length, "#94a3b8"],
+        ].map(([label, val, color]) => (
+          <div key={label} style={{ background:"rgba(15,23,42,0.9)", border:"1px solid #1e293b", borderRadius:8, padding:"0.8rem" }}>
+            <div style={{ fontSize:"0.68rem", color:"#64748b", marginBottom:4 }}>{label}</div>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:"1.4rem", fontWeight:700, color }}>{val}</div>
+          </div>
+        ))}
+      </div>
+
+      {loading && <div style={{ color:"#94a3b8" }}>Caricamento...</div>}
+
+      {online.length > 0 && (
+        <div style={{ marginBottom:"1.2rem" }}>
+          <div style={{ fontSize:"0.7rem", color:"#22c55e", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:8 }}>
+            🟢 Connessi ora ({online.length})
+          </div>
+          {online.map(u => <UserRow key={u.userId} u={u} isOnline={true} />)}
+        </div>
+      )}
+
+      {offline.length > 0 && (
+        <div>
+          <div style={{ fontSize:"0.7rem", color:"#475569", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em", textTransform:"uppercase", marginBottom:8 }}>
+            ⚫ Offline ({offline.length})
+          </div>
+          {offline.map(u => <UserRow key={u.userId} u={u} isOnline={false} />)}
+        </div>
+      )}
+
+      {!loading && users.length === 0 && (
+        <div style={{ textAlign:"center", color:"#4b5563", padding:"2rem" }}>Nessun dato disponibile — gli utenti vengono tracciati dal primo login in poi.</div>
+      )}
+
+      <div style={{ marginTop:"1rem", fontSize:"0.65rem", color:"#334155", textAlign:"right" }}>
+        Aggiornamento ogni 15 secondi · Heartbeat utenti ogni 30s · Online = visto negli ultimi 2 minuti
       </div>
     </div>
   );
