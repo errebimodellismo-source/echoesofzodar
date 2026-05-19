@@ -11,6 +11,7 @@ import DiceRoller from "./components/DiceRoller";
 import ParticleBackground from "./components/ParticleBackground";
 import CombatVisualizer from "./components/CombatVisualizer";
 import AnimatedBackground from "./components/AnimatedBackground";
+import VoiceChat from "./components/VoiceChat";
 import audioManager from "./utils/audioManager";
 
 /* ----------------------------------------------
@@ -10734,6 +10735,13 @@ ${stepText(step)}`, "quest","Master");
             {isAfk ? "⏸ AFK — Non in battaglia" : "✅ Attivo — Pronto a combattere"}
           </button>
           <MusicToggleBtn />
+          <VoiceChat
+            myId={myId}
+            myName={me?.name || "Avventuriero"}
+            partyCode={code}
+            supabase={supabase}
+            hasCrystal={inventory.some(e => e.itemId === "crystal_sintonia")}
+          />
         </div>
 
         <div style={{ background:PANEL_BG_SOFT, border:`1px solid ${PANEL_BORDER}`, borderRadius:4, padding:"0.5rem" }}>
