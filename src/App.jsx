@@ -85,8 +85,8 @@ const MASTER_EMAILS = (import.meta.env.VITE_MASTER_EMAILS || "")
   .split(",")
   .map(email => email.trim().toLowerCase())
   .filter(Boolean);
-const PANEL_BG = "rgba(7,10,20,0.82)";
-const PANEL_BG_SOFT = "rgba(7,10,20,0.72)";
+const PANEL_BG = "rgba(7,10,20,0.96)";
+const PANEL_BG_SOFT = "rgba(7,10,20,0.90)";
 const PANEL_BORDER = "rgba(148,163,184,0.16)";
 const ONLINE_GRACE_MS = 2 * 60 * 1000;
 const USER_HEARTBEAT_MS = 30 * 1000;
@@ -3204,7 +3204,7 @@ function MasterPanel({ setScreen, authUser }) {
   });
 
   return (
-    <div style={{ position:"relative", zIndex:1, maxWidth:1180, margin:"0 auto", padding:"1rem" }}>
+    <div style={{ position:"relative", zIndex:1, maxWidth:1180, margin:"0 auto", padding:"1rem", background:"rgba(5,8,18,0.92)", minHeight:"100vh" }}>
       <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:"1.2rem", paddingBottom:"1rem", borderBottom:"1px solid #1f2937", flexWrap:"wrap" }}>
         <div style={{ flex:1 }}>
           <h1 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.4rem", margin:0 }}>🛡️ Pannello Master</h1>
