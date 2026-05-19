@@ -7595,7 +7595,8 @@ function GameScreen({ myId, setScreen, authUser }) {
   const isMobile = useMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [lootedStepKey, setLootedStepKey] = useState(null);
-  const [choiceFeedback, setChoiceFeedback] = useState(null); // { quality, label, xp, gold }
+  const [choiceFeedback, setChoiceFeedback] = useState(null); // { quality, label, xp, gold, _nextStep, _completeQuest }
+  const [pendingStoryChoice, setPendingStoryChoice] = useState(null); // { idx, text }
   const [catalogItems, setCatalogItems] = useState(DEFAULT_ITEMS);
   const [inventory, setInventory] = useState([]);
   const [equipment, setEquipment] = useState({ weapon:null, armor:null, shield:null, accessory:null });
@@ -9119,16 +9120,18 @@ function GameScreen({ myId, setScreen, authUser }) {
     const partyForCombat = await getOnlinePartyPlayersForCombat(latestQs);
     const playerCombatants = partyForCombat.map(p => ({
       id:p.id, name:p.name, emoji:CLASSES[p.class||"warrior"]?.emoji||"⚔️",
-      hp:p.hp, max_hp:p.maxHp, atk:p.atk+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_atk,
+      hp:p.hp, maxHp:p.maxHp||p.max_hp||p.hp||1,
+      atk:p.atk+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_atk,
       def:p.def+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_def,
       mag:p.mag+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_mag,
       init:p.init+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_init,
-      isPlayer:true, isSummon:false, dead:false, dying:false, stable:false,
+      isPlayer:true, isSummon:false, dead:false, dying:false, stable:false, deathSuccesses:0, deathFailures:0,
       rollInit: (p.init||0) + Math.floor(Math.random()*20),
     }));
-    const monsterCombatants = scene.combat.monsters.map(m => ({
-      ...m, rollInit: (m.init||0) + Math.floor(Math.random()*20),
-    }));
+    const monsterCombatants = scene.combat.monsters.map(m => {
+      const baseHp = m.maxHp || m.max_hp || m.hp || 10;
+      return { ...m, hp:baseHp, maxHp:baseHp, rollInit:(m.init||0)+Math.floor(Math.random()*20) };
+    });
     const allCombatants = [...playerCombatants, ...monsterCombatants].sort((a,b)=>b.rollInit-a.rollInit);
     const newCombat = { active:true, combatants:allCombatants, turn:0, round:1, spellSlots:{}, startedAt:Date.now(), questDmgLog:{} };
     const newStory = { ...latestQs.story, battlePending:true, battleNext:scene.combat.successScene, battleNextFail:scene.combat.failureScene||null };
@@ -10226,16 +10229,23 @@ ${stepText(step)}`, "quest","Master");
       await addMsg(`❌ Risposta sbagliata... il party non guadagna nulla e avanza comunque.`, "system", "Sistema");
     }
 
-    setChoiceFeedback({ quality, label: choice.label, xp: xpE, gold: goldE });
-    setTimeout(() => setChoiceFeedback(null), 4000);
-
     const nextStep = choice.next != null ? Number(choice.next) : step+1;
-    if(nextStep >= q.steps.length) {
+    const isComplete = nextStep >= q.steps.length;
+    setChoiceFeedback({ quality, label: choice.label, xp: xpE, gold: goldE, _nextStep: nextStep, _questId: q.id, _isComplete: isComplete });
+  }
+
+  async function confirmQuestAdvance() {
+    if(!choiceFeedback) return;
+    const { _nextStep, _questId, _isComplete } = choiceFeedback;
+    setChoiceFeedback(null);
+    const q = getQuests().find(x => x.id === _questId);
+    if(!q) return;
+    if(_isComplete) {
       await completeQuest(q);
     } else {
-      const newQs={...qs, step:nextStep};
+      const newQs = { ...qs, step: _nextStep };
       await saveQState(newQs);
-      await postQuestStepMessage(q, nextStep);
+      await postQuestStepMessage(q, _nextStep);
     }
   }
 
@@ -10867,6 +10877,16 @@ ${stepText(step)}`, "quest","Master");
             </div>
           );
           return (
+            <>{pendingStoryChoice ? (
+              <div style={{ padding:"1.2rem", background:"rgba(15,23,42,0.92)", border:"2px solid #6d28d9", borderRadius:12, display:"flex", flexDirection:"column", gap:12 }}>
+                <div style={{ fontFamily:"'Cinzel',serif", color:"#a78bfa", fontWeight:700, fontSize:"1rem" }}>🔀 Scelta effettuata</div>
+                <div style={{ fontSize:"0.88rem", color:"#e2d9c5" }}>Hai scelto: <em>"{pendingStoryChoice.text}"</em></div>
+                <button onClick={async () => { const idx = pendingStoryChoice.idx; setPendingStoryChoice(null); await makeStoryChoice(idx); }}
+                  style={{ padding:"0.65rem 1.2rem", background:"#6d28d9", border:"none", borderRadius:8, color:"#fff", fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:"0.9rem", cursor:"pointer", letterSpacing:"0.04em" }}>
+                  Avanti →
+                </button>
+              </div>
+            ) : (
             <StoryView
               story={activeStory}
               scene={activeStoryScene}
@@ -10876,12 +10896,13 @@ ${stepText(step)}`, "quest","Master");
               myId={myId}
               partyPlayers={partyPlayers}
               onAdvance={advanceStoryScene}
-              onChoice={makeStoryChoice}
+              onChoice={(idx) => { const c = activeStoryScene?.choices?.[idx]; setPendingStoryChoice({ idx, text: c?.text || "" }); }}
               onVote={castStoryVote}
               onFight={startStoryCombat}
               onSkillCheck={makeStorySkillCheck}
               onLeave={()=>{ localStorage.setItem(`eoz_story_abandoned_${myId}`, storyState?.storyId); setTab("quest"); }}
             />
+            )}</>
           );
         })()}
         {tab==="storylibrary" && (
@@ -11217,8 +11238,8 @@ ${stepText(step)}`, "quest","Master");
                       <div>
                         <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:12, lineHeight:1.5 }}>{stepData.text}</p>
 
-                        {/* Feedback banner */}
-                        {fb && fbCfg && (
+                        {/* Feedback banner — stays until user clicks Avanti */}
+                        {fb && fbCfg ? (
                           <div style={{ marginBottom:14, padding:"0.9rem 1.1rem", background:fbCfg.bg, border:`2px solid ${fbCfg.border}`, borderRadius:10, animation:"pulse 0.4s ease" }}>
                             <div style={{ fontFamily:"'Cinzel',serif", color:fbCfg.color, fontSize:"1rem", fontWeight:700, marginBottom:4 }}>
                               {fbCfg.icon} {fbCfg.title}
@@ -11231,22 +11252,25 @@ ${stepText(step)}`, "quest","Master");
                                 {fb.xp > 0 && <span>⭐ +{fb.xp} XP a testa  </span>}
                                 {fb.gold > 0 && <span>💰 +{fb.gold} oro a testa</span>}
                               </div>
-                            ) : fb.quality !== "bad" ? null : (
+                            ) : fb.quality === "bad" ? (
                               <div style={{ marginTop:4, fontSize:"0.78rem", color:"#94a3b8" }}>Nessuna ricompensa ottenuta.</div>
-                            )}
+                            ) : null}
+                            <button onClick={confirmQuestAdvance} style={{ marginTop:12, width:"100%", padding:"0.6rem 1rem", background:fbCfg.border, border:"none", borderRadius:7, color:"#fff", fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:"0.88rem", cursor:"pointer", letterSpacing:"0.04em" }}>
+                              Avanti →
+                            </button>
+                          </div>
+                        ) : (
+                          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+                            {stepData.choices?.map((c,i)=>(
+                              <button key={i} onClick={()=>chooseQuestOption(i)}
+                                style={{ padding:"0.8rem 1.2rem", background:"rgba(109,40,217,0.2)", border:"1px solid #6d28d9", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontFamily:"inherit", fontSize:"0.88rem", textAlign:"left", transition:"background 0.15s" }}
+                                onMouseEnter={e=>e.currentTarget.style.background="rgba(109,40,217,0.4)"}
+                                onMouseLeave={e=>e.currentTarget.style.background="rgba(109,40,217,0.2)"}>
+                                {c.label}
+                              </button>
+                            ))}
                           </div>
                         )}
-
-                        <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
-                          {stepData.choices?.map((c,i)=>(
-                            <button key={i} onClick={()=>chooseQuestOption(i)}
-                              style={{ padding:"0.8rem 1.2rem", background:"rgba(109,40,217,0.2)", border:"1px solid #6d28d9", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontFamily:"inherit", fontSize:"0.88rem", textAlign:"left", transition:"background 0.15s" }}
-                              onMouseEnter={e=>e.currentTarget.style.background="rgba(109,40,217,0.4)"}
-                              onMouseLeave={e=>e.currentTarget.style.background="rgba(109,40,217,0.2)"}>
-                              {c.label}
-                            </button>
-                          ))}
-                        </div>
                       </div>
                     );
                   }
@@ -11260,7 +11284,10 @@ ${stepText(step)}`, "quest","Master");
                               {canAdvance && <BigBtn onClick={advanceQuest} gold>Avanti →</BigBtn>}
                             </div>
                           : qs.combat?.active
-                            ? <p style={{ color:"#ef4444", fontFamily:"'Cinzel',serif" }}>⚔️ Battaglia avviata automaticamente — sei già nel flusso di combattimento.</p>
+                            ? <div>
+                                <p style={{ color:"#ef4444", fontFamily:"'Cinzel',serif", marginBottom:12 }}>⚔️ Battaglia avviata automaticamente — sei già nel flusso di combattimento.</p>
+                                <BigBtn onClick={()=>setTab("combat")} gold>⚔️ Vai al Combattimento →</BigBtn>
+                              </div>
                             : <p style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif" }}>Preparazione del combattimento...</p>
                         }
                       </div>
@@ -11939,6 +11966,17 @@ ${stepText(step)}`, "quest","Master");
                 <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1.7fr) minmax(320px,0.95fr)", gap:"1rem", alignItems:"start" }}>
                   <div>
                     <div style={{ marginBottom:"1rem", padding:"1rem", background:"rgba(10,15,30,0.7)", border:"1px solid rgba(127,29,29,0.3)", borderRadius:14 }}>
+                      {/* Battle name + difficulty header */}
+                      <div style={{ display:"flex", alignItems:"center", gap:"0.6rem", marginBottom:"0.75rem", paddingBottom:"0.6rem", borderBottom:"1px solid rgba(127,29,29,0.25)" }}>
+                        <span style={{ fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:"0.95rem", color:"#fde68a", flex:1, letterSpacing:"0.04em" }}>
+                          ⚔️ {currentQ?.title || combat?.name || "Battaglia"}
+                        </span>
+                        {(currentQ?.difficulty || combat?.difficulty) && (
+                          <span style={{ fontSize:"0.78rem", fontWeight:700, padding:"0.2rem 0.65rem", borderRadius:999, background:"rgba(0,0,0,0.4)", border:`1px solid ${DIFF_COLOR[normalizeMissionDifficulty(currentQ?.difficulty||combat?.difficulty)]||"#94a3b8"}`, color:DIFF_COLOR[normalizeMissionDifficulty(currentQ?.difficulty||combat?.difficulty)]||"#94a3b8", letterSpacing:"0.06em", textTransform:"capitalize" }}>
+                            {displayMissionDifficulty(currentQ?.difficulty||combat?.difficulty)}
+                          </span>
+                        )}
+                      </div>
                       <CombatVisualizer
                         combat={combat}
                         myId={myId}
