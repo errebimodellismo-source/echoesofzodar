@@ -3149,5 +3149,8964 @@ export const DEFAULT_QUESTS = [
       {id:"dq27_ar2",name:"Araldo dell'Apocalisse",emoji:"🌋",hp:95,maxHp:95,atk:22,def:10,xp:78,isBoss:false},
       {id:"dq27_custode",name:"Custode dell'Apocalisse",emoji:"⚠️",hp:250,maxHp:250,atk:31,def:16,xp:185,isBoss:true}
     ],
+  },
+  {
+    id:"dq28", title:"La Vendetta di Vascello Insanguinato", active:true,
+    desc:"Indaga su strani eventi a Vascello Insanguinato. il Mozzo Tim ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Vascello Insanguinato.» — il Mozzo Tim",
+    difficulty:"facile",
+    xpReward:169, goldReward:55,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. il Mozzo Tim ti ha avvisato dei pericoli di Vascello Insanguinato." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Vascello Insanguinato!",
+        monsters:[
+          {id:"dq28_m1",name:"Marinaio Brutto",emoji:"🗡️",hp:45,maxHp:45,atk:5,def:3,xp:12,isBoss:false},
+          {id:"dq28_m2",name:"Bombardiere",emoji:"💣",hp:23,maxHp:23,atk:8,def:3,xp:26,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Vascello Insanguinato! Il bottino è tuo.",
+        loot:{ gold:[11,27], items:["Anello d'Argento","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq28_m1",name:"Marinaio Brutto",emoji:"🗡️",hp:45,maxHp:45,atk:5,def:3,xp:12,isBoss:false},
+      {id:"dq28_m2",name:"Bombardiere",emoji:"💣",hp:23,maxHp:23,atk:8,def:3,xp:26,isBoss:false}
+    ],
+  },
+  {
+    id:"dq29", title:"Il Risveglio di Tempio di Zogath", active:true,
+    desc:"Indaga su strani eventi a Tempio di Zogath. il Sacerdote Pentito ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Tempio di Zogath.» — il Sacerdote Pentito",
+    difficulty:"facile",
+    xpReward:157, goldReward:59,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. il Sacerdote Pentito ti ha avvisato dei pericoli di Tempio di Zogath." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio di Zogath! Il bottino è tuo.",
+        loot:{ gold:[11,29], items:["Cristallo di Energia","Cintura di Resistenza"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq30", title:"L'Ombra di Vascello Insanguinato", active:true,
+    desc:"Indaga su strani eventi a Vascello Insanguinato. la Cartografa Lina ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — la Cartografa Lina",
+    difficulty:"facile",
+    xpReward:137, goldReward:53,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. la Cartografa Lina ti ha avvisato dei pericoli di Vascello Insanguinato." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Vascello Insanguinato! Il bottino è tuo.",
+        loot:{ gold:[10,26], items:["Reliquia Sacra","Guanti di Forza"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq31", title:"L'Ombra di Costa Frangente", active:true,
+    desc:"Indaga su strani eventi a Costa Frangente. il Vecchio Marinaio ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Costa Frangente.» — il Vecchio Marinaio",
+    difficulty:"medio",
+    xpReward:372, goldReward:175,
+    steps:[
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti. il Vecchio Marinaio ti ha avvisato dei pericoli di Costa Frangente." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:19, gold:9, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Costa Frangente!",
+        monsters:[
+          {id:"dq31_m1",name:"Sirena Maligna",emoji:"🧜‍♀️",hp:110,maxHp:110,atk:13,def:6,xp:39,isBoss:false},
+          {id:"dq31_m2",name:"Pirata",emoji:"🏴‍☠️",hp:82,maxHp:82,atk:13,def:5,xp:35,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Costa Frangente! Il bottino è tuo.",
+        loot:{ gold:[35,87], items:["Guanti di Forza","Cintura di Resistenza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq31_m1",name:"Sirena Maligna",emoji:"🧜‍♀️",hp:110,maxHp:110,atk:13,def:6,xp:39,isBoss:false},
+      {id:"dq31_m2",name:"Pirata",emoji:"🏴‍☠️",hp:82,maxHp:82,atk:13,def:5,xp:35,isBoss:false}
+    ],
+  },
+  {
+    id:"dq32", title:"Il Mistero di Monte Drago", active:true,
+    desc:"Indaga su strani eventi a Monte Drago. l'Eremita Tarn ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — l'Eremita Tarn",
+    difficulty:"facile",
+    xpReward:118, goldReward:76,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. l'Eremita Tarn ti ha avvisato dei pericoli di Monte Drago." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:8, gold:4, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Monte Drago!",
+        monsters:[
+          {id:"dq32_m1",name:"Lupo di Ghiaccio",emoji:"🐺",hp:33,maxHp:33,atk:9,def:2,xp:22,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Monte Drago! Il bottino è tuo.",
+        loot:{ gold:[15,38], items:["Guanti di Forza","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq32_m1",name:"Lupo di Ghiaccio",emoji:"🐺",hp:33,maxHp:33,atk:9,def:2,xp:22,isBoss:false}
+    ],
+  },
+  {
+    id:"dq33", title:"L'Assedio di Catacombe di Argos", active:true,
+    desc:"Indaga su strani eventi a Catacombe di Argos. l'Archeologo Vandros ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — l'Archeologo Vandros",
+    difficulty:"medio",
+    xpReward:366, goldReward:169,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. l'Archeologo Vandros ti ha avvisato dei pericoli di Catacombe di Argos." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Catacombe di Argos!",
+        monsters:[
+          {id:"dq33_m1",name:"Wraith",emoji:"👁️",hp:65,maxHp:65,atk:14,def:8,xp:51,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Catacombe di Argos! Il bottino è tuo.",
+        loot:{ gold:[33,84], items:["Tomo Antico","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq33_m1",name:"Wraith",emoji:"👁️",hp:65,maxHp:65,atk:14,def:8,xp:51,isBoss:false}
+    ],
+  },
+  {
+    id:"dq34", title:"La Profezia di Oasi Perduta", active:true,
+    desc:"Indaga su strani eventi a Oasi Perduta. la Sacerdotessa di Ra ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Oasi Perduta.» — la Sacerdotessa di Ra",
+    difficulty:"medio",
+    xpReward:422, goldReward:163,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. la Sacerdotessa di Ra ti ha avvisato dei pericoli di Oasi Perduta." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:22, gold:11, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Oasi Perduta!",
+        monsters:[
+          {id:"dq34_m1",name:"Predone del Deserto",emoji:"🗡️",hp:52,maxHp:52,atk:16,def:5,xp:47,isBoss:false},
+          {id:"dq34_m2",name:"Predone del Deserto",emoji:"🗡️",hp:76,maxHp:76,atk:10,def:7,xp:34,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute." },
+      {
+        type:"loot",
+        text:"Hai trionfato a Oasi Perduta! Il bottino è tuo.",
+        loot:{ gold:[32,81], items:["Guanti di Forza","Elmo Rinforzato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq34_m1",name:"Predone del Deserto",emoji:"🗡️",hp:52,maxHp:52,atk:16,def:5,xp:47,isBoss:false},
+      {id:"dq34_m2",name:"Predone del Deserto",emoji:"🗡️",hp:76,maxHp:76,atk:10,def:7,xp:34,isBoss:false}
+    ],
+  },
+  {
+    id:"dq35", title:"Il Segreto di Vascello Insanguinato", active:true,
+    desc:"Indaga su strani eventi a Vascello Insanguinato. il Vecchio Ammiraglio ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Vascello Insanguinato.» — il Vecchio Ammiraglio",
+    difficulty:"difficile",
+    xpReward:517, goldReward:391,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. il Vecchio Ammiraglio ti ha avvisato dei pericoli di Vascello Insanguinato." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:41, gold:20, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:20, gold:10, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Vascello Insanguinato!",
+        monsters:[
+          {id:"dq35_m1",name:"Bombardiere",emoji:"💣",hp:105,maxHp:105,atk:28,def:11,xp:92,isBoss:false},
+          {id:"dq35_m2",name:"Mozzo Posseduto",emoji:"👻",hp:197,maxHp:197,atk:19,def:9,xp:84,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre." },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Vascello Insanguinato!",
+        monsters:[
+          {id:"dq35_m3",name:"Bombardiere",emoji:"💣",hp:101,maxHp:101,atk:24,def:10,xp:72,isBoss:false},
+          {id:"dq35_m4",name:"Bombardiere",emoji:"💣",hp:170,maxHp:170,atk:20,def:14,xp:84,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Quartiermastro Demone appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq35_boss",name:"Quartiermastro Demone",emoji:"👹",hp:199,maxHp:199,atk:24,def:12,xp:161,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Vascello Insanguinato! Il bottino è tuo.",
+        loot:{ gold:[78,195], items:["Gemma Lucente","Cristallo di Energia","Pergamena Arcana"] }
+      }
+    ],
+    enemies:[
+      {id:"dq35_m1",name:"Bombardiere",emoji:"💣",hp:105,maxHp:105,atk:28,def:11,xp:92,isBoss:false},
+      {id:"dq35_m2",name:"Mozzo Posseduto",emoji:"👻",hp:197,maxHp:197,atk:19,def:9,xp:84,isBoss:false},
+      {id:"dq35_m3",name:"Bombardiere",emoji:"💣",hp:101,maxHp:101,atk:24,def:10,xp:72,isBoss:false},
+      {id:"dq35_m4",name:"Bombardiere",emoji:"💣",hp:170,maxHp:170,atk:20,def:14,xp:84,isBoss:false},
+      {id:"dq35_boss",name:"Quartiermastro Demone",emoji:"👹",hp:199,maxHp:199,atk:24,def:12,xp:161,isBoss:true}
+    ],
+  },
+  {
+    id:"dq36", title:"Il Segreto di Laboratorio Segreto", active:true,
+    desc:"Indaga su strani eventi a Laboratorio Segreto. l'Apprendista Pia ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Laboratorio Segreto.» — l'Apprendista Pia",
+    difficulty:"facile",
+    xpReward:192, goldReward:52,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. l'Apprendista Pia ti ha avvisato dei pericoli di Laboratorio Segreto." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:8, gold:4, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Laboratorio Segreto!",
+        monsters:[
+          {id:"dq36_m1",name:"Omuncolo",emoji:"🧪",hp:27,maxHp:27,atk:9,def:3,xp:16,isBoss:false},
+          {id:"dq36_m2",name:"Esperimento Fallito",emoji:"🐀",hp:33,maxHp:33,atk:8,def:4,xp:20,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Laboratorio Segreto! Il bottino è tuo.",
+        loot:{ gold:[10,26], items:["Antidoto","Bastone Runico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq36_m1",name:"Omuncolo",emoji:"🧪",hp:27,maxHp:27,atk:9,def:3,xp:16,isBoss:false},
+      {id:"dq36_m2",name:"Esperimento Fallito",emoji:"🐀",hp:33,maxHp:33,atk:8,def:4,xp:20,isBoss:false}
+    ],
+  },
+  {
+    id:"dq37", title:"La Tomba di Porto Stellato", active:true,
+    desc:"Indaga su strani eventi a Porto Stellato. la Spia Selene ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Porto Stellato.» — la Spia Selene",
+    difficulty:"facile",
+    xpReward:156, goldReward:51,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. la Spia Selene ti ha avvisato dei pericoli di Porto Stellato." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:10, gold:5, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:5, gold:2, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Porto Stellato! Il bottino è tuo.",
+        loot:{ gold:[10,25], items:["Gemma Lucente","Gemma Lucente"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq38", title:"L'Ultimo di Inferno Cremisi", active:true,
+    desc:"Indaga su strani eventi a Inferno Cremisi. il Mago Vargo ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Inferno Cremisi.» — il Mago Vargo",
+    difficulty:"facile",
+    xpReward:199, goldReward:61,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. il Mago Vargo ti ha avvisato dei pericoli di Inferno Cremisi." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:12, gold:6, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:6, gold:3, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Inferno Cremisi!",
+        monsters:[
+          {id:"dq38_m1",name:"Imp",emoji:"😈",hp:22,maxHp:22,atk:10,def:1,xp:20,isBoss:false},
+          {id:"dq38_m2",name:"Cane Infernale",emoji:"🐕",hp:21,maxHp:21,atk:8,def:3,xp:25,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Inferno Cremisi! Il bottino è tuo.",
+        loot:{ gold:[12,30], items:["Mappa del Tesoro","Guanti di Forza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq38_m1",name:"Imp",emoji:"😈",hp:22,maxHp:22,atk:10,def:1,xp:20,isBoss:false},
+      {id:"dq38_m2",name:"Cane Infernale",emoji:"🐕",hp:21,maxHp:21,atk:8,def:3,xp:25,isBoss:false}
+    ],
+  },
+  {
+    id:"dq39", title:"L'Eco di Palude di Murthak", active:true,
+    desc:"Indaga su strani eventi a Palude di Murthak. lo Sciamano Krodok ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Palude di Murthak.» — lo Sciamano Krodok",
+    difficulty:"medio",
+    xpReward:419, goldReward:121,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. lo Sciamano Krodok ti ha avvisato dei pericoli di Palude di Murthak." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:17, gold:8, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Palude di Murthak!",
+        monsters:[
+          {id:"dq39_m1",name:"Lucertolone",emoji:"🦎",hp:99,maxHp:99,atk:10,def:5,xp:42,isBoss:false},
+          {id:"dq39_m2",name:"Hag della Palude",emoji:"🧙‍♀️",hp:82,maxHp:82,atk:15,def:5,xp:46,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Palude di Murthak! Il bottino è tuo.",
+        loot:{ gold:[24,60], items:["Antidoto","Gemma Lucente"] }
+      }
+    ],
+    enemies:[
+      {id:"dq39_m1",name:"Lucertolone",emoji:"🦎",hp:99,maxHp:99,atk:10,def:5,xp:42,isBoss:false},
+      {id:"dq39_m2",name:"Hag della Palude",emoji:"🧙‍♀️",hp:82,maxHp:82,atk:15,def:5,xp:46,isBoss:false}
+    ],
+  },
+  {
+    id:"dq40", title:"Il Patto di Santuario Profano", active:true,
+    desc:"Indaga su strani eventi a Santuario Profano. l'Inquisitore Vex ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — l'Inquisitore Vex",
+    difficulty:"epica",
+    xpReward:2465, goldReward:723,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. l'Inquisitore Vex ti ha avvisato dei pericoli di Santuario Profano." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:49, gold:24, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:24, gold:12, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Santuario Profano!",
+        monsters:[
+          {id:"dq40_m1",name:"Aberrazione",emoji:"🐙",hp:90,maxHp:90,atk:18,def:13,xp:86,isBoss:false},
+          {id:"dq40_m2",name:"Servo Mutato",emoji:"👁️",hp:82,maxHp:82,atk:20,def:10,xp:80,isBoss:false},
+          {id:"dq40_m3",name:"Servo Mutato",emoji:"👁️",hp:137,maxHp:137,atk:25,def:13,xp:91,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Santuario Profano!",
+        monsters:[
+          {id:"dq40_m4",name:"Servo Mutato",emoji:"👁️",hp:106,maxHp:106,atk:18,def:12,xp:96,isBoss:false},
+          {id:"dq40_m5",name:"Sacerdote Corrotto",emoji:"🕯️",hp:119,maxHp:119,atk:26,def:10,xp:93,isBoss:false},
+          {id:"dq40_m6",name:"Cultista Folle",emoji:"🔪",hp:127,maxHp:127,atk:27,def:13,xp:94,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:68, gold:34, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:34, gold:17, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Avatar di Zogath appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq40_boss",name:"Avatar di Zogath",emoji:"👁️‍🗨️",hp:535,maxHp:535,atk:40,def:17,xp:395,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Santuario Profano! Il bottino è tuo.",
+        loot:{ gold:[144,361], items:["Pozione di Mana","Cintura di Resistenza","Pergamena Arcana","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq40_m1",name:"Aberrazione",emoji:"🐙",hp:90,maxHp:90,atk:18,def:13,xp:86,isBoss:false},
+      {id:"dq40_m2",name:"Servo Mutato",emoji:"👁️",hp:82,maxHp:82,atk:20,def:10,xp:80,isBoss:false},
+      {id:"dq40_m3",name:"Servo Mutato",emoji:"👁️",hp:137,maxHp:137,atk:25,def:13,xp:91,isBoss:false},
+      {id:"dq40_m4",name:"Servo Mutato",emoji:"👁️",hp:106,maxHp:106,atk:18,def:12,xp:96,isBoss:false},
+      {id:"dq40_m5",name:"Sacerdote Corrotto",emoji:"🕯️",hp:119,maxHp:119,atk:26,def:10,xp:93,isBoss:false},
+      {id:"dq40_m6",name:"Cultista Folle",emoji:"🔪",hp:127,maxHp:127,atk:27,def:13,xp:94,isBoss:false},
+      {id:"dq40_boss",name:"Avatar di Zogath",emoji:"👁️‍🗨️",hp:535,maxHp:535,atk:40,def:17,xp:395,isBoss:true}
+    ],
+  },
+  {
+    id:"dq41", title:"Il Mistero di Sabbie Bruciate", active:true,
+    desc:"Indaga su strani eventi a Sabbie Bruciate. la Sacerdotessa di Ra ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — la Sacerdotessa di Ra",
+    difficulty:"medio",
+    xpReward:289, goldReward:173,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. la Sacerdotessa di Ra ti ha avvisato dei pericoli di Sabbie Bruciate." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:25, gold:12, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Sabbie Bruciate!",
+        monsters:[
+          {id:"dq41_m1",name:"Sciacallo",emoji:"🐺",hp:65,maxHp:65,atk:14,def:7,xp:54,isBoss:false},
+          {id:"dq41_m2",name:"Sfinge Minore",emoji:"🦁",hp:109,maxHp:109,atk:15,def:6,xp:52,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti." },
+      {
+        type:"loot",
+        text:"Hai trionfato a Sabbie Bruciate! Il bottino è tuo.",
+        loot:{ gold:[34,86], items:["Anello d'Argento","Elmo Rinforzato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq41_m1",name:"Sciacallo",emoji:"🐺",hp:65,maxHp:65,atk:14,def:7,xp:54,isBoss:false},
+      {id:"dq41_m2",name:"Sfinge Minore",emoji:"🦁",hp:109,maxHp:109,atk:15,def:6,xp:52,isBoss:false}
+    ],
+  },
+  {
+    id:"dq42", title:"Il Tradimento di Abisso di Khaal", active:true,
+    desc:"Indaga su strani eventi a Abisso di Khaal. la Paladina Iris ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Abisso di Khaal.» — la Paladina Iris",
+    difficulty:"medio",
+    xpReward:424, goldReward:112,
+    steps:[
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti. la Paladina Iris ti ha avvisato dei pericoli di Abisso di Khaal." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:23, gold:11, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Abisso di Khaal!",
+        monsters:[
+          {id:"dq42_m1",name:"Cultista",emoji:"🔥",hp:59,maxHp:59,atk:12,def:6,xp:51,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Abisso di Khaal! Il bottino è tuo.",
+        loot:{ gold:[22,56], items:["Gemma Lucente","Arco Lungo"] }
+      }
+    ],
+    enemies:[
+      {id:"dq42_m1",name:"Cultista",emoji:"🔥",hp:59,maxHp:59,atk:12,def:6,xp:51,isBoss:false}
+    ],
+  },
+  {
+    id:"dq43", title:"Il Segreto di Antica Forgia Nanica", active:true,
+    desc:"Indaga su strani eventi a Antica Forgia Nanica. la Storica Mirella ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Antica Forgia Nanica.» — la Storica Mirella",
+    difficulty:"difficile",
+    xpReward:693, goldReward:287,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. la Storica Mirella ti ha avvisato dei pericoli di Antica Forgia Nanica." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:33, gold:16, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:16, gold:8, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Antica Forgia Nanica!",
+        monsters:[
+          {id:"dq43_m1",name:"Guardiano Spettrale",emoji:"👻",hp:162,maxHp:162,atk:25,def:11,xp:73,isBoss:false},
+          {id:"dq43_m2",name:"Statua Animata",emoji:"🗿",hp:134,maxHp:134,atk:19,def:9,xp:81,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:38, gold:19, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:19, gold:9, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute." },
+      {
+        type:"combat",
+        text:"Re Dimenticato appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq43_boss",name:"Re Dimenticato",emoji:"👑",hp:211,maxHp:211,atk:22,def:14,xp:178,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Antica Forgia Nanica! Il bottino è tuo.",
+        loot:{ gold:[57,143], items:["Pugnale Avvelenato","Spada Affilata","Reliquia Sacra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq43_m1",name:"Guardiano Spettrale",emoji:"👻",hp:162,maxHp:162,atk:25,def:11,xp:73,isBoss:false},
+      {id:"dq43_m2",name:"Statua Animata",emoji:"🗿",hp:134,maxHp:134,atk:19,def:9,xp:81,isBoss:false},
+      {id:"dq43_boss",name:"Re Dimenticato",emoji:"👑",hp:211,maxHp:211,atk:22,def:14,xp:178,isBoss:true}
+    ],
+  },
+  {
+    id:"dq44", title:"La Maledizione di Sotterranei Dimenticati", active:true,
+    desc:"Indaga su strani eventi a Sotterranei Dimenticati. l'Archeologo Vandros ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Sotterranei Dimenticati.» — l'Archeologo Vandros",
+    difficulty:"medio",
+    xpReward:277, goldReward:158,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. l'Archeologo Vandros ti ha avvisato dei pericoli di Sotterranei Dimenticati." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Sotterranei Dimenticati!",
+        monsters:[
+          {id:"dq44_m1",name:"Zombi",emoji:"🧟",hp:78,maxHp:78,atk:14,def:5,xp:42,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Sotterranei Dimenticati!",
+        monsters:[
+          {id:"dq44_m2",name:"Scheletro Guerriero",emoji:"💀",hp:77,maxHp:77,atk:18,def:8,xp:51,isBoss:false},
+          {id:"dq44_m3",name:"Spettro",emoji:"👻",hp:66,maxHp:66,atk:15,def:7,xp:41,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Sotterranei Dimenticati! Il bottino è tuo.",
+        loot:{ gold:[31,79], items:["Reliquia Sacra","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq44_m1",name:"Zombi",emoji:"🧟",hp:78,maxHp:78,atk:14,def:5,xp:42,isBoss:false},
+      {id:"dq44_m2",name:"Scheletro Guerriero",emoji:"💀",hp:77,maxHp:77,atk:18,def:8,xp:51,isBoss:false},
+      {id:"dq44_m3",name:"Spettro",emoji:"👻",hp:66,maxHp:66,atk:15,def:7,xp:41,isBoss:false}
+    ],
+  },
+  {
+    id:"dq45", title:"Il Tradimento di Torre di Zarathos", active:true,
+    desc:"Indaga su strani eventi a Torre di Zarathos. il Mago Veridian ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Mago Veridian",
+    difficulty:"facile",
+    xpReward:145, goldReward:50,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. il Mago Veridian ti ha avvisato dei pericoli di Torre di Zarathos." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Torre di Zarathos! Il bottino è tuo.",
+        loot:{ gold:[10,25], items:["Antidoto","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq46", title:"La Discesa di Acque Stagnanti", active:true,
+    desc:"Indaga su strani eventi a Acque Stagnanti. lo Sciamano Krodok ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — lo Sciamano Krodok",
+    difficulty:"medio",
+    xpReward:380, goldReward:172,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. lo Sciamano Krodok ti ha avvisato dei pericoli di Acque Stagnanti." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:17, gold:8, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Acque Stagnanti!",
+        monsters:[
+          {id:"dq46_m1",name:"Sciame di Insetti",emoji:"🦟",hp:104,maxHp:104,atk:17,def:5,xp:55,isBoss:false},
+          {id:"dq46_m2",name:"Rospo Velenoso",emoji:"🐸",hp:75,maxHp:75,atk:13,def:4,xp:45,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Acque Stagnanti!",
+        monsters:[
+          {id:"dq46_m3",name:"Rospo Velenoso",emoji:"🐸",hp:92,maxHp:92,atk:10,def:7,xp:30,isBoss:false},
+          {id:"dq46_m4",name:"Lucertolone",emoji:"🦎",hp:75,maxHp:75,atk:18,def:5,xp:43,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Acque Stagnanti! Il bottino è tuo.",
+        loot:{ gold:[34,86], items:["Bastone Runico","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq46_m1",name:"Sciame di Insetti",emoji:"🦟",hp:104,maxHp:104,atk:17,def:5,xp:55,isBoss:false},
+      {id:"dq46_m2",name:"Rospo Velenoso",emoji:"🐸",hp:75,maxHp:75,atk:13,def:4,xp:45,isBoss:false},
+      {id:"dq46_m3",name:"Rospo Velenoso",emoji:"🐸",hp:92,maxHp:92,atk:10,def:7,xp:30,isBoss:false},
+      {id:"dq46_m4",name:"Lucertolone",emoji:"🦎",hp:75,maxHp:75,atk:18,def:5,xp:43,isBoss:false}
+    ],
+  },
+  {
+    id:"dq47", title:"L'Ombra di Bosco delle Ombre", active:true,
+    desc:"Indaga su strani eventi a Bosco delle Ombre. il Vecchio Guardacaccia ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Vecchio Guardacaccia",
+    difficulty:"medio",
+    xpReward:287, goldReward:124,
+    steps:[
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti. il Vecchio Guardacaccia ti ha avvisato dei pericoli di Bosco delle Ombre." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:21, gold:10, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Bosco delle Ombre!",
+        monsters:[
+          {id:"dq47_m1",name:"Goblin Esploratore",emoji:"👹",hp:95,maxHp:95,atk:12,def:7,xp:49,isBoss:false},
+          {id:"dq47_m2",name:"Falco Nero",emoji:"🦅",hp:96,maxHp:96,atk:11,def:5,xp:43,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Bosco delle Ombre!",
+        monsters:[
+          {id:"dq47_m3",name:"Goblin Esploratore",emoji:"👹",hp:76,maxHp:76,atk:10,def:8,xp:54,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Bosco delle Ombre! Il bottino è tuo.",
+        loot:{ gold:[24,62], items:["Pozione di Cura","Bastone Runico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq47_m1",name:"Goblin Esploratore",emoji:"👹",hp:95,maxHp:95,atk:12,def:7,xp:49,isBoss:false},
+      {id:"dq47_m2",name:"Falco Nero",emoji:"🦅",hp:96,maxHp:96,atk:11,def:5,xp:43,isBoss:false},
+      {id:"dq47_m3",name:"Goblin Esploratore",emoji:"👹",hp:76,maxHp:76,atk:10,def:8,xp:54,isBoss:false}
+    ],
+  },
+  {
+    id:"dq48", title:"Il Tradimento di Foresta di Velrand", active:true,
+    desc:"Indaga su strani eventi a Foresta di Velrand. la Druidessa Mira ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — la Druidessa Mira",
+    difficulty:"difficile",
+    xpReward:742, goldReward:253,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. la Druidessa Mira ti ha avvisato dei pericoli di Foresta di Velrand." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:30, gold:15, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:15, gold:7, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Foresta di Velrand!",
+        monsters:[
+          {id:"dq48_m1",name:"Driade Corrotta",emoji:"🌳",hp:159,maxHp:159,atk:22,def:11,xp:66,isBoss:false},
+          {id:"dq48_m2",name:"Cinghiale Selvaggio",emoji:"🐗",hp:164,maxHp:164,atk:27,def:11,xp:86,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Foresta di Velrand!",
+        monsters:[
+          {id:"dq48_m3",name:"Cinghiale Selvaggio",emoji:"🐗",hp:106,maxHp:106,atk:25,def:12,xp:87,isBoss:false},
+          {id:"dq48_m4",name:"Orso Bruno",emoji:"🐻",hp:195,maxHp:195,atk:23,def:14,xp:78,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Antico Treant appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq48_boss",name:"Antico Treant",emoji:"🌲",hp:252,maxHp:252,atk:29,def:16,xp:177,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Foresta di Velrand! Il bottino è tuo.",
+        loot:{ gold:[50,126], items:["Cristallo di Energia","Mappa del Tesoro","Mappa del Tesoro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq48_m1",name:"Driade Corrotta",emoji:"🌳",hp:159,maxHp:159,atk:22,def:11,xp:66,isBoss:false},
+      {id:"dq48_m2",name:"Cinghiale Selvaggio",emoji:"🐗",hp:164,maxHp:164,atk:27,def:11,xp:86,isBoss:false},
+      {id:"dq48_m3",name:"Cinghiale Selvaggio",emoji:"🐗",hp:106,maxHp:106,atk:25,def:12,xp:87,isBoss:false},
+      {id:"dq48_m4",name:"Orso Bruno",emoji:"🐻",hp:195,maxHp:195,atk:23,def:14,xp:78,isBoss:false},
+      {id:"dq48_boss",name:"Antico Treant",emoji:"🌲",hp:252,maxHp:252,atk:29,def:16,xp:177,isBoss:true}
+    ],
+  },
+  {
+    id:"dq49", title:"La Maledizione di Sotterranei Dimenticati", active:true,
+    desc:"Indaga su strani eventi a Sotterranei Dimenticati. il Saccheggiatore Krad ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Saccheggiatore Krad",
+    difficulty:"medio",
+    xpReward:255, goldReward:157,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. il Saccheggiatore Krad ti ha avvisato dei pericoli di Sotterranei Dimenticati." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:25, gold:12, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Sotterranei Dimenticati!",
+        monsters:[
+          {id:"dq49_m1",name:"Scheletro Guerriero",emoji:"💀",hp:101,maxHp:101,atk:10,def:5,xp:49,isBoss:false},
+          {id:"dq49_m2",name:"Ghoul",emoji:"👹",hp:67,maxHp:67,atk:13,def:5,xp:37,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Sotterranei Dimenticati! Il bottino è tuo.",
+        loot:{ gold:[31,78], items:["Arco Lungo","Amuleto del Sole"] }
+      }
+    ],
+    enemies:[
+      {id:"dq49_m1",name:"Scheletro Guerriero",emoji:"💀",hp:101,maxHp:101,atk:10,def:5,xp:49,isBoss:false},
+      {id:"dq49_m2",name:"Ghoul",emoji:"👹",hp:67,maxHp:67,atk:13,def:5,xp:37,isBoss:false}
+    ],
+  },
+  {
+    id:"dq50", title:"L'Ombra di Acquitrini di Gorm", active:true,
+    desc:"Indaga su strani eventi a Acquitrini di Gorm. lo Sciamano Krodok ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — lo Sciamano Krodok",
+    difficulty:"facile",
+    xpReward:126, goldReward:42,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. lo Sciamano Krodok ti ha avvisato dei pericoli di Acquitrini di Gorm." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:17, gold:8, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Acquitrini di Gorm! Il bottino è tuo.",
+        loot:{ gold:[8,21], items:["Pugnale Avvelenato","Reliquia Sacra"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq51", title:"La Discesa di Foresta di Velrand", active:true,
+    desc:"Indaga su strani eventi a Foresta di Velrand. il Ranger Aldric ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Foresta di Velrand.» — il Ranger Aldric",
+    difficulty:"facile",
+    xpReward:199, goldReward:40,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. il Ranger Aldric ti ha avvisato dei pericoli di Foresta di Velrand." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Foresta di Velrand! Il bottino è tuo.",
+        loot:{ gold:[8,20], items:["Arco Lungo","Pozione di Cura"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq52", title:"Il Patto di Cripte di Maldur", active:true,
+    desc:"Indaga su strani eventi a Cripte di Maldur. la Sacerdotessa Elen ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — la Sacerdotessa Elen",
+    difficulty:"difficile",
+    xpReward:819, goldReward:289,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. la Sacerdotessa Elen ti ha avvisato dei pericoli di Cripte di Maldur." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:31, gold:15, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:15, gold:7, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Cripte di Maldur!",
+        monsters:[
+          {id:"dq52_m1",name:"Zombi",emoji:"🧟",hp:198,maxHp:198,atk:25,def:12,xp:64,isBoss:false},
+          {id:"dq52_m2",name:"Ghoul",emoji:"👹",hp:194,maxHp:194,atk:28,def:9,xp:84,isBoss:false},
+          {id:"dq52_m3",name:"Zombi",emoji:"🧟",hp:131,maxHp:131,atk:23,def:13,xp:85,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi." },
+      {
+        type:"combat",
+        text:"Cavaliere della Morte appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq52_boss",name:"Cavaliere della Morte",emoji:"⚔️",hp:274,maxHp:274,atk:22,def:10,xp:161,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Cripte di Maldur! Il bottino è tuo.",
+        loot:{ gold:[57,144], items:["Tomo Antico","Reliquia Sacra","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq52_m1",name:"Zombi",emoji:"🧟",hp:198,maxHp:198,atk:25,def:12,xp:64,isBoss:false},
+      {id:"dq52_m2",name:"Ghoul",emoji:"👹",hp:194,maxHp:194,atk:28,def:9,xp:84,isBoss:false},
+      {id:"dq52_m3",name:"Zombi",emoji:"🧟",hp:131,maxHp:131,atk:23,def:13,xp:85,isBoss:false},
+      {id:"dq52_boss",name:"Cavaliere della Morte",emoji:"⚔️",hp:274,maxHp:274,atk:22,def:10,xp:161,isBoss:true}
+    ],
+  },
+  {
+    id:"dq53", title:"La Caccia di Veridia", active:true,
+    desc:"Indaga su strani eventi a Veridia. il Mercante Doriano ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — il Mercante Doriano",
+    difficulty:"facile",
+    xpReward:188, goldReward:43,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. il Mercante Doriano ti ha avvisato dei pericoli di Veridia." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:13, gold:6, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:6, gold:3, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Veridia! Il bottino è tuo.",
+        loot:{ gold:[8,21], items:["Cristallo di Energia","Elmo Rinforzato"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq54", title:"Il Mistero di Sabbie Bruciate", active:true,
+    desc:"Indaga su strani eventi a Sabbie Bruciate. il Carovaniere Hassan ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Carovaniere Hassan",
+    difficulty:"medio",
+    xpReward:328, goldReward:128,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. il Carovaniere Hassan ti ha avvisato dei pericoli di Sabbie Bruciate." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:23, gold:11, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Sabbie Bruciate!",
+        monsters:[
+          {id:"dq54_m1",name:"Sfinge Minore",emoji:"🦁",hp:107,maxHp:107,atk:18,def:6,xp:35,isBoss:false},
+          {id:"dq54_m2",name:"Sciacallo",emoji:"🐺",hp:52,maxHp:52,atk:10,def:6,xp:49,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore." },
+      {
+        type:"loot",
+        text:"Hai trionfato a Sabbie Bruciate! Il bottino è tuo.",
+        loot:{ gold:[25,64], items:["Spada Affilata","Elmo Rinforzato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq54_m1",name:"Sfinge Minore",emoji:"🦁",hp:107,maxHp:107,atk:18,def:6,xp:35,isBoss:false},
+      {id:"dq54_m2",name:"Sciacallo",emoji:"🐺",hp:52,maxHp:52,atk:10,def:6,xp:49,isBoss:false}
+    ],
+  },
+  {
+    id:"dq55", title:"Il Mistero di Sabbie Bruciate", active:true,
+    desc:"Indaga su strani eventi a Sabbie Bruciate. il Carovaniere Hassan ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Sabbie Bruciate.» — il Carovaniere Hassan",
+    difficulty:"facile",
+    xpReward:106, goldReward:76,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Carovaniere Hassan ti ha avvisato dei pericoli di Sabbie Bruciate." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:17, gold:8, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Sabbie Bruciate!",
+        monsters:[
+          {id:"dq55_m1",name:"Sciacallo",emoji:"🐺",hp:35,maxHp:35,atk:6,def:1,xp:24,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Sabbie Bruciate! Il bottino è tuo.",
+        loot:{ gold:[15,38], items:["Pergamena Arcana","Gemma Lucente"] }
+      }
+    ],
+    enemies:[
+      {id:"dq55_m1",name:"Sciacallo",emoji:"🐺",hp:35,maxHp:35,atk:6,def:1,xp:24,isBoss:false}
+    ],
+  },
+  {
+    id:"dq56", title:"Il Mistero di Tempio di Zogath", active:true,
+    desc:"Indaga su strani eventi a Tempio di Zogath. l'Inquisitore Vex ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — l'Inquisitore Vex",
+    difficulty:"facile",
+    xpReward:180, goldReward:41,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. l'Inquisitore Vex ti ha avvisato dei pericoli di Tempio di Zogath." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:10, gold:5, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:5, gold:2, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio di Zogath! Il bottino è tuo.",
+        loot:{ gold:[8,20], items:["Tomo Antico","Tomo Antico"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq57", title:"La Maledizione di Palude di Murthak", active:true,
+    desc:"Indaga su strani eventi a Palude di Murthak. la Pescatrice Lila ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — la Pescatrice Lila",
+    difficulty:"medio",
+    xpReward:296, goldReward:153,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. la Pescatrice Lila ti ha avvisato dei pericoli di Palude di Murthak." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Palude di Murthak!",
+        monsters:[
+          {id:"dq57_m1",name:"Sciame di Insetti",emoji:"🦟",hp:54,maxHp:54,atk:13,def:5,xp:37,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Palude di Murthak! Il bottino è tuo.",
+        loot:{ gold:[30,76], items:["Guanti di Forza","Pozione di Mana"] }
+      }
+    ],
+    enemies:[
+      {id:"dq57_m1",name:"Sciame di Insetti",emoji:"🦟",hp:54,maxHp:54,atk:13,def:5,xp:37,isBoss:false}
+    ],
+  },
+  {
+    id:"dq58", title:"L'Eco di Vascello Insanguinato", active:true,
+    desc:"Indaga su strani eventi a Vascello Insanguinato. la Cartografa Lina ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Vascello Insanguinato.» — la Cartografa Lina",
+    difficulty:"difficile",
+    xpReward:812, goldReward:212,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. la Cartografa Lina ti ha avvisato dei pericoli di Vascello Insanguinato." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:36, gold:18, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:18, gold:9, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Vascello Insanguinato!",
+        monsters:[
+          {id:"dq58_m1",name:"Marinaio Brutto",emoji:"🗡️",hp:190,maxHp:190,atk:19,def:14,xp:71,isBoss:false},
+          {id:"dq58_m2",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:148,maxHp:148,atk:18,def:11,xp:72,isBoss:false},
+          {id:"dq58_m3",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:101,maxHp:101,atk:26,def:13,xp:55,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:27, gold:13, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:13, gold:6, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore." },
+      {
+        type:"combat",
+        text:"Capitano Mortenero appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq58_boss",name:"Capitano Mortenero",emoji:"💀",hp:248,maxHp:248,atk:22,def:13,xp:183,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Vascello Insanguinato! Il bottino è tuo.",
+        loot:{ gold:[42,106], items:["Scudo di Ferro","Arco Lungo","Stivali Veloci"] }
+      }
+    ],
+    enemies:[
+      {id:"dq58_m1",name:"Marinaio Brutto",emoji:"🗡️",hp:190,maxHp:190,atk:19,def:14,xp:71,isBoss:false},
+      {id:"dq58_m2",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:148,maxHp:148,atk:18,def:11,xp:72,isBoss:false},
+      {id:"dq58_m3",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:101,maxHp:101,atk:26,def:13,xp:55,isBoss:false},
+      {id:"dq58_boss",name:"Capitano Mortenero",emoji:"💀",hp:248,maxHp:248,atk:22,def:13,xp:183,isBoss:true}
+    ],
+  },
+  {
+    id:"dq59", title:"L'Ombra di Isole dei Naufraghi", active:true,
+    desc:"Indaga su strani eventi a Isole dei Naufraghi. la Sirena Maris ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — la Sirena Maris",
+    difficulty:"medio",
+    xpReward:448, goldReward:103,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. la Sirena Maris ti ha avvisato dei pericoli di Isole dei Naufraghi." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:21, gold:10, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Isole dei Naufraghi!",
+        monsters:[
+          {id:"dq59_m1",name:"Squalo Spada",emoji:"🦈",hp:82,maxHp:82,atk:11,def:6,xp:47,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Isole dei Naufraghi! Il bottino è tuo.",
+        loot:{ gold:[20,51], items:["Gemma Lucente","Anello d'Argento"] }
+      }
+    ],
+    enemies:[
+      {id:"dq59_m1",name:"Squalo Spada",emoji:"🦈",hp:82,maxHp:82,atk:11,def:6,xp:47,isBoss:false}
+    ],
+  },
+  {
+    id:"dq60", title:"La Maledizione di Porto Stellato", active:true,
+    desc:"Indaga su strani eventi a Porto Stellato. il Mercante Doriano ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Mercante Doriano",
+    difficulty:"medio",
+    xpReward:391, goldReward:164,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. il Mercante Doriano ti ha avvisato dei pericoli di Porto Stellato." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:24, gold:12, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Porto Stellato!",
+        monsters:[
+          {id:"dq60_m1",name:"Mago Rinnegato",emoji:"🧙",hp:97,maxHp:97,atk:16,def:4,xp:45,isBoss:false},
+          {id:"dq60_m2",name:"Ladro",emoji:"🗡️",hp:54,maxHp:54,atk:16,def:5,xp:35,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Porto Stellato! Il bottino è tuo.",
+        loot:{ gold:[32,82], items:["Ascia Pesante","Amuleto del Sole"] }
+      }
+    ],
+    enemies:[
+      {id:"dq60_m1",name:"Mago Rinnegato",emoji:"🧙",hp:97,maxHp:97,atk:16,def:4,xp:45,isBoss:false},
+      {id:"dq60_m2",name:"Ladro",emoji:"🗡️",hp:54,maxHp:54,atk:16,def:5,xp:35,isBoss:false}
+    ],
+  },
+  {
+    id:"dq61", title:"La Caccia di Tempio Caduto", active:true,
+    desc:"Indaga su strani eventi a Tempio Caduto. l'Esploratore Tobias ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — l'Esploratore Tobias",
+    difficulty:"medio",
+    xpReward:427, goldReward:124,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. l'Esploratore Tobias ti ha avvisato dei pericoli di Tempio Caduto." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio Caduto!",
+        monsters:[
+          {id:"dq61_m1",name:"Costrutto Arcano",emoji:"⚙️",hp:84,maxHp:84,atk:11,def:4,xp:49,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio Caduto! Il bottino è tuo.",
+        loot:{ gold:[24,62], items:["Anello d'Argento","Gemma Lucente"] }
+      }
+    ],
+    enemies:[
+      {id:"dq61_m1",name:"Costrutto Arcano",emoji:"⚙️",hp:84,maxHp:84,atk:11,def:4,xp:49,isBoss:false}
+    ],
+  },
+  {
+    id:"dq62", title:"L'Eco di Foresta Smeraldina", active:true,
+    desc:"Indaga su strani eventi a Foresta Smeraldina. il Vecchio Guardacaccia ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Vecchio Guardacaccia",
+    difficulty:"medio",
+    xpReward:319, goldReward:165,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. il Vecchio Guardacaccia ti ha avvisato dei pericoli di Foresta Smeraldina." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:17, gold:8, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Foresta Smeraldina!",
+        monsters:[
+          {id:"dq62_m1",name:"Ragno Gigante",emoji:"🕷️",hp:84,maxHp:84,atk:14,def:8,xp:35,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Foresta Smeraldina! Il bottino è tuo.",
+        loot:{ gold:[33,82], items:["Cintura di Resistenza","Pozione di Cura"] }
+      }
+    ],
+    enemies:[
+      {id:"dq62_m1",name:"Ragno Gigante",emoji:"🕷️",hp:84,maxHp:84,atk:14,def:8,xp:35,isBoss:false}
+    ],
+  },
+  {
+    id:"dq63", title:"Il Patto di Tempio di Zogath", active:true,
+    desc:"Indaga su strani eventi a Tempio di Zogath. la Paladina Mara ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — la Paladina Mara",
+    difficulty:"medio",
+    xpReward:368, goldReward:121,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. la Paladina Mara ti ha avvisato dei pericoli di Tempio di Zogath." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:19, gold:9, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio di Zogath!",
+        monsters:[
+          {id:"dq63_m1",name:"Sacerdote Corrotto",emoji:"🕯️",hp:104,maxHp:104,atk:13,def:5,xp:47,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio di Zogath! Il bottino è tuo.",
+        loot:{ gold:[24,60], items:["Gemma Lucente","Mantello dell'Ombra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq63_m1",name:"Sacerdote Corrotto",emoji:"🕯️",hp:104,maxHp:104,atk:13,def:5,xp:47,isBoss:false}
+    ],
+  },
+  {
+    id:"dq64", title:"Il Risveglio di Corte Estiva", active:true,
+    desc:"Indaga su strani eventi a Corte Estiva. il Bardo Cyril ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Corte Estiva.» — il Bardo Cyril",
+    difficulty:"epica",
+    xpReward:1468, goldReward:640,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Bardo Cyril ti ha avvisato dei pericoli di Corte Estiva." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:50, gold:25, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:25, gold:12, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Corte Estiva!",
+        monsters:[
+          {id:"dq64_m1",name:"Centauro Ribelle",emoji:"🏹",hp:110,maxHp:110,atk:28,def:11,xp:93,isBoss:false},
+          {id:"dq64_m2",name:"Satiro",emoji:"🐐",hp:96,maxHp:96,atk:25,def:11,xp:61,isBoss:false},
+          {id:"dq64_m3",name:"Unicorno Oscuro",emoji:"🦄",hp:121,maxHp:121,atk:20,def:13,xp:62,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Regina Maligna appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq64_boss",name:"Regina Maligna",emoji:"👸",hp:504,maxHp:504,atk:42,def:16,xp:310,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Corte Estiva! Il bottino è tuo.",
+        loot:{ gold:[128,320], items:["Guanti di Forza","Scudo di Ferro","Spada Affilata","Stivali Veloci"] }
+      }
+    ],
+    enemies:[
+      {id:"dq64_m1",name:"Centauro Ribelle",emoji:"🏹",hp:110,maxHp:110,atk:28,def:11,xp:93,isBoss:false},
+      {id:"dq64_m2",name:"Satiro",emoji:"🐐",hp:96,maxHp:96,atk:25,def:11,xp:61,isBoss:false},
+      {id:"dq64_m3",name:"Unicorno Oscuro",emoji:"🦄",hp:121,maxHp:121,atk:20,def:13,xp:62,isBoss:false},
+      {id:"dq64_boss",name:"Regina Maligna",emoji:"👸",hp:504,maxHp:504,atk:42,def:16,xp:310,isBoss:true}
+    ],
+  },
+  {
+    id:"dq65", title:"La Tomba di Tempio di Zogath", active:true,
+    desc:"Indaga su strani eventi a Tempio di Zogath. l'Inquisitore Vex ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Tempio di Zogath.» — l'Inquisitore Vex",
+    difficulty:"medio",
+    xpReward:413, goldReward:142,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. l'Inquisitore Vex ti ha avvisato dei pericoli di Tempio di Zogath." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:23, gold:11, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio di Zogath!",
+        monsters:[
+          {id:"dq65_m1",name:"Aberrazione",emoji:"🐙",hp:101,maxHp:101,atk:11,def:4,xp:53,isBoss:false},
+          {id:"dq65_m2",name:"Sacerdote Corrotto",emoji:"🕯️",hp:66,maxHp:66,atk:18,def:4,xp:31,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio di Zogath! Il bottino è tuo.",
+        loot:{ gold:[28,71], items:["Mappa del Tesoro","Guanti di Forza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq65_m1",name:"Aberrazione",emoji:"🐙",hp:101,maxHp:101,atk:11,def:4,xp:53,isBoss:false},
+      {id:"dq65_m2",name:"Sacerdote Corrotto",emoji:"🕯️",hp:66,maxHp:66,atk:18,def:4,xp:31,isBoss:false}
+    ],
+  },
+  {
+    id:"dq66", title:"Il Mistero di Bosco Sussurrante", active:true,
+    desc:"Indaga su strani eventi a Bosco Sussurrante. il Ranger Aldric ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Bosco Sussurrante.» — il Ranger Aldric",
+    difficulty:"medio",
+    xpReward:387, goldReward:164,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. il Ranger Aldric ti ha avvisato dei pericoli di Bosco Sussurrante." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:24, gold:12, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Bosco Sussurrante!",
+        monsters:[
+          {id:"dq66_m1",name:"Ragno Gigante",emoji:"🕷️",hp:66,maxHp:66,atk:13,def:8,xp:54,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Bosco Sussurrante! Il bottino è tuo.",
+        loot:{ gold:[32,82], items:["Ascia Pesante","Guanti di Forza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq66_m1",name:"Ragno Gigante",emoji:"🕷️",hp:66,maxHp:66,atk:13,def:8,xp:54,isBoss:false}
+    ],
+  },
+  {
+    id:"dq67", title:"Il Risveglio di Foresta di Velrand", active:true,
+    desc:"Indaga su strani eventi a Foresta di Velrand. la Druidessa Mira ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Foresta di Velrand.» — la Druidessa Mira",
+    difficulty:"medio",
+    xpReward:355, goldReward:129,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. la Druidessa Mira ti ha avvisato dei pericoli di Foresta di Velrand." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:24, gold:12, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Foresta di Velrand!",
+        monsters:[
+          {id:"dq67_m1",name:"Ragno Gigante",emoji:"🕷️",hp:103,maxHp:103,atk:17,def:8,xp:48,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Foresta di Velrand! Il bottino è tuo.",
+        loot:{ gold:[25,64], items:["Spada Affilata","Reliquia Sacra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq67_m1",name:"Ragno Gigante",emoji:"🕷️",hp:103,maxHp:103,atk:17,def:8,xp:48,isBoss:false}
+    ],
+  },
+  {
+    id:"dq68", title:"La Profezia di Acque Stagnanti", active:true,
+    desc:"Indaga su strani eventi a Acque Stagnanti. lo Sciamano Krodok ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Acque Stagnanti.» — lo Sciamano Krodok",
+    difficulty:"epica",
+    xpReward:2261, goldReward:541,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. lo Sciamano Krodok ti ha avvisato dei pericoli di Acque Stagnanti." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:52, gold:26, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:26, gold:13, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Acque Stagnanti!",
+        monsters:[
+          {id:"dq68_m1",name:"Serpente di Palude",emoji:"🐍",hp:113,maxHp:113,atk:24,def:14,xp:69,isBoss:false},
+          {id:"dq68_m2",name:"Sciame di Insetti",emoji:"🦟",hp:126,maxHp:126,atk:22,def:10,xp:61,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Acque Stagnanti!",
+        monsters:[
+          {id:"dq68_m3",name:"Sciame di Insetti",emoji:"🦟",hp:128,maxHp:128,atk:24,def:14,xp:60,isBoss:false},
+          {id:"dq68_m4",name:"Lucertolone",emoji:"🦎",hp:122,maxHp:122,atk:25,def:10,xp:92,isBoss:false},
+          {id:"dq68_m5",name:"Sciame di Insetti",emoji:"🦟",hp:95,maxHp:95,atk:24,def:13,xp:82,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Re Rospo appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq68_boss",name:"Re Rospo",emoji:"🐸",hp:383,maxHp:383,atk:43,def:17,xp:298,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Acque Stagnanti! Il bottino è tuo.",
+        loot:{ gold:[108,270], items:["Bastone Runico","Spada Affilata","Stivali Veloci","Gemma Lucente"] }
+      }
+    ],
+    enemies:[
+      {id:"dq68_m1",name:"Serpente di Palude",emoji:"🐍",hp:113,maxHp:113,atk:24,def:14,xp:69,isBoss:false},
+      {id:"dq68_m2",name:"Sciame di Insetti",emoji:"🦟",hp:126,maxHp:126,atk:22,def:10,xp:61,isBoss:false},
+      {id:"dq68_m3",name:"Sciame di Insetti",emoji:"🦟",hp:128,maxHp:128,atk:24,def:14,xp:60,isBoss:false},
+      {id:"dq68_m4",name:"Lucertolone",emoji:"🦎",hp:122,maxHp:122,atk:25,def:10,xp:92,isBoss:false},
+      {id:"dq68_m5",name:"Sciame di Insetti",emoji:"🦟",hp:95,maxHp:95,atk:24,def:13,xp:82,isBoss:false},
+      {id:"dq68_boss",name:"Re Rospo",emoji:"🐸",hp:383,maxHp:383,atk:43,def:17,xp:298,isBoss:true}
+    ],
+  },
+  {
+    id:"dq69", title:"Il Tradimento di Radura Argentea", active:true,
+    desc:"Indaga su strani eventi a Radura Argentea. il Druido Faelan ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Druido Faelan",
+    difficulty:"epica",
+    xpReward:1445, goldReward:1134,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. il Druido Faelan ti ha avvisato dei pericoli di Radura Argentea." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:54, gold:27, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:27, gold:13, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Radura Argentea!",
+        monsters:[
+          {id:"dq69_m1",name:"Folletto Dispettoso",emoji:"🧚",hp:91,maxHp:91,atk:28,def:10,xp:87,isBoss:false},
+          {id:"dq69_m2",name:"Unicorno Oscuro",emoji:"🦄",hp:93,maxHp:93,atk:28,def:8,xp:93,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Radura Argentea!",
+        monsters:[
+          {id:"dq69_m3",name:"Satiro",emoji:"🐐",hp:86,maxHp:86,atk:20,def:9,xp:96,isBoss:false},
+          {id:"dq69_m4",name:"Centauro Ribelle",emoji:"🏹",hp:96,maxHp:96,atk:18,def:9,xp:86,isBoss:false},
+          {id:"dq69_m5",name:"Unicorno Oscuro",emoji:"🦄",hp:88,maxHp:88,atk:21,def:8,xp:64,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Radura Argentea!",
+        monsters:[
+          {id:"dq69_m6",name:"Satiro",emoji:"🐐",hp:115,maxHp:115,atk:24,def:8,xp:79,isBoss:false},
+          {id:"dq69_m7",name:"Folletto Dispettoso",emoji:"🧚",hp:117,maxHp:117,atk:27,def:12,xp:66,isBoss:false},
+          {id:"dq69_m8",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:95,maxHp:95,atk:26,def:10,xp:79,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Regina Maligna appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq69_boss",name:"Regina Maligna",emoji:"👸",hp:314,maxHp:314,atk:49,def:15,xp:291,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Radura Argentea! Il bottino è tuo.",
+        loot:{ gold:[226,567], items:["Amuleto del Sole","Antidoto","Ascia Pesante","Ascia Pesante"] }
+      }
+    ],
+    enemies:[
+      {id:"dq69_m1",name:"Folletto Dispettoso",emoji:"🧚",hp:91,maxHp:91,atk:28,def:10,xp:87,isBoss:false},
+      {id:"dq69_m2",name:"Unicorno Oscuro",emoji:"🦄",hp:93,maxHp:93,atk:28,def:8,xp:93,isBoss:false},
+      {id:"dq69_m3",name:"Satiro",emoji:"🐐",hp:86,maxHp:86,atk:20,def:9,xp:96,isBoss:false},
+      {id:"dq69_m4",name:"Centauro Ribelle",emoji:"🏹",hp:96,maxHp:96,atk:18,def:9,xp:86,isBoss:false},
+      {id:"dq69_m5",name:"Unicorno Oscuro",emoji:"🦄",hp:88,maxHp:88,atk:21,def:8,xp:64,isBoss:false},
+      {id:"dq69_m6",name:"Satiro",emoji:"🐐",hp:115,maxHp:115,atk:24,def:8,xp:79,isBoss:false},
+      {id:"dq69_m7",name:"Folletto Dispettoso",emoji:"🧚",hp:117,maxHp:117,atk:27,def:12,xp:66,isBoss:false},
+      {id:"dq69_m8",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:95,maxHp:95,atk:26,def:10,xp:79,isBoss:false},
+      {id:"dq69_boss",name:"Regina Maligna",emoji:"👸",hp:314,maxHp:314,atk:49,def:15,xp:291,isBoss:true}
+    ],
+  },
+  {
+    id:"dq70", title:"Il Segreto di Tempio Caduto", active:true,
+    desc:"Indaga su strani eventi a Tempio Caduto. il Saggio Velnar ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Saggio Velnar",
+    difficulty:"difficile",
+    xpReward:877, goldReward:263,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. il Saggio Velnar ti ha avvisato dei pericoli di Tempio Caduto." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:39, gold:19, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:19, gold:9, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio Caduto!",
+        monsters:[
+          {id:"dq70_m1",name:"Statua Animata",emoji:"🗿",hp:161,maxHp:161,atk:28,def:9,xp:85,isBoss:false},
+          {id:"dq70_m2",name:"Guardiano Spettrale",emoji:"👻",hp:192,maxHp:192,atk:20,def:12,xp:57,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:32, gold:16, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:16, gold:8, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Sentinella Eterna appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq70_boss",name:"Sentinella Eterna",emoji:"🗿",hp:240,maxHp:240,atk:23,def:12,xp:181,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio Caduto! Il bottino è tuo.",
+        loot:{ gold:[52,131], items:["Reliquia Sacra","Pugnale Avvelenato","Pozione di Cura"] }
+      }
+    ],
+    enemies:[
+      {id:"dq70_m1",name:"Statua Animata",emoji:"🗿",hp:161,maxHp:161,atk:28,def:9,xp:85,isBoss:false},
+      {id:"dq70_m2",name:"Guardiano Spettrale",emoji:"👻",hp:192,maxHp:192,atk:20,def:12,xp:57,isBoss:false},
+      {id:"dq70_boss",name:"Sentinella Eterna",emoji:"🗿",hp:240,maxHp:240,atk:23,def:12,xp:181,isBoss:true}
+    ],
+  },
+  {
+    id:"dq71", title:"L'Assedio di Rovine di Eldoria", active:true,
+    desc:"Indaga su strani eventi a Rovine di Eldoria. l'Esploratore Tobias ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Rovine di Eldoria.» — l'Esploratore Tobias",
+    difficulty:"difficile",
+    xpReward:559, goldReward:399,
+    steps:[
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti. l'Esploratore Tobias ti ha avvisato dei pericoli di Rovine di Eldoria." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:27, gold:13, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:13, gold:6, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Rovine di Eldoria!",
+        monsters:[
+          {id:"dq71_m1",name:"Statua Animata",emoji:"🗿",hp:158,maxHp:158,atk:25,def:13,xp:67,isBoss:false},
+          {id:"dq71_m2",name:"Costrutto Arcano",emoji:"⚙️",hp:188,maxHp:188,atk:20,def:14,xp:74,isBoss:false},
+          {id:"dq71_m3",name:"Statua Animata",emoji:"🗿",hp:119,maxHp:119,atk:28,def:11,xp:69,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi." },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Rovine di Eldoria!",
+        monsters:[
+          {id:"dq71_m4",name:"Statua Animata",emoji:"🗿",hp:145,maxHp:145,atk:28,def:8,xp:75,isBoss:false},
+          {id:"dq71_m5",name:"Statua Animata",emoji:"🗿",hp:180,maxHp:180,atk:23,def:11,xp:92,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Sentinella Eterna appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq71_boss",name:"Sentinella Eterna",emoji:"🗿",hp:238,maxHp:238,atk:23,def:16,xp:170,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Rovine di Eldoria! Il bottino è tuo.",
+        loot:{ gold:[79,199], items:["Pozione di Mana","Mappa del Tesoro","Amuleto del Sole"] }
+      }
+    ],
+    enemies:[
+      {id:"dq71_m1",name:"Statua Animata",emoji:"🗿",hp:158,maxHp:158,atk:25,def:13,xp:67,isBoss:false},
+      {id:"dq71_m2",name:"Costrutto Arcano",emoji:"⚙️",hp:188,maxHp:188,atk:20,def:14,xp:74,isBoss:false},
+      {id:"dq71_m3",name:"Statua Animata",emoji:"🗿",hp:119,maxHp:119,atk:28,def:11,xp:69,isBoss:false},
+      {id:"dq71_m4",name:"Statua Animata",emoji:"🗿",hp:145,maxHp:145,atk:28,def:8,xp:75,isBoss:false},
+      {id:"dq71_m5",name:"Statua Animata",emoji:"🗿",hp:180,maxHp:180,atk:23,def:11,xp:92,isBoss:false},
+      {id:"dq71_boss",name:"Sentinella Eterna",emoji:"🗿",hp:238,maxHp:238,atk:23,def:16,xp:170,isBoss:true}
+    ],
+  },
+  {
+    id:"dq72", title:"La Caccia di Catena di Vorndal", active:true,
+    desc:"Indaga su strani eventi a Catena di Vorndal. l'Eremita Tarn ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Catena di Vorndal.» — l'Eremita Tarn",
+    difficulty:"facile",
+    xpReward:143, goldReward:75,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. l'Eremita Tarn ti ha avvisato dei pericoli di Catena di Vorndal." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:11, gold:5, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:5, gold:2, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Catena di Vorndal!",
+        monsters:[
+          {id:"dq72_m1",name:"Troll di Montagna",emoji:"👹",hp:48,maxHp:48,atk:7,def:1,xp:21,isBoss:false},
+          {id:"dq72_m2",name:"Yeti",emoji:"🦍",hp:35,maxHp:35,atk:8,def:1,xp:25,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Catena di Vorndal! Il bottino è tuo.",
+        loot:{ gold:[15,37], items:["Tomo Antico","Spada Affilata"] }
+      }
+    ],
+    enemies:[
+      {id:"dq72_m1",name:"Troll di Montagna",emoji:"👹",hp:48,maxHp:48,atk:7,def:1,xp:21,isBoss:false},
+      {id:"dq72_m2",name:"Yeti",emoji:"🦍",hp:35,maxHp:35,atk:8,def:1,xp:25,isBoss:false}
+    ],
+  },
+  {
+    id:"dq73", title:"La Maledizione di Tempio di Ra-Khem", active:true,
+    desc:"Indaga su strani eventi a Tempio di Ra-Khem. il Beduino Omar ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — il Beduino Omar",
+    difficulty:"medio",
+    xpReward:448, goldReward:103,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Beduino Omar ti ha avvisato dei pericoli di Tempio di Ra-Khem." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:20, gold:10, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio di Ra-Khem!",
+        monsters:[
+          {id:"dq73_m1",name:"Scorpione Gigante",emoji:"🦂",hp:65,maxHp:65,atk:17,def:7,xp:44,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio di Ra-Khem! Il bottino è tuo.",
+        loot:{ gold:[20,51], items:["Pugnale Avvelenato","Ascia Pesante"] }
+      }
+    ],
+    enemies:[
+      {id:"dq73_m1",name:"Scorpione Gigante",emoji:"🦂",hp:65,maxHp:65,atk:17,def:7,xp:44,isBoss:false}
+    ],
+  },
+  {
+    id:"dq74", title:"L'Ombra di Sotterranei Dimenticati", active:true,
+    desc:"Indaga su strani eventi a Sotterranei Dimenticati. l'Archeologo Vandros ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — l'Archeologo Vandros",
+    difficulty:"facile",
+    xpReward:170, goldReward:43,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. l'Archeologo Vandros ti ha avvisato dei pericoli di Sotterranei Dimenticati." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Sotterranei Dimenticati!",
+        monsters:[
+          {id:"dq74_m1",name:"Zombi",emoji:"🧟",hp:50,maxHp:50,atk:9,def:4,xp:21,isBoss:false},
+          {id:"dq74_m2",name:"Wraith",emoji:"👁️",hp:25,maxHp:25,atk:8,def:3,xp:22,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Sotterranei Dimenticati! Il bottino è tuo.",
+        loot:{ gold:[8,21], items:["Bastone Runico","Cristallo di Energia"] }
+      }
+    ],
+    enemies:[
+      {id:"dq74_m1",name:"Zombi",emoji:"🧟",hp:50,maxHp:50,atk:9,def:4,xp:21,isBoss:false},
+      {id:"dq74_m2",name:"Wraith",emoji:"👁️",hp:25,maxHp:25,atk:8,def:3,xp:22,isBoss:false}
+    ],
+  },
+  {
+    id:"dq75", title:"La Vendetta di Sotterranei Dimenticati", active:true,
+    desc:"Indaga su strani eventi a Sotterranei Dimenticati. l'Archeologo Vandros ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — l'Archeologo Vandros",
+    difficulty:"difficile",
+    xpReward:581, goldReward:387,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. l'Archeologo Vandros ti ha avvisato dei pericoli di Sotterranei Dimenticati." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:38, gold:19, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:19, gold:9, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Sotterranei Dimenticati!",
+        monsters:[
+          {id:"dq75_m1",name:"Scheletro Guerriero",emoji:"💀",hp:163,maxHp:163,atk:18,def:11,xp:81,isBoss:false},
+          {id:"dq75_m2",name:"Zombi",emoji:"🧟",hp:128,maxHp:128,atk:19,def:9,xp:55,isBoss:false},
+          {id:"dq75_m3",name:"Ghoul",emoji:"👹",hp:134,maxHp:134,atk:28,def:11,xp:87,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Sotterranei Dimenticati!",
+        monsters:[
+          {id:"dq75_m4",name:"Ghoul",emoji:"👹",hp:162,maxHp:162,atk:21,def:12,xp:60,isBoss:false},
+          {id:"dq75_m5",name:"Wraith",emoji:"👁️",hp:180,maxHp:180,atk:21,def:13,xp:56,isBoss:false},
+          {id:"dq75_m6",name:"Wraith",emoji:"👁️",hp:190,maxHp:190,atk:19,def:12,xp:90,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:29, gold:14, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:14, gold:7, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Lich Eterno appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq75_boss",name:"Lich Eterno",emoji:"💀",hp:222,maxHp:222,atk:22,def:11,xp:167,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Sotterranei Dimenticati! Il bottino è tuo.",
+        loot:{ gold:[77,193], items:["Amuleto del Sole","Pergamena Arcana","Bastone Runico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq75_m1",name:"Scheletro Guerriero",emoji:"💀",hp:163,maxHp:163,atk:18,def:11,xp:81,isBoss:false},
+      {id:"dq75_m2",name:"Zombi",emoji:"🧟",hp:128,maxHp:128,atk:19,def:9,xp:55,isBoss:false},
+      {id:"dq75_m3",name:"Ghoul",emoji:"👹",hp:134,maxHp:134,atk:28,def:11,xp:87,isBoss:false},
+      {id:"dq75_m4",name:"Ghoul",emoji:"👹",hp:162,maxHp:162,atk:21,def:12,xp:60,isBoss:false},
+      {id:"dq75_m5",name:"Wraith",emoji:"👁️",hp:180,maxHp:180,atk:21,def:13,xp:56,isBoss:false},
+      {id:"dq75_m6",name:"Wraith",emoji:"👁️",hp:190,maxHp:190,atk:19,def:12,xp:90,isBoss:false},
+      {id:"dq75_boss",name:"Lich Eterno",emoji:"💀",hp:222,maxHp:222,atk:22,def:11,xp:167,isBoss:true}
+    ],
+  },
+  {
+    id:"dq76", title:"La Maledizione di Roccaforte di Grumsh", active:true,
+    desc:"Indaga su strani eventi a Roccaforte di Grumsh. il Cacciatore Dorn ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Cacciatore Dorn",
+    difficulty:"medio",
+    xpReward:360, goldReward:149,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. il Cacciatore Dorn ti ha avvisato dei pericoli di Roccaforte di Grumsh." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Roccaforte di Grumsh!",
+        monsters:[
+          {id:"dq76_m1",name:"Ogre",emoji:"👹",hp:77,maxHp:77,atk:17,def:4,xp:50,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua." },
+      {
+        type:"loot",
+        text:"Hai trionfato a Roccaforte di Grumsh! Il bottino è tuo.",
+        loot:{ gold:[29,74], items:["Cristallo di Energia","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq76_m1",name:"Ogre",emoji:"👹",hp:77,maxHp:77,atk:17,def:4,xp:50,isBoss:false}
+    ],
+  },
+  {
+    id:"dq77", title:"La Profezia di Oasi Perduta", active:true,
+    desc:"Indaga su strani eventi a Oasi Perduta. il Beduino Omar ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Beduino Omar",
+    difficulty:"facile",
+    xpReward:126, goldReward:45,
+    steps:[
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti. il Beduino Omar ti ha avvisato dei pericoli di Oasi Perduta." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:9, gold:4, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Oasi Perduta!",
+        monsters:[
+          {id:"dq77_m1",name:"Predone del Deserto",emoji:"🗡️",hp:49,maxHp:49,atk:9,def:4,xp:24,isBoss:false},
+          {id:"dq77_m2",name:"Sfinge Minore",emoji:"🦁",hp:32,maxHp:32,atk:8,def:3,xp:13,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Oasi Perduta! Il bottino è tuo.",
+        loot:{ gold:[9,22], items:["Mappa del Tesoro","Amuleto del Sole"] }
+      }
+    ],
+    enemies:[
+      {id:"dq77_m1",name:"Predone del Deserto",emoji:"🗡️",hp:49,maxHp:49,atk:9,def:4,xp:24,isBoss:false},
+      {id:"dq77_m2",name:"Sfinge Minore",emoji:"🦁",hp:32,maxHp:32,atk:8,def:3,xp:13,isBoss:false}
+    ],
+  },
+  {
+    id:"dq78", title:"L'Eco di Antica Forgia Nanica", active:true,
+    desc:"Indaga su strani eventi a Antica Forgia Nanica. il Saggio Velnar ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Saggio Velnar",
+    difficulty:"difficile",
+    xpReward:844, goldReward:393,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. il Saggio Velnar ti ha avvisato dei pericoli di Antica Forgia Nanica." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:35, gold:17, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:17, gold:8, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Antica Forgia Nanica!",
+        monsters:[
+          {id:"dq78_m1",name:"Costrutto Arcano",emoji:"⚙️",hp:166,maxHp:166,atk:22,def:8,xp:55,isBoss:false},
+          {id:"dq78_m2",name:"Guardiano Spettrale",emoji:"👻",hp:130,maxHp:130,atk:22,def:10,xp:91,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute." },
+      {
+        type:"combat",
+        text:"Re Dimenticato appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq78_boss",name:"Re Dimenticato",emoji:"👑",hp:216,maxHp:216,atk:23,def:16,xp:144,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Antica Forgia Nanica! Il bottino è tuo.",
+        loot:{ gold:[78,196], items:["Guanti di Forza","Cristallo di Energia","Arco Lungo"] }
+      }
+    ],
+    enemies:[
+      {id:"dq78_m1",name:"Costrutto Arcano",emoji:"⚙️",hp:166,maxHp:166,atk:22,def:8,xp:55,isBoss:false},
+      {id:"dq78_m2",name:"Guardiano Spettrale",emoji:"👻",hp:130,maxHp:130,atk:22,def:10,xp:91,isBoss:false},
+      {id:"dq78_boss",name:"Re Dimenticato",emoji:"👑",hp:216,maxHp:216,atk:23,def:16,xp:144,isBoss:true}
+    ],
+  },
+  {
+    id:"dq79", title:"La Caccia di Bastione Verde", active:true,
+    desc:"Indaga su strani eventi a Bastione Verde. il Cacciatore Dorn ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Cacciatore Dorn",
+    difficulty:"epica",
+    xpReward:1205, goldReward:827,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. il Cacciatore Dorn ti ha avvisato dei pericoli di Bastione Verde." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:56, gold:28, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:28, gold:14, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Bastione Verde!",
+        monsters:[
+          {id:"dq79_m1",name:"Orco Guerriero",emoji:"👹",hp:146,maxHp:146,atk:23,def:8,xp:93,isBoss:false},
+          {id:"dq79_m2",name:"Orco Sciamano",emoji:"🧙",hp:115,maxHp:115,atk:25,def:14,xp:68,isBoss:false},
+          {id:"dq79_m3",name:"Lupo da Guerra",emoji:"🐺",hp:122,maxHp:122,atk:21,def:14,xp:98,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Re Orco Gruul appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq79_boss",name:"Re Orco Gruul",emoji:"👑",hp:409,maxHp:409,atk:44,def:14,xp:231,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Bastione Verde! Il bottino è tuo.",
+        loot:{ gold:[165,413], items:["Guanti di Forza","Pozione di Cura","Tomo Antico","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq79_m1",name:"Orco Guerriero",emoji:"👹",hp:146,maxHp:146,atk:23,def:8,xp:93,isBoss:false},
+      {id:"dq79_m2",name:"Orco Sciamano",emoji:"🧙",hp:115,maxHp:115,atk:25,def:14,xp:68,isBoss:false},
+      {id:"dq79_m3",name:"Lupo da Guerra",emoji:"🐺",hp:122,maxHp:122,atk:21,def:14,xp:98,isBoss:false},
+      {id:"dq79_boss",name:"Re Orco Gruul",emoji:"👑",hp:409,maxHp:409,atk:44,def:14,xp:231,isBoss:true}
+    ],
+  },
+  {
+    id:"dq80", title:"La Vendetta di Dune di Saharath", active:true,
+    desc:"Indaga su strani eventi a Dune di Saharath. la Sacerdotessa di Ra ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Dune di Saharath.» — la Sacerdotessa di Ra",
+    difficulty:"difficile",
+    xpReward:502, goldReward:272,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. la Sacerdotessa di Ra ti ha avvisato dei pericoli di Dune di Saharath." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:37, gold:18, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:18, gold:9, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Dune di Saharath!",
+        monsters:[
+          {id:"dq80_m1",name:"Sciacallo",emoji:"🐺",hp:182,maxHp:182,atk:20,def:13,xp:66,isBoss:false},
+          {id:"dq80_m2",name:"Predone del Deserto",emoji:"🗡️",hp:107,maxHp:107,atk:22,def:8,xp:57,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute." },
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute." },
+      {
+        type:"combat",
+        text:"Faraone Non-Morto appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq80_boss",name:"Faraone Non-Morto",emoji:"⚱️",hp:261,maxHp:261,atk:26,def:16,xp:167,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Dune di Saharath! Il bottino è tuo.",
+        loot:{ gold:[54,136], items:["Pozione di Mana","Ascia Pesante","Pozione di Mana"] }
+      }
+    ],
+    enemies:[
+      {id:"dq80_m1",name:"Sciacallo",emoji:"🐺",hp:182,maxHp:182,atk:20,def:13,xp:66,isBoss:false},
+      {id:"dq80_m2",name:"Predone del Deserto",emoji:"🗡️",hp:107,maxHp:107,atk:22,def:8,xp:57,isBoss:false},
+      {id:"dq80_boss",name:"Faraone Non-Morto",emoji:"⚱️",hp:261,maxHp:261,atk:26,def:16,xp:167,isBoss:true}
+    ],
+  },
+  {
+    id:"dq81", title:"La Caccia di Piazza dei Mercanti", active:true,
+    desc:"Indaga su strani eventi a Piazza dei Mercanti. il Mercante Doriano ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Piazza dei Mercanti.» — il Mercante Doriano",
+    difficulty:"facile",
+    xpReward:106, goldReward:79,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. il Mercante Doriano ti ha avvisato dei pericoli di Piazza dei Mercanti." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:12, gold:6, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:6, gold:3, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Piazza dei Mercanti!",
+        monsters:[
+          {id:"dq81_m1",name:"Brigante",emoji:"🏴‍☠️",hp:30,maxHp:30,atk:6,def:4,xp:22,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Piazza dei Mercanti! Il bottino è tuo.",
+        loot:{ gold:[15,39], items:["Pergamena Arcana","Cristallo di Energia"] }
+      }
+    ],
+    enemies:[
+      {id:"dq81_m1",name:"Brigante",emoji:"🏴‍☠️",hp:30,maxHp:30,atk:6,def:4,xp:22,isBoss:false}
+    ],
+  },
+  {
+    id:"dq82", title:"L'Ombra di Forte Sangue", active:true,
+    desc:"Indaga su strani eventi a Forte Sangue. la Mercenaria Kira ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — la Mercenaria Kira",
+    difficulty:"facile",
+    xpReward:105, goldReward:70,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. la Mercenaria Kira ti ha avvisato dei pericoli di Forte Sangue." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:10, gold:5, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:5, gold:2, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Forte Sangue! Il bottino è tuo.",
+        loot:{ gold:[14,35], items:["Spada Affilata","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq83", title:"L'Eco di Selva di Thalor", active:true,
+    desc:"Indaga su strani eventi a Selva di Thalor. il Vecchio Guardacaccia ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Selva di Thalor.» — il Vecchio Guardacaccia",
+    difficulty:"facile",
+    xpReward:165, goldReward:70,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. il Vecchio Guardacaccia ti ha avvisato dei pericoli di Selva di Thalor." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:8, gold:4, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Selva di Thalor! Il bottino è tuo.",
+        loot:{ gold:[14,35], items:["Tomo Antico","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq84", title:"L'Ombra di Antica Forgia Nanica", active:true,
+    desc:"Indaga su strani eventi a Antica Forgia Nanica. l'Esploratore Tobias ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — l'Esploratore Tobias",
+    difficulty:"medio",
+    xpReward:366, goldReward:101,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. l'Esploratore Tobias ti ha avvisato dei pericoli di Antica Forgia Nanica." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:25, gold:12, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Antica Forgia Nanica!",
+        monsters:[
+          {id:"dq84_m1",name:"Costrutto Arcano",emoji:"⚙️",hp:107,maxHp:107,atk:11,def:5,xp:54,isBoss:false},
+          {id:"dq84_m2",name:"Costrutto Arcano",emoji:"⚙️",hp:57,maxHp:57,atk:10,def:8,xp:42,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Antica Forgia Nanica!",
+        monsters:[
+          {id:"dq84_m3",name:"Guardiano Spettrale",emoji:"👻",hp:82,maxHp:82,atk:12,def:8,xp:33,isBoss:false},
+          {id:"dq84_m4",name:"Costrutto Arcano",emoji:"⚙️",hp:56,maxHp:56,atk:17,def:4,xp:45,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Antica Forgia Nanica! Il bottino è tuo.",
+        loot:{ gold:[20,50], items:["Antidoto","Gemma Lucente"] }
+      }
+    ],
+    enemies:[
+      {id:"dq84_m1",name:"Costrutto Arcano",emoji:"⚙️",hp:107,maxHp:107,atk:11,def:5,xp:54,isBoss:false},
+      {id:"dq84_m2",name:"Costrutto Arcano",emoji:"⚙️",hp:57,maxHp:57,atk:10,def:8,xp:42,isBoss:false},
+      {id:"dq84_m3",name:"Guardiano Spettrale",emoji:"👻",hp:82,maxHp:82,atk:12,def:8,xp:33,isBoss:false},
+      {id:"dq84_m4",name:"Costrutto Arcano",emoji:"⚙️",hp:56,maxHp:56,atk:17,def:4,xp:45,isBoss:false}
+    ],
+  },
+  {
+    id:"dq85", title:"La Tomba di Oasi Perduta", active:true,
+    desc:"Indaga su strani eventi a Oasi Perduta. il Beduino Omar ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Beduino Omar",
+    difficulty:"difficile",
+    xpReward:749, goldReward:249,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. il Beduino Omar ti ha avvisato dei pericoli di Oasi Perduta." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:29, gold:14, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:14, gold:7, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Oasi Perduta!",
+        monsters:[
+          {id:"dq85_m1",name:"Sciacallo",emoji:"🐺",hp:167,maxHp:167,atk:20,def:10,xp:62,isBoss:false},
+          {id:"dq85_m2",name:"Sciacallo",emoji:"🐺",hp:139,maxHp:139,atk:25,def:13,xp:84,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:29, gold:14, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:14, gold:7, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Faraone Non-Morto appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq85_boss",name:"Faraone Non-Morto",emoji:"⚱️",hp:202,maxHp:202,atk:25,def:12,xp:171,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Oasi Perduta! Il bottino è tuo.",
+        loot:{ gold:[49,124], items:["Guanti di Forza","Anello d'Argento","Amuleto del Sole"] }
+      }
+    ],
+    enemies:[
+      {id:"dq85_m1",name:"Sciacallo",emoji:"🐺",hp:167,maxHp:167,atk:20,def:10,xp:62,isBoss:false},
+      {id:"dq85_m2",name:"Sciacallo",emoji:"🐺",hp:139,maxHp:139,atk:25,def:13,xp:84,isBoss:false},
+      {id:"dq85_boss",name:"Faraone Non-Morto",emoji:"⚱️",hp:202,maxHp:202,atk:25,def:12,xp:171,isBoss:true}
+    ],
+  },
+  {
+    id:"dq86", title:"La Caccia di Scogliere di Tharn", active:true,
+    desc:"Indaga su strani eventi a Scogliere di Tharn. la Sirena Maris ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Scogliere di Tharn.» — la Sirena Maris",
+    difficulty:"difficile",
+    xpReward:530, goldReward:366,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. la Sirena Maris ti ha avvisato dei pericoli di Scogliere di Tharn." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:36, gold:18, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:18, gold:9, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Scogliere di Tharn!",
+        monsters:[
+          {id:"dq86_m1",name:"Squalo Spada",emoji:"🦈",hp:132,maxHp:132,atk:28,def:12,xp:77,isBoss:false},
+          {id:"dq86_m2",name:"Kraken Giovane",emoji:"🐙",hp:152,maxHp:152,atk:21,def:13,xp:82,isBoss:false},
+          {id:"dq86_m3",name:"Squalo Spada",emoji:"🦈",hp:130,maxHp:130,atk:26,def:12,xp:61,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Scogliere di Tharn!",
+        monsters:[
+          {id:"dq86_m4",name:"Pirata",emoji:"🏴‍☠️",hp:117,maxHp:117,atk:25,def:11,xp:67,isBoss:false},
+          {id:"dq86_m5",name:"Squalo Spada",emoji:"🦈",hp:150,maxHp:150,atk:21,def:12,xp:68,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Kraken Antico appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq86_boss",name:"Kraken Antico",emoji:"🐙",hp:190,maxHp:190,atk:25,def:14,xp:143,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Scogliere di Tharn! Il bottino è tuo.",
+        loot:{ gold:[73,183], items:["Reliquia Sacra","Cintura di Resistenza","Antidoto"] }
+      }
+    ],
+    enemies:[
+      {id:"dq86_m1",name:"Squalo Spada",emoji:"🦈",hp:132,maxHp:132,atk:28,def:12,xp:77,isBoss:false},
+      {id:"dq86_m2",name:"Kraken Giovane",emoji:"🐙",hp:152,maxHp:152,atk:21,def:13,xp:82,isBoss:false},
+      {id:"dq86_m3",name:"Squalo Spada",emoji:"🦈",hp:130,maxHp:130,atk:26,def:12,xp:61,isBoss:false},
+      {id:"dq86_m4",name:"Pirata",emoji:"🏴‍☠️",hp:117,maxHp:117,atk:25,def:11,xp:67,isBoss:false},
+      {id:"dq86_m5",name:"Squalo Spada",emoji:"🦈",hp:150,maxHp:150,atk:21,def:12,xp:68,isBoss:false},
+      {id:"dq86_boss",name:"Kraken Antico",emoji:"🐙",hp:190,maxHp:190,atk:25,def:14,xp:143,isBoss:true}
+    ],
+  },
+  {
+    id:"dq87", title:"La Discesa di Città Sommersa", active:true,
+    desc:"Indaga su strani eventi a Città Sommersa. l'Esploratore Tobias ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — l'Esploratore Tobias",
+    difficulty:"facile",
+    xpReward:191, goldReward:57,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. l'Esploratore Tobias ti ha avvisato dei pericoli di Città Sommersa." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:14, gold:7, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Città Sommersa!",
+        monsters:[
+          {id:"dq87_m1",name:"Guardiano Spettrale",emoji:"👻",hp:36,maxHp:36,atk:10,def:3,xp:27,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Città Sommersa! Il bottino è tuo.",
+        loot:{ gold:[11,28], items:["Guanti di Forza","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq87_m1",name:"Guardiano Spettrale",emoji:"👻",hp:36,maxHp:36,atk:10,def:3,xp:27,isBoss:false}
+    ],
+  },
+  {
+    id:"dq88", title:"La Maledizione di Altare di Sangue", active:true,
+    desc:"Indaga su strani eventi a Altare di Sangue. l'Inquisitore Vex ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — l'Inquisitore Vex",
+    difficulty:"facile",
+    xpReward:187, goldReward:40,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. l'Inquisitore Vex ti ha avvisato dei pericoli di Altare di Sangue." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:12, gold:6, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:6, gold:3, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Altare di Sangue! Il bottino è tuo.",
+        loot:{ gold:[8,20], items:["Tomo Antico","Guanti di Forza"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq89", title:"Il Risveglio di Altare di Sangue", active:true,
+    desc:"Indaga su strani eventi a Altare di Sangue. la Paladina Mara ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Altare di Sangue.» — la Paladina Mara",
+    difficulty:"medio",
+    xpReward:281, goldReward:169,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. la Paladina Mara ti ha avvisato dei pericoli di Altare di Sangue." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:23, gold:11, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Altare di Sangue!",
+        monsters:[
+          {id:"dq89_m1",name:"Servo Mutato",emoji:"👁️",hp:92,maxHp:92,atk:14,def:5,xp:48,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Altare di Sangue! Il bottino è tuo.",
+        loot:{ gold:[33,84], items:["Anello d'Argento","Guanti di Forza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq89_m1",name:"Servo Mutato",emoji:"👁️",hp:92,maxHp:92,atk:14,def:5,xp:48,isBoss:false}
+    ],
+  },
+  {
+    id:"dq90", title:"Il Patto di Cripte di Maldur", active:true,
+    desc:"Indaga su strani eventi a Cripte di Maldur. la Sacerdotessa Elen ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — la Sacerdotessa Elen",
+    difficulty:"difficile",
+    xpReward:683, goldReward:363,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. la Sacerdotessa Elen ti ha avvisato dei pericoli di Cripte di Maldur." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:25, gold:12, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Cripte di Maldur!",
+        monsters:[
+          {id:"dq90_m1",name:"Spettro",emoji:"👻",hp:193,maxHp:193,atk:27,def:9,xp:58,isBoss:false},
+          {id:"dq90_m2",name:"Zombi",emoji:"🧟",hp:117,maxHp:117,atk:22,def:14,xp:91,isBoss:false},
+          {id:"dq90_m3",name:"Scheletro Guerriero",emoji:"💀",hp:155,maxHp:155,atk:28,def:13,xp:83,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Cripte di Maldur!",
+        monsters:[
+          {id:"dq90_m4",name:"Spettro",emoji:"👻",hp:148,maxHp:148,atk:25,def:12,xp:55,isBoss:false},
+          {id:"dq90_m5",name:"Ghoul",emoji:"👹",hp:113,maxHp:113,atk:27,def:14,xp:73,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Cavaliere della Morte appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq90_boss",name:"Cavaliere della Morte",emoji:"⚔️",hp:207,maxHp:207,atk:30,def:13,xp:164,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Cripte di Maldur! Il bottino è tuo.",
+        loot:{ gold:[72,181], items:["Anello d'Argento","Antidoto","Elmo Rinforzato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq90_m1",name:"Spettro",emoji:"👻",hp:193,maxHp:193,atk:27,def:9,xp:58,isBoss:false},
+      {id:"dq90_m2",name:"Zombi",emoji:"🧟",hp:117,maxHp:117,atk:22,def:14,xp:91,isBoss:false},
+      {id:"dq90_m3",name:"Scheletro Guerriero",emoji:"💀",hp:155,maxHp:155,atk:28,def:13,xp:83,isBoss:false},
+      {id:"dq90_m4",name:"Spettro",emoji:"👻",hp:148,maxHp:148,atk:25,def:12,xp:55,isBoss:false},
+      {id:"dq90_m5",name:"Ghoul",emoji:"👹",hp:113,maxHp:113,atk:27,def:14,xp:73,isBoss:false},
+      {id:"dq90_boss",name:"Cavaliere della Morte",emoji:"⚔️",hp:207,maxHp:207,atk:30,def:13,xp:164,isBoss:true}
+    ],
+  },
+  {
+    id:"dq91", title:"La Tomba di Vascello Insanguinato", active:true,
+    desc:"Indaga su strani eventi a Vascello Insanguinato. il Mozzo Tim ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Mozzo Tim",
+    difficulty:"medio",
+    xpReward:379, goldReward:112,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. il Mozzo Tim ti ha avvisato dei pericoli di Vascello Insanguinato." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Vascello Insanguinato!",
+        monsters:[
+          {id:"dq91_m1",name:"Mozzo Posseduto",emoji:"👻",hp:78,maxHp:78,atk:17,def:8,xp:37,isBoss:false},
+          {id:"dq91_m2",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:109,maxHp:109,atk:14,def:5,xp:43,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti." },
+      {
+        type:"loot",
+        text:"Hai trionfato a Vascello Insanguinato! Il bottino è tuo.",
+        loot:{ gold:[22,56], items:["Mappa del Tesoro","Reliquia Sacra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq91_m1",name:"Mozzo Posseduto",emoji:"👻",hp:78,maxHp:78,atk:17,def:8,xp:37,isBoss:false},
+      {id:"dq91_m2",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:109,maxHp:109,atk:14,def:5,xp:43,isBoss:false}
+    ],
+  },
+  {
+    id:"dq92", title:"La Maledizione di Forte Sangue", active:true,
+    desc:"Indaga su strani eventi a Forte Sangue. il Disertore Orco Zog ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Disertore Orco Zog",
+    difficulty:"medio",
+    xpReward:450, goldReward:106,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Disertore Orco Zog ti ha avvisato dei pericoli di Forte Sangue." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:23, gold:11, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Forte Sangue!",
+        monsters:[
+          {id:"dq92_m1",name:"Lupo da Guerra",emoji:"🐺",hp:104,maxHp:104,atk:18,def:4,xp:49,isBoss:false},
+          {id:"dq92_m2",name:"Ogre",emoji:"👹",hp:55,maxHp:55,atk:11,def:8,xp:50,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Forte Sangue! Il bottino è tuo.",
+        loot:{ gold:[21,53], items:["Guanti di Forza","Pozione di Mana"] }
+      }
+    ],
+    enemies:[
+      {id:"dq92_m1",name:"Lupo da Guerra",emoji:"🐺",hp:104,maxHp:104,atk:18,def:4,xp:49,isBoss:false},
+      {id:"dq92_m2",name:"Ogre",emoji:"👹",hp:55,maxHp:55,atk:11,def:8,xp:50,isBoss:false}
+    ],
+  },
+  {
+    id:"dq93", title:"L'Eco di Catena di Vorndal", active:true,
+    desc:"Indaga su strani eventi a Catena di Vorndal. lo Scalatore Bjorn ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — lo Scalatore Bjorn",
+    difficulty:"medio",
+    xpReward:400, goldReward:101,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. lo Scalatore Bjorn ti ha avvisato dei pericoli di Catena di Vorndal." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:20, gold:10, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Catena di Vorndal!",
+        monsters:[
+          {id:"dq93_m1",name:"Lupo di Ghiaccio",emoji:"🐺",hp:104,maxHp:104,atk:17,def:7,xp:33,isBoss:false},
+          {id:"dq93_m2",name:"Lupo di Ghiaccio",emoji:"🐺",hp:98,maxHp:98,atk:12,def:5,xp:32,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Catena di Vorndal! Il bottino è tuo.",
+        loot:{ gold:[20,50], items:["Cristallo di Energia","Guanti di Forza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq93_m1",name:"Lupo di Ghiaccio",emoji:"🐺",hp:104,maxHp:104,atk:17,def:7,xp:33,isBoss:false},
+      {id:"dq93_m2",name:"Lupo di Ghiaccio",emoji:"🐺",hp:98,maxHp:98,atk:12,def:5,xp:32,isBoss:false}
+    ],
+  },
+  {
+    id:"dq94", title:"La Tomba di Pozzo di Lava", active:true,
+    desc:"Indaga su strani eventi a Pozzo di Lava. il Cacciatore di Demoni ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Pozzo di Lava.» — il Cacciatore di Demoni",
+    difficulty:"facile",
+    xpReward:143, goldReward:79,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. il Cacciatore di Demoni ti ha avvisato dei pericoli di Pozzo di Lava." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:9, gold:4, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Pozzo di Lava! Il bottino è tuo.",
+        loot:{ gold:[15,39], items:["Guanti di Forza","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq95", title:"Il Risveglio di Abisso di Khaal", active:true,
+    desc:"Indaga su strani eventi a Abisso di Khaal. il Cacciatore di Demoni ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Cacciatore di Demoni",
+    difficulty:"difficile",
+    xpReward:562, goldReward:285,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Cacciatore di Demoni ti ha avvisato dei pericoli di Abisso di Khaal." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:37, gold:18, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:18, gold:9, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Abisso di Khaal!",
+        monsters:[
+          {id:"dq95_m1",name:"Cane Infernale",emoji:"🐕",hp:108,maxHp:108,atk:22,def:9,xp:56,isBoss:false},
+          {id:"dq95_m2",name:"Cultista",emoji:"🔥",hp:100,maxHp:100,atk:18,def:13,xp:65,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:33, gold:16, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:16, gold:8, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:33, gold:16, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:16, gold:8, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Signore dell'Inferno appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq95_boss",name:"Signore dell'Inferno",emoji:"😈",hp:265,maxHp:265,atk:25,def:15,xp:147,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Abisso di Khaal! Il bottino è tuo.",
+        loot:{ gold:[57,142], items:["Reliquia Sacra","Anello d'Argento","Antidoto"] }
+      }
+    ],
+    enemies:[
+      {id:"dq95_m1",name:"Cane Infernale",emoji:"🐕",hp:108,maxHp:108,atk:22,def:9,xp:56,isBoss:false},
+      {id:"dq95_m2",name:"Cultista",emoji:"🔥",hp:100,maxHp:100,atk:18,def:13,xp:65,isBoss:false},
+      {id:"dq95_boss",name:"Signore dell'Inferno",emoji:"😈",hp:265,maxHp:265,atk:25,def:15,xp:147,isBoss:true}
+    ],
+  },
+  {
+    id:"dq96", title:"La Tomba di Veridia", active:true,
+    desc:"Indaga su strani eventi a Veridia. il Capitano Renart ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Veridia.» — il Capitano Renart",
+    difficulty:"facile",
+    xpReward:133, goldReward:70,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. il Capitano Renart ti ha avvisato dei pericoli di Veridia." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Veridia! Il bottino è tuo.",
+        loot:{ gold:[14,35], items:["Bastone Runico","Pozione di Mana"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq97", title:"L'Assedio di Cripte di Maldur", active:true,
+    desc:"Indaga su strani eventi a Cripte di Maldur. l'Archeologo Vandros ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Cripte di Maldur.» — l'Archeologo Vandros",
+    difficulty:"medio",
+    xpReward:421, goldReward:147,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. l'Archeologo Vandros ti ha avvisato dei pericoli di Cripte di Maldur." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:23, gold:11, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Cripte di Maldur!",
+        monsters:[
+          {id:"dq97_m1",name:"Ghoul",emoji:"👹",hp:62,maxHp:62,atk:14,def:8,xp:38,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Cripte di Maldur! Il bottino è tuo.",
+        loot:{ gold:[29,73], items:["Pugnale Avvelenato","Pergamena Arcana"] }
+      }
+    ],
+    enemies:[
+      {id:"dq97_m1",name:"Ghoul",emoji:"👹",hp:62,maxHp:62,atk:14,def:8,xp:38,isBoss:false}
+    ],
+  },
+  {
+    id:"dq98", title:"Il Segreto di Città Sommersa", active:true,
+    desc:"Indaga su strani eventi a Città Sommersa. la Storica Mirella ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Città Sommersa.» — la Storica Mirella",
+    difficulty:"facile",
+    xpReward:131, goldReward:60,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. la Storica Mirella ti ha avvisato dei pericoli di Città Sommersa." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:14, gold:7, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Città Sommersa!",
+        monsters:[
+          {id:"dq98_m1",name:"Statua Animata",emoji:"🗿",hp:21,maxHp:21,atk:8,def:2,xp:20,isBoss:false},
+          {id:"dq98_m2",name:"Statua Animata",emoji:"🗿",hp:20,maxHp:20,atk:10,def:1,xp:26,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Città Sommersa! Il bottino è tuo.",
+        loot:{ gold:[12,30], items:["Elmo Rinforzato","Cintura di Resistenza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq98_m1",name:"Statua Animata",emoji:"🗿",hp:21,maxHp:21,atk:8,def:2,xp:20,isBoss:false},
+      {id:"dq98_m2",name:"Statua Animata",emoji:"🗿",hp:20,maxHp:20,atk:10,def:1,xp:26,isBoss:false}
+    ],
+  },
+  {
+    id:"dq99", title:"Il Segreto di Oasi Perduta", active:true,
+    desc:"Indaga su strani eventi a Oasi Perduta. la Sacerdotessa di Ra ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Oasi Perduta.» — la Sacerdotessa di Ra",
+    difficulty:"facile",
+    xpReward:168, goldReward:67,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. la Sacerdotessa di Ra ti ha avvisato dei pericoli di Oasi Perduta." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:9, gold:4, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Oasi Perduta!",
+        monsters:[
+          {id:"dq99_m1",name:"Sfinge Minore",emoji:"🦁",hp:28,maxHp:28,atk:9,def:4,xp:20,isBoss:false},
+          {id:"dq99_m2",name:"Sciacallo",emoji:"🐺",hp:48,maxHp:48,atk:9,def:3,xp:25,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Oasi Perduta! Il bottino è tuo.",
+        loot:{ gold:[13,33], items:["Mappa del Tesoro","Elmo Rinforzato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq99_m1",name:"Sfinge Minore",emoji:"🦁",hp:28,maxHp:28,atk:9,def:4,xp:20,isBoss:false},
+      {id:"dq99_m2",name:"Sciacallo",emoji:"🐺",hp:48,maxHp:48,atk:9,def:3,xp:25,isBoss:false}
+    ],
+  },
+  {
+    id:"dq100", title:"Il Tradimento di Città Sommersa", active:true,
+    desc:"Indaga su strani eventi a Città Sommersa. l'Esploratore Tobias ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Città Sommersa.» — l'Esploratore Tobias",
+    difficulty:"facile",
+    xpReward:194, goldReward:42,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. l'Esploratore Tobias ti ha avvisato dei pericoli di Città Sommersa." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:9, gold:4, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Città Sommersa!",
+        monsters:[
+          {id:"dq100_m1",name:"Statua Animata",emoji:"🗿",hp:33,maxHp:33,atk:10,def:4,xp:18,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Città Sommersa! Il bottino è tuo.",
+        loot:{ gold:[8,21], items:["Ascia Pesante","Arco Lungo"] }
+      }
+    ],
+    enemies:[
+      {id:"dq100_m1",name:"Statua Animata",emoji:"🗿",hp:33,maxHp:33,atk:10,def:4,xp:18,isBoss:false}
+    ],
+  },
+  {
+    id:"dq101", title:"La Caccia di Acque Stagnanti", active:true,
+    desc:"Indaga su strani eventi a Acque Stagnanti. la Pescatrice Lila ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Acque Stagnanti.» — la Pescatrice Lila",
+    difficulty:"facile",
+    xpReward:134, goldReward:69,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. la Pescatrice Lila ti ha avvisato dei pericoli di Acque Stagnanti." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Acque Stagnanti! Il bottino è tuo.",
+        loot:{ gold:[13,34], items:["Stivali Veloci","Pozione di Cura"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq102", title:"L'Assedio di Sabbie Bruciate", active:true,
+    desc:"Indaga su strani eventi a Sabbie Bruciate. il Carovaniere Hassan ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Carovaniere Hassan",
+    difficulty:"facile",
+    xpReward:138, goldReward:64,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. il Carovaniere Hassan ti ha avvisato dei pericoli di Sabbie Bruciate." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:17, gold:8, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Sabbie Bruciate!",
+        monsters:[
+          {id:"dq102_m1",name:"Predone del Deserto",emoji:"🗡️",hp:45,maxHp:45,atk:10,def:4,xp:24,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Sabbie Bruciate! Il bottino è tuo.",
+        loot:{ gold:[12,32], items:["Cristallo di Energia","Mappa del Tesoro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq102_m1",name:"Predone del Deserto",emoji:"🗡️",hp:45,maxHp:45,atk:10,def:4,xp:24,isBoss:false}
+    ],
+  },
+  {
+    id:"dq103", title:"La Caccia di Catena di Vorndal", active:true,
+    desc:"Indaga su strani eventi a Catena di Vorndal. la Strega della Montagna ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — la Strega della Montagna",
+    difficulty:"epica",
+    xpReward:1144, goldReward:972,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. la Strega della Montagna ti ha avvisato dei pericoli di Catena di Vorndal." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:46, gold:23, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:23, gold:11, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Catena di Vorndal!",
+        monsters:[
+          {id:"dq103_m1",name:"Yeti",emoji:"🦍",hp:140,maxHp:140,atk:18,def:12,xp:67,isBoss:false},
+          {id:"dq103_m2",name:"Aquila Gigante",emoji:"🦅",hp:142,maxHp:142,atk:19,def:10,xp:93,isBoss:false},
+          {id:"dq103_m3",name:"Lupo di Ghiaccio",emoji:"🐺",hp:125,maxHp:125,atk:24,def:8,xp:63,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Catena di Vorndal!",
+        monsters:[
+          {id:"dq103_m4",name:"Gigante di Pietra",emoji:"🗿",hp:137,maxHp:137,atk:22,def:10,xp:74,isBoss:false},
+          {id:"dq103_m5",name:"Gigante di Pietra",emoji:"🗿",hp:123,maxHp:123,atk:26,def:9,xp:96,isBoss:false},
+          {id:"dq103_m6",name:"Aquila Gigante",emoji:"🦅",hp:134,maxHp:134,atk:21,def:14,xp:64,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua." },
+      {
+        type:"combat",
+        text:"Re dei Giganti appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq103_boss",name:"Re dei Giganti",emoji:"🗿",hp:301,maxHp:301,atk:30,def:18,xp:252,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Catena di Vorndal! Il bottino è tuo.",
+        loot:{ gold:[194,486], items:["Spada Affilata","Stivali Veloci","Guanti di Forza","Gemma Lucente"] }
+      }
+    ],
+    enemies:[
+      {id:"dq103_m1",name:"Yeti",emoji:"🦍",hp:140,maxHp:140,atk:18,def:12,xp:67,isBoss:false},
+      {id:"dq103_m2",name:"Aquila Gigante",emoji:"🦅",hp:142,maxHp:142,atk:19,def:10,xp:93,isBoss:false},
+      {id:"dq103_m3",name:"Lupo di Ghiaccio",emoji:"🐺",hp:125,maxHp:125,atk:24,def:8,xp:63,isBoss:false},
+      {id:"dq103_m4",name:"Gigante di Pietra",emoji:"🗿",hp:137,maxHp:137,atk:22,def:10,xp:74,isBoss:false},
+      {id:"dq103_m5",name:"Gigante di Pietra",emoji:"🗿",hp:123,maxHp:123,atk:26,def:9,xp:96,isBoss:false},
+      {id:"dq103_m6",name:"Aquila Gigante",emoji:"🦅",hp:134,maxHp:134,atk:21,def:14,xp:64,isBoss:false},
+      {id:"dq103_boss",name:"Re dei Giganti",emoji:"🗿",hp:301,maxHp:301,atk:30,def:18,xp:252,isBoss:true}
+    ],
+  },
+  {
+    id:"dq104", title:"La Maledizione di Porto Stellato", active:true,
+    desc:"Indaga su strani eventi a Porto Stellato. la Spia Selene ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — la Spia Selene",
+    difficulty:"medio",
+    xpReward:419, goldReward:112,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. la Spia Selene ti ha avvisato dei pericoli di Porto Stellato." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:24, gold:12, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Porto Stellato!",
+        monsters:[
+          {id:"dq104_m1",name:"Guardia Corrotta",emoji:"💂",hp:104,maxHp:104,atk:15,def:5,xp:44,isBoss:false},
+          {id:"dq104_m2",name:"Sicario",emoji:"🥷",hp:108,maxHp:108,atk:12,def:8,xp:50,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Porto Stellato!",
+        monsters:[
+          {id:"dq104_m3",name:"Guardia Corrotta",emoji:"💂",hp:51,maxHp:51,atk:12,def:8,xp:54,isBoss:false},
+          {id:"dq104_m4",name:"Ladro",emoji:"🗡️",hp:68,maxHp:68,atk:14,def:8,xp:49,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Porto Stellato! Il bottino è tuo.",
+        loot:{ gold:[22,56], items:["Stivali Veloci","Spada Affilata"] }
+      }
+    ],
+    enemies:[
+      {id:"dq104_m1",name:"Guardia Corrotta",emoji:"💂",hp:104,maxHp:104,atk:15,def:5,xp:44,isBoss:false},
+      {id:"dq104_m2",name:"Sicario",emoji:"🥷",hp:108,maxHp:108,atk:12,def:8,xp:50,isBoss:false},
+      {id:"dq104_m3",name:"Guardia Corrotta",emoji:"💂",hp:51,maxHp:51,atk:12,def:8,xp:54,isBoss:false},
+      {id:"dq104_m4",name:"Ladro",emoji:"🗡️",hp:68,maxHp:68,atk:14,def:8,xp:49,isBoss:false}
+    ],
+  },
+  {
+    id:"dq105", title:"La Discesa di Galeone Fantasma", active:true,
+    desc:"Indaga su strani eventi a Galeone Fantasma. il Mozzo Tim ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Galeone Fantasma.» — il Mozzo Tim",
+    difficulty:"epica",
+    xpReward:1227, goldReward:851,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Mozzo Tim ti ha avvisato dei pericoli di Galeone Fantasma." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:55, gold:27, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:27, gold:13, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Galeone Fantasma!",
+        monsters:[
+          {id:"dq105_m1",name:"Marinaio Brutto",emoji:"🗡️",hp:122,maxHp:122,atk:27,def:10,xp:99,isBoss:false},
+          {id:"dq105_m2",name:"Bombardiere",emoji:"💣",hp:86,maxHp:86,atk:27,def:9,xp:75,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Quartiermastro Demone appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq105_boss",name:"Quartiermastro Demone",emoji:"👹",hp:523,maxHp:523,atk:33,def:18,xp:202,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Galeone Fantasma! Il bottino è tuo.",
+        loot:{ gold:[170,425], items:["Tomo Antico","Cristallo di Energia","Reliquia Sacra","Spada Affilata"] }
+      }
+    ],
+    enemies:[
+      {id:"dq105_m1",name:"Marinaio Brutto",emoji:"🗡️",hp:122,maxHp:122,atk:27,def:10,xp:99,isBoss:false},
+      {id:"dq105_m2",name:"Bombardiere",emoji:"💣",hp:86,maxHp:86,atk:27,def:9,xp:75,isBoss:false},
+      {id:"dq105_boss",name:"Quartiermastro Demone",emoji:"👹",hp:523,maxHp:523,atk:33,def:18,xp:202,isBoss:true}
+    ],
+  },
+  {
+    id:"dq106", title:"La Maledizione di Caravella dei Dannati", active:true,
+    desc:"Indaga su strani eventi a Caravella dei Dannati. il Mozzo Tim ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Mozzo Tim",
+    difficulty:"medio",
+    xpReward:437, goldReward:179,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. il Mozzo Tim ti ha avvisato dei pericoli di Caravella dei Dannati." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:22, gold:11, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Caravella dei Dannati!",
+        monsters:[
+          {id:"dq106_m1",name:"Mozzo Posseduto",emoji:"👻",hp:50,maxHp:50,atk:18,def:7,xp:48,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Caravella dei Dannati! Il bottino è tuo.",
+        loot:{ gold:[35,89], items:["Tomo Antico","Ascia Pesante"] }
+      }
+    ],
+    enemies:[
+      {id:"dq106_m1",name:"Mozzo Posseduto",emoji:"👻",hp:50,maxHp:50,atk:18,def:7,xp:48,isBoss:false}
+    ],
+  },
+  {
+    id:"dq107", title:"La Profezia di Abisso di Khaal", active:true,
+    desc:"Indaga su strani eventi a Abisso di Khaal. la Paladina Iris ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — la Paladina Iris",
+    difficulty:"medio",
+    xpReward:373, goldReward:137,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. la Paladina Iris ti ha avvisato dei pericoli di Abisso di Khaal." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:17, gold:8, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Abisso di Khaal!",
+        monsters:[
+          {id:"dq107_m1",name:"Diavolo Spinato",emoji:"😈",hp:107,maxHp:107,atk:16,def:7,xp:33,isBoss:false},
+          {id:"dq107_m2",name:"Diavolo Spinato",emoji:"😈",hp:72,maxHp:72,atk:18,def:8,xp:52,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo." },
+      {
+        type:"loot",
+        text:"Hai trionfato a Abisso di Khaal! Il bottino è tuo.",
+        loot:{ gold:[27,68], items:["Tomo Antico","Guanti di Forza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq107_m1",name:"Diavolo Spinato",emoji:"😈",hp:107,maxHp:107,atk:16,def:7,xp:33,isBoss:false},
+      {id:"dq107_m2",name:"Diavolo Spinato",emoji:"😈",hp:72,maxHp:72,atk:18,def:8,xp:52,isBoss:false}
+    ],
+  },
+  {
+    id:"dq108", title:"L'Ombra di Isole dei Naufraghi", active:true,
+    desc:"Indaga su strani eventi a Isole dei Naufraghi. la Sirena Maris ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — la Sirena Maris",
+    difficulty:"medio",
+    xpReward:304, goldReward:107,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. la Sirena Maris ti ha avvisato dei pericoli di Isole dei Naufraghi." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:21, gold:10, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Isole dei Naufraghi!",
+        monsters:[
+          {id:"dq108_m1",name:"Squalo Spada",emoji:"🦈",hp:71,maxHp:71,atk:15,def:6,xp:43,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Isole dei Naufraghi! Il bottino è tuo.",
+        loot:{ gold:[21,53], items:["Spada Affilata","Antidoto"] }
+      }
+    ],
+    enemies:[
+      {id:"dq108_m1",name:"Squalo Spada",emoji:"🦈",hp:71,maxHp:71,atk:15,def:6,xp:43,isBoss:false}
+    ],
+  },
+  {
+    id:"dq109", title:"Il Tradimento di Altare di Sangue", active:true,
+    desc:"Indaga su strani eventi a Altare di Sangue. il Sacerdote Pentito ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Sacerdote Pentito",
+    difficulty:"facile",
+    xpReward:184, goldReward:51,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. il Sacerdote Pentito ti ha avvisato dei pericoli di Altare di Sangue." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Altare di Sangue! Il bottino è tuo.",
+        loot:{ gold:[10,25], items:["Antidoto","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq110", title:"L'Ombra di Bosco delle Fate", active:true,
+    desc:"Indaga su strani eventi a Bosco delle Fate. il Bardo Cyril ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Bosco delle Fate.» — il Bardo Cyril",
+    difficulty:"facile",
+    xpReward:184, goldReward:42,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. il Bardo Cyril ti ha avvisato dei pericoli di Bosco delle Fate." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Bosco delle Fate!",
+        monsters:[
+          {id:"dq110_m1",name:"Folletto Dispettoso",emoji:"🧚",hp:43,maxHp:43,atk:10,def:3,xp:17,isBoss:false},
+          {id:"dq110_m2",name:"Satiro",emoji:"🐐",hp:28,maxHp:28,atk:6,def:1,xp:24,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Bosco delle Fate! Il bottino è tuo.",
+        loot:{ gold:[8,21], items:["Arco Lungo","Tomo Antico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq110_m1",name:"Folletto Dispettoso",emoji:"🧚",hp:43,maxHp:43,atk:10,def:3,xp:17,isBoss:false},
+      {id:"dq110_m2",name:"Satiro",emoji:"🐐",hp:28,maxHp:28,atk:6,def:1,xp:24,isBoss:false}
+    ],
+  },
+  {
+    id:"dq111", title:"Il Mistero di Vascello Insanguinato", active:true,
+    desc:"Indaga su strani eventi a Vascello Insanguinato. la Cartografa Lina ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — la Cartografa Lina",
+    difficulty:"difficile",
+    xpReward:549, goldReward:360,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. la Cartografa Lina ti ha avvisato dei pericoli di Vascello Insanguinato." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:38, gold:19, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:19, gold:9, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Vascello Insanguinato!",
+        monsters:[
+          {id:"dq111_m1",name:"Mozzo Posseduto",emoji:"👻",hp:166,maxHp:166,atk:21,def:8,xp:78,isBoss:false},
+          {id:"dq111_m2",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:102,maxHp:102,atk:27,def:11,xp:64,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:41, gold:20, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:20, gold:10, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Capitano Mortenero appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq111_boss",name:"Capitano Mortenero",emoji:"💀",hp:210,maxHp:210,atk:32,def:11,xp:178,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Vascello Insanguinato! Il bottino è tuo.",
+        loot:{ gold:[72,180], items:["Reliquia Sacra","Guanti di Forza","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq111_m1",name:"Mozzo Posseduto",emoji:"👻",hp:166,maxHp:166,atk:21,def:8,xp:78,isBoss:false},
+      {id:"dq111_m2",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:102,maxHp:102,atk:27,def:11,xp:64,isBoss:false},
+      {id:"dq111_boss",name:"Capitano Mortenero",emoji:"💀",hp:210,maxHp:210,atk:32,def:11,xp:178,isBoss:true}
+    ],
+  },
+  {
+    id:"dq112", title:"L'Eco di Isole dei Naufraghi", active:true,
+    desc:"Indaga su strani eventi a Isole dei Naufraghi. il Vecchio Marinaio ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Isole dei Naufraghi.» — il Vecchio Marinaio",
+    difficulty:"medio",
+    xpReward:311, goldReward:106,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. il Vecchio Marinaio ti ha avvisato dei pericoli di Isole dei Naufraghi." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Isole dei Naufraghi!",
+        monsters:[
+          {id:"dq112_m1",name:"Kraken Giovane",emoji:"🐙",hp:72,maxHp:72,atk:17,def:6,xp:32,isBoss:false},
+          {id:"dq112_m2",name:"Kraken Giovane",emoji:"🐙",hp:52,maxHp:52,atk:14,def:5,xp:40,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Isole dei Naufraghi!",
+        monsters:[
+          {id:"dq112_m3",name:"Squalo Spada",emoji:"🦈",hp:97,maxHp:97,atk:18,def:5,xp:40,isBoss:false},
+          {id:"dq112_m4",name:"Sirena Maligna",emoji:"🧜‍♀️",hp:50,maxHp:50,atk:18,def:8,xp:38,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Isole dei Naufraghi! Il bottino è tuo.",
+        loot:{ gold:[21,53], items:["Pergamena Arcana","Mantello dell'Ombra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq112_m1",name:"Kraken Giovane",emoji:"🐙",hp:72,maxHp:72,atk:17,def:6,xp:32,isBoss:false},
+      {id:"dq112_m2",name:"Kraken Giovane",emoji:"🐙",hp:52,maxHp:52,atk:14,def:5,xp:40,isBoss:false},
+      {id:"dq112_m3",name:"Squalo Spada",emoji:"🦈",hp:97,maxHp:97,atk:18,def:5,xp:40,isBoss:false},
+      {id:"dq112_m4",name:"Sirena Maligna",emoji:"🧜‍♀️",hp:50,maxHp:50,atk:18,def:8,xp:38,isBoss:false}
+    ],
+  },
+  {
+    id:"dq113", title:"Il Mistero di Scogliere di Tharn", active:true,
+    desc:"Indaga su strani eventi a Scogliere di Tharn. il Vecchio Marinaio ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Scogliere di Tharn.» — il Vecchio Marinaio",
+    difficulty:"difficile",
+    xpReward:766, goldReward:376,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. il Vecchio Marinaio ti ha avvisato dei pericoli di Scogliere di Tharn." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:34, gold:17, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:17, gold:8, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Scogliere di Tharn!",
+        monsters:[
+          {id:"dq113_m1",name:"Kraken Giovane",emoji:"🐙",hp:178,maxHp:178,atk:25,def:11,xp:58,isBoss:false},
+          {id:"dq113_m2",name:"Kraken Giovane",emoji:"🐙",hp:143,maxHp:143,atk:28,def:12,xp:66,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:33, gold:16, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:16, gold:8, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Scogliere di Tharn!",
+        monsters:[
+          {id:"dq113_m3",name:"Pirata",emoji:"🏴‍☠️",hp:144,maxHp:144,atk:24,def:10,xp:95,isBoss:false},
+          {id:"dq113_m4",name:"Pirata",emoji:"🏴‍☠️",hp:123,maxHp:123,atk:20,def:14,xp:85,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Kraken Antico appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq113_boss",name:"Kraken Antico",emoji:"🐙",hp:203,maxHp:203,atk:29,def:13,xp:200,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Scogliere di Tharn! Il bottino è tuo.",
+        loot:{ gold:[75,188], items:["Cristallo di Energia","Cintura di Resistenza","Ascia Pesante"] }
+      }
+    ],
+    enemies:[
+      {id:"dq113_m1",name:"Kraken Giovane",emoji:"🐙",hp:178,maxHp:178,atk:25,def:11,xp:58,isBoss:false},
+      {id:"dq113_m2",name:"Kraken Giovane",emoji:"🐙",hp:143,maxHp:143,atk:28,def:12,xp:66,isBoss:false},
+      {id:"dq113_m3",name:"Pirata",emoji:"🏴‍☠️",hp:144,maxHp:144,atk:24,def:10,xp:95,isBoss:false},
+      {id:"dq113_m4",name:"Pirata",emoji:"🏴‍☠️",hp:123,maxHp:123,atk:20,def:14,xp:85,isBoss:false},
+      {id:"dq113_boss",name:"Kraken Antico",emoji:"🐙",hp:203,maxHp:203,atk:29,def:13,xp:200,isBoss:true}
+    ],
+  },
+  {
+    id:"dq114", title:"Il Mistero di Palude Verminosa", active:true,
+    desc:"Indaga su strani eventi a Palude Verminosa. la Pescatrice Lila ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Palude Verminosa.» — la Pescatrice Lila",
+    difficulty:"difficile",
+    xpReward:576, goldReward:246,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. la Pescatrice Lila ti ha avvisato dei pericoli di Palude Verminosa." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:38, gold:19, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:19, gold:9, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Palude Verminosa!",
+        monsters:[
+          {id:"dq114_m1",name:"Hag della Palude",emoji:"🧙‍♀️",hp:145,maxHp:145,atk:24,def:13,xp:73,isBoss:false},
+          {id:"dq114_m2",name:"Rospo Velenoso",emoji:"🐸",hp:119,maxHp:119,atk:23,def:9,xp:82,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:30, gold:15, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:15, gold:7, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Lich Paludoso appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq114_boss",name:"Lich Paludoso",emoji:"💀",hp:209,maxHp:209,atk:30,def:13,xp:194,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Palude Verminosa! Il bottino è tuo.",
+        loot:{ gold:[49,123], items:["Stivali Veloci","Amuleto del Sole","Mantello dell'Ombra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq114_m1",name:"Hag della Palude",emoji:"🧙‍♀️",hp:145,maxHp:145,atk:24,def:13,xp:73,isBoss:false},
+      {id:"dq114_m2",name:"Rospo Velenoso",emoji:"🐸",hp:119,maxHp:119,atk:23,def:9,xp:82,isBoss:false},
+      {id:"dq114_boss",name:"Lich Paludoso",emoji:"💀",hp:209,maxHp:209,atk:30,def:13,xp:194,isBoss:true}
+    ],
+  },
+  {
+    id:"dq115", title:"La Profezia di Forte Sangue", active:true,
+    desc:"Indaga su strani eventi a Forte Sangue. il Disertore Orco Zog ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Disertore Orco Zog",
+    difficulty:"facile",
+    xpReward:101, goldReward:67,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. il Disertore Orco Zog ti ha avvisato dei pericoli di Forte Sangue." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Forte Sangue! Il bottino è tuo.",
+        loot:{ gold:[13,33], items:["Pozione di Cura","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq116", title:"L'Ultimo di Sotterranei Dimenticati", active:true,
+    desc:"Indaga su strani eventi a Sotterranei Dimenticati. il Saccheggiatore Krad ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — il Saccheggiatore Krad",
+    difficulty:"facile",
+    xpReward:162, goldReward:69,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. il Saccheggiatore Krad ti ha avvisato dei pericoli di Sotterranei Dimenticati." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:8, gold:4, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Sotterranei Dimenticati! Il bottino è tuo.",
+        loot:{ gold:[13,34], items:["Elmo Rinforzato","Amuleto del Sole"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq117", title:"Il Mistero di Palude di Murthak", active:true,
+    desc:"Indaga su strani eventi a Palude di Murthak. l'Eremita Borak ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Palude di Murthak.» — l'Eremita Borak",
+    difficulty:"facile",
+    xpReward:140, goldReward:40,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. l'Eremita Borak ti ha avvisato dei pericoli di Palude di Murthak." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:9, gold:4, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Palude di Murthak! Il bottino è tuo.",
+        loot:{ gold:[8,20], items:["Arco Lungo","Antidoto"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq118", title:"L'Assedio di Roccaforte di Grumsh", active:true,
+    desc:"Indaga su strani eventi a Roccaforte di Grumsh. la Mercenaria Kira ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Roccaforte di Grumsh.» — la Mercenaria Kira",
+    difficulty:"facile",
+    xpReward:169, goldReward:58,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. la Mercenaria Kira ti ha avvisato dei pericoli di Roccaforte di Grumsh." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:8, gold:4, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Roccaforte di Grumsh! Il bottino è tuo.",
+        loot:{ gold:[11,29], items:["Pozione di Mana","Mantello dell'Ombra"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq119", title:"La Caccia di Costa Frangente", active:true,
+    desc:"Indaga su strani eventi a Costa Frangente. il Capitano Salgari ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — il Capitano Salgari",
+    difficulty:"medio",
+    xpReward:384, goldReward:100,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Capitano Salgari ti ha avvisato dei pericoli di Costa Frangente." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:20, gold:10, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Costa Frangente!",
+        monsters:[
+          {id:"dq119_m1",name:"Kraken Giovane",emoji:"🐙",hp:65,maxHp:65,atk:15,def:4,xp:38,isBoss:false},
+          {id:"dq119_m2",name:"Marinaio Spettrale",emoji:"👻",hp:97,maxHp:97,atk:12,def:8,xp:53,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Costa Frangente!",
+        monsters:[
+          {id:"dq119_m3",name:"Pirata",emoji:"🏴‍☠️",hp:90,maxHp:90,atk:17,def:6,xp:37,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Costa Frangente! Il bottino è tuo.",
+        loot:{ gold:[20,50], items:["Scudo di Ferro","Antidoto"] }
+      }
+    ],
+    enemies:[
+      {id:"dq119_m1",name:"Kraken Giovane",emoji:"🐙",hp:65,maxHp:65,atk:15,def:4,xp:38,isBoss:false},
+      {id:"dq119_m2",name:"Marinaio Spettrale",emoji:"👻",hp:97,maxHp:97,atk:12,def:8,xp:53,isBoss:false},
+      {id:"dq119_m3",name:"Pirata",emoji:"🏴‍☠️",hp:90,maxHp:90,atk:17,def:6,xp:37,isBoss:false}
+    ],
+  },
+  {
+    id:"dq120", title:"L'Eco di Pozzo di Lava", active:true,
+    desc:"Indaga su strani eventi a Pozzo di Lava. il Mago Vargo ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Pozzo di Lava.» — il Mago Vargo",
+    difficulty:"difficile",
+    xpReward:666, goldReward:394,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. il Mago Vargo ti ha avvisato dei pericoli di Pozzo di Lava." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:29, gold:14, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:14, gold:7, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Pozzo di Lava!",
+        monsters:[
+          {id:"dq120_m1",name:"Diavolo Spinato",emoji:"😈",hp:119,maxHp:119,atk:27,def:12,xp:61,isBoss:false},
+          {id:"dq120_m2",name:"Cultista",emoji:"🔥",hp:161,maxHp:161,atk:27,def:8,xp:58,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Pozzo di Lava!",
+        monsters:[
+          {id:"dq120_m3",name:"Imp",emoji:"😈",hp:156,maxHp:156,atk:20,def:9,xp:90,isBoss:false},
+          {id:"dq120_m4",name:"Diavolo Spinato",emoji:"😈",hp:116,maxHp:116,atk:25,def:14,xp:81,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:36, gold:18, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:18, gold:9, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Arcidemone appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq120_boss",name:"Arcidemone",emoji:"👹",hp:184,maxHp:184,atk:27,def:11,xp:189,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Pozzo di Lava! Il bottino è tuo.",
+        loot:{ gold:[78,197], items:["Anello d'Argento","Mappa del Tesoro","Anello d'Argento"] }
+      }
+    ],
+    enemies:[
+      {id:"dq120_m1",name:"Diavolo Spinato",emoji:"😈",hp:119,maxHp:119,atk:27,def:12,xp:61,isBoss:false},
+      {id:"dq120_m2",name:"Cultista",emoji:"🔥",hp:161,maxHp:161,atk:27,def:8,xp:58,isBoss:false},
+      {id:"dq120_m3",name:"Imp",emoji:"😈",hp:156,maxHp:156,atk:20,def:9,xp:90,isBoss:false},
+      {id:"dq120_m4",name:"Diavolo Spinato",emoji:"😈",hp:116,maxHp:116,atk:25,def:14,xp:81,isBoss:false},
+      {id:"dq120_boss",name:"Arcidemone",emoji:"👹",hp:184,maxHp:184,atk:27,def:11,xp:189,isBoss:true}
+    ],
+  },
+  {
+    id:"dq121", title:"L'Eco di Forte Sangue", active:true,
+    desc:"Indaga su strani eventi a Forte Sangue. la Mercenaria Kira ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — la Mercenaria Kira",
+    difficulty:"facile",
+    xpReward:135, goldReward:65,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. la Mercenaria Kira ti ha avvisato dei pericoli di Forte Sangue." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:14, gold:7, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Forte Sangue!",
+        monsters:[
+          {id:"dq121_m1",name:"Orco Guerriero",emoji:"👹",hp:42,maxHp:42,atk:6,def:2,xp:18,isBoss:false},
+          {id:"dq121_m2",name:"Orco Guerriero",emoji:"👹",hp:24,maxHp:24,atk:9,def:2,xp:23,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Forte Sangue! Il bottino è tuo.",
+        loot:{ gold:[13,32], items:["Cintura di Resistenza","Spada Affilata"] }
+      }
+    ],
+    enemies:[
+      {id:"dq121_m1",name:"Orco Guerriero",emoji:"👹",hp:42,maxHp:42,atk:6,def:2,xp:18,isBoss:false},
+      {id:"dq121_m2",name:"Orco Guerriero",emoji:"👹",hp:24,maxHp:24,atk:9,def:2,xp:23,isBoss:false}
+    ],
+  },
+  {
+    id:"dq122", title:"L'Ultimo di Rovine di Eldoria", active:true,
+    desc:"Indaga su strani eventi a Rovine di Eldoria. l'Esploratore Tobias ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — l'Esploratore Tobias",
+    difficulty:"difficile",
+    xpReward:531, goldReward:228,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. l'Esploratore Tobias ti ha avvisato dei pericoli di Rovine di Eldoria." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:30, gold:15, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:15, gold:7, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Rovine di Eldoria!",
+        monsters:[
+          {id:"dq122_m1",name:"Golem di Pietra",emoji:"🗿",hp:172,maxHp:172,atk:18,def:13,xp:80,isBoss:false},
+          {id:"dq122_m2",name:"Guardiano Spettrale",emoji:"👻",hp:105,maxHp:105,atk:20,def:12,xp:81,isBoss:false},
+          {id:"dq122_m3",name:"Statua Animata",emoji:"🗿",hp:169,maxHp:169,atk:18,def:13,xp:88,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Rovine di Eldoria!",
+        monsters:[
+          {id:"dq122_m4",name:"Golem di Pietra",emoji:"🗿",hp:195,maxHp:195,atk:18,def:12,xp:71,isBoss:false},
+          {id:"dq122_m5",name:"Statua Animata",emoji:"🗿",hp:154,maxHp:154,atk:26,def:13,xp:58,isBoss:false},
+          {id:"dq122_m6",name:"Statua Animata",emoji:"🗿",hp:189,maxHp:189,atk:20,def:10,xp:79,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:43, gold:21, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:21, gold:10, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Sentinella Eterna appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq122_boss",name:"Sentinella Eterna",emoji:"🗿",hp:232,maxHp:232,atk:26,def:13,xp:195,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Rovine di Eldoria! Il bottino è tuo.",
+        loot:{ gold:[45,114], items:["Ascia Pesante","Guanti di Forza","Elmo Rinforzato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq122_m1",name:"Golem di Pietra",emoji:"🗿",hp:172,maxHp:172,atk:18,def:13,xp:80,isBoss:false},
+      {id:"dq122_m2",name:"Guardiano Spettrale",emoji:"👻",hp:105,maxHp:105,atk:20,def:12,xp:81,isBoss:false},
+      {id:"dq122_m3",name:"Statua Animata",emoji:"🗿",hp:169,maxHp:169,atk:18,def:13,xp:88,isBoss:false},
+      {id:"dq122_m4",name:"Golem di Pietra",emoji:"🗿",hp:195,maxHp:195,atk:18,def:12,xp:71,isBoss:false},
+      {id:"dq122_m5",name:"Statua Animata",emoji:"🗿",hp:154,maxHp:154,atk:26,def:13,xp:58,isBoss:false},
+      {id:"dq122_m6",name:"Statua Animata",emoji:"🗿",hp:189,maxHp:189,atk:20,def:10,xp:79,isBoss:false},
+      {id:"dq122_boss",name:"Sentinella Eterna",emoji:"🗿",hp:232,maxHp:232,atk:26,def:13,xp:195,isBoss:true}
+    ],
+  },
+  {
+    id:"dq123", title:"La Vendetta di Tempio di Ra-Khem", active:true,
+    desc:"Indaga su strani eventi a Tempio di Ra-Khem. il Beduino Omar ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — il Beduino Omar",
+    difficulty:"medio",
+    xpReward:380, goldReward:164,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. il Beduino Omar ti ha avvisato dei pericoli di Tempio di Ra-Khem." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio di Ra-Khem!",
+        monsters:[
+          {id:"dq123_m1",name:"Scorpione Gigante",emoji:"🦂",hp:107,maxHp:107,atk:10,def:6,xp:53,isBoss:false},
+          {id:"dq123_m2",name:"Sciacallo",emoji:"🐺",hp:99,maxHp:99,atk:15,def:7,xp:51,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio di Ra-Khem!",
+        monsters:[
+          {id:"dq123_m3",name:"Sciacallo",emoji:"🐺",hp:59,maxHp:59,atk:16,def:7,xp:46,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio di Ra-Khem! Il bottino è tuo.",
+        loot:{ gold:[32,82], items:["Pugnale Avvelenato","Antidoto"] }
+      }
+    ],
+    enemies:[
+      {id:"dq123_m1",name:"Scorpione Gigante",emoji:"🦂",hp:107,maxHp:107,atk:10,def:6,xp:53,isBoss:false},
+      {id:"dq123_m2",name:"Sciacallo",emoji:"🐺",hp:99,maxHp:99,atk:15,def:7,xp:51,isBoss:false},
+      {id:"dq123_m3",name:"Sciacallo",emoji:"🐺",hp:59,maxHp:59,atk:16,def:7,xp:46,isBoss:false}
+    ],
+  },
+  {
+    id:"dq124", title:"Il Risveglio di Granduca", active:true,
+    desc:"Indaga su strani eventi a Granduca. il Mercante Doriano ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Mercante Doriano",
+    difficulty:"medio",
+    xpReward:439, goldReward:102,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. il Mercante Doriano ti ha avvisato dei pericoli di Granduca." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:21, gold:10, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Granduca!",
+        monsters:[
+          {id:"dq124_m1",name:"Brigante",emoji:"🏴‍☠️",hp:99,maxHp:99,atk:10,def:4,xp:38,isBoss:false},
+          {id:"dq124_m2",name:"Brigante",emoji:"🏴‍☠️",hp:56,maxHp:56,atk:15,def:8,xp:31,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Granduca!",
+        monsters:[
+          {id:"dq124_m3",name:"Sicario",emoji:"🥷",hp:107,maxHp:107,atk:18,def:8,xp:32,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Granduca! Il bottino è tuo.",
+        loot:{ gold:[20,51], items:["Spada Affilata","Ascia Pesante"] }
+      }
+    ],
+    enemies:[
+      {id:"dq124_m1",name:"Brigante",emoji:"🏴‍☠️",hp:99,maxHp:99,atk:10,def:4,xp:38,isBoss:false},
+      {id:"dq124_m2",name:"Brigante",emoji:"🏴‍☠️",hp:56,maxHp:56,atk:15,def:8,xp:31,isBoss:false},
+      {id:"dq124_m3",name:"Sicario",emoji:"🥷",hp:107,maxHp:107,atk:18,def:8,xp:32,isBoss:false}
+    ],
+  },
+  {
+    id:"dq125", title:"La Discesa di Pozzo di Lava", active:true,
+    desc:"Indaga su strani eventi a Pozzo di Lava. il Mago Vargo ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Pozzo di Lava.» — il Mago Vargo",
+    difficulty:"facile",
+    xpReward:140, goldReward:72,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. il Mago Vargo ti ha avvisato dei pericoli di Pozzo di Lava." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:10, gold:5, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:5, gold:2, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Pozzo di Lava!",
+        monsters:[
+          {id:"dq125_m1",name:"Imp",emoji:"😈",hp:21,maxHp:21,atk:7,def:3,xp:14,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Pozzo di Lava! Il bottino è tuo.",
+        loot:{ gold:[14,36], items:["Tomo Antico","Pergamena Arcana"] }
+      }
+    ],
+    enemies:[
+      {id:"dq125_m1",name:"Imp",emoji:"😈",hp:21,maxHp:21,atk:7,def:3,xp:14,isBoss:false}
+    ],
+  },
+  {
+    id:"dq126", title:"La Discesa di Città Sommersa", active:true,
+    desc:"Indaga su strani eventi a Città Sommersa. la Storica Mirella ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — la Storica Mirella",
+    difficulty:"medio",
+    xpReward:315, goldReward:146,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. la Storica Mirella ti ha avvisato dei pericoli di Città Sommersa." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:24, gold:12, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Città Sommersa!",
+        monsters:[
+          {id:"dq126_m1",name:"Costrutto Arcano",emoji:"⚙️",hp:103,maxHp:103,atk:11,def:7,xp:51,isBoss:false},
+          {id:"dq126_m2",name:"Statua Animata",emoji:"🗿",hp:80,maxHp:80,atk:11,def:4,xp:35,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Città Sommersa! Il bottino è tuo.",
+        loot:{ gold:[29,73], items:["Gemma Lucente","Cristallo di Energia"] }
+      }
+    ],
+    enemies:[
+      {id:"dq126_m1",name:"Costrutto Arcano",emoji:"⚙️",hp:103,maxHp:103,atk:11,def:7,xp:51,isBoss:false},
+      {id:"dq126_m2",name:"Statua Animata",emoji:"🗿",hp:80,maxHp:80,atk:11,def:4,xp:35,isBoss:false}
+    ],
+  },
+  {
+    id:"dq127", title:"L'Ultimo di Picchi di Ghiaccio", active:true,
+    desc:"Indaga su strani eventi a Picchi di Ghiaccio. la Strega della Montagna ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — la Strega della Montagna",
+    difficulty:"epica",
+    xpReward:1078, goldReward:908,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. la Strega della Montagna ti ha avvisato dei pericoli di Picchi di Ghiaccio." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:40, gold:20, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:20, gold:10, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Picchi di Ghiaccio!",
+        monsters:[
+          {id:"dq127_m1",name:"Gigante di Pietra",emoji:"🗿",hp:126,maxHp:126,atk:23,def:11,xp:67,isBoss:false},
+          {id:"dq127_m2",name:"Aquila Gigante",emoji:"🦅",hp:100,maxHp:100,atk:25,def:13,xp:63,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:45, gold:22, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:22, gold:11, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso." },
+      {
+        type:"combat",
+        text:"Re dei Giganti appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq127_boss",name:"Re dei Giganti",emoji:"🗿",hp:468,maxHp:468,atk:41,def:20,xp:196,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Picchi di Ghiaccio! Il bottino è tuo.",
+        loot:{ gold:[181,454], items:["Pugnale Avvelenato","Mappa del Tesoro","Anello d'Argento","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq127_m1",name:"Gigante di Pietra",emoji:"🗿",hp:126,maxHp:126,atk:23,def:11,xp:67,isBoss:false},
+      {id:"dq127_m2",name:"Aquila Gigante",emoji:"🦅",hp:100,maxHp:100,atk:25,def:13,xp:63,isBoss:false},
+      {id:"dq127_boss",name:"Re dei Giganti",emoji:"🗿",hp:468,maxHp:468,atk:41,def:20,xp:196,isBoss:true}
+    ],
+  },
+  {
+    id:"dq128", title:"Il Risveglio di Officina Arcana", active:true,
+    desc:"Indaga su strani eventi a Officina Arcana. l'Apprendista Pia ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Officina Arcana.» — l'Apprendista Pia",
+    difficulty:"difficile",
+    xpReward:539, goldReward:308,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. l'Apprendista Pia ti ha avvisato dei pericoli di Officina Arcana." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:44, gold:22, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:22, gold:11, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Officina Arcana!",
+        monsters:[
+          {id:"dq128_m1",name:"Esperimento Fallito",emoji:"🐀",hp:124,maxHp:124,atk:19,def:9,xp:86,isBoss:false},
+          {id:"dq128_m2",name:"Omuncolo",emoji:"🧪",hp:108,maxHp:108,atk:27,def:9,xp:64,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:31, gold:15, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:15, gold:7, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Alchimista Pazzo appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq128_boss",name:"Alchimista Pazzo",emoji:"⚗️",hp:224,maxHp:224,atk:24,def:16,xp:148,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Officina Arcana! Il bottino è tuo.",
+        loot:{ gold:[61,154], items:["Elmo Rinforzato","Pugnale Avvelenato","Guanti di Forza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq128_m1",name:"Esperimento Fallito",emoji:"🐀",hp:124,maxHp:124,atk:19,def:9,xp:86,isBoss:false},
+      {id:"dq128_m2",name:"Omuncolo",emoji:"🧪",hp:108,maxHp:108,atk:27,def:9,xp:64,isBoss:false},
+      {id:"dq128_boss",name:"Alchimista Pazzo",emoji:"⚗️",hp:224,maxHp:224,atk:24,def:16,xp:148,isBoss:true}
+    ],
+  },
+  {
+    id:"dq129", title:"La Tomba di Porto Stellato", active:true,
+    desc:"Indaga su strani eventi a Porto Stellato. il Capitano Renart ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Capitano Renart",
+    difficulty:"facile",
+    xpReward:149, goldReward:40,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. il Capitano Renart ti ha avvisato dei pericoli di Porto Stellato." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:10, gold:5, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:5, gold:2, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Porto Stellato!",
+        monsters:[
+          {id:"dq129_m1",name:"Mago Rinnegato",emoji:"🧙",hp:46,maxHp:46,atk:6,def:1,xp:27,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Porto Stellato! Il bottino è tuo.",
+        loot:{ gold:[8,20], items:["Pozione di Mana","Amuleto del Sole"] }
+      }
+    ],
+    enemies:[
+      {id:"dq129_m1",name:"Mago Rinnegato",emoji:"🧙",hp:46,maxHp:46,atk:6,def:1,xp:27,isBoss:false}
+    ],
+  },
+  {
+    id:"dq130", title:"L'Eco di Galeone Fantasma", active:true,
+    desc:"Indaga su strani eventi a Galeone Fantasma. il Vecchio Ammiraglio ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Galeone Fantasma.» — il Vecchio Ammiraglio",
+    difficulty:"facile",
+    xpReward:145, goldReward:74,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. il Vecchio Ammiraglio ti ha avvisato dei pericoli di Galeone Fantasma." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:14, gold:7, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Galeone Fantasma! Il bottino è tuo.",
+        loot:{ gold:[14,37], items:["Pugnale Avvelenato","Anello d'Argento"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq131", title:"La Vendetta di Laboratorio Segreto", active:true,
+    desc:"Indaga su strani eventi a Laboratorio Segreto. il Mago Veridian ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Mago Veridian",
+    difficulty:"difficile",
+    xpReward:733, goldReward:204,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. il Mago Veridian ti ha avvisato dei pericoli di Laboratorio Segreto." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:41, gold:20, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:20, gold:10, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Laboratorio Segreto!",
+        monsters:[
+          {id:"dq131_m1",name:"Costrutto Carnoso",emoji:"🥩",hp:155,maxHp:155,atk:24,def:14,xp:77,isBoss:false},
+          {id:"dq131_m2",name:"Omuncolo",emoji:"🧪",hp:156,maxHp:156,atk:21,def:11,xp:73,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Laboratorio Segreto!",
+        monsters:[
+          {id:"dq131_m3",name:"Omuncolo",emoji:"🧪",hp:197,maxHp:197,atk:26,def:14,xp:86,isBoss:false},
+          {id:"dq131_m4",name:"Omuncolo",emoji:"🧪",hp:174,maxHp:174,atk:25,def:9,xp:87,isBoss:false},
+          {id:"dq131_m5",name:"Apprendista Folle",emoji:"🧙",hp:125,maxHp:125,atk:26,def:12,xp:59,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Laboratorio Segreto!",
+        monsters:[
+          {id:"dq131_m6",name:"Omuncolo",emoji:"🧪",hp:125,maxHp:125,atk:28,def:14,xp:58,isBoss:false},
+          {id:"dq131_m7",name:"Costrutto Carnoso",emoji:"🥩",hp:113,maxHp:113,atk:18,def:14,xp:56,isBoss:false},
+          {id:"dq131_m8",name:"Apprendista Folle",emoji:"🧙",hp:105,maxHp:105,atk:24,def:14,xp:82,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Aberrazione Suprema appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq131_boss",name:"Aberrazione Suprema",emoji:"👁️",hp:213,maxHp:213,atk:31,def:13,xp:140,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Laboratorio Segreto! Il bottino è tuo.",
+        loot:{ gold:[40,102], items:["Stivali Veloci","Stivali Veloci","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq131_m1",name:"Costrutto Carnoso",emoji:"🥩",hp:155,maxHp:155,atk:24,def:14,xp:77,isBoss:false},
+      {id:"dq131_m2",name:"Omuncolo",emoji:"🧪",hp:156,maxHp:156,atk:21,def:11,xp:73,isBoss:false},
+      {id:"dq131_m3",name:"Omuncolo",emoji:"🧪",hp:197,maxHp:197,atk:26,def:14,xp:86,isBoss:false},
+      {id:"dq131_m4",name:"Omuncolo",emoji:"🧪",hp:174,maxHp:174,atk:25,def:9,xp:87,isBoss:false},
+      {id:"dq131_m5",name:"Apprendista Folle",emoji:"🧙",hp:125,maxHp:125,atk:26,def:12,xp:59,isBoss:false},
+      {id:"dq131_m6",name:"Omuncolo",emoji:"🧪",hp:125,maxHp:125,atk:28,def:14,xp:58,isBoss:false},
+      {id:"dq131_m7",name:"Costrutto Carnoso",emoji:"🥩",hp:113,maxHp:113,atk:18,def:14,xp:56,isBoss:false},
+      {id:"dq131_m8",name:"Apprendista Folle",emoji:"🧙",hp:105,maxHp:105,atk:24,def:14,xp:82,isBoss:false},
+      {id:"dq131_boss",name:"Aberrazione Suprema",emoji:"👁️",hp:213,maxHp:213,atk:31,def:13,xp:140,isBoss:true}
+    ],
+  },
+  {
+    id:"dq132", title:"Il Mistero di Oasi Perduta", active:true,
+    desc:"Indaga su strani eventi a Oasi Perduta. il Carovaniere Hassan ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Carovaniere Hassan",
+    difficulty:"difficile",
+    xpReward:779, goldReward:372,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Carovaniere Hassan ti ha avvisato dei pericoli di Oasi Perduta." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:36, gold:18, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:18, gold:9, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Oasi Perduta!",
+        monsters:[
+          {id:"dq132_m1",name:"Mummia",emoji:"🧟",hp:192,maxHp:192,atk:21,def:14,xp:59,isBoss:false},
+          {id:"dq132_m2",name:"Sciacallo",emoji:"🐺",hp:152,maxHp:152,atk:19,def:12,xp:94,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso." },
+      {
+        type:"combat",
+        text:"Genio Maledetto appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq132_boss",name:"Genio Maledetto",emoji:"🧞",hp:225,maxHp:225,atk:31,def:14,xp:125,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Oasi Perduta! Il bottino è tuo.",
+        loot:{ gold:[74,186], items:["Stivali Veloci","Reliquia Sacra","Elmo Rinforzato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq132_m1",name:"Mummia",emoji:"🧟",hp:192,maxHp:192,atk:21,def:14,xp:59,isBoss:false},
+      {id:"dq132_m2",name:"Sciacallo",emoji:"🐺",hp:152,maxHp:152,atk:19,def:12,xp:94,isBoss:false},
+      {id:"dq132_boss",name:"Genio Maledetto",emoji:"🧞",hp:225,maxHp:225,atk:31,def:14,xp:125,isBoss:true}
+    ],
+  },
+  {
+    id:"dq133", title:"Il Tradimento di Tempio di Zogath", active:true,
+    desc:"Indaga su strani eventi a Tempio di Zogath. il Sacerdote Pentito ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Tempio di Zogath.» — il Sacerdote Pentito",
+    difficulty:"medio",
+    xpReward:430, goldReward:156,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Sacerdote Pentito ti ha avvisato dei pericoli di Tempio di Zogath." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:25, gold:12, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio di Zogath!",
+        monsters:[
+          {id:"dq133_m1",name:"Servo Mutato",emoji:"👁️",hp:68,maxHp:68,atk:10,def:4,xp:35,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio di Zogath! Il bottino è tuo.",
+        loot:{ gold:[31,78], items:["Spada Affilata","Mappa del Tesoro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq133_m1",name:"Servo Mutato",emoji:"👁️",hp:68,maxHp:68,atk:10,def:4,xp:35,isBoss:false}
+    ],
+  },
+  {
+    id:"dq134", title:"La Discesa di Galeone Fantasma", active:true,
+    desc:"Indaga su strani eventi a Galeone Fantasma. la Cartografa Lina ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — la Cartografa Lina",
+    difficulty:"medio",
+    xpReward:275, goldReward:163,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. la Cartografa Lina ti ha avvisato dei pericoli di Galeone Fantasma." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:21, gold:10, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Galeone Fantasma!",
+        monsters:[
+          {id:"dq134_m1",name:"Bombardiere",emoji:"💣",hp:98,maxHp:98,atk:16,def:6,xp:35,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Galeone Fantasma! Il bottino è tuo.",
+        loot:{ gold:[32,81], items:["Elmo Rinforzato","Ascia Pesante"] }
+      }
+    ],
+    enemies:[
+      {id:"dq134_m1",name:"Bombardiere",emoji:"💣",hp:98,maxHp:98,atk:16,def:6,xp:35,isBoss:false}
+    ],
+  },
+  {
+    id:"dq135", title:"Il Segreto di Tempio di Ra-Khem", active:true,
+    desc:"Indaga su strani eventi a Tempio di Ra-Khem. il Beduino Omar ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Tempio di Ra-Khem.» — il Beduino Omar",
+    difficulty:"facile",
+    xpReward:181, goldReward:54,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. il Beduino Omar ti ha avvisato dei pericoli di Tempio di Ra-Khem." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:12, gold:6, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:6, gold:3, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio di Ra-Khem! Il bottino è tuo.",
+        loot:{ gold:[10,27], items:["Gemma Lucente","Pergamena Arcana"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq136", title:"L'Assedio di Corte Estiva", active:true,
+    desc:"Indaga su strani eventi a Corte Estiva. il Druido Faelan ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Corte Estiva.» — il Druido Faelan",
+    difficulty:"epica",
+    xpReward:1942, goldReward:900,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. il Druido Faelan ti ha avvisato dei pericoli di Corte Estiva." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:52, gold:26, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:26, gold:13, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Corte Estiva!",
+        monsters:[
+          {id:"dq136_m1",name:"Unicorno Oscuro",emoji:"🦄",hp:107,maxHp:107,atk:27,def:13,xp:70,isBoss:false},
+          {id:"dq136_m2",name:"Satiro",emoji:"🐐",hp:109,maxHp:109,atk:23,def:8,xp:68,isBoss:false},
+          {id:"dq136_m3",name:"Folletto Dispettoso",emoji:"🧚",hp:128,maxHp:128,atk:27,def:11,xp:66,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Corte Estiva!",
+        monsters:[
+          {id:"dq136_m4",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:140,maxHp:140,atk:23,def:11,xp:91,isBoss:false},
+          {id:"dq136_m5",name:"Unicorno Oscuro",emoji:"🦄",hp:102,maxHp:102,atk:22,def:9,xp:66,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Regina Maligna appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq136_boss",name:"Regina Maligna",emoji:"👸",hp:589,maxHp:589,atk:30,def:13,xp:216,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Corte Estiva! Il bottino è tuo.",
+        loot:{ gold:[180,450], items:["Spada Affilata","Tomo Antico","Arco Lungo","Anello d'Argento"] }
+      }
+    ],
+    enemies:[
+      {id:"dq136_m1",name:"Unicorno Oscuro",emoji:"🦄",hp:107,maxHp:107,atk:27,def:13,xp:70,isBoss:false},
+      {id:"dq136_m2",name:"Satiro",emoji:"🐐",hp:109,maxHp:109,atk:23,def:8,xp:68,isBoss:false},
+      {id:"dq136_m3",name:"Folletto Dispettoso",emoji:"🧚",hp:128,maxHp:128,atk:27,def:11,xp:66,isBoss:false},
+      {id:"dq136_m4",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:140,maxHp:140,atk:23,def:11,xp:91,isBoss:false},
+      {id:"dq136_m5",name:"Unicorno Oscuro",emoji:"🦄",hp:102,maxHp:102,atk:22,def:9,xp:66,isBoss:false},
+      {id:"dq136_boss",name:"Regina Maligna",emoji:"👸",hp:589,maxHp:589,atk:30,def:13,xp:216,isBoss:true}
+    ],
+  },
+  {
+    id:"dq137", title:"La Tomba di Veridia", active:true,
+    desc:"Indaga su strani eventi a Veridia. il Capitano Renart ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — il Capitano Renart",
+    difficulty:"facile",
+    xpReward:115, goldReward:67,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. il Capitano Renart ti ha avvisato dei pericoli di Veridia." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:14, gold:7, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Veridia!",
+        monsters:[
+          {id:"dq137_m1",name:"Mago Rinnegato",emoji:"🧙",hp:29,maxHp:29,atk:7,def:1,xp:13,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Veridia! Il bottino è tuo.",
+        loot:{ gold:[13,33], items:["Ascia Pesante","Anello d'Argento"] }
+      }
+    ],
+    enemies:[
+      {id:"dq137_m1",name:"Mago Rinnegato",emoji:"🧙",hp:29,maxHp:29,atk:7,def:1,xp:13,isBoss:false}
+    ],
+  },
+  {
+    id:"dq138", title:"L'Ombra di Officina Arcana", active:true,
+    desc:"Indaga su strani eventi a Officina Arcana. l'Apprendista Pia ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Officina Arcana.» — l'Apprendista Pia",
+    difficulty:"difficile",
+    xpReward:768, goldReward:369,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. l'Apprendista Pia ti ha avvisato dei pericoli di Officina Arcana." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:25, gold:12, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Officina Arcana!",
+        monsters:[
+          {id:"dq138_m1",name:"Omuncolo",emoji:"🧪",hp:183,maxHp:183,atk:24,def:12,xp:67,isBoss:false},
+          {id:"dq138_m2",name:"Omuncolo",emoji:"🧪",hp:155,maxHp:155,atk:19,def:12,xp:69,isBoss:false},
+          {id:"dq138_m3",name:"Apprendista Folle",emoji:"🧙",hp:133,maxHp:133,atk:28,def:11,xp:76,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Officina Arcana!",
+        monsters:[
+          {id:"dq138_m4",name:"Apprendista Folle",emoji:"🧙",hp:103,maxHp:103,atk:27,def:10,xp:58,isBoss:false},
+          {id:"dq138_m5",name:"Apprendista Folle",emoji:"🧙",hp:180,maxHp:180,atk:21,def:14,xp:65,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Alchimista Pazzo appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq138_boss",name:"Alchimista Pazzo",emoji:"⚗️",hp:257,maxHp:257,atk:30,def:16,xp:135,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Officina Arcana! Il bottino è tuo.",
+        loot:{ gold:[73,184], items:["Pugnale Avvelenato","Pugnale Avvelenato","Stivali Veloci"] }
+      }
+    ],
+    enemies:[
+      {id:"dq138_m1",name:"Omuncolo",emoji:"🧪",hp:183,maxHp:183,atk:24,def:12,xp:67,isBoss:false},
+      {id:"dq138_m2",name:"Omuncolo",emoji:"🧪",hp:155,maxHp:155,atk:19,def:12,xp:69,isBoss:false},
+      {id:"dq138_m3",name:"Apprendista Folle",emoji:"🧙",hp:133,maxHp:133,atk:28,def:11,xp:76,isBoss:false},
+      {id:"dq138_m4",name:"Apprendista Folle",emoji:"🧙",hp:103,maxHp:103,atk:27,def:10,xp:58,isBoss:false},
+      {id:"dq138_m5",name:"Apprendista Folle",emoji:"🧙",hp:180,maxHp:180,atk:21,def:14,xp:65,isBoss:false},
+      {id:"dq138_boss",name:"Alchimista Pazzo",emoji:"⚗️",hp:257,maxHp:257,atk:30,def:16,xp:135,isBoss:true}
+    ],
+  },
+  {
+    id:"dq139", title:"Il Tradimento di Galeone Fantasma", active:true,
+    desc:"Indaga su strani eventi a Galeone Fantasma. il Vecchio Ammiraglio ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Galeone Fantasma.» — il Vecchio Ammiraglio",
+    difficulty:"epica",
+    xpReward:1595, goldReward:793,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. il Vecchio Ammiraglio ti ha avvisato dei pericoli di Galeone Fantasma." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:54, gold:27, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:27, gold:13, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Galeone Fantasma!",
+        monsters:[
+          {id:"dq139_m1",name:"Mozzo Posseduto",emoji:"👻",hp:147,maxHp:147,atk:23,def:13,xp:100,isBoss:false},
+          {id:"dq139_m2",name:"Bombardiere",emoji:"💣",hp:116,maxHp:116,atk:18,def:13,xp:91,isBoss:false},
+          {id:"dq139_m3",name:"Mozzo Posseduto",emoji:"👻",hp:127,maxHp:127,atk:25,def:8,xp:81,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Galeone Fantasma!",
+        monsters:[
+          {id:"dq139_m4",name:"Mozzo Posseduto",emoji:"👻",hp:147,maxHp:147,atk:18,def:11,xp:99,isBoss:false},
+          {id:"dq139_m5",name:"Mozzo Posseduto",emoji:"👻",hp:101,maxHp:101,atk:20,def:13,xp:78,isBoss:false},
+          {id:"dq139_m6",name:"Bombardiere",emoji:"💣",hp:138,maxHp:138,atk:22,def:8,xp:77,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Quartiermastro Demone appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq139_boss",name:"Quartiermastro Demone",emoji:"👹",hp:348,maxHp:348,atk:35,def:14,xp:294,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Galeone Fantasma! Il bottino è tuo.",
+        loot:{ gold:[158,396], items:["Elmo Rinforzato","Anello d'Argento","Stivali Veloci","Mantello dell'Ombra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq139_m1",name:"Mozzo Posseduto",emoji:"👻",hp:147,maxHp:147,atk:23,def:13,xp:100,isBoss:false},
+      {id:"dq139_m2",name:"Bombardiere",emoji:"💣",hp:116,maxHp:116,atk:18,def:13,xp:91,isBoss:false},
+      {id:"dq139_m3",name:"Mozzo Posseduto",emoji:"👻",hp:127,maxHp:127,atk:25,def:8,xp:81,isBoss:false},
+      {id:"dq139_m4",name:"Mozzo Posseduto",emoji:"👻",hp:147,maxHp:147,atk:18,def:11,xp:99,isBoss:false},
+      {id:"dq139_m5",name:"Mozzo Posseduto",emoji:"👻",hp:101,maxHp:101,atk:20,def:13,xp:78,isBoss:false},
+      {id:"dq139_m6",name:"Bombardiere",emoji:"💣",hp:138,maxHp:138,atk:22,def:8,xp:77,isBoss:false},
+      {id:"dq139_boss",name:"Quartiermastro Demone",emoji:"👹",hp:348,maxHp:348,atk:35,def:14,xp:294,isBoss:true}
+    ],
+  },
+  {
+    id:"dq140", title:"La Profezia di Macchia Antica", active:true,
+    desc:"Indaga su strani eventi a Macchia Antica. la Druidessa Mira ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Macchia Antica.» — la Druidessa Mira",
+    difficulty:"difficile",
+    xpReward:753, goldReward:241,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. la Druidessa Mira ti ha avvisato dei pericoli di Macchia Antica." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:39, gold:19, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:19, gold:9, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Macchia Antica!",
+        monsters:[
+          {id:"dq140_m1",name:"Orso Bruno",emoji:"🐻",hp:167,maxHp:167,atk:21,def:11,xp:59,isBoss:false},
+          {id:"dq140_m2",name:"Orso Bruno",emoji:"🐻",hp:140,maxHp:140,atk:19,def:12,xp:70,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:27, gold:13, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:13, gold:6, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Strega della Foresta appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq140_boss",name:"Strega della Foresta",emoji:"🧙‍♀️",hp:237,maxHp:237,atk:30,def:16,xp:133,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Macchia Antica! Il bottino è tuo.",
+        loot:{ gold:[48,120], items:["Pergamena Arcana","Tomo Antico","Antidoto"] }
+      }
+    ],
+    enemies:[
+      {id:"dq140_m1",name:"Orso Bruno",emoji:"🐻",hp:167,maxHp:167,atk:21,def:11,xp:59,isBoss:false},
+      {id:"dq140_m2",name:"Orso Bruno",emoji:"🐻",hp:140,maxHp:140,atk:19,def:12,xp:70,isBoss:false},
+      {id:"dq140_boss",name:"Strega della Foresta",emoji:"🧙‍♀️",hp:237,maxHp:237,atk:30,def:16,xp:133,isBoss:true}
+    ],
+  },
+  {
+    id:"dq141", title:"La Profezia di Corte Estiva", active:true,
+    desc:"Indaga su strani eventi a Corte Estiva. il Druido Faelan ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — il Druido Faelan",
+    difficulty:"facile",
+    xpReward:140, goldReward:70,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. il Druido Faelan ti ha avvisato dei pericoli di Corte Estiva." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Corte Estiva!",
+        monsters:[
+          {id:"dq141_m1",name:"Centauro Ribelle",emoji:"🏹",hp:25,maxHp:25,atk:10,def:1,xp:18,isBoss:false},
+          {id:"dq141_m2",name:"Folletto Dispettoso",emoji:"🧚",hp:23,maxHp:23,atk:10,def:4,xp:24,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Corte Estiva! Il bottino è tuo.",
+        loot:{ gold:[14,35], items:["Anello d'Argento","Tomo Antico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq141_m1",name:"Centauro Ribelle",emoji:"🏹",hp:25,maxHp:25,atk:10,def:1,xp:18,isBoss:false},
+      {id:"dq141_m2",name:"Folletto Dispettoso",emoji:"🧚",hp:23,maxHp:23,atk:10,def:4,xp:24,isBoss:false}
+    ],
+  },
+  {
+    id:"dq142", title:"Il Tradimento di Macchia Antica", active:true,
+    desc:"Indaga su strani eventi a Macchia Antica. la Druidessa Mira ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — la Druidessa Mira",
+    difficulty:"epica",
+    xpReward:2142, goldReward:676,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. la Druidessa Mira ti ha avvisato dei pericoli di Macchia Antica." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:55, gold:27, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:27, gold:13, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Macchia Antica!",
+        monsters:[
+          {id:"dq142_m1",name:"Falco Nero",emoji:"🦅",hp:106,maxHp:106,atk:20,def:11,xp:63,isBoss:false},
+          {id:"dq142_m2",name:"Goblin Esploratore",emoji:"👹",hp:100,maxHp:100,atk:26,def:11,xp:64,isBoss:false},
+          {id:"dq142_m3",name:"Goblin Esploratore",emoji:"👹",hp:100,maxHp:100,atk:24,def:11,xp:98,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:63, gold:31, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:31, gold:15, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre." },
+      {
+        type:"combat",
+        text:"Re dei Lupi appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq142_boss",name:"Re dei Lupi",emoji:"🐺",hp:443,maxHp:443,atk:48,def:16,xp:340,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Macchia Antica! Il bottino è tuo.",
+        loot:{ gold:[135,338], items:["Cintura di Resistenza","Tomo Antico","Cristallo di Energia","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq142_m1",name:"Falco Nero",emoji:"🦅",hp:106,maxHp:106,atk:20,def:11,xp:63,isBoss:false},
+      {id:"dq142_m2",name:"Goblin Esploratore",emoji:"👹",hp:100,maxHp:100,atk:26,def:11,xp:64,isBoss:false},
+      {id:"dq142_m3",name:"Goblin Esploratore",emoji:"👹",hp:100,maxHp:100,atk:24,def:11,xp:98,isBoss:false},
+      {id:"dq142_boss",name:"Re dei Lupi",emoji:"🐺",hp:443,maxHp:443,atk:48,def:16,xp:340,isBoss:true}
+    ],
+  },
+  {
+    id:"dq143", title:"L'Eco di Bosco delle Fate", active:true,
+    desc:"Indaga su strani eventi a Bosco delle Fate. il Bardo Cyril ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Bardo Cyril",
+    difficulty:"difficile",
+    xpReward:774, goldReward:244,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. il Bardo Cyril ti ha avvisato dei pericoli di Bosco delle Fate." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:35, gold:17, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:17, gold:8, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Bosco delle Fate!",
+        monsters:[
+          {id:"dq143_m1",name:"Unicorno Oscuro",emoji:"🦄",hp:168,maxHp:168,atk:21,def:11,xp:77,isBoss:false},
+          {id:"dq143_m2",name:"Unicorno Oscuro",emoji:"🦄",hp:199,maxHp:199,atk:19,def:11,xp:89,isBoss:false},
+          {id:"dq143_m3",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:167,maxHp:167,atk:18,def:10,xp:63,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Bosco delle Fate!",
+        monsters:[
+          {id:"dq143_m4",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:138,maxHp:138,atk:22,def:9,xp:93,isBoss:false},
+          {id:"dq143_m5",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:171,maxHp:171,atk:21,def:10,xp:61,isBoss:false},
+          {id:"dq143_m6",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:188,maxHp:188,atk:21,def:11,xp:84,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Lord dei Boschi appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq143_boss",name:"Lord dei Boschi",emoji:"🌳",hp:198,maxHp:198,atk:22,def:12,xp:171,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Bosco delle Fate! Il bottino è tuo.",
+        loot:{ gold:[48,122], items:["Amuleto del Sole","Cristallo di Energia","Elmo Rinforzato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq143_m1",name:"Unicorno Oscuro",emoji:"🦄",hp:168,maxHp:168,atk:21,def:11,xp:77,isBoss:false},
+      {id:"dq143_m2",name:"Unicorno Oscuro",emoji:"🦄",hp:199,maxHp:199,atk:19,def:11,xp:89,isBoss:false},
+      {id:"dq143_m3",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:167,maxHp:167,atk:18,def:10,xp:63,isBoss:false},
+      {id:"dq143_m4",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:138,maxHp:138,atk:22,def:9,xp:93,isBoss:false},
+      {id:"dq143_m5",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:171,maxHp:171,atk:21,def:10,xp:61,isBoss:false},
+      {id:"dq143_m6",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:188,maxHp:188,atk:21,def:11,xp:84,isBoss:false},
+      {id:"dq143_boss",name:"Lord dei Boschi",emoji:"🌳",hp:198,maxHp:198,atk:22,def:12,xp:171,isBoss:true}
+    ],
+  },
+  {
+    id:"dq144", title:"La Tomba di Tempio di Ra-Khem", active:true,
+    desc:"Indaga su strani eventi a Tempio di Ra-Khem. la Sacerdotessa di Ra ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — la Sacerdotessa di Ra",
+    difficulty:"difficile",
+    xpReward:560, goldReward:368,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. la Sacerdotessa di Ra ti ha avvisato dei pericoli di Tempio di Ra-Khem." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:35, gold:17, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:17, gold:8, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio di Ra-Khem!",
+        monsters:[
+          {id:"dq144_m1",name:"Sciacallo",emoji:"🐺",hp:196,maxHp:196,atk:18,def:11,xp:68,isBoss:false},
+          {id:"dq144_m2",name:"Scorpione Gigante",emoji:"🦂",hp:132,maxHp:132,atk:26,def:10,xp:77,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:25, gold:12, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Genio Maledetto appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq144_boss",name:"Genio Maledetto",emoji:"🧞",hp:222,maxHp:222,atk:32,def:13,xp:153,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio di Ra-Khem! Il bottino è tuo.",
+        loot:{ gold:[73,184], items:["Mappa del Tesoro","Spada Affilata","Cristallo di Energia"] }
+      }
+    ],
+    enemies:[
+      {id:"dq144_m1",name:"Sciacallo",emoji:"🐺",hp:196,maxHp:196,atk:18,def:11,xp:68,isBoss:false},
+      {id:"dq144_m2",name:"Scorpione Gigante",emoji:"🦂",hp:132,maxHp:132,atk:26,def:10,xp:77,isBoss:false},
+      {id:"dq144_boss",name:"Genio Maledetto",emoji:"🧞",hp:222,maxHp:222,atk:32,def:13,xp:153,isBoss:true}
+    ],
+  },
+  {
+    id:"dq145", title:"La Tomba di Quartiere Basso di Korvane", active:true,
+    desc:"Indaga su strani eventi a Quartiere Basso di Korvane. il Mercante Doriano ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Mercante Doriano",
+    difficulty:"medio",
+    xpReward:399, goldReward:111,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Mercante Doriano ti ha avvisato dei pericoli di Quartiere Basso di Korvane." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Quartiere Basso di Korvane!",
+        monsters:[
+          {id:"dq145_m1",name:"Sicario",emoji:"🥷",hp:70,maxHp:70,atk:11,def:7,xp:46,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Quartiere Basso di Korvane! Il bottino è tuo.",
+        loot:{ gold:[22,55], items:["Reliquia Sacra","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq145_m1",name:"Sicario",emoji:"🥷",hp:70,maxHp:70,atk:11,def:7,xp:46,isBoss:false}
+    ],
+  },
+  {
+    id:"dq146", title:"La Tomba di Catacombe di Argos", active:true,
+    desc:"Indaga su strani eventi a Catacombe di Argos. il Saccheggiatore Krad ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Catacombe di Argos.» — il Saccheggiatore Krad",
+    difficulty:"difficile",
+    xpReward:677, goldReward:381,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Saccheggiatore Krad ti ha avvisato dei pericoli di Catacombe di Argos." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:25, gold:12, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Catacombe di Argos!",
+        monsters:[
+          {id:"dq146_m1",name:"Ghoul",emoji:"👹",hp:170,maxHp:170,atk:24,def:9,xp:63,isBoss:false},
+          {id:"dq146_m2",name:"Wraith",emoji:"👁️",hp:137,maxHp:137,atk:26,def:13,xp:74,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina." },
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina." },
+      {
+        type:"combat",
+        text:"Cavaliere della Morte appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq146_boss",name:"Cavaliere della Morte",emoji:"⚔️",hp:264,maxHp:264,atk:29,def:12,xp:158,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Catacombe di Argos! Il bottino è tuo.",
+        loot:{ gold:[76,190], items:["Tomo Antico","Mantello dell'Ombra","Bastone Runico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq146_m1",name:"Ghoul",emoji:"👹",hp:170,maxHp:170,atk:24,def:9,xp:63,isBoss:false},
+      {id:"dq146_m2",name:"Wraith",emoji:"👁️",hp:137,maxHp:137,atk:26,def:13,xp:74,isBoss:false},
+      {id:"dq146_boss",name:"Cavaliere della Morte",emoji:"⚔️",hp:264,maxHp:264,atk:29,def:12,xp:158,isBoss:true}
+    ],
+  },
+  {
+    id:"dq147", title:"Il Risveglio di Pozzo di Lava", active:true,
+    desc:"Indaga su strani eventi a Pozzo di Lava. la Paladina Iris ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — la Paladina Iris",
+    difficulty:"facile",
+    xpReward:145, goldReward:46,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. la Paladina Iris ti ha avvisato dei pericoli di Pozzo di Lava." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Pozzo di Lava! Il bottino è tuo.",
+        loot:{ gold:[9,23], items:["Guanti di Forza","Elmo Rinforzato"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq148", title:"L'Ombra di Costa Frangente", active:true,
+    desc:"Indaga su strani eventi a Costa Frangente. la Sirena Maris ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — la Sirena Maris",
+    difficulty:"facile",
+    xpReward:166, goldReward:69,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. la Sirena Maris ti ha avvisato dei pericoli di Costa Frangente." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:8, gold:4, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Costa Frangente! Il bottino è tuo.",
+        loot:{ gold:[13,34], items:["Pozione di Mana","Mantello dell'Ombra"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq149", title:"La Vendetta di Officina Arcana", active:true,
+    desc:"Indaga su strani eventi a Officina Arcana. l'Investigatore Crane ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — l'Investigatore Crane",
+    difficulty:"medio",
+    xpReward:281, goldReward:128,
+    steps:[
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti. l'Investigatore Crane ti ha avvisato dei pericoli di Officina Arcana." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Officina Arcana!",
+        monsters:[
+          {id:"dq149_m1",name:"Omuncolo",emoji:"🧪",hp:84,maxHp:84,atk:13,def:8,xp:54,isBoss:false},
+          {id:"dq149_m2",name:"Apprendista Folle",emoji:"🧙",hp:106,maxHp:106,atk:11,def:7,xp:35,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:21, gold:10, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Officina Arcana! Il bottino è tuo.",
+        loot:{ gold:[25,64], items:["Guanti di Forza","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq149_m1",name:"Omuncolo",emoji:"🧪",hp:84,maxHp:84,atk:13,def:8,xp:54,isBoss:false},
+      {id:"dq149_m2",name:"Apprendista Folle",emoji:"🧙",hp:106,maxHp:106,atk:11,def:7,xp:35,isBoss:false}
+    ],
+  },
+  {
+    id:"dq150", title:"Il Segreto di Cripte di Maldur", active:true,
+    desc:"Indaga su strani eventi a Cripte di Maldur. l'Archeologo Vandros ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — l'Archeologo Vandros",
+    difficulty:"medio",
+    xpReward:288, goldReward:114,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. l'Archeologo Vandros ti ha avvisato dei pericoli di Cripte di Maldur." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:23, gold:11, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Cripte di Maldur!",
+        monsters:[
+          {id:"dq150_m1",name:"Spettro",emoji:"👻",hp:64,maxHp:64,atk:16,def:6,xp:32,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Cripte di Maldur! Il bottino è tuo.",
+        loot:{ gold:[22,57], items:["Pergamena Arcana","Cintura di Resistenza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq150_m1",name:"Spettro",emoji:"👻",hp:64,maxHp:64,atk:16,def:6,xp:32,isBoss:false}
+    ],
+  },
+  {
+    id:"dq151", title:"L'Eco di Foresta di Velrand", active:true,
+    desc:"Indaga su strani eventi a Foresta di Velrand. il Vecchio Guardacaccia ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Foresta di Velrand.» — il Vecchio Guardacaccia",
+    difficulty:"facile",
+    xpReward:117, goldReward:65,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. il Vecchio Guardacaccia ti ha avvisato dei pericoli di Foresta di Velrand." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Foresta di Velrand! Il bottino è tuo.",
+        loot:{ gold:[13,32], items:["Scudo di Ferro","Elmo Rinforzato"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq152", title:"Il Tradimento di Vette Eterne", active:true,
+    desc:"Indaga su strani eventi a Vette Eterne. l'Eremita Tarn ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Vette Eterne.» — l'Eremita Tarn",
+    difficulty:"facile",
+    xpReward:195, goldReward:45,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. l'Eremita Tarn ti ha avvisato dei pericoli di Vette Eterne." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:17, gold:8, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Vette Eterne!",
+        monsters:[
+          {id:"dq152_m1",name:"Yeti",emoji:"🦍",hp:28,maxHp:28,atk:6,def:2,xp:24,isBoss:false},
+          {id:"dq152_m2",name:"Yeti",emoji:"🦍",hp:37,maxHp:37,atk:6,def:3,xp:22,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Vette Eterne! Il bottino è tuo.",
+        loot:{ gold:[9,22], items:["Ascia Pesante","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq152_m1",name:"Yeti",emoji:"🦍",hp:28,maxHp:28,atk:6,def:2,xp:24,isBoss:false},
+      {id:"dq152_m2",name:"Yeti",emoji:"🦍",hp:37,maxHp:37,atk:6,def:3,xp:22,isBoss:false}
+    ],
+  },
+  {
+    id:"dq153", title:"La Caccia di Officina Arcana", active:true,
+    desc:"Indaga su strani eventi a Officina Arcana. il Mago Veridian ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Mago Veridian",
+    difficulty:"medio",
+    xpReward:417, goldReward:136,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. il Mago Veridian ti ha avvisato dei pericoli di Officina Arcana." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:20, gold:10, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Officina Arcana!",
+        monsters:[
+          {id:"dq153_m1",name:"Costrutto Carnoso",emoji:"🥩",hp:94,maxHp:94,atk:12,def:6,xp:44,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Officina Arcana! Il bottino è tuo.",
+        loot:{ gold:[27,68], items:["Tomo Antico","Stivali Veloci"] }
+      }
+    ],
+    enemies:[
+      {id:"dq153_m1",name:"Costrutto Carnoso",emoji:"🥩",hp:94,maxHp:94,atk:12,def:6,xp:44,isBoss:false}
+    ],
+  },
+  {
+    id:"dq154", title:"La Tomba di Oasi Perduta", active:true,
+    desc:"Indaga su strani eventi a Oasi Perduta. il Beduino Omar ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Oasi Perduta.» — il Beduino Omar",
+    difficulty:"epica",
+    xpReward:1664, goldReward:984,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. il Beduino Omar ti ha avvisato dei pericoli di Oasi Perduta." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:54, gold:27, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:27, gold:13, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Oasi Perduta!",
+        monsters:[
+          {id:"dq154_m1",name:"Sfinge Minore",emoji:"🦁",hp:136,maxHp:136,atk:20,def:11,xp:67,isBoss:false},
+          {id:"dq154_m2",name:"Scorpione Gigante",emoji:"🦂",hp:145,maxHp:145,atk:22,def:9,xp:88,isBoss:false},
+          {id:"dq154_m3",name:"Sfinge Minore",emoji:"🦁",hp:121,maxHp:121,atk:28,def:9,xp:83,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Faraone Non-Morto appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq154_boss",name:"Faraone Non-Morto",emoji:"⚱️",hp:373,maxHp:373,atk:33,def:16,xp:223,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Oasi Perduta! Il bottino è tuo.",
+        loot:{ gold:[196,492], items:["Ascia Pesante","Tomo Antico","Cristallo di Energia","Arco Lungo"] }
+      }
+    ],
+    enemies:[
+      {id:"dq154_m1",name:"Sfinge Minore",emoji:"🦁",hp:136,maxHp:136,atk:20,def:11,xp:67,isBoss:false},
+      {id:"dq154_m2",name:"Scorpione Gigante",emoji:"🦂",hp:145,maxHp:145,atk:22,def:9,xp:88,isBoss:false},
+      {id:"dq154_m3",name:"Sfinge Minore",emoji:"🦁",hp:121,maxHp:121,atk:28,def:9,xp:83,isBoss:false},
+      {id:"dq154_boss",name:"Faraone Non-Morto",emoji:"⚱️",hp:373,maxHp:373,atk:33,def:16,xp:223,isBoss:true}
+    ],
+  },
+  {
+    id:"dq155", title:"La Maledizione di Foresta Smeraldina", active:true,
+    desc:"Indaga su strani eventi a Foresta Smeraldina. il Ranger Aldric ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Ranger Aldric",
+    difficulty:"facile",
+    xpReward:142, goldReward:67,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. il Ranger Aldric ti ha avvisato dei pericoli di Foresta Smeraldina." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:11, gold:5, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:5, gold:2, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Foresta Smeraldina!",
+        monsters:[
+          {id:"dq155_m1",name:"Ragno Gigante",emoji:"🕷️",hp:33,maxHp:33,atk:6,def:2,xp:28,isBoss:false},
+          {id:"dq155_m2",name:"Ragno Gigante",emoji:"🕷️",hp:23,maxHp:23,atk:9,def:3,xp:27,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Foresta Smeraldina! Il bottino è tuo.",
+        loot:{ gold:[13,33], items:["Arco Lungo","Spada Affilata"] }
+      }
+    ],
+    enemies:[
+      {id:"dq155_m1",name:"Ragno Gigante",emoji:"🕷️",hp:33,maxHp:33,atk:6,def:2,xp:28,isBoss:false},
+      {id:"dq155_m2",name:"Ragno Gigante",emoji:"🕷️",hp:23,maxHp:23,atk:9,def:3,xp:27,isBoss:false}
+    ],
+  },
+  {
+    id:"dq156", title:"Il Risveglio di Forte Sangue", active:true,
+    desc:"Indaga su strani eventi a Forte Sangue. il Disertore Orco Zog ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Forte Sangue.» — il Disertore Orco Zog",
+    difficulty:"medio",
+    xpReward:372, goldReward:104,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. il Disertore Orco Zog ti ha avvisato dei pericoli di Forte Sangue." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Forte Sangue!",
+        monsters:[
+          {id:"dq156_m1",name:"Orco Sciamano",emoji:"🧙",hp:52,maxHp:52,atk:11,def:4,xp:51,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Forte Sangue! Il bottino è tuo.",
+        loot:{ gold:[20,52], items:["Pugnale Avvelenato","Cintura di Resistenza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq156_m1",name:"Orco Sciamano",emoji:"🧙",hp:52,maxHp:52,atk:11,def:4,xp:51,isBoss:false}
+    ],
+  },
+  {
+    id:"dq157", title:"La Vendetta di Caravella dei Dannati", active:true,
+    desc:"Indaga su strani eventi a Caravella dei Dannati. la Cartografa Lina ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Caravella dei Dannati.» — la Cartografa Lina",
+    difficulty:"epica",
+    xpReward:1825, goldReward:607,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. la Cartografa Lina ti ha avvisato dei pericoli di Caravella dei Dannati." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:51, gold:25, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:25, gold:12, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Caravella dei Dannati!",
+        monsters:[
+          {id:"dq157_m1",name:"Mozzo Posseduto",emoji:"👻",hp:83,maxHp:83,atk:24,def:12,xp:95,isBoss:false},
+          {id:"dq157_m2",name:"Bombardiere",emoji:"💣",hp:102,maxHp:102,atk:19,def:13,xp:72,isBoss:false},
+          {id:"dq157_m3",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:119,maxHp:119,atk:18,def:9,xp:67,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua." },
+      {
+        type:"combat",
+        text:"Capitano Mortenero appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq157_boss",name:"Capitano Mortenero",emoji:"💀",hp:566,maxHp:566,atk:49,def:17,xp:320,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Caravella dei Dannati! Il bottino è tuo.",
+        loot:{ gold:[121,303], items:["Anello d'Argento","Cristallo di Energia","Reliquia Sacra","Guanti di Forza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq157_m1",name:"Mozzo Posseduto",emoji:"👻",hp:83,maxHp:83,atk:24,def:12,xp:95,isBoss:false},
+      {id:"dq157_m2",name:"Bombardiere",emoji:"💣",hp:102,maxHp:102,atk:19,def:13,xp:72,isBoss:false},
+      {id:"dq157_m3",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:119,maxHp:119,atk:18,def:9,xp:67,isBoss:false},
+      {id:"dq157_boss",name:"Capitano Mortenero",emoji:"💀",hp:566,maxHp:566,atk:49,def:17,xp:320,isBoss:true}
+    ],
+  },
+  {
+    id:"dq158", title:"La Profezia di Tempio di Zogath", active:true,
+    desc:"Indaga su strani eventi a Tempio di Zogath. l'Inquisitore Vex ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — l'Inquisitore Vex",
+    difficulty:"facile",
+    xpReward:183, goldReward:80,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. l'Inquisitore Vex ti ha avvisato dei pericoli di Tempio di Zogath." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:8, gold:4, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio di Zogath! Il bottino è tuo.",
+        loot:{ gold:[16,40], items:["Pergamena Arcana","Pozione di Cura"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq159", title:"La Vendetta di Caravella dei Dannati", active:true,
+    desc:"Indaga su strani eventi a Caravella dei Dannati. il Vecchio Ammiraglio ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Vecchio Ammiraglio",
+    difficulty:"medio",
+    xpReward:259, goldReward:162,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. il Vecchio Ammiraglio ti ha avvisato dei pericoli di Caravella dei Dannati." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:25, gold:12, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Caravella dei Dannati!",
+        monsters:[
+          {id:"dq159_m1",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:104,maxHp:104,atk:13,def:8,xp:32,isBoss:false},
+          {id:"dq159_m2",name:"Mozzo Posseduto",emoji:"👻",hp:103,maxHp:103,atk:16,def:4,xp:33,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Caravella dei Dannati! Il bottino è tuo.",
+        loot:{ gold:[32,81], items:["Cristallo di Energia","Stivali Veloci"] }
+      }
+    ],
+    enemies:[
+      {id:"dq159_m1",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:104,maxHp:104,atk:13,def:8,xp:32,isBoss:false},
+      {id:"dq159_m2",name:"Mozzo Posseduto",emoji:"👻",hp:103,maxHp:103,atk:16,def:4,xp:33,isBoss:false}
+    ],
+  },
+  {
+    id:"dq160", title:"Il Patto di Sotterranei Dimenticati", active:true,
+    desc:"Indaga su strani eventi a Sotterranei Dimenticati. il Saccheggiatore Krad ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Sotterranei Dimenticati.» — il Saccheggiatore Krad",
+    difficulty:"medio",
+    xpReward:321, goldReward:176,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. il Saccheggiatore Krad ti ha avvisato dei pericoli di Sotterranei Dimenticati." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Sotterranei Dimenticati!",
+        monsters:[
+          {id:"dq160_m1",name:"Ghoul",emoji:"👹",hp:70,maxHp:70,atk:11,def:7,xp:51,isBoss:false},
+          {id:"dq160_m2",name:"Scheletro Guerriero",emoji:"💀",hp:85,maxHp:85,atk:10,def:4,xp:44,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Sotterranei Dimenticati! Il bottino è tuo.",
+        loot:{ gold:[35,88], items:["Reliquia Sacra","Tomo Antico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq160_m1",name:"Ghoul",emoji:"👹",hp:70,maxHp:70,atk:11,def:7,xp:51,isBoss:false},
+      {id:"dq160_m2",name:"Scheletro Guerriero",emoji:"💀",hp:85,maxHp:85,atk:10,def:4,xp:44,isBoss:false}
+    ],
+  },
+  {
+    id:"dq161", title:"Il Risveglio di Veridia", active:true,
+    desc:"Indaga su strani eventi a Veridia. il Mercante Doriano ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Veridia.» — il Mercante Doriano",
+    difficulty:"facile",
+    xpReward:103, goldReward:67,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Mercante Doriano ti ha avvisato dei pericoli di Veridia." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Veridia!",
+        monsters:[
+          {id:"dq161_m1",name:"Brigante",emoji:"🏴‍☠️",hp:20,maxHp:20,atk:8,def:2,xp:19,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Veridia! Il bottino è tuo.",
+        loot:{ gold:[13,33], items:["Tomo Antico","Stivali Veloci"] }
+      }
+    ],
+    enemies:[
+      {id:"dq161_m1",name:"Brigante",emoji:"🏴‍☠️",hp:20,maxHp:20,atk:8,def:2,xp:19,isBoss:false}
+    ],
+  },
+  {
+    id:"dq162", title:"L'Eco di Corte Estiva", active:true,
+    desc:"Indaga su strani eventi a Corte Estiva. la Fata Lily ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — la Fata Lily",
+    difficulty:"difficile",
+    xpReward:764, goldReward:275,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. la Fata Lily ti ha avvisato dei pericoli di Corte Estiva." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:42, gold:21, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:21, gold:10, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Corte Estiva!",
+        monsters:[
+          {id:"dq162_m1",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:177,maxHp:177,atk:28,def:10,xp:63,isBoss:false},
+          {id:"dq162_m2",name:"Satiro",emoji:"🐐",hp:146,maxHp:146,atk:21,def:12,xp:89,isBoss:false},
+          {id:"dq162_m3",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:160,maxHp:160,atk:21,def:14,xp:71,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Corte Estiva!",
+        monsters:[
+          {id:"dq162_m4",name:"Centauro Ribelle",emoji:"🏹",hp:142,maxHp:142,atk:24,def:11,xp:90,isBoss:false},
+          {id:"dq162_m5",name:"Satiro",emoji:"🐐",hp:193,maxHp:193,atk:28,def:8,xp:69,isBoss:false},
+          {id:"dq162_m6",name:"Folletto Dispettoso",emoji:"🧚",hp:133,maxHp:133,atk:25,def:10,xp:55,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Corte Estiva!",
+        monsters:[
+          {id:"dq162_m7",name:"Centauro Ribelle",emoji:"🏹",hp:148,maxHp:148,atk:26,def:14,xp:66,isBoss:false},
+          {id:"dq162_m8",name:"Unicorno Oscuro",emoji:"🦄",hp:135,maxHp:135,atk:23,def:12,xp:92,isBoss:false},
+          {id:"dq162_m9",name:"Satiro",emoji:"🐐",hp:140,maxHp:140,atk:19,def:14,xp:68,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Regina Maligna appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq162_boss",name:"Regina Maligna",emoji:"👸",hp:231,maxHp:231,atk:31,def:14,xp:149,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Corte Estiva! Il bottino è tuo.",
+        loot:{ gold:[55,137], items:["Arco Lungo","Scudo di Ferro","Cristallo di Energia"] }
+      }
+    ],
+    enemies:[
+      {id:"dq162_m1",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:177,maxHp:177,atk:28,def:10,xp:63,isBoss:false},
+      {id:"dq162_m2",name:"Satiro",emoji:"🐐",hp:146,maxHp:146,atk:21,def:12,xp:89,isBoss:false},
+      {id:"dq162_m3",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:160,maxHp:160,atk:21,def:14,xp:71,isBoss:false},
+      {id:"dq162_m4",name:"Centauro Ribelle",emoji:"🏹",hp:142,maxHp:142,atk:24,def:11,xp:90,isBoss:false},
+      {id:"dq162_m5",name:"Satiro",emoji:"🐐",hp:193,maxHp:193,atk:28,def:8,xp:69,isBoss:false},
+      {id:"dq162_m6",name:"Folletto Dispettoso",emoji:"🧚",hp:133,maxHp:133,atk:25,def:10,xp:55,isBoss:false},
+      {id:"dq162_m7",name:"Centauro Ribelle",emoji:"🏹",hp:148,maxHp:148,atk:26,def:14,xp:66,isBoss:false},
+      {id:"dq162_m8",name:"Unicorno Oscuro",emoji:"🦄",hp:135,maxHp:135,atk:23,def:12,xp:92,isBoss:false},
+      {id:"dq162_m9",name:"Satiro",emoji:"🐐",hp:140,maxHp:140,atk:19,def:14,xp:68,isBoss:false},
+      {id:"dq162_boss",name:"Regina Maligna",emoji:"👸",hp:231,maxHp:231,atk:31,def:14,xp:149,isBoss:true}
+    ],
+  },
+  {
+    id:"dq163", title:"La Maledizione di Caravella dei Dannati", active:true,
+    desc:"Indaga su strani eventi a Caravella dei Dannati. il Mozzo Tim ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Caravella dei Dannati.» — il Mozzo Tim",
+    difficulty:"medio",
+    xpReward:419, goldReward:135,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. il Mozzo Tim ti ha avvisato dei pericoli di Caravella dei Dannati." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:17, gold:8, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Caravella dei Dannati!",
+        monsters:[
+          {id:"dq163_m1",name:"Bombardiere",emoji:"💣",hp:99,maxHp:99,atk:17,def:7,xp:40,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:21, gold:10, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Caravella dei Dannati! Il bottino è tuo.",
+        loot:{ gold:[27,67], items:["Anello d'Argento","Mantello dell'Ombra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq163_m1",name:"Bombardiere",emoji:"💣",hp:99,maxHp:99,atk:17,def:7,xp:40,isBoss:false}
+    ],
+  },
+  {
+    id:"dq164", title:"L'Assedio di Catacombe di Argos", active:true,
+    desc:"Indaga su strani eventi a Catacombe di Argos. la Sacerdotessa Elen ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — la Sacerdotessa Elen",
+    difficulty:"medio",
+    xpReward:260, goldReward:169,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. la Sacerdotessa Elen ti ha avvisato dei pericoli di Catacombe di Argos." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Catacombe di Argos!",
+        monsters:[
+          {id:"dq164_m1",name:"Spettro",emoji:"👻",hp:116,maxHp:116,atk:18,def:7,xp:52,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui." },
+      {
+        type:"loot",
+        text:"Hai trionfato a Catacombe di Argos! Il bottino è tuo.",
+        loot:{ gold:[33,84], items:["Mappa del Tesoro","Mappa del Tesoro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq164_m1",name:"Spettro",emoji:"👻",hp:116,maxHp:116,atk:18,def:7,xp:52,isBoss:false}
+    ],
+  },
+  {
+    id:"dq165", title:"L'Eco di Bosco delle Fate", active:true,
+    desc:"Indaga su strani eventi a Bosco delle Fate. il Bardo Cyril ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Bosco delle Fate.» — il Bardo Cyril",
+    difficulty:"medio",
+    xpReward:399, goldReward:173,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. il Bardo Cyril ti ha avvisato dei pericoli di Bosco delle Fate." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:23, gold:11, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Bosco delle Fate!",
+        monsters:[
+          {id:"dq165_m1",name:"Unicorno Oscuro",emoji:"🦄",hp:82,maxHp:82,atk:12,def:4,xp:39,isBoss:false},
+          {id:"dq165_m2",name:"Unicorno Oscuro",emoji:"🦄",hp:108,maxHp:108,atk:16,def:4,xp:52,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute." },
+      {
+        type:"loot",
+        text:"Hai trionfato a Bosco delle Fate! Il bottino è tuo.",
+        loot:{ gold:[34,86], items:["Amuleto del Sole","Pergamena Arcana"] }
+      }
+    ],
+    enemies:[
+      {id:"dq165_m1",name:"Unicorno Oscuro",emoji:"🦄",hp:82,maxHp:82,atk:12,def:4,xp:39,isBoss:false},
+      {id:"dq165_m2",name:"Unicorno Oscuro",emoji:"🦄",hp:108,maxHp:108,atk:16,def:4,xp:52,isBoss:false}
+    ],
+  },
+  {
+    id:"dq166", title:"La Discesa di Cripte di Maldur", active:true,
+    desc:"Indaga su strani eventi a Cripte di Maldur. il Saccheggiatore Krad ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Saccheggiatore Krad",
+    difficulty:"difficile",
+    xpReward:507, goldReward:366,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. il Saccheggiatore Krad ti ha avvisato dei pericoli di Cripte di Maldur." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:28, gold:14, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:14, gold:7, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Cripte di Maldur!",
+        monsters:[
+          {id:"dq166_m1",name:"Ghoul",emoji:"👹",hp:181,maxHp:181,atk:23,def:8,xp:87,isBoss:false},
+          {id:"dq166_m2",name:"Ghoul",emoji:"👹",hp:196,maxHp:196,atk:27,def:9,xp:57,isBoss:false},
+          {id:"dq166_m3",name:"Zombi",emoji:"🧟",hp:150,maxHp:150,atk:19,def:11,xp:85,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:41, gold:20, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:20, gold:10, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Cripte di Maldur!",
+        monsters:[
+          {id:"dq166_m4",name:"Spettro",emoji:"👻",hp:172,maxHp:172,atk:20,def:10,xp:70,isBoss:false},
+          {id:"dq166_m5",name:"Scheletro Guerriero",emoji:"💀",hp:137,maxHp:137,atk:26,def:14,xp:92,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Lich Eterno appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq166_boss",name:"Lich Eterno",emoji:"💀",hp:204,maxHp:204,atk:24,def:15,xp:122,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Cripte di Maldur! Il bottino è tuo.",
+        loot:{ gold:[73,183], items:["Pergamena Arcana","Cristallo di Energia","Pergamena Arcana"] }
+      }
+    ],
+    enemies:[
+      {id:"dq166_m1",name:"Ghoul",emoji:"👹",hp:181,maxHp:181,atk:23,def:8,xp:87,isBoss:false},
+      {id:"dq166_m2",name:"Ghoul",emoji:"👹",hp:196,maxHp:196,atk:27,def:9,xp:57,isBoss:false},
+      {id:"dq166_m3",name:"Zombi",emoji:"🧟",hp:150,maxHp:150,atk:19,def:11,xp:85,isBoss:false},
+      {id:"dq166_m4",name:"Spettro",emoji:"👻",hp:172,maxHp:172,atk:20,def:10,xp:70,isBoss:false},
+      {id:"dq166_m5",name:"Scheletro Guerriero",emoji:"💀",hp:137,maxHp:137,atk:26,def:14,xp:92,isBoss:false},
+      {id:"dq166_boss",name:"Lich Eterno",emoji:"💀",hp:204,maxHp:204,atk:24,def:15,xp:122,isBoss:true}
+    ],
+  },
+  {
+    id:"dq167", title:"La Tomba di Bosco Sussurrante", active:true,
+    desc:"Indaga su strani eventi a Bosco Sussurrante. la Druidessa Mira ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Bosco Sussurrante.» — la Druidessa Mira",
+    difficulty:"difficile",
+    xpReward:692, goldReward:227,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. la Druidessa Mira ti ha avvisato dei pericoli di Bosco Sussurrante." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:31, gold:15, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:15, gold:7, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Bosco Sussurrante!",
+        monsters:[
+          {id:"dq167_m1",name:"Orso Bruno",emoji:"🐻",hp:108,maxHp:108,atk:19,def:12,xp:70,isBoss:false},
+          {id:"dq167_m2",name:"Falco Nero",emoji:"🦅",hp:128,maxHp:128,atk:20,def:11,xp:89,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua." },
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute." },
+      {
+        type:"combat",
+        text:"Antico Treant appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq167_boss",name:"Antico Treant",emoji:"🌲",hp:208,maxHp:208,atk:29,def:13,xp:187,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Bosco Sussurrante! Il bottino è tuo.",
+        loot:{ gold:[45,113], items:["Pugnale Avvelenato","Antidoto","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq167_m1",name:"Orso Bruno",emoji:"🐻",hp:108,maxHp:108,atk:19,def:12,xp:70,isBoss:false},
+      {id:"dq167_m2",name:"Falco Nero",emoji:"🦅",hp:128,maxHp:128,atk:20,def:11,xp:89,isBoss:false},
+      {id:"dq167_boss",name:"Antico Treant",emoji:"🌲",hp:208,maxHp:208,atk:29,def:13,xp:187,isBoss:true}
+    ],
+  },
+  {
+    id:"dq168", title:"L'Ultimo di Sabbie Bruciate", active:true,
+    desc:"Indaga su strani eventi a Sabbie Bruciate. il Beduino Omar ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Beduino Omar",
+    difficulty:"facile",
+    xpReward:159, goldReward:44,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. il Beduino Omar ti ha avvisato dei pericoli di Sabbie Bruciate." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:11, gold:5, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:5, gold:2, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Sabbie Bruciate!",
+        monsters:[
+          {id:"dq168_m1",name:"Mummia",emoji:"🧟",hp:39,maxHp:39,atk:5,def:3,xp:28,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Sabbie Bruciate! Il bottino è tuo.",
+        loot:{ gold:[8,22], items:["Ascia Pesante","Pozione di Mana"] }
+      }
+    ],
+    enemies:[
+      {id:"dq168_m1",name:"Mummia",emoji:"🧟",hp:39,maxHp:39,atk:5,def:3,xp:28,isBoss:false}
+    ],
+  },
+  {
+    id:"dq169", title:"Il Segreto di Quartiere Basso di Korvane", active:true,
+    desc:"Indaga su strani eventi a Quartiere Basso di Korvane. il Mercante Doriano ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Quartiere Basso di Korvane.» — il Mercante Doriano",
+    difficulty:"medio",
+    xpReward:382, goldReward:136,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. il Mercante Doriano ti ha avvisato dei pericoli di Quartiere Basso di Korvane." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:24, gold:12, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Quartiere Basso di Korvane!",
+        monsters:[
+          {id:"dq169_m1",name:"Mago Rinnegato",emoji:"🧙",hp:99,maxHp:99,atk:12,def:5,xp:41,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina." },
+      {
+        type:"loot",
+        text:"Hai trionfato a Quartiere Basso di Korvane! Il bottino è tuo.",
+        loot:{ gold:[27,68], items:["Elmo Rinforzato","Tomo Antico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq169_m1",name:"Mago Rinnegato",emoji:"🧙",hp:99,maxHp:99,atk:12,def:5,xp:41,isBoss:false}
+    ],
+  },
+  {
+    id:"dq170", title:"La Maledizione di Roccaforte di Grumsh", active:true,
+    desc:"Indaga su strani eventi a Roccaforte di Grumsh. il Disertore Orco Zog ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Roccaforte di Grumsh.» — il Disertore Orco Zog",
+    difficulty:"difficile",
+    xpReward:592, goldReward:378,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. il Disertore Orco Zog ti ha avvisato dei pericoli di Roccaforte di Grumsh." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:35, gold:17, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:17, gold:8, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Roccaforte di Grumsh!",
+        monsters:[
+          {id:"dq170_m1",name:"Ogre",emoji:"👹",hp:183,maxHp:183,atk:24,def:12,xp:75,isBoss:false},
+          {id:"dq170_m2",name:"Orco Sciamano",emoji:"🧙",hp:200,maxHp:200,atk:21,def:9,xp:91,isBoss:false},
+          {id:"dq170_m3",name:"Orco Guerriero",emoji:"👹",hp:156,maxHp:156,atk:23,def:8,xp:61,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre." },
+      {
+        type:"combat",
+        text:"Re Orco Gruul appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq170_boss",name:"Re Orco Gruul",emoji:"👑",hp:246,maxHp:246,atk:25,def:16,xp:132,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Roccaforte di Grumsh! Il bottino è tuo.",
+        loot:{ gold:[75,189], items:["Arco Lungo","Elmo Rinforzato","Pergamena Arcana"] }
+      }
+    ],
+    enemies:[
+      {id:"dq170_m1",name:"Ogre",emoji:"👹",hp:183,maxHp:183,atk:24,def:12,xp:75,isBoss:false},
+      {id:"dq170_m2",name:"Orco Sciamano",emoji:"🧙",hp:200,maxHp:200,atk:21,def:9,xp:91,isBoss:false},
+      {id:"dq170_m3",name:"Orco Guerriero",emoji:"👹",hp:156,maxHp:156,atk:23,def:8,xp:61,isBoss:false},
+      {id:"dq170_boss",name:"Re Orco Gruul",emoji:"👑",hp:246,maxHp:246,atk:25,def:16,xp:132,isBoss:true}
+    ],
+  },
+  {
+    id:"dq171", title:"L'Assedio di Tempio Caduto", active:true,
+    desc:"Indaga su strani eventi a Tempio Caduto. la Storica Mirella ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Tempio Caduto.» — la Storica Mirella",
+    difficulty:"difficile",
+    xpReward:795, goldReward:234,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. la Storica Mirella ti ha avvisato dei pericoli di Tempio Caduto." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:27, gold:13, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:13, gold:6, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio Caduto!",
+        monsters:[
+          {id:"dq171_m1",name:"Statua Animata",emoji:"🗿",hp:119,maxHp:119,atk:24,def:10,xp:79,isBoss:false},
+          {id:"dq171_m2",name:"Golem di Pietra",emoji:"🗿",hp:182,maxHp:182,atk:22,def:14,xp:68,isBoss:false},
+          {id:"dq171_m3",name:"Costrutto Arcano",emoji:"⚙️",hp:131,maxHp:131,atk:19,def:10,xp:70,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio Caduto!",
+        monsters:[
+          {id:"dq171_m4",name:"Statua Animata",emoji:"🗿",hp:172,maxHp:172,atk:20,def:13,xp:70,isBoss:false},
+          {id:"dq171_m5",name:"Golem di Pietra",emoji:"🗿",hp:132,maxHp:132,atk:25,def:10,xp:86,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Sentinella Eterna appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq171_boss",name:"Sentinella Eterna",emoji:"🗿",hp:258,maxHp:258,atk:27,def:14,xp:155,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio Caduto! Il bottino è tuo.",
+        loot:{ gold:[46,117], items:["Amuleto del Sole","Stivali Veloci","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq171_m1",name:"Statua Animata",emoji:"🗿",hp:119,maxHp:119,atk:24,def:10,xp:79,isBoss:false},
+      {id:"dq171_m2",name:"Golem di Pietra",emoji:"🗿",hp:182,maxHp:182,atk:22,def:14,xp:68,isBoss:false},
+      {id:"dq171_m3",name:"Costrutto Arcano",emoji:"⚙️",hp:131,maxHp:131,atk:19,def:10,xp:70,isBoss:false},
+      {id:"dq171_m4",name:"Statua Animata",emoji:"🗿",hp:172,maxHp:172,atk:20,def:13,xp:70,isBoss:false},
+      {id:"dq171_m5",name:"Golem di Pietra",emoji:"🗿",hp:132,maxHp:132,atk:25,def:10,xp:86,isBoss:false},
+      {id:"dq171_boss",name:"Sentinella Eterna",emoji:"🗿",hp:258,maxHp:258,atk:27,def:14,xp:155,isBoss:true}
+    ],
+  },
+  {
+    id:"dq172", title:"L'Eco di Segrete di Pietranera", active:true,
+    desc:"Indaga su strani eventi a Segrete di Pietranera. il Saccheggiatore Krad ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Segrete di Pietranera.» — il Saccheggiatore Krad",
+    difficulty:"facile",
+    xpReward:197, goldReward:79,
+    steps:[
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti. il Saccheggiatore Krad ti ha avvisato dei pericoli di Segrete di Pietranera." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:8, gold:4, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Segrete di Pietranera! Il bottino è tuo.",
+        loot:{ gold:[15,39], items:["Mappa del Tesoro","Mantello dell'Ombra"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq173", title:"La Caccia di Mare di Smeraldo", active:true,
+    desc:"Indaga su strani eventi a Mare di Smeraldo. il Capitano Salgari ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Mare di Smeraldo.» — il Capitano Salgari",
+    difficulty:"difficile",
+    xpReward:856, goldReward:396,
+    steps:[
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti. il Capitano Salgari ti ha avvisato dei pericoli di Mare di Smeraldo." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:30, gold:15, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:15, gold:7, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Mare di Smeraldo!",
+        monsters:[
+          {id:"dq173_m1",name:"Kraken Giovane",emoji:"🐙",hp:158,maxHp:158,atk:19,def:14,xp:91,isBoss:false},
+          {id:"dq173_m2",name:"Squalo Spada",emoji:"🦈",hp:112,maxHp:112,atk:24,def:13,xp:94,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina." },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Mare di Smeraldo!",
+        monsters:[
+          {id:"dq173_m3",name:"Kraken Giovane",emoji:"🐙",hp:188,maxHp:188,atk:27,def:10,xp:60,isBoss:false},
+          {id:"dq173_m4",name:"Sirena Maligna",emoji:"🧜‍♀️",hp:152,maxHp:152,atk:20,def:10,xp:93,isBoss:false},
+          {id:"dq173_m5",name:"Sirena Maligna",emoji:"🧜‍♀️",hp:125,maxHp:125,atk:20,def:14,xp:64,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Kraken Antico appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq173_boss",name:"Kraken Antico",emoji:"🐙",hp:255,maxHp:255,atk:30,def:10,xp:158,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Mare di Smeraldo! Il bottino è tuo.",
+        loot:{ gold:[79,198], items:["Mappa del Tesoro","Scudo di Ferro","Cintura di Resistenza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq173_m1",name:"Kraken Giovane",emoji:"🐙",hp:158,maxHp:158,atk:19,def:14,xp:91,isBoss:false},
+      {id:"dq173_m2",name:"Squalo Spada",emoji:"🦈",hp:112,maxHp:112,atk:24,def:13,xp:94,isBoss:false},
+      {id:"dq173_m3",name:"Kraken Giovane",emoji:"🐙",hp:188,maxHp:188,atk:27,def:10,xp:60,isBoss:false},
+      {id:"dq173_m4",name:"Sirena Maligna",emoji:"🧜‍♀️",hp:152,maxHp:152,atk:20,def:10,xp:93,isBoss:false},
+      {id:"dq173_m5",name:"Sirena Maligna",emoji:"🧜‍♀️",hp:125,maxHp:125,atk:20,def:14,xp:64,isBoss:false},
+      {id:"dq173_boss",name:"Kraken Antico",emoji:"🐙",hp:255,maxHp:255,atk:30,def:10,xp:158,isBoss:true}
+    ],
+  },
+  {
+    id:"dq174", title:"La Vendetta di Cittadella di Bael", active:true,
+    desc:"Indaga su strani eventi a Cittadella di Bael. la Paladina Iris ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — la Paladina Iris",
+    difficulty:"epica",
+    xpReward:1667, goldReward:607,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. la Paladina Iris ti ha avvisato dei pericoli di Cittadella di Bael." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:42, gold:21, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:21, gold:10, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Cittadella di Bael!",
+        monsters:[
+          {id:"dq174_m1",name:"Diavolo Spinato",emoji:"😈",hp:86,maxHp:86,atk:25,def:13,xp:65,isBoss:false},
+          {id:"dq174_m2",name:"Diavolo Spinato",emoji:"😈",hp:106,maxHp:106,atk:23,def:10,xp:82,isBoss:false},
+          {id:"dq174_m3",name:"Diavolo Spinato",emoji:"😈",hp:138,maxHp:138,atk:27,def:13,xp:82,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Signore dell'Inferno appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq174_boss",name:"Signore dell'Inferno",emoji:"😈",hp:455,maxHp:455,atk:37,def:12,xp:259,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Cittadella di Bael! Il bottino è tuo.",
+        loot:{ gold:[121,303], items:["Bastone Runico","Elmo Rinforzato","Pozione di Mana","Anello d'Argento"] }
+      }
+    ],
+    enemies:[
+      {id:"dq174_m1",name:"Diavolo Spinato",emoji:"😈",hp:86,maxHp:86,atk:25,def:13,xp:65,isBoss:false},
+      {id:"dq174_m2",name:"Diavolo Spinato",emoji:"😈",hp:106,maxHp:106,atk:23,def:10,xp:82,isBoss:false},
+      {id:"dq174_m3",name:"Diavolo Spinato",emoji:"😈",hp:138,maxHp:138,atk:27,def:13,xp:82,isBoss:false},
+      {id:"dq174_boss",name:"Signore dell'Inferno",emoji:"😈",hp:455,maxHp:455,atk:37,def:12,xp:259,isBoss:true}
+    ],
+  },
+  {
+    id:"dq175", title:"La Maledizione di Laboratorio Segreto", active:true,
+    desc:"Indaga su strani eventi a Laboratorio Segreto. il Mago Veridian ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Mago Veridian",
+    difficulty:"medio",
+    xpReward:439, goldReward:109,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. il Mago Veridian ti ha avvisato dei pericoli di Laboratorio Segreto." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:25, gold:12, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Laboratorio Segreto!",
+        monsters:[
+          {id:"dq175_m1",name:"Esperimento Fallito",emoji:"🐀",hp:112,maxHp:112,atk:14,def:5,xp:52,isBoss:false},
+          {id:"dq175_m2",name:"Esperimento Fallito",emoji:"🐀",hp:92,maxHp:92,atk:18,def:6,xp:49,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Laboratorio Segreto!",
+        monsters:[
+          {id:"dq175_m3",name:"Costrutto Carnoso",emoji:"🥩",hp:65,maxHp:65,atk:11,def:4,xp:52,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Laboratorio Segreto! Il bottino è tuo.",
+        loot:{ gold:[21,54], items:["Anello d'Argento","Bastone Runico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq175_m1",name:"Esperimento Fallito",emoji:"🐀",hp:112,maxHp:112,atk:14,def:5,xp:52,isBoss:false},
+      {id:"dq175_m2",name:"Esperimento Fallito",emoji:"🐀",hp:92,maxHp:92,atk:18,def:6,xp:49,isBoss:false},
+      {id:"dq175_m3",name:"Costrutto Carnoso",emoji:"🥩",hp:65,maxHp:65,atk:11,def:4,xp:52,isBoss:false}
+    ],
+  },
+  {
+    id:"dq176", title:"L'Eco di Radura Argentea", active:true,
+    desc:"Indaga su strani eventi a Radura Argentea. la Fata Lily ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Radura Argentea.» — la Fata Lily",
+    difficulty:"facile",
+    xpReward:127, goldReward:45,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. la Fata Lily ti ha avvisato dei pericoli di Radura Argentea." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Radura Argentea!",
+        monsters:[
+          {id:"dq176_m1",name:"Centauro Ribelle",emoji:"🏹",hp:28,maxHp:28,atk:10,def:2,xp:21,isBoss:false},
+          {id:"dq176_m2",name:"Folletto Dispettoso",emoji:"🧚",hp:29,maxHp:29,atk:7,def:1,xp:15,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Radura Argentea! Il bottino è tuo.",
+        loot:{ gold:[9,22], items:["Amuleto del Sole","Mantello dell'Ombra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq176_m1",name:"Centauro Ribelle",emoji:"🏹",hp:28,maxHp:28,atk:10,def:2,xp:21,isBoss:false},
+      {id:"dq176_m2",name:"Folletto Dispettoso",emoji:"🧚",hp:29,maxHp:29,atk:7,def:1,xp:15,isBoss:false}
+    ],
+  },
+  {
+    id:"dq177", title:"L'Ombra di Vette Eterne", active:true,
+    desc:"Indaga su strani eventi a Vette Eterne. lo Scalatore Bjorn ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Vette Eterne.» — lo Scalatore Bjorn",
+    difficulty:"epica",
+    xpReward:2348, goldReward:615,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. lo Scalatore Bjorn ti ha avvisato dei pericoli di Vette Eterne." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:48, gold:24, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:24, gold:12, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Vette Eterne!",
+        monsters:[
+          {id:"dq177_m1",name:"Troll di Montagna",emoji:"👹",hp:107,maxHp:107,atk:22,def:11,xp:93,isBoss:false},
+          {id:"dq177_m2",name:"Gigante di Pietra",emoji:"🗿",hp:117,maxHp:117,atk:26,def:9,xp:61,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Yeti Alpha appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq177_boss",name:"Yeti Alpha",emoji:"🦍",hp:546,maxHp:546,atk:44,def:14,xp:274,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Vette Eterne! Il bottino è tuo.",
+        loot:{ gold:[123,307], items:["Pozione di Mana","Amuleto del Sole","Bastone Runico","Tomo Antico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq177_m1",name:"Troll di Montagna",emoji:"👹",hp:107,maxHp:107,atk:22,def:11,xp:93,isBoss:false},
+      {id:"dq177_m2",name:"Gigante di Pietra",emoji:"🗿",hp:117,maxHp:117,atk:26,def:9,xp:61,isBoss:false},
+      {id:"dq177_boss",name:"Yeti Alpha",emoji:"🦍",hp:546,maxHp:546,atk:44,def:14,xp:274,isBoss:true}
+    ],
+  },
+  {
+    id:"dq178", title:"La Maledizione di Altare di Sangue", active:true,
+    desc:"Indaga su strani eventi a Altare di Sangue. il Sacerdote Pentito ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Sacerdote Pentito",
+    difficulty:"facile",
+    xpReward:169, goldReward:59,
+    steps:[
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti. il Sacerdote Pentito ti ha avvisato dei pericoli di Altare di Sangue." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Altare di Sangue! Il bottino è tuo.",
+        loot:{ gold:[11,29], items:["Pugnale Avvelenato","Tomo Antico"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq179", title:"Il Risveglio di Galeone Fantasma", active:true,
+    desc:"Indaga su strani eventi a Galeone Fantasma. il Vecchio Ammiraglio ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Vecchio Ammiraglio",
+    difficulty:"difficile",
+    xpReward:814, goldReward:276,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. il Vecchio Ammiraglio ti ha avvisato dei pericoli di Galeone Fantasma." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:26, gold:13, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:13, gold:6, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Galeone Fantasma!",
+        monsters:[
+          {id:"dq179_m1",name:"Bombardiere",emoji:"💣",hp:185,maxHp:185,atk:21,def:12,xp:65,isBoss:false},
+          {id:"dq179_m2",name:"Bombardiere",emoji:"💣",hp:111,maxHp:111,atk:24,def:12,xp:94,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi." },
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi." },
+      {
+        type:"combat",
+        text:"Quartiermastro Demone appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq179_boss",name:"Quartiermastro Demone",emoji:"👹",hp:258,maxHp:258,atk:32,def:13,xp:142,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Galeone Fantasma! Il bottino è tuo.",
+        loot:{ gold:[55,138], items:["Gemma Lucente","Tomo Antico","Pergamena Arcana"] }
+      }
+    ],
+    enemies:[
+      {id:"dq179_m1",name:"Bombardiere",emoji:"💣",hp:185,maxHp:185,atk:21,def:12,xp:65,isBoss:false},
+      {id:"dq179_m2",name:"Bombardiere",emoji:"💣",hp:111,maxHp:111,atk:24,def:12,xp:94,isBoss:false},
+      {id:"dq179_boss",name:"Quartiermastro Demone",emoji:"👹",hp:258,maxHp:258,atk:32,def:13,xp:142,isBoss:true}
+    ],
+  },
+  {
+    id:"dq180", title:"Il Risveglio di Città Sommersa", active:true,
+    desc:"Indaga su strani eventi a Città Sommersa. la Storica Mirella ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — la Storica Mirella",
+    difficulty:"medio",
+    xpReward:264, goldReward:163,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. la Storica Mirella ti ha avvisato dei pericoli di Città Sommersa." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:21, gold:10, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Città Sommersa!",
+        monsters:[
+          {id:"dq180_m1",name:"Guardiano Spettrale",emoji:"👻",hp:90,maxHp:90,atk:12,def:6,xp:52,isBoss:false},
+          {id:"dq180_m2",name:"Costrutto Arcano",emoji:"⚙️",hp:67,maxHp:67,atk:14,def:7,xp:47,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Città Sommersa! Il bottino è tuo.",
+        loot:{ gold:[32,81], items:["Ascia Pesante","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq180_m1",name:"Guardiano Spettrale",emoji:"👻",hp:90,maxHp:90,atk:12,def:6,xp:52,isBoss:false},
+      {id:"dq180_m2",name:"Costrutto Arcano",emoji:"⚙️",hp:67,maxHp:67,atk:14,def:7,xp:47,isBoss:false}
+    ],
+  },
+  {
+    id:"dq181", title:"Il Risveglio di Vette Eterne", active:true,
+    desc:"Indaga su strani eventi a Vette Eterne. lo Scalatore Bjorn ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — lo Scalatore Bjorn",
+    difficulty:"difficile",
+    xpReward:876, goldReward:301,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. lo Scalatore Bjorn ti ha avvisato dei pericoli di Vette Eterne." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:39, gold:19, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:19, gold:9, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Vette Eterne!",
+        monsters:[
+          {id:"dq181_m1",name:"Lupo di Ghiaccio",emoji:"🐺",hp:104,maxHp:104,atk:18,def:10,xp:73,isBoss:false},
+          {id:"dq181_m2",name:"Aquila Gigante",emoji:"🦅",hp:153,maxHp:153,atk:21,def:14,xp:74,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:34, gold:17, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:17, gold:8, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Yeti Alpha appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq181_boss",name:"Yeti Alpha",emoji:"🦍",hp:196,maxHp:196,atk:23,def:15,xp:181,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Vette Eterne! Il bottino è tuo.",
+        loot:{ gold:[60,150], items:["Guanti di Forza","Cintura di Resistenza","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq181_m1",name:"Lupo di Ghiaccio",emoji:"🐺",hp:104,maxHp:104,atk:18,def:10,xp:73,isBoss:false},
+      {id:"dq181_m2",name:"Aquila Gigante",emoji:"🦅",hp:153,maxHp:153,atk:21,def:14,xp:74,isBoss:false},
+      {id:"dq181_boss",name:"Yeti Alpha",emoji:"🦍",hp:196,maxHp:196,atk:23,def:15,xp:181,isBoss:true}
+    ],
+  },
+  {
+    id:"dq182", title:"La Discesa di Torre di Zarathos", active:true,
+    desc:"Indaga su strani eventi a Torre di Zarathos. il Mago Veridian ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Mago Veridian",
+    difficulty:"difficile",
+    xpReward:760, goldReward:268,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Mago Veridian ti ha avvisato dei pericoli di Torre di Zarathos." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:29, gold:14, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:14, gold:7, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Torre di Zarathos!",
+        monsters:[
+          {id:"dq182_m1",name:"Omuncolo",emoji:"🧪",hp:151,maxHp:151,atk:28,def:13,xp:81,isBoss:false},
+          {id:"dq182_m2",name:"Esperimento Fallito",emoji:"🐀",hp:139,maxHp:139,atk:23,def:10,xp:72,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua." },
+      {
+        type:"combat",
+        text:"Aberrazione Suprema appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq182_boss",name:"Aberrazione Suprema",emoji:"👁️",hp:210,maxHp:210,atk:24,def:15,xp:136,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Torre di Zarathos! Il bottino è tuo.",
+        loot:{ gold:[53,134], items:["Antidoto","Pugnale Avvelenato","Mappa del Tesoro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq182_m1",name:"Omuncolo",emoji:"🧪",hp:151,maxHp:151,atk:28,def:13,xp:81,isBoss:false},
+      {id:"dq182_m2",name:"Esperimento Fallito",emoji:"🐀",hp:139,maxHp:139,atk:23,def:10,xp:72,isBoss:false},
+      {id:"dq182_boss",name:"Aberrazione Suprema",emoji:"👁️",hp:210,maxHp:210,atk:24,def:15,xp:136,isBoss:true}
+    ],
+  },
+  {
+    id:"dq183", title:"Il Mistero di Tempio Caduto", active:true,
+    desc:"Indaga su strani eventi a Tempio Caduto. il Saggio Velnar ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Saggio Velnar",
+    difficulty:"difficile",
+    xpReward:580, goldReward:208,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. il Saggio Velnar ti ha avvisato dei pericoli di Tempio Caduto." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:42, gold:21, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:21, gold:10, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio Caduto!",
+        monsters:[
+          {id:"dq183_m1",name:"Golem di Pietra",emoji:"🗿",hp:114,maxHp:114,atk:27,def:8,xp:68,isBoss:false},
+          {id:"dq183_m2",name:"Statua Animata",emoji:"🗿",hp:130,maxHp:130,atk:25,def:13,xp:81,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre." },
+      {
+        type:"combat",
+        text:"Spirito dell'Antichità appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq183_boss",name:"Spirito dell'Antichità",emoji:"👻",hp:262,maxHp:262,atk:22,def:14,xp:196,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio Caduto! Il bottino è tuo.",
+        loot:{ gold:[41,104], items:["Cristallo di Energia","Cintura di Resistenza","Gemma Lucente"] }
+      }
+    ],
+    enemies:[
+      {id:"dq183_m1",name:"Golem di Pietra",emoji:"🗿",hp:114,maxHp:114,atk:27,def:8,xp:68,isBoss:false},
+      {id:"dq183_m2",name:"Statua Animata",emoji:"🗿",hp:130,maxHp:130,atk:25,def:13,xp:81,isBoss:false},
+      {id:"dq183_boss",name:"Spirito dell'Antichità",emoji:"👻",hp:262,maxHp:262,atk:22,def:14,xp:196,isBoss:true}
+    ],
+  },
+  {
+    id:"dq184", title:"Il Mistero di Rovine di Eldoria", active:true,
+    desc:"Indaga su strani eventi a Rovine di Eldoria. il Saggio Velnar ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Rovine di Eldoria.» — il Saggio Velnar",
+    difficulty:"facile",
+    xpReward:162, goldReward:52,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Saggio Velnar ti ha avvisato dei pericoli di Rovine di Eldoria." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Rovine di Eldoria!",
+        monsters:[
+          {id:"dq184_m1",name:"Statua Animata",emoji:"🗿",hp:45,maxHp:45,atk:9,def:1,xp:26,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Rovine di Eldoria! Il bottino è tuo.",
+        loot:{ gold:[10,26], items:["Pergamena Arcana","Mappa del Tesoro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq184_m1",name:"Statua Animata",emoji:"🗿",hp:45,maxHp:45,atk:9,def:1,xp:26,isBoss:false}
+    ],
+  },
+  {
+    id:"dq185", title:"La Vendetta di Forte Sangue", active:true,
+    desc:"Indaga su strani eventi a Forte Sangue. il Cacciatore Dorn ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — il Cacciatore Dorn",
+    difficulty:"medio",
+    xpReward:313, goldReward:163,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. il Cacciatore Dorn ti ha avvisato dei pericoli di Forte Sangue." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:19, gold:9, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Forte Sangue!",
+        monsters:[
+          {id:"dq185_m1",name:"Orco Guerriero",emoji:"👹",hp:74,maxHp:74,atk:16,def:6,xp:54,isBoss:false},
+          {id:"dq185_m2",name:"Lupo da Guerra",emoji:"🐺",hp:54,maxHp:54,atk:16,def:6,xp:33,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Forte Sangue! Il bottino è tuo.",
+        loot:{ gold:[32,81], items:["Mantello dell'Ombra","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq185_m1",name:"Orco Guerriero",emoji:"👹",hp:74,maxHp:74,atk:16,def:6,xp:54,isBoss:false},
+      {id:"dq185_m2",name:"Lupo da Guerra",emoji:"🐺",hp:54,maxHp:54,atk:16,def:6,xp:33,isBoss:false}
+    ],
+  },
+  {
+    id:"dq186", title:"La Profezia di Roccaforte di Grumsh", active:true,
+    desc:"Indaga su strani eventi a Roccaforte di Grumsh. il Cacciatore Dorn ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Cacciatore Dorn",
+    difficulty:"medio",
+    xpReward:307, goldReward:131,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. il Cacciatore Dorn ti ha avvisato dei pericoli di Roccaforte di Grumsh." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:17, gold:8, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Roccaforte di Grumsh!",
+        monsters:[
+          {id:"dq186_m1",name:"Orco Guerriero",emoji:"👹",hp:105,maxHp:105,atk:15,def:8,xp:33,isBoss:false},
+          {id:"dq186_m2",name:"Orco Guerriero",emoji:"👹",hp:83,maxHp:83,atk:11,def:4,xp:42,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Roccaforte di Grumsh! Il bottino è tuo.",
+        loot:{ gold:[26,65], items:["Elmo Rinforzato","Pozione di Cura"] }
+      }
+    ],
+    enemies:[
+      {id:"dq186_m1",name:"Orco Guerriero",emoji:"👹",hp:105,maxHp:105,atk:15,def:8,xp:33,isBoss:false},
+      {id:"dq186_m2",name:"Orco Guerriero",emoji:"👹",hp:83,maxHp:83,atk:11,def:4,xp:42,isBoss:false}
+    ],
+  },
+  {
+    id:"dq187", title:"Il Mistero di Tempio di Ra-Khem", active:true,
+    desc:"Indaga su strani eventi a Tempio di Ra-Khem. il Beduino Omar ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — il Beduino Omar",
+    difficulty:"facile",
+    xpReward:159, goldReward:40,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. il Beduino Omar ti ha avvisato dei pericoli di Tempio di Ra-Khem." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:11, gold:5, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:5, gold:2, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio di Ra-Khem!",
+        monsters:[
+          {id:"dq187_m1",name:"Sfinge Minore",emoji:"🦁",hp:26,maxHp:26,atk:8,def:3,xp:25,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio di Ra-Khem! Il bottino è tuo.",
+        loot:{ gold:[8,20], items:["Cintura di Resistenza","Pozione di Cura"] }
+      }
+    ],
+    enemies:[
+      {id:"dq187_m1",name:"Sfinge Minore",emoji:"🦁",hp:26,maxHp:26,atk:8,def:3,xp:25,isBoss:false}
+    ],
+  },
+  {
+    id:"dq188", title:"L'Ultimo di Cripte di Maldur", active:true,
+    desc:"Indaga su strani eventi a Cripte di Maldur. la Sacerdotessa Elen ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Cripte di Maldur.» — la Sacerdotessa Elen",
+    difficulty:"medio",
+    xpReward:363, goldReward:159,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. la Sacerdotessa Elen ti ha avvisato dei pericoli di Cripte di Maldur." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:21, gold:10, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Cripte di Maldur!",
+        monsters:[
+          {id:"dq188_m1",name:"Spettro",emoji:"👻",hp:119,maxHp:119,atk:12,def:7,xp:36,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Cripte di Maldur! Il bottino è tuo.",
+        loot:{ gold:[31,79], items:["Cintura di Resistenza","Pozione di Cura"] }
+      }
+    ],
+    enemies:[
+      {id:"dq188_m1",name:"Spettro",emoji:"👻",hp:119,maxHp:119,atk:12,def:7,xp:36,isBoss:false}
+    ],
+  },
+  {
+    id:"dq189", title:"Il Tradimento di Pozzo di Lava", active:true,
+    desc:"Indaga su strani eventi a Pozzo di Lava. la Paladina Iris ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Pozzo di Lava.» — la Paladina Iris",
+    difficulty:"medio",
+    xpReward:265, goldReward:133,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. la Paladina Iris ti ha avvisato dei pericoli di Pozzo di Lava." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Pozzo di Lava!",
+        monsters:[
+          {id:"dq189_m1",name:"Imp",emoji:"😈",hp:108,maxHp:108,atk:12,def:4,xp:42,isBoss:false},
+          {id:"dq189_m2",name:"Cultista",emoji:"🔥",hp:62,maxHp:62,atk:11,def:5,xp:52,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Pozzo di Lava! Il bottino è tuo.",
+        loot:{ gold:[26,66], items:["Amuleto del Sole","Bastone Runico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq189_m1",name:"Imp",emoji:"😈",hp:108,maxHp:108,atk:12,def:4,xp:42,isBoss:false},
+      {id:"dq189_m2",name:"Cultista",emoji:"🔥",hp:62,maxHp:62,atk:11,def:5,xp:52,isBoss:false}
+    ],
+  },
+  {
+    id:"dq190", title:"L'Assedio di Caravella dei Dannati", active:true,
+    desc:"Indaga su strani eventi a Caravella dei Dannati. il Mozzo Tim ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Mozzo Tim",
+    difficulty:"difficile",
+    xpReward:810, goldReward:318,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. il Mozzo Tim ti ha avvisato dei pericoli di Caravella dei Dannati." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:35, gold:17, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:17, gold:8, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Caravella dei Dannati!",
+        monsters:[
+          {id:"dq190_m1",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:165,maxHp:165,atk:23,def:12,xp:57,isBoss:false},
+          {id:"dq190_m2",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:154,maxHp:154,atk:22,def:11,xp:66,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:26, gold:13, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:13, gold:6, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:33, gold:16, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:16, gold:8, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Capitano Mortenero appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq190_boss",name:"Capitano Mortenero",emoji:"💀",hp:271,maxHp:271,atk:23,def:11,xp:153,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Caravella dei Dannati! Il bottino è tuo.",
+        loot:{ gold:[63,159], items:["Pergamena Arcana","Gemma Lucente","Mantello dell'Ombra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq190_m1",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:165,maxHp:165,atk:23,def:12,xp:57,isBoss:false},
+      {id:"dq190_m2",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:154,maxHp:154,atk:22,def:11,xp:66,isBoss:false},
+      {id:"dq190_boss",name:"Capitano Mortenero",emoji:"💀",hp:271,maxHp:271,atk:23,def:11,xp:153,isBoss:true}
+    ],
+  },
+  {
+    id:"dq191", title:"Il Risveglio di Caravella dei Dannati", active:true,
+    desc:"Indaga su strani eventi a Caravella dei Dannati. il Vecchio Ammiraglio ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Vecchio Ammiraglio",
+    difficulty:"medio",
+    xpReward:386, goldReward:146,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. il Vecchio Ammiraglio ti ha avvisato dei pericoli di Caravella dei Dannati." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:22, gold:11, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Caravella dei Dannati!",
+        monsters:[
+          {id:"dq191_m1",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:56,maxHp:56,atk:11,def:8,xp:38,isBoss:false},
+          {id:"dq191_m2",name:"Bombardiere",emoji:"💣",hp:113,maxHp:113,atk:12,def:4,xp:49,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Caravella dei Dannati! Il bottino è tuo.",
+        loot:{ gold:[29,73], items:["Arco Lungo","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq191_m1",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:56,maxHp:56,atk:11,def:8,xp:38,isBoss:false},
+      {id:"dq191_m2",name:"Bombardiere",emoji:"💣",hp:113,maxHp:113,atk:12,def:4,xp:49,isBoss:false}
+    ],
+  },
+  {
+    id:"dq192", title:"La Caccia di Laboratorio Segreto", active:true,
+    desc:"Indaga su strani eventi a Laboratorio Segreto. l'Apprendista Pia ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — l'Apprendista Pia",
+    difficulty:"facile",
+    xpReward:197, goldReward:78,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. l'Apprendista Pia ti ha avvisato dei pericoli di Laboratorio Segreto." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:11, gold:5, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:5, gold:2, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Laboratorio Segreto! Il bottino è tuo.",
+        loot:{ gold:[15,39], items:["Ascia Pesante","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq193", title:"La Caccia di Rovine di Eldoria", active:true,
+    desc:"Indaga su strani eventi a Rovine di Eldoria. il Saggio Velnar ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Rovine di Eldoria.» — il Saggio Velnar",
+    difficulty:"medio",
+    xpReward:341, goldReward:118,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. il Saggio Velnar ti ha avvisato dei pericoli di Rovine di Eldoria." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:22, gold:11, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Rovine di Eldoria!",
+        monsters:[
+          {id:"dq193_m1",name:"Costrutto Arcano",emoji:"⚙️",hp:102,maxHp:102,atk:11,def:6,xp:41,isBoss:false},
+          {id:"dq193_m2",name:"Guardiano Spettrale",emoji:"👻",hp:78,maxHp:78,atk:11,def:6,xp:30,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Rovine di Eldoria! Il bottino è tuo.",
+        loot:{ gold:[23,59], items:["Gemma Lucente","Mantello dell'Ombra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq193_m1",name:"Costrutto Arcano",emoji:"⚙️",hp:102,maxHp:102,atk:11,def:6,xp:41,isBoss:false},
+      {id:"dq193_m2",name:"Guardiano Spettrale",emoji:"👻",hp:78,maxHp:78,atk:11,def:6,xp:30,isBoss:false}
+    ],
+  },
+  {
+    id:"dq194", title:"La Discesa di Cripte di Maldur", active:true,
+    desc:"Indaga su strani eventi a Cripte di Maldur. l'Archeologo Vandros ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — l'Archeologo Vandros",
+    difficulty:"medio",
+    xpReward:332, goldReward:108,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. l'Archeologo Vandros ti ha avvisato dei pericoli di Cripte di Maldur." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Cripte di Maldur!",
+        monsters:[
+          {id:"dq194_m1",name:"Scheletro Guerriero",emoji:"💀",hp:51,maxHp:51,atk:18,def:4,xp:41,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Cripte di Maldur!",
+        monsters:[
+          {id:"dq194_m2",name:"Zombi",emoji:"🧟",hp:106,maxHp:106,atk:10,def:6,xp:35,isBoss:false},
+          {id:"dq194_m3",name:"Zombi",emoji:"🧟",hp:69,maxHp:69,atk:15,def:6,xp:36,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Cripte di Maldur! Il bottino è tuo.",
+        loot:{ gold:[21,54], items:["Tomo Antico","Stivali Veloci"] }
+      }
+    ],
+    enemies:[
+      {id:"dq194_m1",name:"Scheletro Guerriero",emoji:"💀",hp:51,maxHp:51,atk:18,def:4,xp:41,isBoss:false},
+      {id:"dq194_m2",name:"Zombi",emoji:"🧟",hp:106,maxHp:106,atk:10,def:6,xp:35,isBoss:false},
+      {id:"dq194_m3",name:"Zombi",emoji:"🧟",hp:69,maxHp:69,atk:15,def:6,xp:36,isBoss:false}
+    ],
+  },
+  {
+    id:"dq195", title:"La Discesa di Inferno Cremisi", active:true,
+    desc:"Indaga su strani eventi a Inferno Cremisi. la Paladina Iris ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Inferno Cremisi.» — la Paladina Iris",
+    difficulty:"medio",
+    xpReward:369, goldReward:169,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. la Paladina Iris ti ha avvisato dei pericoli di Inferno Cremisi." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:19, gold:9, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Inferno Cremisi!",
+        monsters:[
+          {id:"dq195_m1",name:"Imp",emoji:"😈",hp:81,maxHp:81,atk:10,def:4,xp:43,isBoss:false},
+          {id:"dq195_m2",name:"Diavolo Spinato",emoji:"😈",hp:93,maxHp:93,atk:16,def:6,xp:47,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:21, gold:10, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Inferno Cremisi! Il bottino è tuo.",
+        loot:{ gold:[33,84], items:["Cristallo di Energia","Spada Affilata"] }
+      }
+    ],
+    enemies:[
+      {id:"dq195_m1",name:"Imp",emoji:"😈",hp:81,maxHp:81,atk:10,def:4,xp:43,isBoss:false},
+      {id:"dq195_m2",name:"Diavolo Spinato",emoji:"😈",hp:93,maxHp:93,atk:16,def:6,xp:47,isBoss:false}
+    ],
+  },
+  {
+    id:"dq196", title:"La Tomba di Scogliere di Tharn", active:true,
+    desc:"Indaga su strani eventi a Scogliere di Tharn. il Vecchio Marinaio ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Vecchio Marinaio",
+    difficulty:"medio",
+    xpReward:315, goldReward:170,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. il Vecchio Marinaio ti ha avvisato dei pericoli di Scogliere di Tharn." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:17, gold:8, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Scogliere di Tharn!",
+        monsters:[
+          {id:"dq196_m1",name:"Squalo Spada",emoji:"🦈",hp:89,maxHp:89,atk:11,def:6,xp:41,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Scogliere di Tharn! Il bottino è tuo.",
+        loot:{ gold:[34,85], items:["Tomo Antico","Tomo Antico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq196_m1",name:"Squalo Spada",emoji:"🦈",hp:89,maxHp:89,atk:11,def:6,xp:41,isBoss:false}
+    ],
+  },
+  {
+    id:"dq197", title:"La Tomba di Costa Frangente", active:true,
+    desc:"Indaga su strani eventi a Costa Frangente. la Sirena Maris ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — la Sirena Maris",
+    difficulty:"difficile",
+    xpReward:642, goldReward:390,
+    steps:[
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti. la Sirena Maris ti ha avvisato dei pericoli di Costa Frangente." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:27, gold:13, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:13, gold:6, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Costa Frangente!",
+        monsters:[
+          {id:"dq197_m1",name:"Kraken Giovane",emoji:"🐙",hp:169,maxHp:169,atk:24,def:8,xp:74,isBoss:false},
+          {id:"dq197_m2",name:"Pirata",emoji:"🏴‍☠️",hp:184,maxHp:184,atk:28,def:13,xp:68,isBoss:false},
+          {id:"dq197_m3",name:"Kraken Giovane",emoji:"🐙",hp:113,maxHp:113,atk:26,def:13,xp:91,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre." },
+      {
+        type:"combat",
+        text:"Kraken Antico appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq197_boss",name:"Kraken Antico",emoji:"🐙",hp:184,maxHp:184,atk:28,def:16,xp:155,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Costa Frangente! Il bottino è tuo.",
+        loot:{ gold:[78,195], items:["Tomo Antico","Ascia Pesante","Tomo Antico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq197_m1",name:"Kraken Giovane",emoji:"🐙",hp:169,maxHp:169,atk:24,def:8,xp:74,isBoss:false},
+      {id:"dq197_m2",name:"Pirata",emoji:"🏴‍☠️",hp:184,maxHp:184,atk:28,def:13,xp:68,isBoss:false},
+      {id:"dq197_m3",name:"Kraken Giovane",emoji:"🐙",hp:113,maxHp:113,atk:26,def:13,xp:91,isBoss:false},
+      {id:"dq197_boss",name:"Kraken Antico",emoji:"🐙",hp:184,maxHp:184,atk:28,def:16,xp:155,isBoss:true}
+    ],
+  },
+  {
+    id:"dq198", title:"Il Segreto di Isole dei Naufraghi", active:true,
+    desc:"Indaga su strani eventi a Isole dei Naufraghi. la Sirena Maris ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — la Sirena Maris",
+    difficulty:"medio",
+    xpReward:309, goldReward:103,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. la Sirena Maris ti ha avvisato dei pericoli di Isole dei Naufraghi." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Isole dei Naufraghi!",
+        monsters:[
+          {id:"dq198_m1",name:"Sirena Maligna",emoji:"🧜‍♀️",hp:106,maxHp:106,atk:10,def:6,xp:43,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Isole dei Naufraghi! Il bottino è tuo.",
+        loot:{ gold:[20,51], items:["Amuleto del Sole","Antidoto"] }
+      }
+    ],
+    enemies:[
+      {id:"dq198_m1",name:"Sirena Maligna",emoji:"🧜‍♀️",hp:106,maxHp:106,atk:10,def:6,xp:43,isBoss:false}
+    ],
+  },
+  {
+    id:"dq199", title:"L'Eco di Bastione Verde", active:true,
+    desc:"Indaga su strani eventi a Bastione Verde. la Mercenaria Kira ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — la Mercenaria Kira",
+    difficulty:"medio",
+    xpReward:260, goldReward:175,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. la Mercenaria Kira ti ha avvisato dei pericoli di Bastione Verde." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:17, gold:8, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Bastione Verde!",
+        monsters:[
+          {id:"dq199_m1",name:"Ogre",emoji:"👹",hp:67,maxHp:67,atk:16,def:6,xp:52,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui." },
+      {
+        type:"loot",
+        text:"Hai trionfato a Bastione Verde! Il bottino è tuo.",
+        loot:{ gold:[35,87], items:["Bastone Runico","Ascia Pesante"] }
+      }
+    ],
+    enemies:[
+      {id:"dq199_m1",name:"Ogre",emoji:"👹",hp:67,maxHp:67,atk:16,def:6,xp:52,isBoss:false}
+    ],
+  },
+  {
+    id:"dq200", title:"Il Risveglio di Torre di Zarathos", active:true,
+    desc:"Indaga su strani eventi a Torre di Zarathos. l'Apprendista Pia ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Torre di Zarathos.» — l'Apprendista Pia",
+    difficulty:"difficile",
+    xpReward:624, goldReward:389,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. l'Apprendista Pia ti ha avvisato dei pericoli di Torre di Zarathos." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:34, gold:17, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:17, gold:8, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Torre di Zarathos!",
+        monsters:[
+          {id:"dq200_m1",name:"Omuncolo",emoji:"🧪",hp:111,maxHp:111,atk:25,def:12,xp:69,isBoss:false},
+          {id:"dq200_m2",name:"Costrutto Carnoso",emoji:"🥩",hp:155,maxHp:155,atk:20,def:11,xp:82,isBoss:false},
+          {id:"dq200_m3",name:"Esperimento Fallito",emoji:"🐀",hp:114,maxHp:114,atk:25,def:11,xp:76,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre." },
+      {
+        type:"combat",
+        text:"Alchimista Pazzo appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq200_boss",name:"Alchimista Pazzo",emoji:"⚗️",hp:272,maxHp:272,atk:25,def:13,xp:185,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Torre di Zarathos! Il bottino è tuo.",
+        loot:{ gold:[77,194], items:["Gemma Lucente","Cintura di Resistenza","Spada Affilata"] }
+      }
+    ],
+    enemies:[
+      {id:"dq200_m1",name:"Omuncolo",emoji:"🧪",hp:111,maxHp:111,atk:25,def:12,xp:69,isBoss:false},
+      {id:"dq200_m2",name:"Costrutto Carnoso",emoji:"🥩",hp:155,maxHp:155,atk:20,def:11,xp:82,isBoss:false},
+      {id:"dq200_m3",name:"Esperimento Fallito",emoji:"🐀",hp:114,maxHp:114,atk:25,def:11,xp:76,isBoss:false},
+      {id:"dq200_boss",name:"Alchimista Pazzo",emoji:"⚗️",hp:272,maxHp:272,atk:25,def:13,xp:185,isBoss:true}
+    ],
+  },
+  {
+    id:"dq201", title:"La Profezia di Foresta Smeraldina", active:true,
+    desc:"Indaga su strani eventi a Foresta Smeraldina. la Druidessa Mira ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — la Druidessa Mira",
+    difficulty:"difficile",
+    xpReward:511, goldReward:347,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. la Druidessa Mira ti ha avvisato dei pericoli di Foresta Smeraldina." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:29, gold:14, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:14, gold:7, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Foresta Smeraldina!",
+        monsters:[
+          {id:"dq201_m1",name:"Goblin Esploratore",emoji:"👹",hp:143,maxHp:143,atk:28,def:9,xp:81,isBoss:false},
+          {id:"dq201_m2",name:"Orso Bruno",emoji:"🐻",hp:156,maxHp:156,atk:26,def:13,xp:90,isBoss:false},
+          {id:"dq201_m3",name:"Cinghiale Selvaggio",emoji:"🐗",hp:110,maxHp:110,atk:25,def:8,xp:55,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Foresta Smeraldina!",
+        monsters:[
+          {id:"dq201_m4",name:"Goblin Esploratore",emoji:"👹",hp:141,maxHp:141,atk:27,def:11,xp:82,isBoss:false},
+          {id:"dq201_m5",name:"Goblin Esploratore",emoji:"👹",hp:134,maxHp:134,atk:26,def:14,xp:74,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:27, gold:13, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:13, gold:6, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Re dei Lupi appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq201_boss",name:"Re dei Lupi",emoji:"🐺",hp:244,maxHp:244,atk:29,def:13,xp:141,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Foresta Smeraldina! Il bottino è tuo.",
+        loot:{ gold:[69,173], items:["Cintura di Resistenza","Stivali Veloci","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq201_m1",name:"Goblin Esploratore",emoji:"👹",hp:143,maxHp:143,atk:28,def:9,xp:81,isBoss:false},
+      {id:"dq201_m2",name:"Orso Bruno",emoji:"🐻",hp:156,maxHp:156,atk:26,def:13,xp:90,isBoss:false},
+      {id:"dq201_m3",name:"Cinghiale Selvaggio",emoji:"🐗",hp:110,maxHp:110,atk:25,def:8,xp:55,isBoss:false},
+      {id:"dq201_m4",name:"Goblin Esploratore",emoji:"👹",hp:141,maxHp:141,atk:27,def:11,xp:82,isBoss:false},
+      {id:"dq201_m5",name:"Goblin Esploratore",emoji:"👹",hp:134,maxHp:134,atk:26,def:14,xp:74,isBoss:false},
+      {id:"dq201_boss",name:"Re dei Lupi",emoji:"🐺",hp:244,maxHp:244,atk:29,def:13,xp:141,isBoss:true}
+    ],
+  },
+  {
+    id:"dq202", title:"L'Ultimo di Selva di Thalor", active:true,
+    desc:"Indaga su strani eventi a Selva di Thalor. il Vecchio Guardacaccia ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — il Vecchio Guardacaccia",
+    difficulty:"facile",
+    xpReward:155, goldReward:41,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. il Vecchio Guardacaccia ti ha avvisato dei pericoli di Selva di Thalor." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Selva di Thalor!",
+        monsters:[
+          {id:"dq202_m1",name:"Goblin Esploratore",emoji:"👹",hp:35,maxHp:35,atk:8,def:3,xp:13,isBoss:false},
+          {id:"dq202_m2",name:"Goblin Esploratore",emoji:"👹",hp:33,maxHp:33,atk:10,def:4,xp:19,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Selva di Thalor! Il bottino è tuo.",
+        loot:{ gold:[8,20], items:["Pozione di Mana","Stivali Veloci"] }
+      }
+    ],
+    enemies:[
+      {id:"dq202_m1",name:"Goblin Esploratore",emoji:"👹",hp:35,maxHp:35,atk:8,def:3,xp:13,isBoss:false},
+      {id:"dq202_m2",name:"Goblin Esploratore",emoji:"👹",hp:33,maxHp:33,atk:10,def:4,xp:19,isBoss:false}
+    ],
+  },
+  {
+    id:"dq203", title:"La Tomba di Radura Argentea", active:true,
+    desc:"Indaga su strani eventi a Radura Argentea. il Bardo Cyril ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Radura Argentea.» — il Bardo Cyril",
+    difficulty:"medio",
+    xpReward:281, goldReward:144,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. il Bardo Cyril ti ha avvisato dei pericoli di Radura Argentea." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:21, gold:10, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:10, gold:5, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Radura Argentea!",
+        monsters:[
+          {id:"dq203_m1",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:104,maxHp:104,atk:16,def:7,xp:44,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Radura Argentea! Il bottino è tuo.",
+        loot:{ gold:[28,72], items:["Spada Affilata","Pergamena Arcana"] }
+      }
+    ],
+    enemies:[
+      {id:"dq203_m1",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:104,maxHp:104,atk:16,def:7,xp:44,isBoss:false}
+    ],
+  },
+  {
+    id:"dq204", title:"L'Eco di Vascello Insanguinato", active:true,
+    desc:"Indaga su strani eventi a Vascello Insanguinato. il Vecchio Ammiraglio ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Vecchio Ammiraglio",
+    difficulty:"epica",
+    xpReward:1302, goldReward:1043,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. il Vecchio Ammiraglio ti ha avvisato dei pericoli di Vascello Insanguinato." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:69, gold:34, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:34, gold:17, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Vascello Insanguinato!",
+        monsters:[
+          {id:"dq204_m1",name:"Bombardiere",emoji:"💣",hp:113,maxHp:113,atk:19,def:9,xp:97,isBoss:false},
+          {id:"dq204_m2",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:147,maxHp:147,atk:21,def:14,xp:90,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Capitano Mortenero appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq204_boss",name:"Capitano Mortenero",emoji:"💀",hp:308,maxHp:308,atk:45,def:15,xp:335,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Vascello Insanguinato! Il bottino è tuo.",
+        loot:{ gold:[208,521], items:["Spada Affilata","Anello d'Argento","Cristallo di Energia","Mantello dell'Ombra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq204_m1",name:"Bombardiere",emoji:"💣",hp:113,maxHp:113,atk:19,def:9,xp:97,isBoss:false},
+      {id:"dq204_m2",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:147,maxHp:147,atk:21,def:14,xp:90,isBoss:false},
+      {id:"dq204_boss",name:"Capitano Mortenero",emoji:"💀",hp:308,maxHp:308,atk:45,def:15,xp:335,isBoss:true}
+    ],
+  },
+  {
+    id:"dq205", title:"Il Tradimento di Tempio di Ra-Khem", active:true,
+    desc:"Indaga su strani eventi a Tempio di Ra-Khem. il Carovaniere Hassan ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Tempio di Ra-Khem.» — il Carovaniere Hassan",
+    difficulty:"epica",
+    xpReward:2125, goldReward:876,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Carovaniere Hassan ti ha avvisato dei pericoli di Tempio di Ra-Khem." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:40, gold:20, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:20, gold:10, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio di Ra-Khem!",
+        monsters:[
+          {id:"dq205_m1",name:"Sfinge Minore",emoji:"🦁",hp:149,maxHp:149,atk:26,def:9,xp:60,isBoss:false},
+          {id:"dq205_m2",name:"Predone del Deserto",emoji:"🗡️",hp:147,maxHp:147,atk:22,def:9,xp:75,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Faraone Non-Morto appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq205_boss",name:"Faraone Non-Morto",emoji:"⚱️",hp:423,maxHp:423,atk:45,def:17,xp:393,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio di Ra-Khem! Il bottino è tuo.",
+        loot:{ gold:[175,438], items:["Stivali Veloci","Scudo di Ferro","Pozione di Mana","Reliquia Sacra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq205_m1",name:"Sfinge Minore",emoji:"🦁",hp:149,maxHp:149,atk:26,def:9,xp:60,isBoss:false},
+      {id:"dq205_m2",name:"Predone del Deserto",emoji:"🗡️",hp:147,maxHp:147,atk:22,def:9,xp:75,isBoss:false},
+      {id:"dq205_boss",name:"Faraone Non-Morto",emoji:"⚱️",hp:423,maxHp:423,atk:45,def:17,xp:393,isBoss:true}
+    ],
+  },
+  {
+    id:"dq206", title:"La Caccia di Caravella dei Dannati", active:true,
+    desc:"Indaga su strani eventi a Caravella dei Dannati. il Vecchio Ammiraglio ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — il Vecchio Ammiraglio",
+    difficulty:"medio",
+    xpReward:374, goldReward:100,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Vecchio Ammiraglio ti ha avvisato dei pericoli di Caravella dei Dannati." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Caravella dei Dannati!",
+        monsters:[
+          {id:"dq206_m1",name:"Marinaio Brutto",emoji:"🗡️",hp:115,maxHp:115,atk:18,def:7,xp:48,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua." },
+      {
+        type:"loot",
+        text:"Hai trionfato a Caravella dei Dannati! Il bottino è tuo.",
+        loot:{ gold:[20,50], items:["Mappa del Tesoro","Guanti di Forza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq206_m1",name:"Marinaio Brutto",emoji:"🗡️",hp:115,maxHp:115,atk:18,def:7,xp:48,isBoss:false}
+    ],
+  },
+  {
+    id:"dq207", title:"La Profezia di Veridia", active:true,
+    desc:"Indaga su strani eventi a Veridia. il Capitano Renart ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Capitano Renart",
+    difficulty:"difficile",
+    xpReward:864, goldReward:332,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Capitano Renart ti ha avvisato dei pericoli di Veridia." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:42, gold:21, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:21, gold:10, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Veridia!",
+        monsters:[
+          {id:"dq207_m1",name:"Mago Rinnegato",emoji:"🧙",hp:189,maxHp:189,atk:21,def:8,xp:95,isBoss:false},
+          {id:"dq207_m2",name:"Brigante",emoji:"🏴‍☠️",hp:147,maxHp:147,atk:26,def:8,xp:65,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti." },
+      {
+        type:"combat",
+        text:"Re dei Ladri appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq207_boss",name:"Re dei Ladri",emoji:"👑",hp:222,maxHp:222,atk:26,def:10,xp:120,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Veridia! Il bottino è tuo.",
+        loot:{ gold:[66,166], items:["Mappa del Tesoro","Stivali Veloci","Cintura di Resistenza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq207_m1",name:"Mago Rinnegato",emoji:"🧙",hp:189,maxHp:189,atk:21,def:8,xp:95,isBoss:false},
+      {id:"dq207_m2",name:"Brigante",emoji:"🏴‍☠️",hp:147,maxHp:147,atk:26,def:8,xp:65,isBoss:false},
+      {id:"dq207_boss",name:"Re dei Ladri",emoji:"👑",hp:222,maxHp:222,atk:26,def:10,xp:120,isBoss:true}
+    ],
+  },
+  {
+    id:"dq208", title:"Il Segreto di Mare di Smeraldo", active:true,
+    desc:"Indaga su strani eventi a Mare di Smeraldo. il Capitano Salgari ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Mare di Smeraldo.» — il Capitano Salgari",
+    difficulty:"facile",
+    xpReward:159, goldReward:50,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. il Capitano Salgari ti ha avvisato dei pericoli di Mare di Smeraldo." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Mare di Smeraldo!",
+        monsters:[
+          {id:"dq208_m1",name:"Marinaio Spettrale",emoji:"👻",hp:27,maxHp:27,atk:9,def:3,xp:24,isBoss:false},
+          {id:"dq208_m2",name:"Marinaio Spettrale",emoji:"👻",hp:29,maxHp:29,atk:6,def:2,xp:17,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Mare di Smeraldo! Il bottino è tuo.",
+        loot:{ gold:[10,25], items:["Tomo Antico","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq208_m1",name:"Marinaio Spettrale",emoji:"👻",hp:27,maxHp:27,atk:9,def:3,xp:24,isBoss:false},
+      {id:"dq208_m2",name:"Marinaio Spettrale",emoji:"👻",hp:29,maxHp:29,atk:6,def:2,xp:17,isBoss:false}
+    ],
+  },
+  {
+    id:"dq209", title:"L'Eco di Bosco Sussurrante", active:true,
+    desc:"Indaga su strani eventi a Bosco Sussurrante. il Ranger Aldric ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Bosco Sussurrante.» — il Ranger Aldric",
+    difficulty:"facile",
+    xpReward:131, goldReward:64,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Ranger Aldric ti ha avvisato dei pericoli di Bosco Sussurrante." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Bosco Sussurrante!",
+        monsters:[
+          {id:"dq209_m1",name:"Driade Corrotta",emoji:"🌳",hp:46,maxHp:46,atk:5,def:3,xp:16,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Bosco Sussurrante! Il bottino è tuo.",
+        loot:{ gold:[12,32], items:["Guanti di Forza","Mantello dell'Ombra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq209_m1",name:"Driade Corrotta",emoji:"🌳",hp:46,maxHp:46,atk:5,def:3,xp:16,isBoss:false}
+    ],
+  },
+  {
+    id:"dq210", title:"Il Tradimento di Abisso di Khaal", active:true,
+    desc:"Indaga su strani eventi a Abisso di Khaal. la Paladina Iris ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Abisso di Khaal.» — la Paladina Iris",
+    difficulty:"medio",
+    xpReward:318, goldReward:132,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. la Paladina Iris ti ha avvisato dei pericoli di Abisso di Khaal." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Abisso di Khaal!",
+        monsters:[
+          {id:"dq210_m1",name:"Cane Infernale",emoji:"🐕",hp:105,maxHp:105,atk:18,def:7,xp:38,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Abisso di Khaal! Il bottino è tuo.",
+        loot:{ gold:[26,66], items:["Anello d'Argento","Pozione di Mana"] }
+      }
+    ],
+    enemies:[
+      {id:"dq210_m1",name:"Cane Infernale",emoji:"🐕",hp:105,maxHp:105,atk:18,def:7,xp:38,isBoss:false}
+    ],
+  },
+  {
+    id:"dq211", title:"L'Eco di Porto Stellato", active:true,
+    desc:"Indaga su strani eventi a Porto Stellato. il Mercante Doriano ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Porto Stellato.» — il Mercante Doriano",
+    difficulty:"facile",
+    xpReward:110, goldReward:53,
+    steps:[
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso. il Mercante Doriano ti ha avvisato dei pericoli di Porto Stellato." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:12, gold:6, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:6, gold:3, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Porto Stellato!",
+        monsters:[
+          {id:"dq211_m1",name:"Brigante",emoji:"🏴‍☠️",hp:20,maxHp:20,atk:5,def:2,xp:24,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Porto Stellato! Il bottino è tuo.",
+        loot:{ gold:[10,26], items:["Arco Lungo","Elmo Rinforzato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq211_m1",name:"Brigante",emoji:"🏴‍☠️",hp:20,maxHp:20,atk:5,def:2,xp:24,isBoss:false}
+    ],
+  },
+  {
+    id:"dq212", title:"La Vendetta di Catacombe di Argos", active:true,
+    desc:"Indaga su strani eventi a Catacombe di Argos. l'Archeologo Vandros ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — l'Archeologo Vandros",
+    difficulty:"difficile",
+    xpReward:581, goldReward:316,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. l'Archeologo Vandros ti ha avvisato dei pericoli di Catacombe di Argos." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:45, gold:22, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:22, gold:11, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Catacombe di Argos!",
+        monsters:[
+          {id:"dq212_m1",name:"Wraith",emoji:"👁️",hp:192,maxHp:192,atk:22,def:9,xp:61,isBoss:false},
+          {id:"dq212_m2",name:"Zombi",emoji:"🧟",hp:102,maxHp:102,atk:18,def:11,xp:57,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Catacombe di Argos!",
+        monsters:[
+          {id:"dq212_m3",name:"Wraith",emoji:"👁️",hp:166,maxHp:166,atk:19,def:14,xp:87,isBoss:false},
+          {id:"dq212_m4",name:"Ghoul",emoji:"👹",hp:132,maxHp:132,atk:20,def:8,xp:91,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Cavaliere della Morte appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq212_boss",name:"Cavaliere della Morte",emoji:"⚔️",hp:195,maxHp:195,atk:29,def:14,xp:168,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Catacombe di Argos! Il bottino è tuo.",
+        loot:{ gold:[63,158], items:["Cintura di Resistenza","Reliquia Sacra","Cintura di Resistenza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq212_m1",name:"Wraith",emoji:"👁️",hp:192,maxHp:192,atk:22,def:9,xp:61,isBoss:false},
+      {id:"dq212_m2",name:"Zombi",emoji:"🧟",hp:102,maxHp:102,atk:18,def:11,xp:57,isBoss:false},
+      {id:"dq212_m3",name:"Wraith",emoji:"👁️",hp:166,maxHp:166,atk:19,def:14,xp:87,isBoss:false},
+      {id:"dq212_m4",name:"Ghoul",emoji:"👹",hp:132,maxHp:132,atk:20,def:8,xp:91,isBoss:false},
+      {id:"dq212_boss",name:"Cavaliere della Morte",emoji:"⚔️",hp:195,maxHp:195,atk:29,def:14,xp:168,isBoss:true}
+    ],
+  },
+  {
+    id:"dq213", title:"Il Patto di Picchi di Ghiaccio", active:true,
+    desc:"Indaga su strani eventi a Picchi di Ghiaccio. lo Scalatore Bjorn ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Picchi di Ghiaccio.» — lo Scalatore Bjorn",
+    difficulty:"epica",
+    xpReward:1328, goldReward:1104,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. lo Scalatore Bjorn ti ha avvisato dei pericoli di Picchi di Ghiaccio." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:53, gold:26, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:26, gold:13, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Picchi di Ghiaccio!",
+        monsters:[
+          {id:"dq213_m1",name:"Yeti",emoji:"🦍",hp:145,maxHp:145,atk:18,def:11,xp:83,isBoss:false},
+          {id:"dq213_m2",name:"Yeti",emoji:"🦍",hp:101,maxHp:101,atk:23,def:11,xp:60,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Re dei Giganti appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq213_boss",name:"Re dei Giganti",emoji:"🗿",hp:565,maxHp:565,atk:43,def:12,xp:249,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Picchi di Ghiaccio! Il bottino è tuo.",
+        loot:{ gold:[220,552], items:["Pergamena Arcana","Reliquia Sacra","Bastone Runico","Stivali Veloci"] }
+      }
+    ],
+    enemies:[
+      {id:"dq213_m1",name:"Yeti",emoji:"🦍",hp:145,maxHp:145,atk:18,def:11,xp:83,isBoss:false},
+      {id:"dq213_m2",name:"Yeti",emoji:"🦍",hp:101,maxHp:101,atk:23,def:11,xp:60,isBoss:false},
+      {id:"dq213_boss",name:"Re dei Giganti",emoji:"🗿",hp:565,maxHp:565,atk:43,def:12,xp:249,isBoss:true}
+    ],
+  },
+  {
+    id:"dq214", title:"La Maledizione di Acquitrini di Gorm", active:true,
+    desc:"Indaga su strani eventi a Acquitrini di Gorm. la Pescatrice Lila ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Acquitrini di Gorm.» — la Pescatrice Lila",
+    difficulty:"facile",
+    xpReward:179, goldReward:56,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. la Pescatrice Lila ti ha avvisato dei pericoli di Acquitrini di Gorm." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:9, gold:4, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Acquitrini di Gorm!",
+        monsters:[
+          {id:"dq214_m1",name:"Serpente di Palude",emoji:"🐍",hp:39,maxHp:39,atk:7,def:2,xp:26,isBoss:false},
+          {id:"dq214_m2",name:"Rospo Velenoso",emoji:"🐸",hp:39,maxHp:39,atk:6,def:2,xp:13,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Acquitrini di Gorm! Il bottino è tuo.",
+        loot:{ gold:[11,28], items:["Anello d'Argento","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq214_m1",name:"Serpente di Palude",emoji:"🐍",hp:39,maxHp:39,atk:7,def:2,xp:26,isBoss:false},
+      {id:"dq214_m2",name:"Rospo Velenoso",emoji:"🐸",hp:39,maxHp:39,atk:6,def:2,xp:13,isBoss:false}
+    ],
+  },
+  {
+    id:"dq215", title:"L'Ultimo di Piazza dei Mercanti", active:true,
+    desc:"Indaga su strani eventi a Piazza dei Mercanti. il Mercante Doriano ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Piazza dei Mercanti.» — il Mercante Doriano",
+    difficulty:"medio",
+    xpReward:418, goldReward:154,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. il Mercante Doriano ti ha avvisato dei pericoli di Piazza dei Mercanti." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Piazza dei Mercanti!",
+        monsters:[
+          {id:"dq215_m1",name:"Sicario",emoji:"🥷",hp:115,maxHp:115,atk:12,def:7,xp:42,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Piazza dei Mercanti! Il bottino è tuo.",
+        loot:{ gold:[30,77], items:["Mappa del Tesoro","Anello d'Argento"] }
+      }
+    ],
+    enemies:[
+      {id:"dq215_m1",name:"Sicario",emoji:"🥷",hp:115,maxHp:115,atk:12,def:7,xp:42,isBoss:false}
+    ],
+  },
+  {
+    id:"dq216", title:"La Discesa di Regno di Titania", active:true,
+    desc:"Indaga su strani eventi a Regno di Titania. il Druido Faelan ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Regno di Titania.» — il Druido Faelan",
+    difficulty:"facile",
+    xpReward:101, goldReward:54,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. il Druido Faelan ti ha avvisato dei pericoli di Regno di Titania." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:13, gold:6, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:6, gold:3, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Regno di Titania! Il bottino è tuo.",
+        loot:{ gold:[10,27], items:["Gemma Lucente","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq217", title:"La Profezia di Veridia", active:true,
+    desc:"Indaga su strani eventi a Veridia. il Capitano Renart ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — il Capitano Renart",
+    difficulty:"facile",
+    xpReward:109, goldReward:67,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. il Capitano Renart ti ha avvisato dei pericoli di Veridia." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:14, gold:7, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Veridia!",
+        monsters:[
+          {id:"dq217_m1",name:"Ladro",emoji:"🗡️",hp:39,maxHp:39,atk:7,def:4,xp:18,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Veridia! Il bottino è tuo.",
+        loot:{ gold:[13,33], items:["Pozione di Mana","Arco Lungo"] }
+      }
+    ],
+    enemies:[
+      {id:"dq217_m1",name:"Ladro",emoji:"🗡️",hp:39,maxHp:39,atk:7,def:4,xp:18,isBoss:false}
+    ],
+  },
+  {
+    id:"dq218", title:"Il Segreto di Inferno Cremisi", active:true,
+    desc:"Indaga su strani eventi a Inferno Cremisi. la Paladina Iris ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — la Paladina Iris",
+    difficulty:"difficile",
+    xpReward:846, goldReward:380,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. la Paladina Iris ti ha avvisato dei pericoli di Inferno Cremisi." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:39, gold:19, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:19, gold:9, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Inferno Cremisi!",
+        monsters:[
+          {id:"dq218_m1",name:"Cane Infernale",emoji:"🐕",hp:102,maxHp:102,atk:26,def:14,xp:93,isBoss:false},
+          {id:"dq218_m2",name:"Imp",emoji:"😈",hp:144,maxHp:144,atk:23,def:8,xp:91,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:37, gold:18, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:18, gold:9, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Balrog appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq218_boss",name:"Balrog",emoji:"🔥",hp:204,maxHp:204,atk:23,def:16,xp:168,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Inferno Cremisi! Il bottino è tuo.",
+        loot:{ gold:[76,190], items:["Stivali Veloci","Mappa del Tesoro","Reliquia Sacra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq218_m1",name:"Cane Infernale",emoji:"🐕",hp:102,maxHp:102,atk:26,def:14,xp:93,isBoss:false},
+      {id:"dq218_m2",name:"Imp",emoji:"😈",hp:144,maxHp:144,atk:23,def:8,xp:91,isBoss:false},
+      {id:"dq218_boss",name:"Balrog",emoji:"🔥",hp:204,maxHp:204,atk:23,def:16,xp:168,isBoss:true}
+    ],
+  },
+  {
+    id:"dq219", title:"Il Segreto di Rovine di Eldoria", active:true,
+    desc:"Indaga su strani eventi a Rovine di Eldoria. il Saggio Velnar ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Rovine di Eldoria.» — il Saggio Velnar",
+    difficulty:"facile",
+    xpReward:109, goldReward:72,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. il Saggio Velnar ti ha avvisato dei pericoli di Rovine di Eldoria." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:13, gold:6, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:6, gold:3, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Rovine di Eldoria!",
+        monsters:[
+          {id:"dq219_m1",name:"Statua Animata",emoji:"🗿",hp:40,maxHp:40,atk:9,def:1,xp:14,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Rovine di Eldoria! Il bottino è tuo.",
+        loot:{ gold:[14,36], items:["Guanti di Forza","Mantello dell'Ombra"] }
+      }
+    ],
+    enemies:[
+      {id:"dq219_m1",name:"Statua Animata",emoji:"🗿",hp:40,maxHp:40,atk:9,def:1,xp:14,isBoss:false}
+    ],
+  },
+  {
+    id:"dq220", title:"La Vendetta di Bosco Sussurrante", active:true,
+    desc:"Indaga su strani eventi a Bosco Sussurrante. la Druidessa Mira ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Bosco Sussurrante.» — la Druidessa Mira",
+    difficulty:"facile",
+    xpReward:116, goldReward:76,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. la Druidessa Mira ti ha avvisato dei pericoli di Bosco Sussurrante." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:17, gold:8, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Bosco Sussurrante! Il bottino è tuo.",
+        loot:{ gold:[15,38], items:["Tomo Antico","Stivali Veloci"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq221", title:"L'Eco di Acque Stagnanti", active:true,
+    desc:"Indaga su strani eventi a Acque Stagnanti. l'Eremita Borak ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Acque Stagnanti.» — l'Eremita Borak",
+    difficulty:"medio",
+    xpReward:402, goldReward:153,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. l'Eremita Borak ti ha avvisato dei pericoli di Acque Stagnanti." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:24, gold:12, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Acque Stagnanti!",
+        monsters:[
+          {id:"dq221_m1",name:"Hag della Palude",emoji:"🧙‍♀️",hp:55,maxHp:55,atk:16,def:4,xp:33,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Acque Stagnanti! Il bottino è tuo.",
+        loot:{ gold:[30,76], items:["Pozione di Mana","Amuleto del Sole"] }
+      }
+    ],
+    enemies:[
+      {id:"dq221_m1",name:"Hag della Palude",emoji:"🧙‍♀️",hp:55,maxHp:55,atk:16,def:4,xp:33,isBoss:false}
+    ],
+  },
+  {
+    id:"dq222", title:"L'Assedio di Cittadella di Bael", active:true,
+    desc:"Indaga su strani eventi a Cittadella di Bael. il Cacciatore di Demoni ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Cittadella di Bael.» — il Cacciatore di Demoni",
+    difficulty:"epica",
+    xpReward:1708, goldReward:734,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. il Cacciatore di Demoni ti ha avvisato dei pericoli di Cittadella di Bael." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:60, gold:30, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:30, gold:15, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Cittadella di Bael!",
+        monsters:[
+          {id:"dq222_m1",name:"Diavolo Spinato",emoji:"😈",hp:94,maxHp:94,atk:21,def:14,xp:88,isBoss:false},
+          {id:"dq222_m2",name:"Cultista",emoji:"🔥",hp:91,maxHp:91,atk:24,def:12,xp:91,isBoss:false},
+          {id:"dq222_m3",name:"Demone Minore",emoji:"👹",hp:100,maxHp:100,atk:27,def:8,xp:92,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Arcidemone appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq222_boss",name:"Arcidemone",emoji:"👹",hp:586,maxHp:586,atk:49,def:14,xp:293,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Cittadella di Bael! Il bottino è tuo.",
+        loot:{ gold:[146,367], items:["Elmo Rinforzato","Arco Lungo","Elmo Rinforzato","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq222_m1",name:"Diavolo Spinato",emoji:"😈",hp:94,maxHp:94,atk:21,def:14,xp:88,isBoss:false},
+      {id:"dq222_m2",name:"Cultista",emoji:"🔥",hp:91,maxHp:91,atk:24,def:12,xp:91,isBoss:false},
+      {id:"dq222_m3",name:"Demone Minore",emoji:"👹",hp:100,maxHp:100,atk:27,def:8,xp:92,isBoss:false},
+      {id:"dq222_boss",name:"Arcidemone",emoji:"👹",hp:586,maxHp:586,atk:49,def:14,xp:293,isBoss:true}
+    ],
+  },
+  {
+    id:"dq223", title:"Il Segreto di Segrete di Pietranera", active:true,
+    desc:"Indaga su strani eventi a Segrete di Pietranera. l'Archeologo Vandros ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Segrete di Pietranera.» — l'Archeologo Vandros",
+    difficulty:"facile",
+    xpReward:192, goldReward:41,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. l'Archeologo Vandros ti ha avvisato dei pericoli di Segrete di Pietranera." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Segrete di Pietranera!",
+        monsters:[
+          {id:"dq223_m1",name:"Zombi",emoji:"🧟",hp:29,maxHp:29,atk:8,def:1,xp:18,isBoss:false},
+          {id:"dq223_m2",name:"Wraith",emoji:"👁️",hp:45,maxHp:45,atk:7,def:3,xp:18,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Segrete di Pietranera! Il bottino è tuo.",
+        loot:{ gold:[8,20], items:["Scudo di Ferro","Gemma Lucente"] }
+      }
+    ],
+    enemies:[
+      {id:"dq223_m1",name:"Zombi",emoji:"🧟",hp:29,maxHp:29,atk:8,def:1,xp:18,isBoss:false},
+      {id:"dq223_m2",name:"Wraith",emoji:"👁️",hp:45,maxHp:45,atk:7,def:3,xp:18,isBoss:false}
+    ],
+  },
+  {
+    id:"dq224", title:"L'Eco di Officina Arcana", active:true,
+    desc:"Indaga su strani eventi a Officina Arcana. il Mago Veridian ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Officina Arcana.» — il Mago Veridian",
+    difficulty:"medio",
+    xpReward:395, goldReward:118,
+    steps:[
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti. il Mago Veridian ti ha avvisato dei pericoli di Officina Arcana." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Officina Arcana!",
+        monsters:[
+          {id:"dq224_m1",name:"Apprendista Folle",emoji:"🧙",hp:106,maxHp:106,atk:10,def:7,xp:31,isBoss:false},
+          {id:"dq224_m2",name:"Apprendista Folle",emoji:"🧙",hp:71,maxHp:71,atk:16,def:4,xp:46,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Officina Arcana! Il bottino è tuo.",
+        loot:{ gold:[23,59], items:["Ascia Pesante","Guanti di Forza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq224_m1",name:"Apprendista Folle",emoji:"🧙",hp:106,maxHp:106,atk:10,def:7,xp:31,isBoss:false},
+      {id:"dq224_m2",name:"Apprendista Folle",emoji:"🧙",hp:71,maxHp:71,atk:16,def:4,xp:46,isBoss:false}
+    ],
+  },
+  {
+    id:"dq225", title:"Il Patto di Segrete di Pietranera", active:true,
+    desc:"Indaga su strani eventi a Segrete di Pietranera. l'Archeologo Vandros ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — l'Archeologo Vandros",
+    difficulty:"medio",
+    xpReward:421, goldReward:110,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. l'Archeologo Vandros ti ha avvisato dei pericoli di Segrete di Pietranera." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:22, gold:11, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Segrete di Pietranera!",
+        monsters:[
+          {id:"dq225_m1",name:"Spettro",emoji:"👻",hp:58,maxHp:58,atk:11,def:8,xp:41,isBoss:false},
+          {id:"dq225_m2",name:"Wraith",emoji:"👁️",hp:96,maxHp:96,atk:15,def:4,xp:42,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua." },
+      {
+        type:"loot",
+        text:"Hai trionfato a Segrete di Pietranera! Il bottino è tuo.",
+        loot:{ gold:[22,55], items:["Reliquia Sacra","Scudo di Ferro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq225_m1",name:"Spettro",emoji:"👻",hp:58,maxHp:58,atk:11,def:8,xp:41,isBoss:false},
+      {id:"dq225_m2",name:"Wraith",emoji:"👁️",hp:96,maxHp:96,atk:15,def:4,xp:42,isBoss:false}
+    ],
+  },
+  {
+    id:"dq226", title:"L'Ultimo di Santuario Profano", active:true,
+    desc:"Indaga su strani eventi a Santuario Profano. l'Inquisitore Vex ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Santuario Profano.» — l'Inquisitore Vex",
+    difficulty:"medio",
+    xpReward:353, goldReward:145,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. l'Inquisitore Vex ti ha avvisato dei pericoli di Santuario Profano." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:24, gold:12, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Santuario Profano!",
+        monsters:[
+          {id:"dq226_m1",name:"Cultista Folle",emoji:"🔪",hp:62,maxHp:62,atk:14,def:7,xp:48,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Santuario Profano! Il bottino è tuo.",
+        loot:{ gold:[29,72], items:["Pozione di Mana","Cristallo di Energia"] }
+      }
+    ],
+    enemies:[
+      {id:"dq226_m1",name:"Cultista Folle",emoji:"🔪",hp:62,maxHp:62,atk:14,def:7,xp:48,isBoss:false}
+    ],
+  },
+  {
+    id:"dq227", title:"L'Ombra di Santuario Profano", active:true,
+    desc:"Indaga su strani eventi a Santuario Profano. la Paladina Mara ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — la Paladina Mara",
+    difficulty:"difficile",
+    xpReward:724, goldReward:297,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. la Paladina Mara ti ha avvisato dei pericoli di Santuario Profano." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:30, gold:15, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:15, gold:7, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Santuario Profano!",
+        monsters:[
+          {id:"dq227_m1",name:"Servo Mutato",emoji:"👁️",hp:157,maxHp:157,atk:24,def:8,xp:82,isBoss:false},
+          {id:"dq227_m2",name:"Servo Mutato",emoji:"👁️",hp:119,maxHp:119,atk:21,def:10,xp:89,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:30, gold:15, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:15, gold:7, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Sommo Cultista appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq227_boss",name:"Sommo Cultista",emoji:"🩸",hp:202,maxHp:202,atk:22,def:10,xp:197,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Santuario Profano! Il bottino è tuo.",
+        loot:{ gold:[59,148], items:["Pozione di Mana","Spada Affilata","Spada Affilata"] }
+      }
+    ],
+    enemies:[
+      {id:"dq227_m1",name:"Servo Mutato",emoji:"👁️",hp:157,maxHp:157,atk:24,def:8,xp:82,isBoss:false},
+      {id:"dq227_m2",name:"Servo Mutato",emoji:"👁️",hp:119,maxHp:119,atk:21,def:10,xp:89,isBoss:false},
+      {id:"dq227_boss",name:"Sommo Cultista",emoji:"🩸",hp:202,maxHp:202,atk:22,def:10,xp:197,isBoss:true}
+    ],
+  },
+  {
+    id:"dq228", title:"L'Assedio di Veridia", active:true,
+    desc:"Indaga su strani eventi a Veridia. il Capitano Renart ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Capitano Renart",
+    difficulty:"difficile",
+    xpReward:504, goldReward:291,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. il Capitano Renart ti ha avvisato dei pericoli di Veridia." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:35, gold:17, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:17, gold:8, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Veridia!",
+        monsters:[
+          {id:"dq228_m1",name:"Ladro",emoji:"🗡️",hp:140,maxHp:140,atk:27,def:11,xp:81,isBoss:false},
+          {id:"dq228_m2",name:"Mago Rinnegato",emoji:"🧙",hp:186,maxHp:186,atk:21,def:8,xp:75,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Veridia!",
+        monsters:[
+          {id:"dq228_m3",name:"Ladro",emoji:"🗡️",hp:143,maxHp:143,atk:25,def:13,xp:66,isBoss:false},
+          {id:"dq228_m4",name:"Brigante",emoji:"🏴‍☠️",hp:176,maxHp:176,atk:26,def:8,xp:80,isBoss:false},
+          {id:"dq228_m5",name:"Sicario",emoji:"🥷",hp:112,maxHp:112,atk:25,def:8,xp:85,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Spettro del Sindaco appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq228_boss",name:"Spettro del Sindaco",emoji:"👻",hp:254,maxHp:254,atk:31,def:15,xp:162,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Veridia! Il bottino è tuo.",
+        loot:{ gold:[58,145], items:["Elmo Rinforzato","Guanti di Forza","Stivali Veloci"] }
+      }
+    ],
+    enemies:[
+      {id:"dq228_m1",name:"Ladro",emoji:"🗡️",hp:140,maxHp:140,atk:27,def:11,xp:81,isBoss:false},
+      {id:"dq228_m2",name:"Mago Rinnegato",emoji:"🧙",hp:186,maxHp:186,atk:21,def:8,xp:75,isBoss:false},
+      {id:"dq228_m3",name:"Ladro",emoji:"🗡️",hp:143,maxHp:143,atk:25,def:13,xp:66,isBoss:false},
+      {id:"dq228_m4",name:"Brigante",emoji:"🏴‍☠️",hp:176,maxHp:176,atk:26,def:8,xp:80,isBoss:false},
+      {id:"dq228_m5",name:"Sicario",emoji:"🥷",hp:112,maxHp:112,atk:25,def:8,xp:85,isBoss:false},
+      {id:"dq228_boss",name:"Spettro del Sindaco",emoji:"👻",hp:254,maxHp:254,atk:31,def:15,xp:162,isBoss:true}
+    ],
+  },
+  {
+    id:"dq229", title:"Il Segreto di Granduca", active:true,
+    desc:"Indaga su strani eventi a Granduca. il Capitano Renart ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Capitano Renart",
+    difficulty:"medio",
+    xpReward:430, goldReward:114,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Capitano Renart ti ha avvisato dei pericoli di Granduca." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Granduca!",
+        monsters:[
+          {id:"dq229_m1",name:"Ladro",emoji:"🗡️",hp:118,maxHp:118,atk:17,def:4,xp:34,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Granduca! Il bottino è tuo.",
+        loot:{ gold:[22,57], items:["Mantello dell'Ombra","Pozione di Cura"] }
+      }
+    ],
+    enemies:[
+      {id:"dq229_m1",name:"Ladro",emoji:"🗡️",hp:118,maxHp:118,atk:17,def:4,xp:34,isBoss:false}
+    ],
+  },
+  {
+    id:"dq230", title:"La Maledizione di Torre di Zarathos", active:true,
+    desc:"Indaga su strani eventi a Torre di Zarathos. l'Investigatore Crane ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Torre di Zarathos.» — l'Investigatore Crane",
+    difficulty:"difficile",
+    xpReward:526, goldReward:292,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. l'Investigatore Crane ti ha avvisato dei pericoli di Torre di Zarathos." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:26, gold:13, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:13, gold:6, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Torre di Zarathos!",
+        monsters:[
+          {id:"dq230_m1",name:"Costrutto Carnoso",emoji:"🥩",hp:184,maxHp:184,atk:21,def:13,xp:89,isBoss:false},
+          {id:"dq230_m2",name:"Costrutto Carnoso",emoji:"🥩",hp:109,maxHp:109,atk:22,def:11,xp:84,isBoss:false},
+          {id:"dq230_m3",name:"Esperimento Fallito",emoji:"🐀",hp:131,maxHp:131,atk:26,def:8,xp:56,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:40, gold:20, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:20, gold:10, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Alchimista Pazzo appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq230_boss",name:"Alchimista Pazzo",emoji:"⚗️",hp:181,maxHp:181,atk:25,def:13,xp:188,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Torre di Zarathos! Il bottino è tuo.",
+        loot:{ gold:[58,146], items:["Pozione di Cura","Tomo Antico","Cintura di Resistenza"] }
+      }
+    ],
+    enemies:[
+      {id:"dq230_m1",name:"Costrutto Carnoso",emoji:"🥩",hp:184,maxHp:184,atk:21,def:13,xp:89,isBoss:false},
+      {id:"dq230_m2",name:"Costrutto Carnoso",emoji:"🥩",hp:109,maxHp:109,atk:22,def:11,xp:84,isBoss:false},
+      {id:"dq230_m3",name:"Esperimento Fallito",emoji:"🐀",hp:131,maxHp:131,atk:26,def:8,xp:56,isBoss:false},
+      {id:"dq230_boss",name:"Alchimista Pazzo",emoji:"⚗️",hp:181,maxHp:181,atk:25,def:13,xp:188,isBoss:true}
+    ],
+  },
+  {
+    id:"dq231", title:"La Maledizione di Laboratorio Segreto", active:true,
+    desc:"Indaga su strani eventi a Laboratorio Segreto. il Mago Veridian ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Mago Veridian",
+    difficulty:"medio",
+    xpReward:381, goldReward:171,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. il Mago Veridian ti ha avvisato dei pericoli di Laboratorio Segreto." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:23, gold:11, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Laboratorio Segreto!",
+        monsters:[
+          {id:"dq231_m1",name:"Omuncolo",emoji:"🧪",hp:105,maxHp:105,atk:10,def:8,xp:52,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Una luce fioca brilla in lontananza, invitante e minacciosa al tempo stesso." },
+      {
+        type:"loot",
+        text:"Hai trionfato a Laboratorio Segreto! Il bottino è tuo.",
+        loot:{ gold:[34,85], items:["Ascia Pesante","Anello d'Argento"] }
+      }
+    ],
+    enemies:[
+      {id:"dq231_m1",name:"Omuncolo",emoji:"🧪",hp:105,maxHp:105,atk:10,def:8,xp:52,isBoss:false}
+    ],
+  },
+  {
+    id:"dq232", title:"La Maledizione di Antica Forgia Nanica", active:true,
+    desc:"Indaga su strani eventi a Antica Forgia Nanica. la Storica Mirella ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Antica Forgia Nanica.» — la Storica Mirella",
+    difficulty:"medio",
+    xpReward:272, goldReward:126,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. la Storica Mirella ti ha avvisato dei pericoli di Antica Forgia Nanica." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Lascia in pace l'antico spirito", xp:24, gold:12, quality:"good" },
+        { label:"🟡 Parla con rispetto", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Profanare il sepolcro", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Antica Forgia Nanica!",
+        monsters:[
+          {id:"dq232_m1",name:"Golem di Pietra",emoji:"🗿",hp:88,maxHp:88,atk:10,def:6,xp:36,isBoss:false},
+          {id:"dq232_m2",name:"Costrutto Arcano",emoji:"⚙️",hp:84,maxHp:84,atk:17,def:8,xp:39,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Antica Forgia Nanica!",
+        monsters:[
+          {id:"dq232_m3",name:"Guardiano Spettrale",emoji:"👻",hp:78,maxHp:78,atk:13,def:8,xp:43,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Antica Forgia Nanica! Il bottino è tuo.",
+        loot:{ gold:[25,63], items:["Guanti di Forza","Spada Affilata"] }
+      }
+    ],
+    enemies:[
+      {id:"dq232_m1",name:"Golem di Pietra",emoji:"🗿",hp:88,maxHp:88,atk:10,def:6,xp:36,isBoss:false},
+      {id:"dq232_m2",name:"Costrutto Arcano",emoji:"⚙️",hp:84,maxHp:84,atk:17,def:8,xp:39,isBoss:false},
+      {id:"dq232_m3",name:"Guardiano Spettrale",emoji:"👻",hp:78,maxHp:78,atk:13,def:8,xp:43,isBoss:false}
+    ],
+  },
+  {
+    id:"dq233", title:"L'Eco di Scogliere di Tharn", active:true,
+    desc:"Indaga su strani eventi a Scogliere di Tharn. il Capitano Salgari ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Capitano Salgari",
+    difficulty:"medio",
+    xpReward:264, goldReward:135,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. il Capitano Salgari ti ha avvisato dei pericoli di Scogliere di Tharn." },
+      {
+        type:"choice",
+        text:"Davanti a te si presenta una scelta cruciale.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:16, gold:8, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Scogliere di Tharn!",
+        monsters:[
+          {id:"dq233_m1",name:"Squalo Spada",emoji:"🦈",hp:99,maxHp:99,atk:17,def:5,xp:54,isBoss:false},
+          {id:"dq233_m2",name:"Squalo Spada",emoji:"🦈",hp:78,maxHp:78,atk:15,def:4,xp:43,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Scogliere di Tharn! Il bottino è tuo.",
+        loot:{ gold:[27,67], items:["Pergamena Arcana","Gemma Lucente"] }
+      }
+    ],
+    enemies:[
+      {id:"dq233_m1",name:"Squalo Spada",emoji:"🦈",hp:99,maxHp:99,atk:17,def:5,xp:54,isBoss:false},
+      {id:"dq233_m2",name:"Squalo Spada",emoji:"🦈",hp:78,maxHp:78,atk:15,def:4,xp:43,isBoss:false}
+    ],
+  },
+  {
+    id:"dq234", title:"Il Risveglio di Santuario Profano", active:true,
+    desc:"Indaga su strani eventi a Santuario Profano. la Paladina Mara ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Santuario Profano.» — la Paladina Mara",
+    difficulty:"facile",
+    xpReward:140, goldReward:49,
+    steps:[
+      { type:"narrative", text:"Il silenzio è rotto solo dal battito del tuo cuore. la Paladina Mara ti ha avvisato dei pericoli di Santuario Profano." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:14, gold:7, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Santuario Profano!",
+        monsters:[
+          {id:"dq234_m1",name:"Servo Mutato",emoji:"👁️",hp:20,maxHp:20,atk:6,def:2,xp:13,isBoss:false},
+          {id:"dq234_m2",name:"Aberrazione",emoji:"🐙",hp:29,maxHp:29,atk:7,def:1,xp:16,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Santuario Profano! Il bottino è tuo.",
+        loot:{ gold:[9,24], items:["Bastone Runico","Mappa del Tesoro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq234_m1",name:"Servo Mutato",emoji:"👁️",hp:20,maxHp:20,atk:6,def:2,xp:13,isBoss:false},
+      {id:"dq234_m2",name:"Aberrazione",emoji:"🐙",hp:29,maxHp:29,atk:7,def:1,xp:16,isBoss:false}
+    ],
+  },
+  {
+    id:"dq235", title:"Il Segreto di Corte Estiva", active:true,
+    desc:"Indaga su strani eventi a Corte Estiva. il Druido Faelan ti ha chiesto aiuto urgente.",
+    flavor:"«Pochi tornano da Corte Estiva.» — il Druido Faelan",
+    difficulty:"epica",
+    xpReward:1541, goldReward:732,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. il Druido Faelan ti ha avvisato dei pericoli di Corte Estiva." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:49, gold:24, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:24, gold:12, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Corte Estiva!",
+        monsters:[
+          {id:"dq235_m1",name:"Satiro",emoji:"🐐",hp:132,maxHp:132,atk:23,def:9,xp:64,isBoss:false},
+          {id:"dq235_m2",name:"Unicorno Oscuro",emoji:"🦄",hp:117,maxHp:117,atk:19,def:14,xp:97,isBoss:false},
+          {id:"dq235_m3",name:"Centauro Ribelle",emoji:"🏹",hp:149,maxHp:149,atk:20,def:12,xp:71,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Re Oberon appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq235_boss",name:"Re Oberon",emoji:"🤴",hp:568,maxHp:568,atk:44,def:17,xp:180,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Corte Estiva! Il bottino è tuo.",
+        loot:{ gold:[146,366], items:["Pozione di Mana","Reliquia Sacra","Gemma Lucente","Stivali Veloci"] }
+      }
+    ],
+    enemies:[
+      {id:"dq235_m1",name:"Satiro",emoji:"🐐",hp:132,maxHp:132,atk:23,def:9,xp:64,isBoss:false},
+      {id:"dq235_m2",name:"Unicorno Oscuro",emoji:"🦄",hp:117,maxHp:117,atk:19,def:14,xp:97,isBoss:false},
+      {id:"dq235_m3",name:"Centauro Ribelle",emoji:"🏹",hp:149,maxHp:149,atk:20,def:12,xp:71,isBoss:false},
+      {id:"dq235_boss",name:"Re Oberon",emoji:"🤴",hp:568,maxHp:568,atk:44,def:17,xp:180,isBoss:true}
+    ],
+  },
+  {
+    id:"dq236", title:"L'Eco di Corte Estiva", active:true,
+    desc:"Indaga su strani eventi a Corte Estiva. la Fata Lily ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — la Fata Lily",
+    difficulty:"difficile",
+    xpReward:653, goldReward:230,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. la Fata Lily ti ha avvisato dei pericoli di Corte Estiva." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Studia attentamente la situazione", xp:35, gold:17, quality:"good" },
+        { label:"🟡 Agisci d'istinto", xp:17, gold:8, quality:"neutral" },
+        { label:"❌ Distruggi tutto in preda alla rabbia", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Corte Estiva!",
+        monsters:[
+          {id:"dq236_m1",name:"Satiro",emoji:"🐐",hp:118,maxHp:118,atk:24,def:12,xp:68,isBoss:false},
+          {id:"dq236_m2",name:"Satiro",emoji:"🐐",hp:110,maxHp:110,atk:26,def:10,xp:65,isBoss:false},
+          {id:"dq236_m3",name:"Centauro Ribelle",emoji:"🏹",hp:137,maxHp:137,atk:26,def:14,xp:94,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:44, gold:22, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:22, gold:11, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Lord dei Boschi appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq236_boss",name:"Lord dei Boschi",emoji:"🌳",hp:230,maxHp:230,atk:31,def:10,xp:193,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Corte Estiva! Il bottino è tuo.",
+        loot:{ gold:[46,115], items:["Amuleto del Sole","Antidoto","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq236_m1",name:"Satiro",emoji:"🐐",hp:118,maxHp:118,atk:24,def:12,xp:68,isBoss:false},
+      {id:"dq236_m2",name:"Satiro",emoji:"🐐",hp:110,maxHp:110,atk:26,def:10,xp:65,isBoss:false},
+      {id:"dq236_m3",name:"Centauro Ribelle",emoji:"🏹",hp:137,maxHp:137,atk:26,def:14,xp:94,isBoss:false},
+      {id:"dq236_boss",name:"Lord dei Boschi",emoji:"🌳",hp:230,maxHp:230,atk:31,def:10,xp:193,isBoss:true}
+    ],
+  },
+  {
+    id:"dq237", title:"La Maledizione di Officina Arcana", active:true,
+    desc:"Indaga su strani eventi a Officina Arcana. l'Apprendista Pia ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Officina Arcana.» — l'Apprendista Pia",
+    difficulty:"facile",
+    xpReward:115, goldReward:67,
+    steps:[
+      { type:"narrative", text:"Una sensazione opprimente ti accompagna ad ogni passo. l'Apprendista Pia ti ha avvisato dei pericoli di Officina Arcana." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Officina Arcana! Il bottino è tuo.",
+        loot:{ gold:[13,33], items:["Bastone Runico","Amuleto del Sole"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq238", title:"L'Eco di Sabbie Bruciate", active:true,
+    desc:"Indaga su strani eventi a Sabbie Bruciate. la Sacerdotessa di Ra ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — la Sacerdotessa di Ra",
+    difficulty:"difficile",
+    xpReward:599, goldReward:364,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. la Sacerdotessa di Ra ti ha avvisato dei pericoli di Sabbie Bruciate." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:41, gold:20, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:20, gold:10, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Sabbie Bruciate!",
+        monsters:[
+          {id:"dq238_m1",name:"Scorpione Gigante",emoji:"🦂",hp:186,maxHp:186,atk:25,def:11,xp:55,isBoss:false},
+          {id:"dq238_m2",name:"Predone del Deserto",emoji:"🗡️",hp:105,maxHp:105,atk:24,def:14,xp:73,isBoss:false},
+          {id:"dq238_m3",name:"Sfinge Minore",emoji:"🦁",hp:150,maxHp:150,atk:25,def:13,xp:91,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Sabbie Bruciate!",
+        monsters:[
+          {id:"dq238_m4",name:"Scorpione Gigante",emoji:"🦂",hp:166,maxHp:166,atk:27,def:12,xp:91,isBoss:false},
+          {id:"dq238_m5",name:"Sfinge Minore",emoji:"🦁",hp:174,maxHp:174,atk:23,def:12,xp:56,isBoss:false},
+          {id:"dq238_m6",name:"Scorpione Gigante",emoji:"🦂",hp:163,maxHp:163,atk:18,def:8,xp:91,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Verme delle Sabbie appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq238_boss",name:"Verme delle Sabbie",emoji:"🐛",hp:240,maxHp:240,atk:26,def:13,xp:179,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Sabbie Bruciate! Il bottino è tuo.",
+        loot:{ gold:[72,182], items:["Pugnale Avvelenato","Stivali Veloci","Pugnale Avvelenato"] }
+      }
+    ],
+    enemies:[
+      {id:"dq238_m1",name:"Scorpione Gigante",emoji:"🦂",hp:186,maxHp:186,atk:25,def:11,xp:55,isBoss:false},
+      {id:"dq238_m2",name:"Predone del Deserto",emoji:"🗡️",hp:105,maxHp:105,atk:24,def:14,xp:73,isBoss:false},
+      {id:"dq238_m3",name:"Sfinge Minore",emoji:"🦁",hp:150,maxHp:150,atk:25,def:13,xp:91,isBoss:false},
+      {id:"dq238_m4",name:"Scorpione Gigante",emoji:"🦂",hp:166,maxHp:166,atk:27,def:12,xp:91,isBoss:false},
+      {id:"dq238_m5",name:"Sfinge Minore",emoji:"🦁",hp:174,maxHp:174,atk:23,def:12,xp:56,isBoss:false},
+      {id:"dq238_m6",name:"Scorpione Gigante",emoji:"🦂",hp:163,maxHp:163,atk:18,def:8,xp:91,isBoss:false},
+      {id:"dq238_boss",name:"Verme delle Sabbie",emoji:"🐛",hp:240,maxHp:240,atk:26,def:13,xp:179,isBoss:true}
+    ],
+  },
+  {
+    id:"dq239", title:"L'Assedio di Tempio di Ra-Khem", active:true,
+    desc:"Indaga su strani eventi a Tempio di Ra-Khem. la Sacerdotessa di Ra ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — la Sacerdotessa di Ra",
+    difficulty:"medio",
+    xpReward:402, goldReward:160,
+    steps:[
+      { type:"narrative", text:"L'aria si fa pesante, carica di magia residua. la Sacerdotessa di Ra ti ha avvisato dei pericoli di Tempio di Ra-Khem." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:24, gold:12, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Tempio di Ra-Khem!",
+        monsters:[
+          {id:"dq239_m1",name:"Scorpione Gigante",emoji:"🦂",hp:109,maxHp:109,atk:13,def:7,xp:37,isBoss:false},
+          {id:"dq239_m2",name:"Sfinge Minore",emoji:"🦁",hp:53,maxHp:53,atk:16,def:5,xp:34,isBoss:false}
+        ]
+      },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:19, gold:9, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Tempio di Ra-Khem! Il bottino è tuo.",
+        loot:{ gold:[32,80], items:["Cintura di Resistenza","Anello d'Argento"] }
+      }
+    ],
+    enemies:[
+      {id:"dq239_m1",name:"Scorpione Gigante",emoji:"🦂",hp:109,maxHp:109,atk:13,def:7,xp:37,isBoss:false},
+      {id:"dq239_m2",name:"Sfinge Minore",emoji:"🦁",hp:53,maxHp:53,atk:16,def:5,xp:34,isBoss:false}
+    ],
+  },
+  {
+    id:"dq240", title:"La Tomba di Antica Forgia Nanica", active:true,
+    desc:"Indaga su strani eventi a Antica Forgia Nanica. l'Esploratore Tobias ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Antica Forgia Nanica.» — l'Esploratore Tobias",
+    difficulty:"medio",
+    xpReward:289, goldReward:147,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. l'Esploratore Tobias ti ha avvisato dei pericoli di Antica Forgia Nanica." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:25, gold:12, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:12, gold:6, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Antica Forgia Nanica!",
+        monsters:[
+          {id:"dq240_m1",name:"Guardiano Spettrale",emoji:"👻",hp:76,maxHp:76,atk:11,def:4,xp:30,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Antica Forgia Nanica! Il bottino è tuo.",
+        loot:{ gold:[29,73], items:["Pozione di Cura","Bastone Runico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq240_m1",name:"Guardiano Spettrale",emoji:"👻",hp:76,maxHp:76,atk:11,def:4,xp:30,isBoss:false}
+    ],
+  },
+  {
+    id:"dq241", title:"La Vendetta di Costa Frangente", active:true,
+    desc:"Indaga su strani eventi a Costa Frangente. il Vecchio Marinaio ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Vecchio Marinaio",
+    difficulty:"medio",
+    xpReward:274, goldReward:169,
+    steps:[
+      { type:"narrative", text:"Il vento porta echi di un passato dimenticato mentre avanzi tra le ombre. il Vecchio Marinaio ti ha avvisato dei pericoli di Costa Frangente." },
+      {
+        type:"choice",
+        text:"Un bivio morale ti mette alla prova.",
+        choices:[
+        { label:"✅ Affronta la verità con onore", xp:23, gold:11, quality:"good" },
+        { label:"🟡 Procedi con cautela", xp:11, gold:5, quality:"neutral" },
+        { label:"❌ Volta le spalle e fuggi", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Costa Frangente!",
+        monsters:[
+          {id:"dq241_m1",name:"Kraken Giovane",emoji:"🐙",hp:50,maxHp:50,atk:11,def:7,xp:49,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Costa Frangente!",
+        monsters:[
+          {id:"dq241_m2",name:"Squalo Spada",emoji:"🦈",hp:88,maxHp:88,atk:11,def:5,xp:37,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Costa Frangente! Il bottino è tuo.",
+        loot:{ gold:[33,84], items:["Cintura di Resistenza","Antidoto"] }
+      }
+    ],
+    enemies:[
+      {id:"dq241_m1",name:"Kraken Giovane",emoji:"🐙",hp:50,maxHp:50,atk:11,def:7,xp:49,isBoss:false},
+      {id:"dq241_m2",name:"Squalo Spada",emoji:"🦈",hp:88,maxHp:88,atk:11,def:5,xp:37,isBoss:false}
+    ],
+  },
+  {
+    id:"dq242", title:"L'Assedio di Bastione Verde", active:true,
+    desc:"Indaga su strani eventi a Bastione Verde. il Cacciatore Dorn ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Cacciatore Dorn",
+    difficulty:"facile",
+    xpReward:149, goldReward:75,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. il Cacciatore Dorn ti ha avvisato dei pericoli di Bastione Verde." },
+      {
+        type:"choice",
+        text:"Devi decidere rapidamente come agire.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:8, gold:4, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:4, gold:2, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Bastione Verde!",
+        monsters:[
+          {id:"dq242_m1",name:"Ogre",emoji:"👹",hp:37,maxHp:37,atk:10,def:3,xp:13,isBoss:false},
+          {id:"dq242_m2",name:"Orco Sciamano",emoji:"🧙",hp:43,maxHp:43,atk:6,def:3,xp:17,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Bastione Verde! Il bottino è tuo.",
+        loot:{ gold:[15,37], items:["Tomo Antico","Amuleto del Sole"] }
+      }
+    ],
+    enemies:[
+      {id:"dq242_m1",name:"Ogre",emoji:"👹",hp:37,maxHp:37,atk:10,def:3,xp:13,isBoss:false},
+      {id:"dq242_m2",name:"Orco Sciamano",emoji:"🧙",hp:43,maxHp:43,atk:6,def:3,xp:17,isBoss:false}
+    ],
+  },
+  {
+    id:"dq243", title:"La Maledizione di Galeone Fantasma", active:true,
+    desc:"Indaga su strani eventi a Galeone Fantasma. il Mozzo Tim ti ha chiesto aiuto urgente.",
+    flavor:"«Non fidarti di nulla, in quei luoghi.» — il Mozzo Tim",
+    difficulty:"difficile",
+    xpReward:783, goldReward:270,
+    steps:[
+      { type:"narrative", text:"Antichi simboli incisi nella pietra raccontano storie perdute. il Mozzo Tim ti ha avvisato dei pericoli di Galeone Fantasma." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Negozia con saggezza", xp:32, gold:16, quality:"good" },
+        { label:"🟡 Offri un piccolo dono", xp:16, gold:8, quality:"neutral" },
+        { label:"❌ Minaccia con la forza", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Galeone Fantasma!",
+        monsters:[
+          {id:"dq243_m1",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:107,maxHp:107,atk:20,def:11,xp:71,isBoss:false},
+          {id:"dq243_m2",name:"Marinaio Brutto",emoji:"🗡️",hp:178,maxHp:178,atk:21,def:8,xp:66,isBoss:false}
+        ]
+      },
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina." },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Galeone Fantasma!",
+        monsters:[
+          {id:"dq243_m3",name:"Bombardiere",emoji:"💣",hp:183,maxHp:183,atk:18,def:13,xp:66,isBoss:false},
+          {id:"dq243_m4",name:"Marinaio Brutto",emoji:"🗡️",hp:102,maxHp:102,atk:23,def:10,xp:71,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Quartiermastro Demone appare in tutto il suo terrore!",
+        monsters:[
+          {id:"dq243_boss",name:"Quartiermastro Demone",emoji:"👹",hp:226,maxHp:226,atk:23,def:12,xp:137,isBoss:true}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Galeone Fantasma! Il bottino è tuo.",
+        loot:{ gold:[54,135], items:["Arco Lungo","Tomo Antico","Stivali Veloci"] }
+      }
+    ],
+    enemies:[
+      {id:"dq243_m1",name:"Pirata Veterano",emoji:"🏴‍☠️",hp:107,maxHp:107,atk:20,def:11,xp:71,isBoss:false},
+      {id:"dq243_m2",name:"Marinaio Brutto",emoji:"🗡️",hp:178,maxHp:178,atk:21,def:8,xp:66,isBoss:false},
+      {id:"dq243_m3",name:"Bombardiere",emoji:"💣",hp:183,maxHp:183,atk:18,def:13,xp:66,isBoss:false},
+      {id:"dq243_m4",name:"Marinaio Brutto",emoji:"🗡️",hp:102,maxHp:102,atk:23,def:10,xp:71,isBoss:false},
+      {id:"dq243_boss",name:"Quartiermastro Demone",emoji:"👹",hp:226,maxHp:226,atk:23,def:12,xp:137,isBoss:true}
+    ],
+  },
+  {
+    id:"dq244", title:"L'Ultimo di Bosco Sussurrante", active:true,
+    desc:"Indaga su strani eventi a Bosco Sussurrante. il Ranger Aldric ti ha chiesto aiuto urgente.",
+    flavor:"«Ho visto cose che non oso descrivere.» — il Ranger Aldric",
+    difficulty:"medio",
+    xpReward:351, goldReward:140,
+    steps:[
+      { type:"narrative", text:"Le ombre si allungano e i sussurri si fanno più nitidi. il Ranger Aldric ti ha avvisato dei pericoli di Bosco Sussurrante." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Aiuta i deboli senza esitare", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Chiedi una ricompensa prima", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Ignora le loro suppliche", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Bosco Sussurrante!",
+        monsters:[
+          {id:"dq244_m1",name:"Falco Nero",emoji:"🦅",hp:110,maxHp:110,atk:18,def:4,xp:37,isBoss:false},
+          {id:"dq244_m2",name:"Ragno Gigante",emoji:"🕷️",hp:61,maxHp:61,atk:17,def:6,xp:37,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Bosco Sussurrante! Il bottino è tuo.",
+        loot:{ gold:[28,70], items:["Pozione di Mana","Bastone Runico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq244_m1",name:"Falco Nero",emoji:"🦅",hp:110,maxHp:110,atk:18,def:4,xp:37,isBoss:false},
+      {id:"dq244_m2",name:"Ragno Gigante",emoji:"🕷️",hp:61,maxHp:61,atk:17,def:6,xp:37,isBoss:false}
+    ],
+  },
+  {
+    id:"dq245", title:"Il Risveglio di Radura Argentea", active:true,
+    desc:"Indaga su strani eventi a Radura Argentea. il Bardo Cyril ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — il Bardo Cyril",
+    difficulty:"medio",
+    xpReward:400, goldReward:142,
+    steps:[
+      { type:"narrative", text:"Il terreno trema sotto i tuoi piedi, qualcosa di grosso si avvicina. il Bardo Cyril ti ha avvisato dei pericoli di Radura Argentea." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Risolvi l'enigma con logica", xp:17, gold:8, quality:"good" },
+        { label:"🟡 Tira a indovinare", xp:8, gold:4, quality:"neutral" },
+        { label:"❌ Rompi il meccanismo", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Radura Argentea!",
+        monsters:[
+          {id:"dq245_m1",name:"Unicorno Oscuro",emoji:"🦄",hp:56,maxHp:56,atk:14,def:7,xp:48,isBoss:false}
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Radura Argentea!",
+        monsters:[
+          {id:"dq245_m2",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:69,maxHp:69,atk:11,def:7,xp:49,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Radura Argentea! Il bottino è tuo.",
+        loot:{ gold:[28,71], items:["Anello d'Argento","Mappa del Tesoro"] }
+      }
+    ],
+    enemies:[
+      {id:"dq245_m1",name:"Unicorno Oscuro",emoji:"🦄",hp:56,maxHp:56,atk:14,def:7,xp:48,isBoss:false},
+      {id:"dq245_m2",name:"Pixie Maligna",emoji:"🧚‍♀️",hp:69,maxHp:69,atk:11,def:7,xp:49,isBoss:false}
+    ],
+  },
+  {
+    id:"dq246", title:"La Profezia di Monte Drago", active:true,
+    desc:"Indaga su strani eventi a Monte Drago. lo Scalatore Bjorn ti ha chiesto aiuto urgente.",
+    flavor:"«Solo i coraggiosi sopravvivono a Monte Drago.» — lo Scalatore Bjorn",
+    difficulty:"facile",
+    xpReward:120, goldReward:48,
+    steps:[
+      { type:"narrative", text:"Tracce recenti suggeriscono che non sei il primo a passare di qui. lo Scalatore Bjorn ti ha avvisato dei pericoli di Monte Drago." },
+      {
+        type:"choice",
+        text:"Il destino di molti dipende da questa scelta.",
+        choices:[
+        { label:"✅ Aiuta i feriti prima di proseguire", xp:18, gold:9, quality:"good" },
+        { label:"🟡 Lascia loro una pozione", xp:9, gold:4, quality:"neutral" },
+        { label:"❌ Passa oltre senza guardare", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Monte Drago! Il bottino è tuo.",
+        loot:{ gold:[9,24], items:["Amuleto del Sole","Antidoto"] }
+      }
+    ],
+    enemies:[
+
+    ],
+  },
+  {
+    id:"dq247", title:"L'Assedio di Oasi Perduta", active:true,
+    desc:"Indaga su strani eventi a Oasi Perduta. la Sacerdotessa di Ra ti ha chiesto aiuto urgente.",
+    flavor:"«Il male si annida dove meno te lo aspetti.» — la Sacerdotessa di Ra",
+    difficulty:"facile",
+    xpReward:117, goldReward:46,
+    steps:[
+      { type:"narrative", text:"Il sentiero si snoda incerto, costellato di segni inquietanti. la Sacerdotessa di Ra ti ha avvisato dei pericoli di Oasi Perduta." },
+      {
+        type:"choice",
+        text:"Una decisione difficile pesa sulle tue spalle.",
+        choices:[
+        { label:"✅ Cerca un'altra via", xp:15, gold:7, quality:"good" },
+        { label:"🟡 Sfonda la porta", xp:7, gold:3, quality:"neutral" },
+        { label:"❌ Urla per farti aprire", xp:0, gold:0, quality:"bad" }
+        ]
+      },
+      {
+        type:"combat",
+        text:"Nemici emergono dalle ombre di Oasi Perduta!",
+        monsters:[
+          {id:"dq247_m1",name:"Sfinge Minore",emoji:"🦁",hp:39,maxHp:39,atk:8,def:3,xp:27,isBoss:false}
+        ]
+      },
+      {
+        type:"loot",
+        text:"Hai trionfato a Oasi Perduta! Il bottino è tuo.",
+        loot:{ gold:[9,23], items:["Anello d'Argento","Tomo Antico"] }
+      }
+    ],
+    enemies:[
+      {id:"dq247_m1",name:"Sfinge Minore",emoji:"🦁",hp:39,maxHp:39,atk:8,def:3,xp:27,isBoss:false}
+    ],
   }
 ];
