@@ -9596,6 +9596,7 @@ function GameScreen({ myId, setScreen, authUser }) {
 
   async function castSpell(spell, allyTargetId = null) {
     if(!combat?.active || combat.pendingLog) return;
+    try {
     const _computed = getSpellSlots(me.level || 1);
     const _stored = (combat.spellSlots||{})[myId];
     const _isStale = _stored && [2,3,4,5].every(k=>(_stored[k]??0)===0) && [2,3,4,5].some(k=>(_computed[k]??0)>0);
@@ -9797,16 +9798,15 @@ function GameScreen({ myId, setScreen, authUser }) {
         log += `✝️ Nessun alleato caduto da riportare in vita.`;
       }
     } else if(spell.type === "control") {
-      // Stordisce/ammagli il bersaglio più forte o tutti
       if(spell.area) {
         const aliveEnemies = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
         newCombatants = newCombatants.map(c => (!c.isPlayer && c.hp>0) ? {...c, statusEffects:[...(c.statusEffects||[]),{type:"stun",duration:1}]} : c);
         log += `💜 **${spell.name}**\nTutti i nemici sono ammaliati e saltano il prossimo turno!\n${aliveEnemies.map(e=>`• ${e.name}`).join("\n")}`;
       } else {
-        const strongestEnemy = [...newCombatants.filter(c=>!c.isPlayer&&c.hp>0)].sort((a,b)=>(b.atk||0)-(a.atk||0))[0] || target;
-        const cidx = newCombatants.findIndex(c=>c.id===strongestEnemy.id);
-        newCombatants[cidx] = {...newCombatants[cidx], statusEffects:[...(newCombatants[cidx].statusEffects||[]),{type:"stun",duration:1}]};
-        log += `💜 **${spell.name}**\n${strongestEnemy.name} è ammaliato/stordito e salta il prossimo turno!`;
+        const ctarget = [...newCombatants.filter(c=>!c.isPlayer&&c.hp>0)].sort((a,b)=>(b.atk||0)-(a.atk||0))[0] || target;
+        const cidx = newCombatants.findIndex(c=>c.id===ctarget.id);
+        if(cidx !== -1) newCombatants[cidx] = {...newCombatants[cidx], statusEffects:[...(newCombatants[cidx].statusEffects||[]),{type:"stun",duration:1}]};
+        log += `💜 **${spell.name}**\n${ctarget.name} è ammaliato/stordito e salta il prossimo turno!`;
       }
     } else if(spell.type === "defense") {
       // Buff difensivo temporaneo sul caster
@@ -9860,6 +9860,11 @@ function GameScreen({ myId, setScreen, authUser }) {
     setSpellMenu(false);
     if(allDead) { await endCombat({...latestSpellBuffState, masterBuffs: newSpellMasterBuffs, questDmgLog: newSpellQuestDmgLog, combat:{...combat, combatants:newCombatants, spellSlots:nextSlots}}); return; }
     await saveQState({ ...latestSpellBuffState, masterBuffs: newSpellMasterBuffs, questDmgLog: newSpellQuestDmgLog, combat: { ...combat, combatants:newCombatants, turn:nextTurn, round:nextRound, spellSlots:nextSlots, pendingLog: log } });
+    } catch(err) {
+      console.error("castSpell error:", err);
+      setSpellMenu(false);
+      await addMsg(`⚠️ Errore nel lancio dell'incantesimo: ${err?.message || err}`, "system", "Sistema");
+    }
   }
 
   async function endCombat(preloadedQs) {
