@@ -24,6 +24,7 @@ import audioManager from "./utils/audioManager";
   const style = document.createElement("style");
   style.textContent = `
     @keyframes fadeUp   { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
+    @keyframes blink    { 0%,100%{opacity:1} 50%{opacity:0} }
     @keyframes goldenGlow { 0%,100%{text-shadow:0 0 20px rgba(251,191,36,.5)} 50%{text-shadow:0 0 50px rgba(251,191,36,.9),0 0 100px rgba(245,158,11,.4)} }
     @keyframes legNotifIn { from{opacity:0;transform:translateY(-40px) scale(0.92)} to{opacity:1;transform:translateY(0) scale(1)} }
     @keyframes logAutoDismiss { from{width:100%} to{width:0%} }
@@ -1660,6 +1661,36 @@ function getMonsterImage(monster) {
     { icon:monster.emoji || "👾", title:"Creatura", accent:"#60a5fa", accent2:"#22c55e", bg1:"#172033", bg2:"#0b1120", border:"#334155" };
   return makeArchetypeImage({ ...theme, subtitle:monster.isBoss ? "Boss" : `${monster.hp || 0} HP` });
 }
+function TypewriterText({ text, speed=18, style={}, onDone }) {
+  const [displayed, setDisplayed] = React.useState('');
+  const [done, setDone] = React.useState(false);
+  const idxRef = React.useRef(0);
+
+  React.useEffect(() => {
+    setDisplayed('');
+    setDone(false);
+    idxRef.current = 0;
+    if(!text) return;
+    const interval = setInterval(() => {
+      idxRef.current += 1;
+      setDisplayed(text.slice(0, idxRef.current));
+      if(idxRef.current >= text.length) {
+        clearInterval(interval);
+        setDone(true);
+        onDone?.();
+      }
+    }, speed);
+    return () => clearInterval(interval);
+  }, [text, speed]);
+
+  return (
+    <span style={style} onClick={() => { if(!done) { setDisplayed(text); setDone(true); idxRef.current = text.length; onDone?.(); } }}>
+      {displayed}
+      {!done && <span style={{ opacity: 0.7, animation:'blink 0.7s step-end infinite' }}>▌</span>}
+    </span>
+  );
+}
+
 function ArtThumb({ src, alt, size=56, radius=12, race, gender, cls }) {
   return (
     <img
@@ -5758,7 +5789,7 @@ function DungeonView({ dungeon, me, onRoomAction, loading }) {
               <div style={{ color:'#64748b', fontSize:'0.72rem', textTransform:'uppercase', letterSpacing:'0.06em' }}>{cfg.label}</div>
             </div>
           </div>
-          <p style={{ color:'#cbd5e1', fontSize:'0.88rem', lineHeight:1.7, marginBottom:'1.4rem' }}>{room.desc}</p>
+          <p style={{ color:'#cbd5e1', fontSize:'0.88rem', lineHeight:1.7, marginBottom:'1.4rem' }}><TypewriterText text={room.desc} speed={14} /></p>
 
           {/* Countdown badge */}
           {!readyToAct && (
@@ -5839,7 +5870,7 @@ function DungeonView({ dungeon, me, onRoomAction, loading }) {
           {room.type === 'event' && (
             <div>
               <div style={{ background:'rgba(148,163,184,0.08)', border:'1px solid #334155', borderRadius:8, padding:'0.8rem 1rem', marginBottom:'0.8rem', color:'#cbd5e1', fontSize:'0.85rem', lineHeight:1.7, fontStyle:'italic' }}>
-                📖 {room.narrative}
+                📖 <TypewriterText text={room.narrative} speed={14} />
               </div>
               {room.effect && room.effect !== 'nothing' && (
                 <div style={{ color:'#94a3b8', fontSize:'0.75rem', marginBottom:'0.6rem' }}>
@@ -11261,7 +11292,7 @@ ${stepText(step)}`, "quest","Master");
                     }[fb.quality] || null : null;
                     return (
                       <div>
-                        <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:12, lineHeight:1.5 }}>{stepData.text}</p>
+                        <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:12, lineHeight:1.5 }}><TypewriterText text={stepData.text} speed={16} /></p>
 
                         {/* Feedback banner — stays until user clicks Avanti */}
                         {fb && fbCfg ? (
@@ -11302,7 +11333,7 @@ ${stepText(step)}`, "quest","Master");
                   if(isCombatStep(stepData)) {
                     return (
                       <div style={{ textAlign:"center", padding:"1rem" }}>
-                        <p style={{ color:"#fca5a5", fontSize:"0.88rem", marginBottom:12 }}>{stepData.text}</p>
+                        <p style={{ color:"#fca5a5", fontSize:"0.88rem", marginBottom:12 }}><TypewriterText text={stepData.text} speed={16} /></p>
                         {qs.combat?.won
                           ? <div>
                               <p style={{ color:"#22c55e", fontFamily:"'Cinzel',serif", marginBottom:12 }}>🏆 Vittoria! Il combattimento è finito.</p>
@@ -11321,7 +11352,7 @@ ${stepText(step)}`, "quest","Master");
                   if(isLootStep(stepData)) {
                     return (
                       <div style={{ textAlign:"center", padding:"1rem" }}>
-                        <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:12 }}>{stepData.text}</p>
+                        <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:12 }}><TypewriterText text={stepData.text} speed={16} /></p>
                         {canAdvance
                           ? <BigBtn onClick={advanceQuest} gold>Avanti →</BigBtn>
                           : <BigBtn onClick={()=>handleLoot(stepData)} gold icon="🔍">Cerca tra le rovine</BigBtn>
@@ -11332,7 +11363,7 @@ ${stepText(step)}`, "quest","Master");
                   // narrative
                   return (
                     <div>
-                      <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:16, lineHeight:1.5 }}>{stepText(stepData)}</p>
+                      <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:16, lineHeight:1.5 }}><TypewriterText text={stepText(stepData)} speed={16} /></p>
                       {canAdvance && <BigBtn onClick={advanceQuest} gold>Avanti →</BigBtn>}
                     </div>
                   );
