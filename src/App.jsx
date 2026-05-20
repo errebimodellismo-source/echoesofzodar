@@ -3593,16 +3593,16 @@ function MasterPanel({ setScreen, authUser }) {
                     <textarea style={{...inputStyle,flex:1,height:60,resize:"vertical",fontSize:"0.85rem"}} value={step.text}
                       onChange={e=>updateStep({ text: e.target.value })} />
                     <div style={{ display:"flex", flexDirection:"column", gap:3, paddingTop:2 }}>
-                      <button onClick={()=>{ const st=[...editQ.steps]; if(i>0){[st[i],st[i-1]]=[st[i-1],st[i]]; setEditQ(q=>({...q,steps:st}));} }} style={iconBtnStyle}>?</button>
-                      <button onClick={()=>{ const st=[...editQ.steps]; if(i<st.length-1){[st[i],st[i+1]]=[st[i+1],st[i]]; setEditQ(q=>({...q,steps:st}));} }} style={iconBtnStyle}>?</button>
-                      <button onClick={()=>setEditQ(q=>({...q,steps:q.steps.filter((_,j)=>j!==i)}))} style={{...iconBtnStyle,color:"#f87171"}}>?</button>
+                      <button onClick={()=>{ const st=[...editQ.steps]; if(i>0){[st[i],st[i-1]]=[st[i-1],st[i]]; setEditQ(q=>({...q,steps:st}));} }} title="Sposta su" style={iconBtnStyle}>↑</button>
+                      <button onClick={()=>{ const st=[...editQ.steps]; if(i<st.length-1){[st[i],st[i+1]]=[st[i+1],st[i]]; setEditQ(q=>({...q,steps:st}));} }} title="Sposta giù" style={iconBtnStyle}>↓</button>
+                      <button onClick={()=>setEditQ(q=>({...q,steps:q.steps.filter((_,j)=>j!==i)}))} title="Elimina scena" style={{...iconBtnStyle,color:"#f87171"}}>🗑</button>
                     </div>
                   </div>
                   <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr 1fr", gap:8, marginTop:6 }}>
                     {[
-                      ["good","? Buona"],
-                      ["neutral","? Media"],
-                      ["bad","? Sbagliata"],
+                      ["good","✅ Buona"],
+                      ["neutral","⚠️ Media"],
+                      ["bad","❌ Sbagliata"],
                     ].map(([key,label])=>{
                       const choice = choices[key] || {};
                       return (
@@ -3633,7 +3633,7 @@ function MasterPanel({ setScreen, authUser }) {
                   <span style={{ fontSize:"1.2rem" }}>{en.emoji}</span>
                   <span style={{ color:en.isBoss?"#fbbf24":"#e2d9c5", fontWeight:en.isBoss?700:400 }}>{en.name}{en.isBoss?" ⭐":""}</span>
                   <span style={{ color:"#94a3b8", fontSize:"0.72rem" }}>❤️{en.hp} ⚔️{en.atk} 🛡️{en.def} ⭐{monsterXpValue(en)}xp</span>
-                  <button onClick={()=>setEditQ(q=>({...q,enemies:q.enemies.filter((_,j)=>j!==i)}))} style={{ marginLeft:"auto", ...iconBtnStyle, color:"#f87171" }}>?</button>
+                  <button onClick={()=>setEditQ(q=>({...q,enemies:q.enemies.filter((_,j)=>j!==i)}))} title="Rimuovi nemico" style={{ marginLeft:"auto", ...iconBtnStyle, color:"#f87171" }}>🗑</button>
                 </div>
               ))}
             </div>
