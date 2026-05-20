@@ -7,6 +7,7 @@ import { DEFAULT_MONSTERS } from "./data/monstersData";
 import { DEFAULT_ITEMS, DEFAULT_WEAPON } from "./data/itemsData";
 import { STORIES } from "./data/storiesData";
 import StoryEditorPanel from "./StoryEditor";
+import QuestEditorPanel from "./QuestEditor";
 import DiceRoller from "./components/DiceRoller";
 import ParticleBackground from "./components/ParticleBackground";
 import CombatVisualizer from "./components/CombatVisualizer";
@@ -3288,7 +3289,7 @@ function MasterPanel({ setScreen, authUser }) {
     return ()=>{ alive = false; clearInterval(timer); };
   }, [tab]);
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"stories",l:"📖 Storie"},{k:"editor",l:"✏️ Editor"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"online",l:"👁️ Online"},{k:"users",l:"📊 Report"}];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"questbuilder",l:"⚔️ Quest Builder"},{k:"stories",l:"📖 Storie"},{k:"editor",l:"✏️ Editor"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"online",l:"👁️ Online"},{k:"users",l:"📊 Report"}];
   const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
   const visibleQuests = quests.filter(q => {
     const term = questSearch.trim().toLowerCase();
@@ -3658,6 +3659,12 @@ function MasterPanel({ setScreen, authUser }) {
           dbSavePartyState={dbSavePartyState}
           supabase={supabase}
         />
+      )}
+
+      {tab==="questbuilder" && (
+        <div style={{ flex:1, overflow:"hidden", display:"flex", flexDirection:"column" }}>
+          <QuestEditorPanel supabase={supabase} />
+        </div>
       )}
 
       {tab==="editor" && (
