@@ -7611,7 +7611,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
 
           {/* Character */}
           <div style={{ flex:1, alignSelf:"stretch", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, minWidth:0, overflow:"hidden" }}>
-            <div style={{ flex:1, width:"100%", minHeight:0, position:"relative", borderRadius:12, background:"rgba(80,70,100,0.25)" }}>
+            <div style={{ flex:1, width:"100%", minHeight:0, position:"relative", borderRadius:12 }}>
               <CharacterViewer me={me} equippedItems={equippedItems} fillContainer />
             </div>
             <div style={{ display:"flex", gap:8, flexShrink:0 }}>
