@@ -7626,16 +7626,16 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, isMobile 
 
         {/* ── Selected item detail ── */}
         {selectedItem && (
-          <div style={{ minWidth:160, maxWidth:200, background:"rgba(15,23,42,0.95)", border:`1px solid ${rarityColors[selectedItem.rarity]||"#334155"}`, borderRadius:12, padding:"1rem" }}>
-            <div style={{ textAlign:"center", fontSize:"2.2rem", marginBottom:4 }}>{selectedItem.emoji}</div>
-            <div style={{ fontFamily:"'Cinzel',serif", color: rarityColors[selectedItem.rarity]||"#e2d9c5", fontSize:"0.82rem", fontWeight:700, textAlign:"center", marginBottom:4 }}>{selectedItem.name}</div>
-            <div style={{ fontSize:"0.65rem", color:"#64748b", textAlign:"center", marginBottom:8 }}>{itemRarityLabel(selectedItem.rarity)} • {itemTypeLabel(selectedItem.type)}</div>
-            <div style={{ display:"flex", flexDirection:"column", gap:3, marginBottom:10 }}>
+          <div style={{ minWidth:220, maxWidth:260, background:"rgba(15,23,42,0.95)", border:`2px solid ${rarityColors[selectedItem.rarity]||"#334155"}`, borderRadius:16, padding:"1.2rem", boxShadow:`0 0 24px ${rarityColors[selectedItem.rarity]||"#334155"}44` }}>
+            <ArtThumb src={getItemImage(selectedItem)} alt={selectedItem.name} size={180} radius={12} />
+            <div style={{ fontFamily:"'Cinzel',serif", color: rarityColors[selectedItem.rarity]||"#e2d9c5", fontSize:"0.95rem", fontWeight:700, textAlign:"center", marginTop:10, marginBottom:4 }}>{selectedItem.name}</div>
+            <div style={{ fontSize:"0.7rem", color:"#64748b", textAlign:"center", marginBottom:10 }}>{itemRarityLabel(selectedItem.rarity)} • {itemTypeLabel(selectedItem.type)}</div>
+            <div style={{ display:"flex", flexDirection:"column", gap:4, marginBottom:12 }}>
               {itemStatSummary(selectedItem).map(stat => (
-                <div key={stat} style={{ fontSize:"0.72rem", color:"#94a3b8", background:"rgba(255,255,255,0.04)", borderRadius:6, padding:"2px 6px" }}>{stat}</div>
+                <div key={stat} style={{ fontSize:"0.78rem", color:"#94a3b8", background:"rgba(255,255,255,0.04)", borderRadius:6, padding:"4px 8px" }}>{stat}</div>
               ))}
             </div>
-            {selectedItem.desc && <div style={{ fontSize:"0.7rem", color:"#64748b", fontStyle:"italic", marginBottom:8, lineHeight:1.5 }}>{selectedItem.desc}</div>}
+            {selectedItem.desc && <div style={{ fontSize:"0.75rem", color:"#64748b", fontStyle:"italic", marginBottom:12, lineHeight:1.6 }}>{selectedItem.desc}</div>}
             <SmallBtn red onClick={() => { onUnequip(selectedSlot); setSelectedSlot(null); }}>Rimuovi</SmallBtn>
           </div>
         )}
