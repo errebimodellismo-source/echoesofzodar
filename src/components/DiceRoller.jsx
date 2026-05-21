@@ -8,10 +8,10 @@ function getDiceConfig() {
   const w = window.innerWidth;
   const isMobile = w <= 768;
   return {
-    scale: isMobile ? 6 : 6,
-    spinForce: isMobile ? 7 : 5,
-    throwForce: isMobile ? 5.5 : 3.5,
-    startingHeight: isMobile ? 12 : 10,
+    scale: isMobile ? 9 : 12,
+    spinForce: isMobile ? 7 : 6,
+    throwForce: isMobile ? 5.5 : 4,
+    startingHeight: isMobile ? 14 : 12,
   };
 }
 

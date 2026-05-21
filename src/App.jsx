@@ -1149,12 +1149,14 @@ const QUEST_MONSTER_IMAGE_ALIASES = {
 
   "brigante": "m5",
   "ladro": "m5",
+  "ladro-del-campanile": "m5",
   "sicario": "m12",
   "pirata": "m5",
   "pirata-veterano": "m12",
   "mozzo-posseduto": "m87",
   "marinaio-brutto": "m5",
   "bombardiere": "m12",
+  "capobanda-brenn": "m12",
   "capitano-mortenero": "m26",
   "ammiraglio-spettrale-ironbay": "m87",
   "quartiermastro-demone": "m160",
@@ -1287,7 +1289,6 @@ const QUEST_MONSTER_IMAGE_ALIASES = {
   "warlord-grommash": "m13",
   "ape-regina-velena": "m43",
   "arbusto-carnivoro": "m62",
-  "capobanda-brenn": "m5",
   "capobanda-fulmine": "m5",
   "capobranco-scarface": "m59",
   "diavoletto-capo-brux": "m102",
@@ -1342,7 +1343,7 @@ const QUEST_MONSTER_IMAGE_RULES = [
   [/aquila|falco|roc|uccello|rapace/, "m166"],
   [/demone|diavolo|inferno|balrog|apocalisse/, "m160"],
   [/cultista|sacerdote|alchimista|mago|arcimago|apprendista|omuncolo/, "m16"],
-  [/pirata|marinaio|corsaro|mozzo|capitano|ammiraglio|brigante|ladro|sicario|predone|bandito|contrabbandiere|assassino|gangster|gladiatore|nomade|monaco|vedetta|arciere|cavaliere|guerriero/, "m5"],
+  [/pirata|marinaio|corsaro|mozzo|capitano|capobanda|ammiraglio|brigante|ladro|sicario|predone|bandito|contrabbandiere|assassino|gangster|gladiatore|nomade|monaco|vedetta|arciere|cavaliere|guerriero/, "m5"],
   [/orco|ogre/, "m13"],
   [/goblin|coboldo|nano/, "m1"],
   [/gigante/, "m158"],
@@ -10970,13 +10971,16 @@ ${stepText(step)}`, "quest","Master");
         </div>
       )}
       {diceResult?.stage === "result" && (
-        <div style={{ position:"fixed", bottom:"12%", left:"50%", transform:"translateX(-50%)", zIndex:10000, textAlign:"center", pointerEvents:"none" }}>
-          <div style={{ fontFamily:"'Cinzel',serif", fontSize:"1.4rem", color: diceResult.value===20?"#fbbf24": diceResult.value===1?"#f87171":"#fff", textShadow:"0 0 20px rgba(0,0,0,0.9)", letterSpacing:"0.1em" }}>
-            {diceResult.value===20 ? "CRITICO!" : diceResult.value===1 ? "FALLIMENTO!" : diceResult.label || ""}
+        <div style={{ position:"fixed", bottom:"18%", left:"50%", transform:"translateX(-50%)", zIndex:10000, textAlign:"center", pointerEvents:"none" }}>
+          <div style={{ fontFamily:"'Cinzel',serif", fontSize:"2.8rem", fontWeight:700, color: diceResult.value===20?"#fbbf24": diceResult.value===1?"#f87171":"#e2d9c5", textShadow:"0 0 30px rgba(0,0,0,1), 0 0 60px rgba(0,0,0,0.8)", letterSpacing:"0.08em", lineHeight:1 }}>
+            {diceResult.value===20 ? "⚡ CRITICO!" : diceResult.value===1 ? "💀 FALLIMENTO!" : diceResult.label || ""}
           </div>
-          <div style={{ fontSize:"1rem", color:"#cbd5e1", marginTop:4, textShadow:"0 0 16px rgba(0,0,0,0.9)" }}>
-            {diceResult.label && diceResult.value !== 20 && diceResult.value !== 1 ? `${diceResult.label}: ` : ""}<strong style={{ fontSize:"1.3rem" }}>{diceResult.value}</strong>
+          <div style={{ fontSize:"4rem", fontWeight:900, color: diceResult.value===20?"#fbbf24": diceResult.value===1?"#f87171":"#fff", textShadow:"0 0 40px rgba(0,0,0,1)", marginTop:4, lineHeight:1 }}>
+            {diceResult.value}
           </div>
+          {diceResult.label && diceResult.value !== 20 && diceResult.value !== 1 && (
+            <div style={{ fontSize:"1rem", color:"#94a3b8", marginTop:6, textShadow:"0 0 16px rgba(0,0,0,0.9)" }}>{diceResult.label}</div>
+          )}
         </div>
       )}
       {/* SIDEBAR — drawer on mobile, fixed panel on desktop */}
