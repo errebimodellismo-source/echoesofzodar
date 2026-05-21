@@ -6844,7 +6844,7 @@ function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick }
     <div
       onClick={() => onPick ? onPick(slotCfg.key) : (isEmpty ? null : onSelect(slotCfg.key))}
       style={{
-        width:76, height:76, borderRadius:10,
+        width:96, height:96, borderRadius:12,
         background: isEmpty ? "rgba(0,0,0,0.35)" : "rgba(15,23,42,0.9)",
         border: `2px solid ${isSelected ? "#fbbf24" : borderColor}`,
         display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
@@ -6863,7 +6863,7 @@ function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick }
         </>
       ) : (
         <>
-          <ArtThumb src={getItemImage(item)} alt={item.name} size={60} radius={6} />
+          <ArtThumb src={getItemImage(item)} alt={item.name} size={78} radius={8} />
           <span style={{ fontSize:"0.44rem", color: rarityColors[item.rarity] || "#94a3b8", marginTop:2, fontFamily:"'Cinzel',serif", maxWidth:84, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.name}</span>
         </>
       )}
@@ -7592,7 +7592,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
     <div style={{ flex:1, display:"flex", overflow:"hidden", height:"100%" }}>
 
       {/* ══ LEFT — mannequin + slots ══ */}
-      <div style={{ width: isMobile ? "100%" : 360, flexShrink:0, display:"flex", flexDirection:"column", borderRight:"1px solid rgba(255,255,255,0.07)", background:"rgba(5,8,18,0.6)" }}>
+      <div style={{ width: isMobile ? "100%" : "50%", flexShrink:0, display:"flex", flexDirection:"column", borderRight:"1px solid rgba(255,255,255,0.07)", background:"rgba(5,8,18,0.6)" }}>
 
         {/* Stats bar */}
         <div style={{ display:"flex", gap:12, padding:"0.6rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.06)", flexWrap:"wrap" }}>
