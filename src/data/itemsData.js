@@ -368,7 +368,7 @@ export const DEFAULT_ITEMS = [
   { id:"cloak_eternity_shroud",   name:"Sudario dell'Eternità",        emoji:"🌌", type:"armor", slot:"cloak", rarity:"legendary", price:430, description:"Tessuto con fili di tempo solidificato. Non invecchia mai.",         bonus_atk:1, bonus_def:4, bonus_mag:5, bonus_hp:20, bonus_init:3, weapon_die:null, heal_amount:0, available:true },
   { id:"cloak_shadow_sovereign",  name:"Mantello del Sovrano delle Ombre", emoji:"👑", type:"armor", slot:"cloak", rarity:"legendary", price:450, description:"Il potere dell'oscurità fusa in tessuto. Chi lo porta comanda le ombre.", bonus_atk:2, bonus_def:3, bonus_mag:6, bonus_hp:18, bonus_init:4, weapon_die:null, heal_amount:0, available:true },
 
-  { id:"crystal_sintonia", name:"Cristallo della Sintonia", emoji:"💎", type:"potion", slot:null, rarity:"rare", price:120, description:"Un cristallo magico che risuona con le voci degli alleati. Permette di parlare con il tuo party in tempo reale attraverso il piano etereo.", effect:"voice", value:0, bonus_atk:0, bonus_def:0, bonus_mag:0, bonus_hp:0, bonus_init:0, weapon_die:null, heal_amount:0, available:true },
+  { id:"crystal_sintonia", name:"Cristallo della Sintonia", emoji:"💎", type:"accessory", slot:"amulet", rarity:"rare", price:120, description:"Un cristallo magico che risuona con le voci degli alleati. Equipaggialo come amuleto per parlare con il tuo party in tempo reale attraverso il piano etereo.", bonus_atk:0, bonus_def:0, bonus_mag:1, bonus_hp:0, bonus_init:1, weapon_die:null, heal_amount:0, available:true },
 ];
 
 export const DEFAULT_WEAPON = {
