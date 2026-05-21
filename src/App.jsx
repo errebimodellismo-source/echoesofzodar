@@ -6327,124 +6327,134 @@ function _invCategory(item) {
   return "accessory";
 }
 
-function InventoryView({ loading, groups, equipment, selectedItem, onSelectItem, onCloseItem, onEquip, onSell, onUse, canUseConsumables }) {
+const RARITY_ORDER = { common:0, uncommon:1, rare:2, epic:3, legendary:4 };
+const RARITY_COLOR_INV = { common:"#9ca3af", uncommon:"#34d399", rare:"#60a5fa", epic:"#a78bfa", legendary:"#fbbf24" };
+
+function InventoryView({ loading, groups, equipment, onEquip, onSell, onUse, canUseConsumables }) {
+  const [expandedId, setExpandedId] = React.useState(null);
+  const [collapsedCats, setCollapsedCats] = React.useState({});
+  const [sortBy, setSortBy] = React.useState("cat"); // cat | name | price | rarity
+
   const byCategory = INV_CATEGORIES.map(cat => ({
     ...cat,
     items: groups.filter(g => _invCategory(g.item) === cat.key),
   })).filter(cat => cat.items.length > 0);
 
-  const renderCard = (group) => {
+  const toggleCat = key => setCollapsedCats(p => ({ ...p, [key]: !p[key] }));
+
+  const sortedItems = sortBy === "cat" ? null : [...groups].sort((a,b) => {
+    if(sortBy === "name")   return a.item.name.localeCompare(b.item.name);
+    if(sortBy === "price")  return (b.item.price||0) - (a.item.price||0);
+    if(sortBy === "rarity") return (RARITY_ORDER[b.item.rarity]||0) - (RARITY_ORDER[a.item.rarity]||0);
+    return 0;
+  });
+
+  const renderRow = (group) => {
     const slot = itemSlot(group.item);
     const equipped = !!slot && equipment?.[slot] === group.item.id;
-    const selected = selectedItem?.item?.id === group.item.id;
+    const open = expandedId === group.item.id;
+    const rc = RARITY_COLOR_INV[group.item.rarity] || "#9ca3af";
+
     return (
-      <button
-        key={group.item.id}
-        onClick={()=>onSelectItem(group)}
-        style={{
-          textAlign:"left",
-          background:PANEL_BG,
-          border:`1px solid ${selected ? "#7c3aed" : equipped ? "#b45309" : PANEL_BORDER}`,
-          borderRadius:6,
-          padding:"0.8rem",
-          cursor:"pointer",
-          color:"inherit",
-          font:"inherit",
-          boxShadow:selected ? "0 0 0 1px rgba(124,58,237,0.35) inset" : "none",
-        }}
-      >
-        <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:6 }}>
-          <ArtThumb src={getItemImage(group.item)} alt={group.item.name} size={62} />
-          <div style={{ flex:1 }}>
-            <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{group.item.name}</div>
-            <div style={{ fontSize:"0.72rem", color:"#94a3b8" }}>{itemTypeLabel(group.item.type)} • {itemRarityLabel(group.item.rarity)}</div>
+      <div key={group.item.id} style={{ borderBottom:"1px solid rgba(255,255,255,0.05)" }}>
+        {/* Compact row */}
+        <button onClick={()=>setExpandedId(open ? null : group.item.id)}
+          style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"0.55rem 0.75rem",
+            background: open ? "rgba(99,102,241,0.08)" : "transparent",
+            border:"none", cursor:"pointer", color:"inherit", font:"inherit", textAlign:"left" }}>
+          <span style={{ fontSize:"1.4rem", flexShrink:0, width:28, textAlign:"center" }}>{group.item.emoji || "📦"}</span>
+          <div style={{ flex:1, minWidth:0 }}>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.82rem", color:"#e2d9c5", fontWeight:700,
+              overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+              {group.item.name}
+              {equipped && <span style={{ marginLeft:6, fontSize:"0.62rem", color:"#fbbf24", fontFamily:"sans-serif" }}>★ equip</span>}
+            </div>
+            <div style={{ fontSize:"0.68rem", color:rc }}>{itemRarityLabel(group.item.rarity)}</div>
           </div>
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:4 }}>
-            <span style={{ fontSize:"0.78rem", color:"#c4b5fd", fontWeight:700 }}>x{group.quantity}</span>
-            {equipped && <span style={{ fontSize:"0.66rem", color:"#fbbf24" }}>Equip.</span>}
+          <div style={{ display:"flex", alignItems:"center", gap:8, flexShrink:0 }}>
+            {group.quantity > 1 && <span style={{ fontSize:"0.72rem", color:"#c4b5fd", fontWeight:700 }}>×{group.quantity}</span>}
+            <span style={{ fontSize:"0.72rem", color:"#64748b" }}>💰{group.item.price||0}</span>
+            <span style={{ fontSize:"0.7rem", color: open?"#a78bfa":"#334155", transition:"color 0.15s" }}>{open?"▲":"▼"}</span>
           </div>
-        </div>
-        <div style={{ fontSize:"0.75rem", color:"#94a3b8", marginBottom:6 }}>{group.item.description}</div>
-        <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#94a3b8", marginBottom:10 }}>
-          {itemStatSummary(group.item).map(stat => <span key={stat}>{stat}</span>)}
-        </div>
-        <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#9ca3af" }}>
-          <span>Quantità: {group.quantity}</span>
-          <span>Valore: {group.item.price || 0} oro</span>
-          <span style={{ color:"#94a3b8" }}>Clicca per ispezionare</span>
-        </div>
-      </button>
+        </button>
+
+        {/* Expanded detail */}
+        {open && (
+          <div style={{ padding:"0.75rem 1rem 1rem 1rem", background:"rgba(15,23,42,0.6)", borderTop:"1px solid rgba(99,102,241,0.15)" }}>
+            <div style={{ display:"flex", gap:12, marginBottom:10 }}>
+              <ArtThumb src={getItemImage(group.item)} alt={group.item.name} size={72} radius={8} />
+              <div style={{ flex:1 }}>
+                <div style={{ color:"#cbd5e1", fontSize:"0.84rem", lineHeight:1.6, marginBottom:6 }}>{group.item.description}</div>
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                  {itemStatSummary(group.item).map(stat => (
+                    <span key={stat} style={{ fontSize:"0.7rem", color:"#d1d5db", background:"rgba(255,255,255,0.05)", border:"1px solid #1f2937", borderRadius:999, padding:"2px 8px" }}>{stat}</span>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <div style={{ display:"flex", gap:8, flexWrap:"wrap", justifyContent:"flex-end", marginTop:4 }}>
+              {isEquippableItem(group.item) && (
+                <BigBtn onClick={()=>onEquip(group.entries[0])} gold disabled={equipped}>
+                  {equipped ? "Equipaggiato" : "Equipaggia"}
+                </BigBtn>
+              )}
+              {group.item.type === "potion" && canUseConsumables && (
+                <BigBtn onClick={()=>onUse(group.entries[0])} gold icon="🧪">Usa</BigBtn>
+              )}
+              <SmallBtn onClick={()=>onSell(group)}>Vendi</SmallBtn>
+            </div>
+          </div>
+        )}
+      </div>
     );
   };
 
   return (
-    <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
-      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🎒 Inventario</h3>
+    <div style={{ flex:1, overflowY:"auto", padding:"0.75rem" }}>
+      {/* Header + sort */}
+      <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:"0.75rem", flexWrap:"wrap" }}>
+        <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, fontSize:"1rem", flex:1 }}>🎒 Inventario</h3>
+        <div style={{ display:"flex", gap:4, alignItems:"center" }}>
+          <span style={{ fontSize:"0.68rem", color:"#475569" }}>Ordina:</span>
+          {[["cat","📂 Cat."],["name","A→Z"],["rarity","✨ Rarità"],["price","💰 Prezzo"]].map(([k,l])=>(
+            <button key={k} onClick={()=>setSortBy(k)}
+              style={{ padding:"2px 8px", fontSize:"0.68rem", borderRadius:4, cursor:"pointer", fontFamily:"inherit",
+                background: sortBy===k ? "rgba(99,102,241,0.3)" : "rgba(15,23,42,0.6)",
+                border:`1px solid ${sortBy===k?"#6366f1":"#334155"}`,
+                color: sortBy===k ? "#a5b4fc" : "#64748b" }}>
+              {l}
+            </button>
+          ))}
+        </div>
+      </div>
+
       {loading && <div style={{ color:"#94a3b8" }}>Caricamento...</div>}
-      {!loading && !groups.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Inventario vuoto. Saccheggia o compra qualcosa.</div>}
-      {byCategory.map(cat => (
-        <div key={cat.key} style={{ marginBottom:"1.5rem" }}>
-          <div style={{
-            fontFamily:"'Cinzel',serif", color:"#94a3b8", fontSize:"0.72rem",
-            letterSpacing:"0.12em", textTransform:"uppercase",
-            borderBottom:"1px solid rgba(148,163,184,0.15)", paddingBottom:"0.4rem", marginBottom:"0.6rem",
-          }}>
-            {cat.label} <span style={{ color:"#475569", fontFamily:"inherit" }}>({cat.items.length})</span>
-          </div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(250px,1fr))", gap:10 }}>
-            {cat.items.map(renderCard)}
-          </div>
+      {!loading && !groups.length && (
+        <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>
+          Inventario vuoto. Saccheggia o compra qualcosa.
+        </div>
+      )}
+
+      {/* By category */}
+      {sortBy === "cat" && byCategory.map(cat => (
+        <div key={cat.key} style={{ marginBottom:"0.75rem", background:"rgba(15,23,42,0.4)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, overflow:"hidden" }}>
+          <button onClick={()=>toggleCat(cat.key)}
+            style={{ width:"100%", display:"flex", alignItems:"center", gap:8, padding:"0.55rem 0.75rem",
+              background:"rgba(255,255,255,0.03)", border:"none", cursor:"pointer", color:"inherit", font:"inherit" }}>
+            <span style={{ fontFamily:"'Cinzel',serif", color:"#94a3b8", fontSize:"0.72rem", letterSpacing:"0.1em", textTransform:"uppercase", flex:1, textAlign:"left" }}>
+              {cat.label}
+            </span>
+            <span style={{ fontSize:"0.68rem", color:"#475569" }}>{cat.items.length} oggetti</span>
+            <span style={{ fontSize:"0.7rem", color:"#334155", marginLeft:4 }}>{collapsedCats[cat.key]?"▶":"▼"}</span>
+          </button>
+          {!collapsedCats[cat.key] && cat.items.map(renderRow)}
         </div>
       ))}
 
-      {!!selectedItem && (
-        <div style={{ position:"fixed", inset:0, background:"rgba(2,6,23,0.78)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem", zIndex:50 }} onClick={onCloseItem}>
-          <div onClick={e=>e.stopPropagation()} style={{ width:"min(560px,100%)", background:"linear-gradient(180deg, rgba(17,24,39,0.98), rgba(10,10,18,0.98))", border:"1px solid #312e81", borderRadius:10, boxShadow:"0 24px 80px rgba(0,0,0,0.45)", padding:"1rem" }}>
-            <div style={{ display:"flex", gap:12, alignItems:"flex-start", marginBottom:12 }}>
-              <ArtThumb src={getItemImage(selectedItem.item)} alt={selectedItem.item.name} size={92} radius={16} />
-              <div style={{ flex:1 }}>
-                <div style={{ fontFamily:"'Cinzel',serif", color:"#f8e7b9", fontSize:"1.15rem", fontWeight:700 }}>{selectedItem.item.name}</div>
-                <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:6, fontSize:"0.75rem" }}>
-                  <span style={{ color:"#9ca3af" }}>{itemTypeLabel(selectedItem.item.type)}</span>
-                  <span style={{ color:"#c4b5fd" }}>{itemRarityLabel(selectedItem.item.rarity)}</span>
-                  <span style={{ color:"#6ee7b7" }}>Quantità: {selectedItem.quantity}</span>
-                  {!!itemSlot(selectedItem.item) && equipment?.[itemSlot(selectedItem.item)] === selectedItem.item.id && <span style={{ color:"#fbbf24" }}>Equipaggiato</span>}
-                </div>
-              </div>
-            </div>
-            <div style={{ color:"#cbd5e1", fontSize:"0.92rem", lineHeight:1.6, marginBottom:12 }}>
-              {selectedItem.item.description}
-            </div>
-            <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:12 }}>
-              {itemStatSummary(selectedItem.item).map(stat => (
-                <span key={stat} style={{ fontSize:"0.76rem", color:"#d1d5db", background:"rgba(255,255,255,0.04)", border:"1px solid #1f2937", borderRadius:999, padding:"4px 8px" }}>
-                  {stat}
-                </span>
-              ))}
-            </div>
-            <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:16, color:"#9ca3af", fontSize:"0.82rem" }}>
-              <span>💰 Valore: {selectedItem.item.price || 0} oro</span>
-              <span>Copie possedute: {selectedItem.quantity}</span>
-            </div>
-            <div style={{ display:"flex", gap:8, flexWrap:"wrap", justifyContent:"flex-end" }}>
-              {isEquippableItem(selectedItem.item) && (
-                <BigBtn
-                  onClick={()=>onEquip(selectedItem.entries[0])}
-                  gold
-                  disabled={equipment?.[itemSlot(selectedItem.item)] === selectedItem.item.id}
-                >
-                  Equipaggia
-                </BigBtn>
-              )}
-              {selectedItem.item.type === "potion" && canUseConsumables && (
-                <BigBtn onClick={()=>onUse(selectedItem.entries[0])} gold icon="🧪">
-                  Usa
-                </BigBtn>
-              )}
-              <SmallBtn onClick={()=>onSell(selectedItem)}>Vendi</SmallBtn>
-              <SmallBtn onClick={onCloseItem}>Chiudi</SmallBtn>
-            </div>
-          </div>
+      {/* Flat sorted list */}
+      {sortBy !== "cat" && (
+        <div style={{ background:"rgba(15,23,42,0.4)", border:"1px solid rgba(255,255,255,0.06)", borderRadius:8, overflow:"hidden" }}>
+          {sortedItems.map(renderRow)}
         </div>
       )}
     </div>
@@ -11469,9 +11479,6 @@ ${stepText(step)}`, "quest","Master");
                 loading={inventoryLoading}
                 groups={inventoryGroups}
                 equipment={equipment}
-                selectedItem={selectedInventoryItem}
-                onSelectItem={handleInventorySelect}
-                onCloseItem={handleInventoryClose}
                 onEquip={equipItem}
                 onSell={handleInventorySell}
                 onUse={usePotion}
