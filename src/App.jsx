@@ -6007,7 +6007,7 @@ function generateShopInventory(items, seed = 0) {
   const pick = (pool, n) => shuffle(pool).slice(0, Math.min(n, pool.length));
   const isRanged = i => /bow|arco|crossbow|balestra|balista|sling|fionda/.test((i.id + " " + (i.name || "")).toLowerCase());
   const always = items.filter(i => i.id === "potion_escape" || i.id === "crystal_sintonia");
-  const equip = items.filter(i => i.type !== 'material' && i.id !== "potion_escape");
+  const equip = items.filter(i => i.type !== 'material' && i.id !== "potion_escape" && i.id !== "crystal_sintonia");
 
   const commonPool    = equip.filter(i => i.rarity === "common");
   const uncommonPool  = equip.filter(i => i.rarity === "uncommon");
