@@ -6859,12 +6859,13 @@ function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick }
       {isEmpty ? (
         <>
           <span style={{ fontSize:"1.8rem", opacity:0.3 }}>{slotCfg.icon}</span>
-          <span style={{ fontSize:"0.5rem", color:"#475569", marginTop:2, fontFamily:"'Cinzel',serif" }}>{slotCfg.label}</span>
+          <span style={{ fontSize:"0.58rem", color:"#64748b", marginTop:3, fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>{slotCfg.label}</span>
         </>
       ) : (
         <>
-          <ArtThumb src={getItemImage(item)} alt={item.name} size={78} radius={8} />
-          <span style={{ fontSize:"0.44rem", color: rarityColors[item.rarity] || "#94a3b8", marginTop:2, fontFamily:"'Cinzel',serif", maxWidth:84, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.name}</span>
+          <ArtThumb src={getItemImage(item)} alt={item.name} size={68} radius={6} />
+          <span style={{ fontSize:"0.44rem", color: rarityColors[item.rarity] || "#94a3b8", marginTop:1, fontFamily:"'Cinzel',serif", maxWidth:84, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.name}</span>
+          <span style={{ fontSize:"0.5rem", color:"#475569", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>{slotCfg.label}</span>
         </>
       )}
     </div>
