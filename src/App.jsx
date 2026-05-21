@@ -1083,6 +1083,287 @@ function slugifyAssetName(value) {
     .replace(/^-+|-+$/g, "");
 }
 
+function monsterAssetPath(monster) {
+  if(!monster) return "";
+  return `/assets/monsters/${monster.id}-${slugifyAssetName(monster.name)}.png`;
+}
+
+const QUEST_MONSTER_IMAGE_ALIASES = {
+  "zombi": "m39",
+  "zombi-del-campo": "m39",
+  "spettro": "m11",
+  "guardiano-spettrale": "m87",
+  "marinaio-spettrale": "m87",
+  "scheletro-guerriero": "m18",
+  "cavaliere-della-morte": "m87",
+  "faraone-non-morto": "m148",
+  "lich-eterno": "m169",
+  "lich-morvane": "m169",
+  "lich-paludoso": "m169",
+  "re-non-morto-aldras": "m148",
+  "vampiro-antico": "m168",
+  "lord-vampiro-valthar": "m168",
+  "signore-del-sangue": "m171",
+
+  "statua-animata": "m68",
+  "sentinella-eterna": "m147",
+  "costrutto-arcano": "m28",
+  "costrutto-carnoso": "m96",
+  "golem-antico": "m147",
+  "costrutto-del-giudizio": "m170",
+  "cristallo-antico-violaceo": "m28",
+  "cuore-del-labirinto": "m174",
+
+  "sfinge-minore": "m126",
+  "kraken-giovane": "m165",
+  "kraken-antico": "m165",
+  "squalo-spada": "m98",
+  "sirena-maligna": "m98",
+  "mostro-del-lago-nero": "m144",
+  "scorpione-gigante": "m92",
+  "verme-delle-sabbie": "m164",
+  "grande-serpente-antico": "m176",
+  "naga-velenos": "m176",
+  "anaconda-reale-sseth": "m176",
+  "chimera-del-deserto-cremisi": "m137",
+  "idra-adulta": "m180",
+  "hydra-delle-profondita": "m180",
+  "unicorno-oscuro": "m105",
+  "satiro": "m175",
+  "centauro-ribelle": "m104",
+  "pixie-maligna": "m54",
+  "folletto-dispettoso": "m54",
+  "driade-corrotta": "m113",
+  "lord-dei-boschi": "m113",
+  "antico-treant": "m113",
+  "falco-nero": "m58",
+  "aquila-gigante": "m166",
+  "sciacallo": "m57",
+  "lupo-di-ghiaccio": "m33",
+  "lupo-da-guerra": "m59",
+  "lupo-della-piana": "m57",
+  "re-dei-lupi": "m33",
+  "orso-bruno": "m138",
+  "yeti": "m114",
+  "yeti-alpha": "m114",
+
+  "brigante": "m5",
+  "ladro": "m5",
+  "sicario": "m12",
+  "pirata": "m5",
+  "pirata-veterano": "m12",
+  "mozzo-posseduto": "m87",
+  "marinaio-brutto": "m5",
+  "bombardiere": "m12",
+  "capitano-mortenero": "m26",
+  "ammiraglio-spettrale-ironbay": "m87",
+  "quartiermastro-demone": "m160",
+  "predone-del-deserto": "m5",
+  "goblin-esploratore": "m1",
+  "orco-sciamano": "m16",
+  "ogre": "m20",
+  "re-orco-gruul": "m13",
+  "re-dei-giganti": "m158",
+
+  "cultista": "m8",
+  "cultista-folle": "m23",
+  "cultista-fanatico": "m23",
+  "cultista-della-fiamma": "m27",
+  "gran-sacerdote-pyrax": "m23",
+  "sacerdote-corrotto": "m23",
+  "mago-rinnegato": "m16",
+  "apprendista-folle": "m16",
+  "alchimista-pazzo": "m16",
+  "alchimista-vrex-il-pazzo": "m16",
+  "arcimago-rinnegato-thax": "m16",
+  "mago-folle-kaelix": "m16",
+  "necromante-supremo-nekrath": "m169",
+
+  "aberrrazione": "m144",
+  "aberrazione": "m144",
+  "aberrazione-abissale": "m144",
+  "aberrazione-suprema": "m173",
+  "servo-mutato": "m76",
+  "intelletto-divoratore": "m143",
+  "maestro-dello-sguardo-nyssar": "m173",
+
+  "diavolo-spinato": "m118",
+  "imp": "m102",
+  "arcidemone": "m160",
+  "balrog": "m160",
+  "grande-demonio-azkarath": "m160",
+  "signore-dell-inferno": "m161",
+  "diavolo-del-pozzo-skarrex": "m161",
+  "demone-del-portale": "m32",
+  "demone-del-chaos": "m37",
+
+  "drago-del-ghiaccio-eterno-glacyon": "m153",
+  "drago-di-bronzo-keldrath": "m154",
+  "draghetto-di-bronzo": "m154",
+  "avatar-della-fiamma-antica": "m27",
+  "avatar-del-dio-del-fango": "m141",
+  "avatar-del-vuoto": "m145",
+
+  "omuncolo": "m102",
+  "esperimento-fallito": "m106",
+  "esperimento-vivente": "m96",
+  "rospo-velenoso": "m52",
+  "rana-velenosa": "m52",
+  "pesce-morditore": "m98",
+  "lucertolone": "m49",
+  "hag-della-palude": "m19",
+  "spirito-del-grano": "m113",
+  "rapace-della-cresta": "m58",
+  "rapace-di-ghiaccio": "m166",
+  "ragno-selvatico": "m51",
+  "scimmia-selvatica": "m114",
+  "serpe-delle-rovine": "m22",
+  "talpa-guerriera": "m92",
+  "diavoletto-della-dispensa": "m102",
+  "imp-del-pozzo": "m102",
+  "topo-guardia-del-re": "m4",
+  "muffa-vivente": "m55",
+  "fungo-camminante": "m55",
+  "larva-oscura": "m106",
+  "pipistrello-spia": "m50",
+  "draugr-fabbro": "m18",
+  "gangster-cappello-grigio": "m5",
+  "nano-corrotto": "m47",
+  "arciere-oscuro": "m15",
+  "guerriero-non-morto": "m18",
+  "campione-non-morto": "m18",
+  "contadino-maledetto": "m39",
+  "elementale-del-vento": "m142",
+  "elementale-della-tempesta": "m158",
+  "signore-del-fango": "m141",
+  "guerriero-mantide": "m92",
+  "guerriero-del-ghiaccio": "m153",
+  "nomade-guerriero": "m12",
+  "monaco-della-lama": "m12",
+  "gladiatore": "m12",
+  "raksha-cacciatore": "m175",
+  "giullare-maledetto": "m83",
+  "cavaliere-traditore": "m30",
+  "guerriero-di-cenere": "m27",
+  "morto-potenziato": "m39",
+  "non-morto-potenziato": "m39",
+  "orrore-abissale": "m144",
+  "salmandra-abissale": "m139",
+  "salamandra-abissale": "m139",
+  "mannaro": "m86",
+  "regina-maligna": "m101",
+  "genio-maledetto": "m142",
+  "re-dimenticato": "m148",
+  "guardia-corrotta": "m24",
+  "servitore-del-vuoto": "m145",
+  "troll-di-montagna": "m172",
+  "arconte-dei-venti-zephyrix": "m142",
+  "avatar-di-zogath": "m37",
+  "basilisco-di-greystone": "m66",
+  "boss-rexan-il-grigio": "m12",
+  "campione-korvas": "m12",
+  "cecchino-maestro-voss": "m15",
+  "comandante-traditore-aldran": "m30",
+  "domatore-corrotto-harlequin": "m12",
+  "generale-non-morto-valdric": "m87",
+  "generale-non-morto-valdrix": "m87",
+  "gran-maestro-corrotto-shin": "m12",
+  "lord-della-caccia-keroon": "m33",
+  "maestro-dei-veleni-sorrax": "m97",
+  "minotauro-di-mirthedge": "m72",
+  "re-dei-ladri": "m5",
+  "re-delle-ceneri-malachar": "m27",
+  "re-oberon": "m175",
+  "signore-dei-mannari-volkaan": "m86",
+  "signore-del-gelo-frimor": "m153",
+  "signore-della-morte-mordrex": "m169",
+  "signore-raksha-tigraath": "m175",
+  "spirito-dell-antichita": "m74",
+  "sposa-del-chaos": "m101",
+  "strega-del-silenzio-morra": "m19",
+  "strega-della-foresta": "m19",
+  "titano-della-tempesta-zepheron": "m158",
+  "troll-delle-caverne": "m25",
+  "warlord-grommash": "m13",
+  "ape-regina-velena": "m43",
+  "arbusto-carnivoro": "m62",
+  "capobanda-brenn": "m5",
+  "capobanda-fulmine": "m5",
+  "capobranco-scarface": "m59",
+  "diavoletto-capo-brux": "m102",
+  "femmina-alfa": "m57",
+  "gatto-selvatico-di-amberveil": "m78",
+  "granchio-antico": "m117",
+  "lumaca-madre": "m7",
+  "mobili-animati": "m69",
+  "poltergeist-della-biblioteca": "m74",
+  "sciame-di-api-furiose": "m43",
+  "scorticatore": "m143",
+  "serpe-velenosissima": "m22",
+  "spirito-dell-acqua": "m140",
+  "spirito-volpe": "m54",
+  "spora-mostruosa": "m55",
+  "tomi-volanti": "m53",
+  "truffatore-vrannix": "m5",
+  "viticci-striscianti": "m62",
+  "volpe-incantata": "m54",
+};
+
+const QUEST_MONSTER_IMAGE_RULES = [
+  [/kraken/, "m165"],
+  [/beholder|sguardo/, "m173"],
+  [/lich|necromante/, "m169"],
+  [/vampir|sangue/, "m168"],
+  [/mummia|faraone/, "m148"],
+  [/spettral|spettro|fantasma|ombra/, "m87"],
+  [/scheletro|ossa|ossea|osseo/, "m18"],
+  [/zombi|zombie|ghoul|ghast/, "m39"],
+  [/golem.*ferro|ferro/, "m170"],
+  [/golem|costrutt|statua|sentinella|guardiano/, "m147"],
+  [/drago.*ghiaccio|ghiaccio.*drago/, "m153"],
+  [/drago.*rosso|drago.*fuoco|drago.*fiamma/, "m149"],
+  [/drago.*blu|drago.*tempesta|drago.*elettric/, "m150"],
+  [/drago.*verde|drago.*velen/, "m151"],
+  [/drago.*oro|bronzo|argento|metallic/, "m155"],
+  [/drago|dragon/, "m38"],
+  [/idra|hydra/, "m180"],
+  [/serpente|naga|anaconda/, "m176"],
+  [/sfinge/, "m126"],
+  [/chimera/, "m137"],
+  [/unicorno|pegaso/, "m105"],
+  [/ragno/, "m51"],
+  [/rospo|rana/, "m52"],
+  [/fungo|muffa|myconide/, "m55"],
+  [/pipistrello/, "m50"],
+  [/scorpione|ankheg|insett|cavalletta|mantide|talpa/, "m92"],
+  [/squalo|sirena|marina|mare|lago|pesce/, "m98"],
+  [/pixie|folletto|fata|fatato|driade|treant|boschi|grano/, "m113"],
+  [/lupo|sciacallo|yeti|orso|bestia|cinghiale|cane|ratto|topo|scimmia|cucciolo/, "m57"],
+  [/aquila|falco|roc|uccello|rapace/, "m166"],
+  [/demone|diavolo|inferno|balrog|apocalisse/, "m160"],
+  [/cultista|sacerdote|alchimista|mago|arcimago|apprendista|omuncolo/, "m16"],
+  [/pirata|marinaio|corsaro|mozzo|capitano|ammiraglio|brigante|ladro|sicario|predone|bandito|contrabbandiere|assassino|gangster|gladiatore|nomade|monaco|vedetta|arciere|cavaliere|guerriero/, "m5"],
+  [/orco|ogre/, "m13"],
+  [/goblin|coboldo|nano/, "m1"],
+  [/gigante/, "m158"],
+  [/aberr|mutato|intelletto|esperimento|orrore|mangiatore/, "m144"],
+];
+
+function findMonsterImageById(id) {
+  const match = DEFAULT_MONSTERS.find(m => m.id === id);
+  return match ? monsterAssetPath(match) : "";
+}
+
+function getQuestMonsterImageByAlias(monster) {
+  const slug = slugifyAssetName(monster?.name || "");
+  const exactId = QUEST_MONSTER_IMAGE_ALIASES[slug];
+  if(exactId) return findMonsterImageById(exactId);
+  for(const [pattern, id] of QUEST_MONSTER_IMAGE_RULES) {
+    if(pattern.test(slug)) return findMonsterImageById(id);
+  }
+  return "";
+}
+
 function getQuests() {
   const defaults = DEFAULT_QUESTS.map(normalizeQuest);
   const stored = lsGet("eoz_quests", null);
@@ -1655,11 +1936,13 @@ function getMonsterImage(monster) {
   if(monster.image_url) return monster.image_url;
   if(monster.name) {
     // Try with monster's own id first (e.g. m1-goblin-delle-rovine.png)
-    if(monster.id && monster.id.match(/^m\d+/)) return `/assets/monsters/${monster.id}-${slugifyAssetName(monster.name)}.png`;
+    if(monster.id && monster.id.match(/^m\d+/)) return monsterAssetPath(monster);
     // For quest-specific enemies look up matching monster in catalogue by name
     const nameSlug = slugifyAssetName(monster.name);
     const catalogMatch = DEFAULT_MONSTERS.find(m => slugifyAssetName(m.name) === nameSlug);
-    if(catalogMatch) return `/assets/monsters/${catalogMatch.id}-${nameSlug}.png`;
+    if(catalogMatch) return monsterAssetPath(catalogMatch);
+    const aliasMatch = getQuestMonsterImageByAlias(monster);
+    if(aliasMatch) return aliasMatch;
     // No file match — fall through to archetype generated image below
   }
   const key = `${monster.id || ""} ${monster.name || ""} ${monster.desc || ""}`.toLowerCase();
@@ -2739,8 +3022,6 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   const [loadingChars, setLoadingChars] = useState(true);
   const [recoverId, setRecoverId] = useState("");
   const [recoverError, setRecoverError] = useState("");
-
-  useEffect(() => { audioManager.playBGM("intro"); }, []);
 
   async function loadCharacters() {
     if(!authUser?.id) { setCharacters([]); setLoadingChars(false); return; }
