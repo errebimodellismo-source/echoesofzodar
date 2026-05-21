@@ -1794,29 +1794,69 @@ function makeArchetypeImage({ icon, title, accent="#fbbf24", accent2="#7c3aed", 
   `);
 }
 function itemImageTheme(item) {
+  const key = `${item?.id || ""} ${item?.name || ""}`.toLowerCase();
+  const rarityAccent = {
+    common: ["#94a3b8", "#64748b"],
+    uncommon: ["#22c55e", "#0ea5e9"],
+    rare: ["#60a5fa", "#7c3aed"],
+    epic: ["#a855f7", "#fb7185"],
+    legendary: ["#f59e0b", "#fef08a"],
+  }[item?.rarity] || ["#fbbf24", "#7c3aed"];
+  const themed = (theme) => ({ accent:rarityAccent[0], accent2:rarityAccent[1], ...theme });
+  const tests = [
+    [/crossbow|balestra|ballista|balista/, { icon:"🏹", title:"Balestra", bg1:"#1f1a12", bg2:"#0c0906", border:"#92400e" }],
+    [/bow|arco|longbow/, { icon:"🏹", title:"Arco", bg1:"#102319", bg2:"#070f0b", border:"#166534" }],
+    [/spear|lancia|halberd|alabarda|glaive|asta/, { icon:"🔱", title:"Arma in Asta", bg1:"#172033", bg2:"#080b12", border:"#1d4ed8" }],
+    [/axe|ascia|hatchet|accetta/, { icon:"🪓", title:"Ascia", bg1:"#28130f", bg2:"#0e0806", border:"#991b1b" }],
+    [/mace|mazza|hammer|martello|club|randello/, { icon:"🔨", title:"Arma Pesante", bg1:"#241a12", bg2:"#0d0906", border:"#854d0e" }],
+    [/dagger|pugnale|knife|coltello/, { icon:"🗡️", title:"Lama Leggera", bg1:"#1d1726", bg2:"#09070d", border:"#6d28d9" }],
+    [/sword|spada|blade|lama|rapier|falchion|cutlass|sciabola|claymore/, { icon:"⚔️", title:"Lama", bg1:"#261019", bg2:"#09090b", border:"#7f1d1d" }],
+    [/staff|bastone|wand|bacchetta|rod|verga/, { icon:"🪄", title:"Focus", bg1:"#171235", bg2:"#080714", border:"#5b21b6" }],
+    [/grimoire|grimorio|tome|tomo|book|libro/, { icon:"📘", title:"Grimorio", bg1:"#111b35", bg2:"#080b16", border:"#3730a3" }],
+    [/orb|sfera|crystal|cristallo|sintonia/, { icon:"🔮", title:"Reliquia", bg1:"#16152e", bg2:"#080712", border:"#6d28d9" }],
+    [/whip|frusta/, { icon:"〰️", title:"Frusta", bg1:"#21140d", bg2:"#0d0704", border:"#9a3412" }],
+    [/scythe|falce/, { icon:"🌙", title:"Falce", bg1:"#10201e", bg2:"#060d0c", border:"#0f766e" }],
+    [/shield|scudo/, { icon:"🛡️", title:"Scudo", bg1:"#0f221d", bg2:"#08110f", border:"#166534" }],
+    [/head_|helm|elmo|helmet|crown|corona|circlet|diadema/, { icon:"👑", title:"Copricapo", bg1:"#21170a", bg2:"#0d0904", border:"#a16207" }],
+    [/hood|cappuccio|cap|berretto|cuffia|cowl|cappello/, { icon:"🧙", title:"Cappuccio", bg1:"#171225", bg2:"#080711", border:"#6d28d9" }],
+    [/legs_|pants|greaves|legplates|kilt|gambali/, { icon:"🦵", title:"Gambali", bg1:"#161d2b", bg2:"#080b12", border:"#1e40af" }],
+    [/boots|stivali|shoes|sandals|sabatons|calzari/, { icon:"🥾", title:"Calzature", bg1:"#1d1711", bg2:"#0b0805", border:"#854d0e" }],
+    [/gloves|guanti|gauntlets|bracer|fist|hands/, { icon:"🧤", title:"Guanti", bg1:"#191f2a", bg2:"#080b10", border:"#334155" }],
+    [/cloak|mantle|cape|robe|shroud|mantello|cappa/, { icon:"🧥", title:"Mantello", bg1:"#172033", bg2:"#080b12", border:"#334155" }],
+    [/mail|maglia|chain|plate|piastre|armor|armatura|leather|cuoio|gambeson|coat|corazza/, { icon:"🛡️", title:"Armatura", bg1:"#102033", bg2:"#08111d", border:"#1d4ed8" }],
+    [/escape|fuga|smoke|fumo/, { icon:"💨", title:"Pozione", bg1:"#202333", bg2:"#0b0d14", border:"#475569" }],
+    [/heal|cura|vita|ristoro|mending|tonic|tonico/, { icon:"🧪", title:"Cura", bg1:"#2a1018", bg2:"#11060a", border:"#be123c" }],
+    [/balm|balsamo|guardian|guardiano/, { icon:"🧴", title:"Balsamo", bg1:"#102033", bg2:"#08111d", border:"#1d4ed8" }],
+    [/elixir|elisir|spark|scintilla|mag|arcane|arcano/, { icon:"✨", title:"Elisir", bg1:"#211235", bg2:"#0b0714", border:"#7c3aed" }],
+    [/potion|pozione|infuso|ampolla|fiala/, { icon:"🧪", title:"Pozione", bg1:"#231236", bg2:"#120b1f", border:"#6d28d9" }],
+    [/ring|anello/, { icon:"💍", title:"Anello", bg1:"#2a1d0a", bg2:"#140f09", border:"#b45309" }],
+    [/charm|ciondolo|talisman|talismano|amulet|amuleto/, { icon:"📿", title:"Talismano", bg1:"#24170d", bg2:"#0d0805", border:"#92400e" }],
+    [/sash|fascia|belt|cintura/, { icon:"🎗️", title:"Fascia", bg1:"#25130d", bg2:"#100704", border:"#c2410c" }],
+  ];
+  const match = tests.find(([rx]) => rx.test(key));
+  if(match) return themed(match[1]);
   return {
-    weapon:{ icon:"⚔️", title:"Arma", accent:"#ef4444", accent2:"#f59e0b", bg1:"#261019", bg2:"#09090b", border:"#7f1d1d" },
-    armor:{ icon:"🛡️", title:"Armatura", accent:"#60a5fa", accent2:"#e2e8f0", bg1:"#102033", bg2:"#08111d", border:"#1d4ed8" },
-    shield:{ icon:"🛡️", title:"Scudo", accent:"#22c55e", accent2:"#0ea5e9", bg1:"#0f221d", bg2:"#08110f", border:"#166534" },
-    potion:{ icon:"🧪", title:"Pozione", accent:"#a855f7", accent2:"#f472b6", bg1:"#231236", bg2:"#120b1f", border:"#6d28d9" },
-    accessory:{ icon:"💍", title:"Accessorio", accent:"#fbbf24", accent2:"#fb7185", bg1:"#2a1d0a", bg2:"#140f09", border:"#b45309" },
-  }[item?.type] || { icon:item?.emoji || "⭐", title:"Oggetto", accent:"#fbbf24", accent2:"#7c3aed", bg1:"#172033", bg2:"#0b1120", border:"#334155" };
+    weapon:themed({ icon:"⚔️", title:"Arma", bg1:"#261019", bg2:"#09090b", border:"#7f1d1d" }),
+    armor:themed({ icon:"🛡️", title:"Armatura", bg1:"#102033", bg2:"#08111d", border:"#1d4ed8" }),
+    shield:themed({ icon:"🛡️", title:"Scudo", bg1:"#0f221d", bg2:"#08110f", border:"#166534" }),
+    potion:themed({ icon:"🧪", title:"Pozione", bg1:"#231236", bg2:"#120b1f", border:"#6d28d9" }),
+    accessory:themed({ icon:"💍", title:"Accessorio", bg1:"#2a1d0a", bg2:"#140f09", border:"#b45309" }),
+  }[item?.type] || themed({ icon:item?.emoji || "⭐", title:"Oggetto", bg1:"#172033", bg2:"#0b1120", border:"#334155" });
 }
 function getItemImage(item) {
   if(!item) return "";
   if(item.image) return item.image;
   if(item.image_url) return item.image_url;
-  if(item.id) return `/assets/items/${item.id}.png`;
   const theme = itemImageTheme(item);
-  return makeArchetypeImage({ ...theme, icon:item.emoji || theme.icon, title:itemTypeLabel(item.type), subtitle:itemRarityLabel(item.rarity) });
+  return makeArchetypeImage({ ...theme, title:theme.title || itemTypeLabel(item.type), subtitle:itemRarityLabel(item.rarity) });
 }
 function ItemImg({ item, size=56, style={} }) {
   const [useFallback, setUseFallback] = React.useState(false);
-  const src = !useFallback ? `/assets/items/${item?.id}.png` : null;
+  const src = !useFallback ? getItemImage(item) : null;
   if (!item) return null;
   if (useFallback || !item.id) {
     const theme = itemImageTheme(item);
-    const svg = makeArchetypeImage({ ...theme, icon:item.emoji||theme.icon, title:itemTypeLabel(item.type), subtitle:itemRarityLabel(item.rarity) });
+    const svg = makeArchetypeImage({ ...theme, title:theme.title || itemTypeLabel(item.type), subtitle:itemRarityLabel(item.rarity) });
     return <img src={svg} width={size} height={size} style={{ objectFit:'contain', borderRadius:6, ...style }} />;
   }
   return <img src={src} width={size} height={size} onError={()=>setUseFallback(true)} style={{ objectFit:'contain', borderRadius:6, ...style }} />;
@@ -7936,6 +7976,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [guildChatInput, setGuildChatInput] = useState("");
   const [guildMissionForm, setGuildMissionForm] = useState({ title:"", desc:"", goal:1, rewardGold:0, rewardXp:50 });
   const [showMissionForm, setShowMissionForm] = useState(false);
+  const [showGuildCreator, setShowGuildCreator] = useState(false);
   const [showGuildRoles, setShowGuildRoles] = useState(false);
   const [showGuildInvite, setShowGuildInvite] = useState(false);
   const [guildInviteCode, setGuildInviteCode] = useState("");
@@ -8807,6 +8848,35 @@ function GameScreen({ myId, setScreen, authUser }) {
     const newGuilds={...guilds,[gId]:newG};
     await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
     await addMsg(`🏛️ **${me.name}** è entrato nella gilda **${guild.emoji} ${guild.name}**!`,"info","Sistema");
+  }
+
+  async function requestJoinGuild(gId) {
+    if(getPlayerGuild(guilds,myId)){window.alert("Sei già in una gilda.");return;}
+    const guild=guilds[gId]; if(!guild) return;
+    const already=(guild.joinRequests||[]).find(r=>r.id===myId);
+    if(already){window.alert("Hai già inviato una richiesta a questa gilda.");return;}
+    const newG={...guild,joinRequests:[...(guild.joinRequests||[]),{id:myId,name:me.name,requestedAt:new Date().toISOString()}]};
+    const newGuilds={...guilds,[gId]:newG};
+    await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
+    window.alert(`✅ Richiesta inviata a ${guild.name}! Attendi l'approvazione del capo gilda.`);
+  }
+
+  async function approveJoinRequest(gId, requesterId, requesterName) {
+    const guild=guilds[gId]; if(!guild) return;
+    const newG={...guild,
+      members:[...(guild.members||[]),{id:requesterId,name:requesterName,role:"member",joinedAt:new Date().toISOString()}],
+      joinRequests:(guild.joinRequests||[]).filter(r=>r.id!==requesterId)
+    };
+    const newGuilds={...guilds,[gId]:newG};
+    await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
+    await addMsg(`🏛️ **${requesterName}** è stato accettato nella gilda **${guild.emoji} ${guild.name}**!`,"info","Sistema");
+  }
+
+  async function rejectJoinRequest(gId, requesterId) {
+    const guild=guilds[gId]; if(!guild) return;
+    const newG={...guild,joinRequests:(guild.joinRequests||[]).filter(r=>r.id!==requesterId)};
+    const newGuilds={...guilds,[gId]:newG};
+    await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
   }
 
   async function leaveGuild() {
@@ -12009,6 +12079,22 @@ ${stepText(step)}`, "quest","Master");
                       );
                     })()}
 
+                    {/* Join Requests panel — visible to leaders with invite perm */}
+                    {hasPerm(myMember,"invite") && (myGuild.joinRequests||[]).length > 0 && (
+                      <div style={{ background:"rgba(15,23,42,0.6)", border:"1px solid #7c3aed", borderRadius:8, padding:"0.65rem", marginBottom:8 }}>
+                        <div style={{ fontSize:"0.68rem", color:"#c4b5fd", fontFamily:"'Cinzel',serif", marginBottom:6 }}>📨 RICHIESTE DI ACCESSO ({(myGuild.joinRequests||[]).length})</div>
+                        {(myGuild.joinRequests||[]).map(req=>(
+                          <div key={req.id} style={{ display:"flex", alignItems:"center", gap:8, padding:"0.4rem 0.5rem", background:"rgba(109,40,217,0.1)", border:"1px solid rgba(109,40,217,0.3)", borderRadius:6, marginBottom:5 }}>
+                            <span style={{ fontSize:"0.82rem", flex:1, color:"#e2e8f0" }}>⚔️ <strong>{req.name}</strong></span>
+                            <button onClick={()=>approveJoinRequest(myGuild.id, req.id, req.name)}
+                              style={{ padding:"2px 10px", background:"rgba(20,83,45,0.5)", border:"1px solid #166534", borderRadius:5, color:"#4ade80", cursor:"pointer", fontSize:"0.72rem", fontWeight:600 }}>✓ Accetta</button>
+                            <button onClick={()=>rejectJoinRequest(myGuild.id, req.id)}
+                              style={{ padding:"2px 8px", background:"rgba(127,29,29,0.4)", border:"1px solid #7f1d1d", borderRadius:5, color:"#f87171", cursor:"pointer", fontSize:"0.72rem" }}>✕</button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
                     {/* Roles reference */}
                     {showGuildRoles && (
                       <div style={{ background:"rgba(15,23,42,0.6)", border:"1px solid #334155", borderRadius:8, padding:"0.65rem", marginBottom:8 }}>
@@ -12178,45 +12264,82 @@ ${stepText(step)}`, "quest","Master");
                 </div>
               ) : (
                 <div>
-                  {/* Create Guild */}
-                  <div style={{ background:PANEL_BG, border:"1px solid #7c3aed", borderRadius:12, padding:"1rem", marginBottom:"1rem" }}>
-                    <div style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontSize:"0.9rem", marginBottom:"0.75rem" }}>⚔️ Fonda una Gilda — 1000 oro</div>
-                    <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:8 }}>
-                      {GUILD_EMOJIS.map(e=>(
-                        <button key={e} onClick={()=>setGuildForm(f=>({...f,emoji:e}))} style={{ fontSize:"1.1rem", width:36, height:36, background:guildForm.emoji===e?"rgba(109,40,217,0.4)":"rgba(15,23,42,0.5)", border:`1px solid ${guildForm.emoji===e?"#7c3aed":"#334155"}`, borderRadius:6, cursor:"pointer" }}>{e}</button>
-                      ))}
-                    </div>
-                    <input value={guildForm.name} onChange={e=>setGuildForm(f=>({...f,name:e.target.value}))} placeholder="Nome della gilda..."
-                      style={{ width:"100%", marginBottom:8, padding:"0.5rem 0.7rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.85rem" }} />
-                    <textarea value={guildForm.desc} onChange={e=>setGuildForm(f=>({...f,desc:e.target.value}))} placeholder="Descrizione (opzionale)..." rows={2}
-                      style={{ width:"100%", marginBottom:10, padding:"0.5rem 0.7rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.82rem", resize:"none" }} />
-                    <div style={{ marginBottom:10 }}>
-                      <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginBottom:6, fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>🛡️ Stemma araldico</div>
-                      <GuildEmblemEditor emblem={guildForm.emblem} onChange={emb=>setGuildForm(f=>({...f,emblem:emb}))}/>
-                    </div>
-                    <BigBtn onClick={createGuild} gold icon="🏛️" disabled={(me?.gold||0)<10000}>Fonda ({me?.gold||0}/10000 🪙)</BigBtn>
-                  </div>
-
-                  {/* Join existing guilds */}
-                  {Object.values(guilds).length>0 && (
-                    <div>
-                      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.78rem", color:"#94a3b8", marginBottom:8 }}>O unisciti a una gilda esistente</div>
-                      {Object.values(guilds).map(g=>{
-                        const hall=getGuildHallStage(g.level||1);
-                        return (
-                          <div key={g.id} style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:10, padding:"0.85rem", marginBottom:8, display:"flex", alignItems:"center", gap:12 }}>
-                            <GuildEmblemSVG emblem={g.emblem} size={52}/>
-                            <div style={{ flex:1 }}>
-                              <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize:"0.88rem" }}>{g.emoji} {g.name} <span style={{fontSize:"0.65rem",color:"#94a3b8"}}>{hall.emoji}</span></div>
-                              <div style={{ fontSize:"0.7rem", color:"#94a3b8" }}>Lv.{g.level||1} · {g.members?.length||0} membri · {hall.name}</div>
-                              {g.description&&<div style={{ fontSize:"0.7rem", color:"#64748b", fontStyle:"italic", marginTop:2 }}>{g.description}</div>}
+                  {/* Guild Leaderboard */}
+                  {Object.values(guilds).length > 0 && (() => {
+                    const ranked = Object.values(guilds).sort((a,b) => (b.xp||0) - (a.xp||0));
+                    const medals = ["🥇","🥈","🥉"];
+                    const myPendingGuildId = Object.values(guilds).find(g=>(g.joinRequests||[]).find(r=>r.id===myId))?.id;
+                    return (
+                      <div style={{ marginBottom:"1.2rem" }}>
+                        <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.78rem", color:"#fbbf24", letterSpacing:"0.08em", marginBottom:10, display:"flex", alignItems:"center", gap:8 }}>
+                          🏆 CLASSIFICA GILDE
+                        </div>
+                        {ranked.map((g, idx) => {
+                          const hall = getGuildHallStage(g.level||1);
+                          const isPending = myPendingGuildId === g.id;
+                          const rank = idx + 1;
+                          const isTop3 = rank <= 3;
+                          const borderColor = rank===1?"#fbbf24": rank===2?"#94a3b8": rank===3?"#a16207":"#334155";
+                          const bgColor = rank===1?"rgba(251,191,36,0.06)": rank===2?"rgba(148,163,184,0.06)": rank===3?"rgba(161,98,7,0.06)":"rgba(15,23,42,0.4)";
+                          return (
+                            <div key={g.id} style={{ background:bgColor, border:`1px solid ${borderColor}`, borderRadius:11, padding:"0.85rem", marginBottom:8, display:"flex", alignItems:"center", gap:12, position:"relative" }}>
+                              <div style={{ fontSize: isTop3?"1.6rem":"1rem", minWidth:32, textAlign:"center" }}>
+                                {isTop3 ? medals[idx] : `#${rank}`}
+                              </div>
+                              <GuildEmblemSVG emblem={g.emblem} size={isTop3?56:44}/>
+                              <div style={{ flex:1, minWidth:0 }}>
+                                <div style={{ fontFamily:"'Cinzel',serif", color: rank===1?"#fbbf24": rank===2?"#cbd5e1": rank===3?"#d97706":"#e2e8f0", fontSize: isTop3?"0.92rem":"0.82rem", fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>
+                                  {g.emoji} {g.name} <span style={{fontSize:"0.65rem",color:"#94a3b8"}}>{hall.emoji}</span>
+                                </div>
+                                <div style={{ fontSize:"0.68rem", color:"#94a3b8", marginTop:2 }}>
+                                  Lv.{g.level||1} · {g.members?.length||0} membri · ⭐ {g.xp||0} XP
+                                </div>
+                                {g.description && <div style={{ fontSize:"0.66rem", color:"#4b5563", fontStyle:"italic", marginTop:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{g.description}</div>}
+                              </div>
+                              <div style={{ flexShrink:0 }}>
+                                {isPending
+                                  ? <div style={{ padding:"0.4rem 0.75rem", background:"rgba(109,40,217,0.15)", border:"1px solid #7c3aed", borderRadius:7, color:"#a78bfa", fontSize:"0.72rem", fontWeight:600 }}>⏳ In attesa</div>
+                                  : <button onClick={()=>requestJoinGuild(g.id)}
+                                      style={{ padding:"0.4rem 0.75rem", background:"rgba(109,40,217,0.25)", border:"1px solid #7c3aed", borderRadius:7, color:"#c4b5fd", cursor:"pointer", fontSize:"0.75rem", fontWeight:600, transition:"background 0.2s" }}
+                                      onMouseEnter={e=>e.currentTarget.style.background="rgba(109,40,217,0.45)"}
+                                      onMouseLeave={e=>e.currentTarget.style.background="rgba(109,40,217,0.25)"}>
+                                      📨 Richiesta
+                                    </button>
+                                }
+                              </div>
                             </div>
-                            <BigBtn onClick={()=>joinGuild(g.id)} gold icon="🏛️">Unisciti</BigBtn>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+
+                  {/* Fonda Gilda — collapsible button */}
+                  <div>
+                    <button onClick={()=>setShowGuildCreator(v=>!v)}
+                      style={{ width:"100%", padding:"0.7rem 1rem", background: showGuildCreator?"rgba(109,40,217,0.25)":"rgba(15,23,42,0.6)", border:"1px solid #7c3aed", borderRadius:10, color:"#c4b5fd", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.84rem", fontWeight:600, display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom: showGuildCreator?8:0 }}>
+                      <span>🏛️ Fonda una Nuova Gilda</span>
+                      <span style={{ fontSize:"0.7rem", color:"#94a3b8" }}>{showGuildCreator?"▲":"▼"} 10.000 🪙</span>
+                    </button>
+                    {showGuildCreator && (
+                      <div style={{ background:"rgba(15,23,42,0.7)", border:"1px solid #7c3aed", borderRadius:10, padding:"1rem", animation:"fadeIn 0.2s" }}>
+                        <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:8 }}>
+                          {GUILD_EMOJIS.map(e=>(
+                            <button key={e} onClick={()=>setGuildForm(f=>({...f,emoji:e}))} style={{ fontSize:"1.1rem", width:36, height:36, background:guildForm.emoji===e?"rgba(109,40,217,0.4)":"rgba(15,23,42,0.5)", border:`1px solid ${guildForm.emoji===e?"#7c3aed":"#334155"}`, borderRadius:6, cursor:"pointer" }}>{e}</button>
+                          ))}
+                        </div>
+                        <input value={guildForm.name} onChange={e=>setGuildForm(f=>({...f,name:e.target.value}))} placeholder="Nome della gilda..."
+                          style={{ width:"100%", marginBottom:8, padding:"0.5rem 0.7rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.85rem" }} />
+                        <textarea value={guildForm.desc} onChange={e=>setGuildForm(f=>({...f,desc:e.target.value}))} placeholder="Descrizione (opzionale)..." rows={2}
+                          style={{ width:"100%", marginBottom:10, padding:"0.5rem 0.7rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.82rem", resize:"none" }} />
+                        <div style={{ marginBottom:10 }}>
+                          <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginBottom:6, fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>🛡️ Stemma araldico</div>
+                          <GuildEmblemEditor emblem={guildForm.emblem} onChange={emb=>setGuildForm(f=>({...f,emblem:emb}))}/>
+                        </div>
+                        <BigBtn onClick={()=>{createGuild();setShowGuildCreator(false);}} gold icon="🏛️" disabled={(me?.gold||0)<10000}>Fonda ({me?.gold||0}/10.000 🪙)</BigBtn>
+                      </div>
+                    )}
+                  </div>
                 </div>
               )}
             </div>
