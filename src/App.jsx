@@ -7709,7 +7709,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
                   onMouseLeave={()=>setHoveredItem(null)}
                   onClick={()=>{ if(equippableTypes.has(item.type)) onEquip(g.entries[0]); else if(item.type==="potion"&&canUseConsumables) onUse(g.entries[0]); }}
                   style={{
-                    background: isEquipped?"rgba(251,191,36,0.08)": isHovered?"rgba(99,102,241,0.12)":"rgba(15,23,42,0.7)",
+                    background: isEquipped?"rgba(251,191,36,0.12)": isHovered?"rgba(99,102,241,0.18)":"rgba(30,20,60,0.85)",
                     border:`2px solid ${isEquipped?"#fbbf24": isHovered?rc:"rgba(255,255,255,0.08)"}`,
                     borderRadius:10, padding:"0.4rem 0.3rem", cursor:"pointer", textAlign:"center",
                     transition:"border-color 0.15s, background 0.15s", position:"relative",
