@@ -6877,7 +6877,7 @@ function CharacterViewer({ me, equippedItems, size, fillContainer }) {
   const baseSprite = `/assets/equip/base_${race}_${gender}.png`;
   const overlaySlots = ["chest","legs","boots","gloves","head","weapon","offhand","cloak","amulet"];
   const containerStyle = fillContainer
-    ? { position:"relative", width:"100%", height:"100%", maxWidth:"100%", maxHeight:"100%" }
+    ? { position:"absolute", inset:0 }
     : { position:"relative", width: size||240, height: size ? size*2 : 480, margin:"0 auto", flexShrink:0 };
   return (
     <div style={containerStyle}>
@@ -7619,9 +7619,9 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
           </div>
 
           {/* Character */}
-          <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, minWidth:0, overflow:"hidden" }}>
-            <div style={{ width:200, height:400, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(20,10,40,0.5)", borderRadius:12, border:"1px solid rgba(167,139,250,0.15)" }}>
-              <CharacterViewer me={me} equippedItems={equippedItems} size={200} />
+          <div style={{ flex:1, alignSelf:"stretch", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, minWidth:0, overflow:"hidden" }}>
+            <div style={{ flex:1, width:"100%", minHeight:0, position:"relative", background:"rgba(20,10,40,0.5)", borderRadius:12, border:"1px solid rgba(167,139,250,0.15)" }}>
+              <CharacterViewer me={me} equippedItems={equippedItems} fillContainer />
             </div>
             <div style={{ display:"flex", gap:8, flexShrink:0 }}>
               {bottomSlots.map(k => {
