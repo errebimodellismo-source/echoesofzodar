@@ -6876,29 +6876,16 @@ function CharacterViewer({ me, equippedItems, size, fillContainer }) {
   const gender = me?.gender || "male";
   const baseSprite = `/assets/equip/base_${race}_${gender}.png`;
   const overlaySlots = ["chest","legs","boots","gloves","head","weapon","offhand","cloak","amulet"];
-  const [imgLoaded, setImgLoaded] = React.useState(false);
   const containerStyle = fillContainer
     ? { position:"absolute", inset:0 }
     : { position:"relative", width: size||240, height: size ? size*2 : 480, margin:"0 auto", flexShrink:0 };
   return (
     <div style={containerStyle}>
-      {/* Fallback silhouette — visibile solo se immagine non carica */}
-      {!imgLoaded && (
-        <svg viewBox="0 0 100 200" style={{ position:"absolute", inset:0, width:"100%", height:"100%", opacity:0.45, pointerEvents:"none" }} fill="rgba(167,139,250,0.9)">
-          <ellipse cx="50" cy="22" rx="16" ry="18"/>
-          <rect x="28" y="42" width="44" height="70" rx="8"/>
-          <rect x="10" y="44" width="18" height="55" rx="7"/>
-          <rect x="72" y="44" width="18" height="55" rx="7"/>
-          <rect x="30" y="112" width="17" height="70" rx="7"/>
-          <rect x="53" y="112" width="17" height="70" rx="7"/>
-        </svg>
-      )}
       {/* Base character */}
       <img
         src={baseSprite}
         alt="personaggio"
-        onLoad={() => setImgLoaded(true)}
-        onError={e => { e.currentTarget.style.display="none"; setImgLoaded(false); }}
+        onError={e => { e.currentTarget.style.display="none"; }}
         style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none", mixBlendMode:"multiply" }}
       />
       {/* Equipment overlays */}
