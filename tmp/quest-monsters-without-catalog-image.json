@@ -1,0 +1,4448 @@
+[
+  {
+    "slug": "statua-animata",
+    "name": "Statua Animata",
+    "count": 38,
+    "boss": 0,
+    "sampleIds": [
+      "fq19_stat",
+      "dq43_m2",
+      "dq70_m1",
+      "dq71_m1",
+      "dq71_m3",
+      "dq71_m4",
+      "dq71_m5",
+      "dq98_m1"
+    ],
+    "hpMin": 20,
+    "hpMax": 189,
+    "atkMin": 8,
+    "atkMax": 28
+  },
+  {
+    "slug": "bombardiere",
+    "name": "Bombardiere",
+    "count": 30,
+    "boss": 0,
+    "sampleIds": [
+      "dq28_m2",
+      "dq35_m1",
+      "dq35_m3",
+      "dq35_m4",
+      "dq105_m2",
+      "dq134_m1",
+      "dq139_m2",
+      "dq139_m6"
+    ],
+    "hpMin": 23,
+    "hpMax": 185,
+    "atkMin": 8,
+    "atkMax": 28
+  },
+  {
+    "slug": "omuncolo",
+    "name": "Omuncolo",
+    "count": 24,
+    "boss": 0,
+    "sampleIds": [
+      "dq36_m1",
+      "dq128_m2",
+      "dq131_m2",
+      "dq131_m3",
+      "dq131_m4",
+      "dq131_m6",
+      "dq138_m1",
+      "dq138_m2"
+    ],
+    "hpMin": 27,
+    "hpMax": 197,
+    "atkMin": 9,
+    "atkMax": 28
+  },
+  {
+    "slug": "sfinge-minore",
+    "name": "Sfinge Minore",
+    "count": 24,
+    "boss": 0,
+    "sampleIds": [
+      "dq41_m2",
+      "dq54_m1",
+      "dq77_m2",
+      "dq99_m1",
+      "dq154_m1",
+      "dq154_m3",
+      "dq187_m1",
+      "dq205_m1"
+    ],
+    "hpMin": 26,
+    "hpMax": 174,
+    "atkMin": 8,
+    "atkMax": 28
+  },
+  {
+    "slug": "unicorno-oscuro",
+    "name": "Unicorno Oscuro",
+    "count": 24,
+    "boss": 0,
+    "sampleIds": [
+      "dq64_m3",
+      "dq69_m2",
+      "dq69_m5",
+      "dq136_m1",
+      "dq136_m5",
+      "dq143_m1",
+      "dq143_m2",
+      "dq162_m8"
+    ],
+    "hpMin": 56,
+    "hpMax": 199,
+    "atkMin": 12,
+    "atkMax": 28
+  },
+  {
+    "slug": "costrutto-arcano",
+    "name": "Costrutto Arcano",
+    "count": 22,
+    "boss": 0,
+    "sampleIds": [
+      "dq61_m1",
+      "dq71_m2",
+      "dq78_m1",
+      "dq84_m1",
+      "dq84_m2",
+      "dq84_m4",
+      "dq126_m1",
+      "dq171_m3"
+    ],
+    "hpMin": 56,
+    "hpMax": 188,
+    "atkMin": 10,
+    "atkMax": 22
+  },
+  {
+    "slug": "kraken-giovane",
+    "name": "Kraken Giovane",
+    "count": 22,
+    "boss": 0,
+    "sampleIds": [
+      "dq86_m2",
+      "dq112_m1",
+      "dq112_m2",
+      "dq113_m1",
+      "dq113_m2",
+      "dq119_m1",
+      "dq173_m1",
+      "dq173_m3"
+    ],
+    "hpMin": 50,
+    "hpMax": 188,
+    "atkMin": 11,
+    "atkMax": 28
+  },
+  {
+    "slug": "pirata-veterano",
+    "name": "Pirata Veterano",
+    "count": 22,
+    "boss": 0,
+    "sampleIds": [
+      "dq58_m2",
+      "dq58_m3",
+      "dq91_m2",
+      "dq111_m2",
+      "dq157_m3",
+      "dq159_m1",
+      "dq190_m1",
+      "dq190_m2"
+    ],
+    "hpMin": 56,
+    "hpMax": 165,
+    "atkMin": 11,
+    "atkMax": 27
+  },
+  {
+    "slug": "satiro",
+    "name": "Satiro",
+    "count": 22,
+    "boss": 0,
+    "sampleIds": [
+      "dq64_m2",
+      "dq69_m3",
+      "dq69_m6",
+      "dq110_m2",
+      "dq136_m2",
+      "dq162_m2",
+      "dq162_m5",
+      "dq162_m9"
+    ],
+    "hpMin": 28,
+    "hpMax": 193,
+    "atkMin": 6,
+    "atkMax": 28
+  },
+  {
+    "slug": "sciacallo",
+    "name": "Sciacallo",
+    "count": 22,
+    "boss": 0,
+    "sampleIds": [
+      "dq41_m1",
+      "dq54_m2",
+      "dq55_m1",
+      "dq80_m1",
+      "dq85_m1",
+      "dq85_m2",
+      "dq99_m2",
+      "dq123_m2"
+    ],
+    "hpMin": 35,
+    "hpMax": 196,
+    "atkMin": 6,
+    "atkMax": 25
+  },
+  {
+    "slug": "squalo-spada",
+    "name": "Squalo Spada",
+    "count": 22,
+    "boss": 0,
+    "sampleIds": [
+      "dq59_m1",
+      "dq86_m1",
+      "dq86_m3",
+      "dq86_m5",
+      "dq108_m1",
+      "dq112_m3",
+      "dq173_m2",
+      "dq196_m1"
+    ],
+    "hpMin": 71,
+    "hpMax": 150,
+    "atkMin": 11,
+    "atkMax": 28
+  },
+  {
+    "slug": "zombi",
+    "name": "Zombi",
+    "count": 22,
+    "boss": 0,
+    "sampleIds": [
+      "dq44_m1",
+      "dq52_m1",
+      "dq52_m3",
+      "dq74_m1",
+      "dq75_m2",
+      "dq90_m2",
+      "dq166_m3",
+      "dq194_m2"
+    ],
+    "hpMin": 29,
+    "hpMax": 198,
+    "atkMin": 8,
+    "atkMax": 25
+  },
+  {
+    "slug": "guardiano-spettrale",
+    "name": "Guardiano Spettrale",
+    "count": 20,
+    "boss": 0,
+    "sampleIds": [
+      "dq43_m1",
+      "dq70_m2",
+      "dq78_m2",
+      "dq84_m3",
+      "dq87_m1",
+      "dq122_m2",
+      "dq180_m1",
+      "dq193_m2"
+    ],
+    "hpMin": 36,
+    "hpMax": 192,
+    "atkMin": 10,
+    "atkMax": 25
+  },
+  {
+    "slug": "mozzo-posseduto",
+    "name": "Mozzo Posseduto",
+    "count": 20,
+    "boss": 0,
+    "sampleIds": [
+      "dq35_m2",
+      "dq91_m1",
+      "dq106_m1",
+      "dq111_m1",
+      "dq139_m1",
+      "dq139_m3",
+      "dq139_m4",
+      "dq139_m5"
+    ],
+    "hpMin": 50,
+    "hpMax": 197,
+    "atkMin": 16,
+    "atkMax": 25
+  },
+  {
+    "slug": "pixie-maligna",
+    "name": "Pixie Maligna",
+    "count": 20,
+    "boss": 0,
+    "sampleIds": [
+      "dq69_m8",
+      "dq136_m4",
+      "dq143_m3",
+      "dq143_m4",
+      "dq143_m5",
+      "dq143_m6",
+      "dq162_m1",
+      "dq162_m3"
+    ],
+    "hpMin": 69,
+    "hpMax": 188,
+    "atkMin": 11,
+    "atkMax": 28
+  },
+  {
+    "slug": "brigante",
+    "name": "Brigante",
+    "count": 18,
+    "boss": 0,
+    "sampleIds": [
+      "fq3_b1",
+      "fq3_b2",
+      "dq81_m1",
+      "dq124_m1",
+      "dq124_m2",
+      "dq161_m1",
+      "dq207_m2",
+      "dq211_m1"
+    ],
+    "hpMin": 20,
+    "hpMax": 176,
+    "atkMin": 5,
+    "atkMax": 26
+  },
+  {
+    "slug": "diavolo-spinato",
+    "name": "Diavolo Spinato",
+    "count": 18,
+    "boss": 0,
+    "sampleIds": [
+      "dq107_m1",
+      "dq107_m2",
+      "dq120_m1",
+      "dq120_m4",
+      "dq174_m1",
+      "dq174_m2",
+      "dq174_m3",
+      "dq195_m2"
+    ],
+    "hpMin": 72,
+    "hpMax": 138,
+    "atkMin": 16,
+    "atkMax": 27
+  },
+  {
+    "slug": "goblin-esploratore",
+    "name": "Goblin Esploratore",
+    "count": 18,
+    "boss": 0,
+    "sampleIds": [
+      "dq47_m1",
+      "dq47_m3",
+      "dq142_m2",
+      "dq142_m3",
+      "dq201_m1",
+      "dq201_m4",
+      "dq201_m5",
+      "dq202_m1"
+    ],
+    "hpMin": 33,
+    "hpMax": 143,
+    "atkMin": 8,
+    "atkMax": 28
+  },
+  {
+    "slug": "scorpione-gigante",
+    "name": "Scorpione Gigante",
+    "count": 18,
+    "boss": 0,
+    "sampleIds": [
+      "fq37_scgig",
+      "dq73_m1",
+      "dq123_m1",
+      "dq144_m2",
+      "dq154_m2",
+      "dq238_m1",
+      "dq238_m4",
+      "dq238_m6"
+    ],
+    "hpMin": 46,
+    "hpMax": 186,
+    "atkMin": 10,
+    "atkMax": 27
+  },
+  {
+    "slug": "apprendista-folle",
+    "name": "Apprendista Folle",
+    "count": 16,
+    "boss": 0,
+    "sampleIds": [
+      "dq131_m5",
+      "dq131_m8",
+      "dq138_m3",
+      "dq138_m4",
+      "dq138_m5",
+      "dq149_m2",
+      "dq224_m1",
+      "dq224_m2"
+    ],
+    "hpMin": 71,
+    "hpMax": 180,
+    "atkMin": 10,
+    "atkMax": 28
+  },
+  {
+    "slug": "centauro-ribelle",
+    "name": "Centauro Ribelle",
+    "count": 16,
+    "boss": 0,
+    "sampleIds": [
+      "dq64_m1",
+      "dq69_m4",
+      "dq141_m1",
+      "dq162_m4",
+      "dq162_m7",
+      "dq176_m1",
+      "dq235_m3",
+      "dq236_m3"
+    ],
+    "hpMin": 25,
+    "hpMax": 149,
+    "atkMin": 10,
+    "atkMax": 28
+  },
+  {
+    "slug": "mago-rinnegato",
+    "name": "Mago Rinnegato",
+    "count": 16,
+    "boss": 0,
+    "sampleIds": [
+      "mq8_mr1",
+      "mq8_mr2",
+      "dq60_m1",
+      "dq129_m1",
+      "dq137_m1",
+      "dq169_m1",
+      "dq207_m1",
+      "dq228_m2"
+    ],
+    "hpMin": 29,
+    "hpMax": 189,
+    "atkMin": 6,
+    "atkMax": 21
+  },
+  {
+    "slug": "servo-mutato",
+    "name": "Servo Mutato",
+    "count": 16,
+    "boss": 0,
+    "sampleIds": [
+      "dq40_m2",
+      "dq40_m3",
+      "dq40_m4",
+      "dq89_m1",
+      "dq133_m1",
+      "dq227_m1",
+      "dq227_m2",
+      "dq234_m1"
+    ],
+    "hpMin": 20,
+    "hpMax": 157,
+    "atkMin": 6,
+    "atkMax": 25
+  },
+  {
+    "slug": "spettro",
+    "name": "Spettro",
+    "count": 16,
+    "boss": 0,
+    "sampleIds": [
+      "dq44_m3",
+      "dq90_m1",
+      "dq90_m4",
+      "dq150_m1",
+      "dq164_m1",
+      "dq166_m4",
+      "dq188_m1",
+      "dq225_m1"
+    ],
+    "hpMin": 58,
+    "hpMax": 193,
+    "atkMin": 11,
+    "atkMax": 27
+  },
+  {
+    "slug": "costrutto-carnoso",
+    "name": "Costrutto Carnoso",
+    "count": 14,
+    "boss": 0,
+    "sampleIds": [
+      "dq131_m1",
+      "dq131_m7",
+      "dq153_m1",
+      "dq175_m3",
+      "dq200_m2",
+      "dq230_m1",
+      "dq230_m2"
+    ],
+    "hpMin": 65,
+    "hpMax": 184,
+    "atkMin": 11,
+    "atkMax": 24
+  },
+  {
+    "slug": "esperimento-fallito",
+    "name": "Esperimento Fallito",
+    "count": 14,
+    "boss": 0,
+    "sampleIds": [
+      "dq36_m2",
+      "dq128_m1",
+      "dq175_m1",
+      "dq175_m2",
+      "dq182_m2",
+      "dq200_m3",
+      "dq230_m3"
+    ],
+    "hpMin": 33,
+    "hpMax": 139,
+    "atkMin": 8,
+    "atkMax": 26
+  },
+  {
+    "slug": "folletto-dispettoso",
+    "name": "Folletto Dispettoso",
+    "count": 14,
+    "boss": 0,
+    "sampleIds": [
+      "dq69_m1",
+      "dq69_m7",
+      "dq110_m1",
+      "dq136_m3",
+      "dq141_m2",
+      "dq162_m6",
+      "dq176_m2"
+    ],
+    "hpMin": 23,
+    "hpMax": 133,
+    "atkMin": 7,
+    "atkMax": 28
+  },
+  {
+    "slug": "predone-del-deserto",
+    "name": "Predone del Deserto",
+    "count": 14,
+    "boss": 0,
+    "sampleIds": [
+      "dq34_m1",
+      "dq34_m2",
+      "dq77_m1",
+      "dq80_m2",
+      "dq102_m1",
+      "dq205_m2",
+      "dq238_m2"
+    ],
+    "hpMin": 45,
+    "hpMax": 147,
+    "atkMin": 9,
+    "atkMax": 24
+  },
+  {
+    "slug": "scheletro-guerriero",
+    "name": "Scheletro Guerriero",
+    "count": 14,
+    "boss": 0,
+    "sampleIds": [
+      "dq44_m2",
+      "dq49_m1",
+      "dq75_m1",
+      "dq90_m3",
+      "dq160_m2",
+      "dq166_m5",
+      "dq194_m1"
+    ],
+    "hpMin": 51,
+    "hpMax": 163,
+    "atkMin": 10,
+    "atkMax": 28
+  },
+  {
+    "slug": "imp",
+    "name": "Imp",
+    "count": 12,
+    "boss": 0,
+    "sampleIds": [
+      "dq38_m1",
+      "dq120_m3",
+      "dq125_m1",
+      "dq189_m1",
+      "dq195_m1",
+      "dq218_m2"
+    ],
+    "hpMin": 21,
+    "hpMax": 156,
+    "atkMin": 7,
+    "atkMax": 23
+  },
+  {
+    "slug": "ladro",
+    "name": "Ladro",
+    "count": 12,
+    "boss": 0,
+    "sampleIds": [
+      "dq60_m2",
+      "dq104_m4",
+      "dq217_m1",
+      "dq228_m1",
+      "dq228_m3",
+      "dq229_m1"
+    ],
+    "hpMin": 39,
+    "hpMax": 143,
+    "atkMin": 7,
+    "atkMax": 27
+  },
+  {
+    "slug": "marinaio-brutto",
+    "name": "Marinaio Brutto",
+    "count": 12,
+    "boss": 0,
+    "sampleIds": [
+      "dq28_m1",
+      "dq58_m1",
+      "dq105_m1",
+      "dq206_m1",
+      "dq243_m2",
+      "dq243_m4"
+    ],
+    "hpMin": 45,
+    "hpMax": 190,
+    "atkMin": 5,
+    "atkMax": 27
+  },
+  {
+    "slug": "pirata",
+    "name": "Pirata",
+    "count": 12,
+    "boss": 0,
+    "sampleIds": [
+      "dq31_m2",
+      "dq86_m4",
+      "dq113_m3",
+      "dq113_m4",
+      "dq119_m3",
+      "dq197_m2"
+    ],
+    "hpMin": 82,
+    "hpMax": 184,
+    "atkMin": 13,
+    "atkMax": 28
+  },
+  {
+    "slug": "yeti",
+    "name": "Yeti",
+    "count": 12,
+    "boss": 0,
+    "sampleIds": [
+      "dq72_m2",
+      "dq103_m1",
+      "dq152_m1",
+      "dq152_m2",
+      "dq213_m1",
+      "dq213_m2"
+    ],
+    "hpMin": 28,
+    "hpMax": 145,
+    "atkMin": 6,
+    "atkMax": 23
+  },
+  {
+    "slug": "capitano-mortenero",
+    "name": "Capitano Mortenero",
+    "count": 10,
+    "boss": 10,
+    "sampleIds": [
+      "dq58_boss",
+      "dq111_boss",
+      "dq157_boss",
+      "dq190_boss",
+      "dq204_boss"
+    ],
+    "hpMin": 210,
+    "hpMax": 566,
+    "atkMin": 22,
+    "atkMax": 49
+  },
+  {
+    "slug": "quartiermastro-demone",
+    "name": "Quartiermastro Demone",
+    "count": 10,
+    "boss": 10,
+    "sampleIds": [
+      "dq35_boss",
+      "dq105_boss",
+      "dq139_boss",
+      "dq179_boss",
+      "dq243_boss"
+    ],
+    "hpMin": 199,
+    "hpMax": 523,
+    "atkMin": 23,
+    "atkMax": 35
+  },
+  {
+    "slug": "aberrazione",
+    "name": "Aberrazione",
+    "count": 10,
+    "boss": 0,
+    "sampleIds": [
+      "mq36_ab1",
+      "mq36_ab2",
+      "dq40_m1",
+      "dq65_m1",
+      "dq234_m2"
+    ],
+    "hpMin": 29,
+    "hpMax": 101,
+    "atkMin": 7,
+    "atkMax": 18
+  },
+  {
+    "slug": "cultista",
+    "name": "Cultista",
+    "count": 10,
+    "boss": 0,
+    "sampleIds": [
+      "dq42_m1",
+      "dq95_m2",
+      "dq120_m2",
+      "dq189_m2",
+      "dq222_m2"
+    ],
+    "hpMin": 59,
+    "hpMax": 161,
+    "atkMin": 11,
+    "atkMax": 27
+  },
+  {
+    "slug": "lupo-di-ghiaccio",
+    "name": "Lupo di Ghiaccio",
+    "count": 10,
+    "boss": 0,
+    "sampleIds": [
+      "dq32_m1",
+      "dq93_m1",
+      "dq93_m2",
+      "dq103_m3",
+      "dq181_m1"
+    ],
+    "hpMin": 33,
+    "hpMax": 125,
+    "atkMin": 9,
+    "atkMax": 24
+  },
+  {
+    "slug": "marinaio-spettrale",
+    "name": "Marinaio Spettrale",
+    "count": 10,
+    "boss": 0,
+    "sampleIds": [
+      "mq18_ms1",
+      "mq18_ms2",
+      "dq119_m2",
+      "dq208_m1",
+      "dq208_m2"
+    ],
+    "hpMin": 27,
+    "hpMax": 97,
+    "atkMin": 6,
+    "atkMax": 12
+  },
+  {
+    "slug": "ogre",
+    "name": "Ogre",
+    "count": 10,
+    "boss": 0,
+    "sampleIds": [
+      "dq76_m1",
+      "dq92_m2",
+      "dq170_m1",
+      "dq199_m1",
+      "dq242_m1"
+    ],
+    "hpMin": 37,
+    "hpMax": 183,
+    "atkMin": 10,
+    "atkMax": 24
+  },
+  {
+    "slug": "orso-bruno",
+    "name": "Orso Bruno",
+    "count": 10,
+    "boss": 0,
+    "sampleIds": [
+      "dq48_m4",
+      "dq140_m1",
+      "dq140_m2",
+      "dq167_m1",
+      "dq201_m2"
+    ],
+    "hpMin": 108,
+    "hpMax": 195,
+    "atkMin": 19,
+    "atkMax": 26
+  },
+  {
+    "slug": "sciame-di-insetti",
+    "name": "Sciame di Insetti",
+    "count": 10,
+    "boss": 0,
+    "sampleIds": [
+      "dq46_m1",
+      "dq57_m1",
+      "dq68_m2",
+      "dq68_m3",
+      "dq68_m5"
+    ],
+    "hpMin": 54,
+    "hpMax": 128,
+    "atkMin": 13,
+    "atkMax": 24
+  },
+  {
+    "slug": "sicario",
+    "name": "Sicario",
+    "count": 10,
+    "boss": 0,
+    "sampleIds": [
+      "dq104_m2",
+      "dq124_m3",
+      "dq145_m1",
+      "dq215_m1",
+      "dq228_m5"
+    ],
+    "hpMin": 70,
+    "hpMax": 115,
+    "atkMin": 11,
+    "atkMax": 25
+  },
+  {
+    "slug": "sirena-maligna",
+    "name": "Sirena Maligna",
+    "count": 10,
+    "boss": 0,
+    "sampleIds": [
+      "dq31_m1",
+      "dq112_m4",
+      "dq173_m4",
+      "dq173_m5",
+      "dq198_m1"
+    ],
+    "hpMin": 50,
+    "hpMax": 152,
+    "atkMin": 10,
+    "atkMax": 20
+  },
+  {
+    "slug": "alchimista-pazzo",
+    "name": "Alchimista Pazzo",
+    "count": 8,
+    "boss": 8,
+    "sampleIds": [
+      "dq128_boss",
+      "dq138_boss",
+      "dq200_boss",
+      "dq230_boss"
+    ],
+    "hpMin": 181,
+    "hpMax": 272,
+    "atkMin": 24,
+    "atkMax": 30
+  },
+  {
+    "slug": "cavaliere-della-morte",
+    "name": "Cavaliere della Morte",
+    "count": 8,
+    "boss": 8,
+    "sampleIds": [
+      "dq52_boss",
+      "dq90_boss",
+      "dq146_boss",
+      "dq212_boss"
+    ],
+    "hpMin": 195,
+    "hpMax": 274,
+    "atkMin": 22,
+    "atkMax": 30
+  },
+  {
+    "slug": "faraone-non-morto",
+    "name": "Faraone Non-Morto",
+    "count": 8,
+    "boss": 8,
+    "sampleIds": [
+      "dq80_boss",
+      "dq85_boss",
+      "dq154_boss",
+      "dq205_boss"
+    ],
+    "hpMin": 202,
+    "hpMax": 423,
+    "atkMin": 25,
+    "atkMax": 45
+  },
+  {
+    "slug": "kraken-antico",
+    "name": "Kraken Antico",
+    "count": 8,
+    "boss": 8,
+    "sampleIds": [
+      "dq86_boss",
+      "dq113_boss",
+      "dq173_boss",
+      "dq197_boss"
+    ],
+    "hpMin": 184,
+    "hpMax": 255,
+    "atkMin": 25,
+    "atkMax": 30
+  },
+  {
+    "slug": "regina-maligna",
+    "name": "Regina Maligna",
+    "count": 8,
+    "boss": 8,
+    "sampleIds": [
+      "dq64_boss",
+      "dq69_boss",
+      "dq136_boss",
+      "dq162_boss"
+    ],
+    "hpMin": 231,
+    "hpMax": 589,
+    "atkMin": 30,
+    "atkMax": 49
+  },
+  {
+    "slug": "sentinella-eterna",
+    "name": "Sentinella Eterna",
+    "count": 8,
+    "boss": 8,
+    "sampleIds": [
+      "dq70_boss",
+      "dq71_boss",
+      "dq122_boss",
+      "dq171_boss"
+    ],
+    "hpMin": 232,
+    "hpMax": 258,
+    "atkMin": 23,
+    "atkMax": 27
+  },
+  {
+    "slug": "aquila-gigante",
+    "name": "Aquila Gigante",
+    "count": 8,
+    "boss": 0,
+    "sampleIds": [
+      "dq103_m2",
+      "dq103_m6",
+      "dq127_m2",
+      "dq181_m2"
+    ],
+    "hpMin": 100,
+    "hpMax": 153,
+    "atkMin": 19,
+    "atkMax": 25
+  },
+  {
+    "slug": "falco-nero",
+    "name": "Falco Nero",
+    "count": 8,
+    "boss": 0,
+    "sampleIds": [
+      "dq47_m2",
+      "dq142_m1",
+      "dq167_m2",
+      "dq244_m1"
+    ],
+    "hpMin": 96,
+    "hpMax": 128,
+    "atkMin": 11,
+    "atkMax": 20
+  },
+  {
+    "slug": "orco-sciamano",
+    "name": "Orco Sciamano",
+    "count": 8,
+    "boss": 0,
+    "sampleIds": [
+      "dq79_m2",
+      "dq156_m1",
+      "dq170_m2",
+      "dq242_m2"
+    ],
+    "hpMin": 43,
+    "hpMax": 200,
+    "atkMin": 6,
+    "atkMax": 25
+  },
+  {
+    "slug": "rospo-velenoso",
+    "name": "Rospo Velenoso",
+    "count": 8,
+    "boss": 0,
+    "sampleIds": [
+      "dq46_m2",
+      "dq46_m3",
+      "dq114_m2",
+      "dq214_m2"
+    ],
+    "hpMin": 39,
+    "hpMax": 119,
+    "atkMin": 6,
+    "atkMax": 23
+  },
+  {
+    "slug": "re-dei-giganti",
+    "name": "Re dei Giganti",
+    "count": 6,
+    "boss": 6,
+    "sampleIds": [
+      "dq103_boss",
+      "dq127_boss",
+      "dq213_boss"
+    ],
+    "hpMin": 301,
+    "hpMax": 565,
+    "atkMin": 30,
+    "atkMax": 43
+  },
+  {
+    "slug": "cinghiale-selvaggio",
+    "name": "Cinghiale Selvaggio",
+    "count": 6,
+    "boss": 0,
+    "sampleIds": [
+      "dq48_m2",
+      "dq48_m3",
+      "dq201_m3"
+    ],
+    "hpMin": 106,
+    "hpMax": 164,
+    "atkMin": 25,
+    "atkMax": 27
+  },
+  {
+    "slug": "hag-della-palude",
+    "name": "Hag della Palude",
+    "count": 6,
+    "boss": 0,
+    "sampleIds": [
+      "dq39_m2",
+      "dq114_m1",
+      "dq221_m1"
+    ],
+    "hpMin": 55,
+    "hpMax": 145,
+    "atkMin": 15,
+    "atkMax": 24
+  },
+  {
+    "slug": "lucertolone",
+    "name": "Lucertolone",
+    "count": 6,
+    "boss": 0,
+    "sampleIds": [
+      "dq39_m1",
+      "dq46_m4",
+      "dq68_m4"
+    ],
+    "hpMin": 75,
+    "hpMax": 122,
+    "atkMin": 10,
+    "atkMax": 25
+  },
+  {
+    "slug": "lupo-da-guerra",
+    "name": "Lupo da Guerra",
+    "count": 6,
+    "boss": 0,
+    "sampleIds": [
+      "dq79_m3",
+      "dq92_m1",
+      "dq185_m2"
+    ],
+    "hpMin": 54,
+    "hpMax": 122,
+    "atkMin": 16,
+    "atkMax": 21
+  },
+  {
+    "slug": "lupo-della-piana",
+    "name": "Lupo della Piana",
+    "count": 6,
+    "boss": 0,
+    "sampleIds": [
+      "fq25_lp1",
+      "fq25_lp2",
+      "fq25_lp3"
+    ],
+    "hpMin": 22,
+    "hpMax": 22,
+    "atkMin": 7,
+    "atkMax": 7
+  },
+  {
+    "slug": "ombra-strisciante",
+    "name": "Ombra Strisciante",
+    "count": 6,
+    "boss": 0,
+    "sampleIds": [
+      "fq24_omb",
+      "fq43_os1",
+      "fq43_os2"
+    ],
+    "hpMin": 26,
+    "hpMax": 38,
+    "atkMin": 8,
+    "atkMax": 10
+  },
+  {
+    "slug": "pesce-morditore",
+    "name": "Pesce Morditore",
+    "count": 6,
+    "boss": 0,
+    "sampleIds": [
+      "fq15_p1",
+      "fq15_p2",
+      "fq15_p3"
+    ],
+    "hpMin": 19,
+    "hpMax": 19,
+    "atkMin": 6,
+    "atkMax": 6
+  },
+  {
+    "slug": "ratto-gigante",
+    "name": "Ratto Gigante",
+    "count": 6,
+    "boss": 0,
+    "sampleIds": [
+      "fq1_r1",
+      "fq1_r2",
+      "fq1_r3"
+    ],
+    "hpMin": 18,
+    "hpMax": 18,
+    "atkMin": 5,
+    "atkMax": 5
+  },
+  {
+    "slug": "sacerdote-corrotto",
+    "name": "Sacerdote Corrotto",
+    "count": 6,
+    "boss": 0,
+    "sampleIds": [
+      "dq40_m5",
+      "dq63_m1",
+      "dq65_m2"
+    ],
+    "hpMin": 66,
+    "hpMax": 119,
+    "atkMin": 13,
+    "atkMax": 26
+  },
+  {
+    "slug": "zombi-del-campo",
+    "name": "Zombi del Campo",
+    "count": 6,
+    "boss": 0,
+    "sampleIds": [
+      "fq46_z1",
+      "fq46_z2",
+      "fq46_z3"
+    ],
+    "hpMin": 23,
+    "hpMax": 23,
+    "atkMin": 6,
+    "atkMax": 6
+  },
+  {
+    "slug": "aberrazione-suprema",
+    "name": "Aberrazione Suprema",
+    "count": 4,
+    "boss": 4,
+    "sampleIds": [
+      "dq131_boss",
+      "dq182_boss"
+    ],
+    "hpMin": 210,
+    "hpMax": 213,
+    "atkMin": 24,
+    "atkMax": 31
+  },
+  {
+    "slug": "antico-treant",
+    "name": "Antico Treant",
+    "count": 4,
+    "boss": 4,
+    "sampleIds": [
+      "dq48_boss",
+      "dq167_boss"
+    ],
+    "hpMin": 208,
+    "hpMax": 252,
+    "atkMin": 29,
+    "atkMax": 29
+  },
+  {
+    "slug": "arcidemone",
+    "name": "Arcidemone",
+    "count": 4,
+    "boss": 4,
+    "sampleIds": [
+      "dq120_boss",
+      "dq222_boss"
+    ],
+    "hpMin": 184,
+    "hpMax": 586,
+    "atkMin": 27,
+    "atkMax": 49
+  },
+  {
+    "slug": "genio-maledetto",
+    "name": "Genio Maledetto",
+    "count": 4,
+    "boss": 4,
+    "sampleIds": [
+      "dq132_boss",
+      "dq144_boss"
+    ],
+    "hpMin": 222,
+    "hpMax": 225,
+    "atkMin": 31,
+    "atkMax": 32
+  },
+  {
+    "slug": "lich-eterno",
+    "name": "Lich Eterno",
+    "count": 4,
+    "boss": 4,
+    "sampleIds": [
+      "dq75_boss",
+      "dq166_boss"
+    ],
+    "hpMin": 204,
+    "hpMax": 222,
+    "atkMin": 22,
+    "atkMax": 24
+  },
+  {
+    "slug": "lord-dei-boschi",
+    "name": "Lord dei Boschi",
+    "count": 4,
+    "boss": 4,
+    "sampleIds": [
+      "dq143_boss",
+      "dq236_boss"
+    ],
+    "hpMin": 198,
+    "hpMax": 230,
+    "atkMin": 22,
+    "atkMax": 31
+  },
+  {
+    "slug": "re-dei-lupi",
+    "name": "Re dei Lupi",
+    "count": 4,
+    "boss": 4,
+    "sampleIds": [
+      "dq142_boss",
+      "dq201_boss"
+    ],
+    "hpMin": 244,
+    "hpMax": 443,
+    "atkMin": 29,
+    "atkMax": 48
+  },
+  {
+    "slug": "re-dimenticato",
+    "name": "Re Dimenticato",
+    "count": 4,
+    "boss": 4,
+    "sampleIds": [
+      "dq43_boss",
+      "dq78_boss"
+    ],
+    "hpMin": 211,
+    "hpMax": 216,
+    "atkMin": 22,
+    "atkMax": 23
+  },
+  {
+    "slug": "re-orco-gruul",
+    "name": "Re Orco Gruul",
+    "count": 4,
+    "boss": 4,
+    "sampleIds": [
+      "dq79_boss",
+      "dq170_boss"
+    ],
+    "hpMin": 246,
+    "hpMax": 409,
+    "atkMin": 25,
+    "atkMax": 44
+  },
+  {
+    "slug": "signore-dell-inferno",
+    "name": "Signore dell'Inferno",
+    "count": 4,
+    "boss": 4,
+    "sampleIds": [
+      "dq95_boss",
+      "dq174_boss"
+    ],
+    "hpMin": 265,
+    "hpMax": 455,
+    "atkMin": 25,
+    "atkMax": 37
+  },
+  {
+    "slug": "yeti-alpha",
+    "name": "Yeti Alpha",
+    "count": 4,
+    "boss": 4,
+    "sampleIds": [
+      "dq177_boss",
+      "dq181_boss"
+    ],
+    "hpMin": 196,
+    "hpMax": 546,
+    "atkMin": 23,
+    "atkMax": 44
+  },
+  {
+    "slug": "aberrazione-abissale",
+    "name": "Aberrazione Abissale",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq18_ab1",
+      "dq18_ab2"
+    ],
+    "hpMin": 90,
+    "hpMax": 90,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "araldo-dell-apocalisse",
+    "name": "Araldo dell'Apocalisse",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq27_ar1",
+      "dq27_ar2"
+    ],
+    "hpMin": 95,
+    "hpMax": 95,
+    "atkMin": 22,
+    "atkMax": 22
+  },
+  {
+    "slug": "arciere-oscuro",
+    "name": "Arciere Oscuro",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq13_ao1",
+      "mq13_ao2"
+    ],
+    "hpMin": 45,
+    "hpMax": 45,
+    "atkMin": 14,
+    "atkMax": 14
+  },
+  {
+    "slug": "assassino-della-gilda",
+    "name": "Assassino della Gilda",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq31_as1",
+      "mq31_as2"
+    ],
+    "hpMin": 48,
+    "hpMax": 48,
+    "atkMin": 14,
+    "atkMax": 14
+  },
+  {
+    "slug": "cacciatore-d-ombra",
+    "name": "Cacciatore d'Ombra",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq23_cs1",
+      "mq23_cs2"
+    ],
+    "hpMin": 52,
+    "hpMax": 52,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "cacciatore-fatato",
+    "name": "Cacciatore Fatato",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq49_cf1",
+      "mq49_cf2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 14,
+    "atkMax": 14
+  },
+  {
+    "slug": "campione-insetto",
+    "name": "Campione Insetto",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq15_ci1",
+      "dq15_ci2"
+    ],
+    "hpMin": 85,
+    "hpMax": 85,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "campione-non-morto",
+    "name": "Campione Non-Morto",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq11_cnd1",
+      "dq11_cnd2"
+    ],
+    "hpMin": 82,
+    "hpMax": 82,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "campione-scheletro",
+    "name": "Campione Scheletro",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq26_cs1",
+      "dq26_cs2"
+    ],
+    "hpMin": 88,
+    "hpMax": 88,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "cane-rabbioso",
+    "name": "Cane Rabbioso",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq29_can1",
+      "fq29_can2"
+    ],
+    "hpMin": 20,
+    "hpMax": 20,
+    "atkMin": 6,
+    "atkMax": 6
+  },
+  {
+    "slug": "cavaliere-traditore",
+    "name": "Cavaliere Traditore",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq45_kt1",
+      "mq45_kt2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 14,
+    "atkMax": 14
+  },
+  {
+    "slug": "cavalletta-gigante",
+    "name": "Cavalletta Gigante",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq48_cav1",
+      "fq48_cav2"
+    ],
+    "hpMin": 19,
+    "hpMax": 19,
+    "atkMin": 5,
+    "atkMax": 5
+  },
+  {
+    "slug": "cinghialetto-furioso",
+    "name": "Cinghialetto Furioso",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq12_c1",
+      "fq12_c2"
+    ],
+    "hpMin": 20,
+    "hpMax": 20,
+    "atkMin": 6,
+    "atkMax": 6
+  },
+  {
+    "slug": "coboldo-guardia",
+    "name": "Coboldo Guardia",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq14_k1",
+      "fq14_k2"
+    ],
+    "hpMin": 18,
+    "hpMax": 18,
+    "atkMin": 5,
+    "atkMax": 5
+  },
+  {
+    "slug": "contadino-maledetto",
+    "name": "Contadino Maledetto",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq16_cm1",
+      "mq16_cm2"
+    ],
+    "hpMin": 42,
+    "hpMax": 42,
+    "atkMin": 10,
+    "atkMax": 10
+  },
+  {
+    "slug": "contrabbandiere-dell-ombra",
+    "name": "Contrabbandiere dell'Ombra",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq30_co1",
+      "mq30_co2"
+    ],
+    "hpMin": 48,
+    "hpMax": 48,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "corsaro-d-assalto",
+    "name": "Corsaro d'Assalto",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq3_cor1",
+      "mq3_cor2"
+    ],
+    "hpMin": 50,
+    "hpMax": 50,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "cucciolo-selvatico",
+    "name": "Cucciolo Selvatico",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq36_cuc1",
+      "fq36_cuc2"
+    ],
+    "hpMin": 18,
+    "hpMax": 18,
+    "atkMin": 5,
+    "atkMax": 5
+  },
+  {
+    "slug": "cultista-della-fiamma",
+    "name": "Cultista della Fiamma",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq25_cf1",
+      "mq25_cf2"
+    ],
+    "hpMin": 48,
+    "hpMax": 48,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "cultista-fanatico",
+    "name": "Cultista Fanatico",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq23_cf1",
+      "dq23_cf2"
+    ],
+    "hpMin": 85,
+    "hpMax": 85,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "cultista-folle",
+    "name": "Cultista Folle",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq40_m6",
+      "dq226_m1"
+    ],
+    "hpMin": 62,
+    "hpMax": 127,
+    "atkMin": 14,
+    "atkMax": 27
+  },
+  {
+    "slug": "cultista-guardia",
+    "name": "Cultista Guardia",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq7_c1",
+      "fq7_c2"
+    ],
+    "hpMin": 23,
+    "hpMax": 23,
+    "atkMin": 7,
+    "atkMax": 7
+  },
+  {
+    "slug": "demone-del-chaos",
+    "name": "Demone del Chaos",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq25_dc1",
+      "dq25_dc2"
+    ],
+    "hpMin": 90,
+    "hpMax": 90,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "demone-del-portale",
+    "name": "Demone del Portale",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq10_dp1",
+      "dq10_dp2"
+    ],
+    "hpMin": 85,
+    "hpMax": 85,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "diavoletto-della-dispensa",
+    "name": "Diavoletto della Dispensa",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq32_d1",
+      "fq32_d2"
+    ],
+    "hpMin": 18,
+    "hpMax": 18,
+    "atkMin": 5,
+    "atkMax": 5
+  },
+  {
+    "slug": "draghetto-di-bronzo",
+    "name": "Draghetto di Bronzo",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq8_db1",
+      "dq8_db2"
+    ],
+    "hpMin": 85,
+    "hpMax": 85,
+    "atkMin": 18,
+    "atkMax": 18
+  },
+  {
+    "slug": "draugr-fabbro",
+    "name": "Draugr Fabbro",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq4_dr1",
+      "mq4_dr2"
+    ],
+    "hpMin": 52,
+    "hpMax": 52,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "driade-corrotta",
+    "name": "Driade Corrotta",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq48_m1",
+      "dq209_m1"
+    ],
+    "hpMin": 46,
+    "hpMax": 159,
+    "atkMin": 5,
+    "atkMax": 22
+  },
+  {
+    "slug": "elementale-del-vento",
+    "name": "Elementale del Vento",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq17_ev1",
+      "mq17_ev2"
+    ],
+    "hpMin": 52,
+    "hpMax": 52,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "elementale-della-tempesta",
+    "name": "Elementale della Tempesta",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq12_et1",
+      "dq12_et2"
+    ],
+    "hpMin": 88,
+    "hpMax": 88,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "esperimento-vivente",
+    "name": "Esperimento Vivente",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq20_es1",
+      "mq20_es2"
+    ],
+    "hpMin": 50,
+    "hpMax": 50,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "fungo-camminante",
+    "name": "Fungo Camminante",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq38_fc1",
+      "fq38_fc2"
+    ],
+    "hpMin": 22,
+    "hpMax": 22,
+    "atkMin": 5,
+    "atkMax": 5
+  },
+  {
+    "slug": "gangster-cappello-grigio",
+    "name": "Gangster Cappello Grigio",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq9_g1",
+      "mq9_g2"
+    ],
+    "hpMin": 42,
+    "hpMax": 42,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "ghoul-glaciale",
+    "name": "Ghoul Glaciale",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq37_gg1",
+      "mq37_gg2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "giullare-maledetto",
+    "name": "Giullare Maledetto",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq43_gm1",
+      "mq43_gm2"
+    ],
+    "hpMin": 50,
+    "hpMax": 50,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "gladiatore",
+    "name": "Gladiatore",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq39_gl1",
+      "mq39_gl2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "golem-di-acido",
+    "name": "Golem di Acido",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq1_ga1",
+      "mq1_ga2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "granchio-gigante",
+    "name": "Granchio Gigante",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq30_gr1",
+      "fq30_gr2"
+    ],
+    "hpMin": 24,
+    "hpMax": 24,
+    "atkMin": 7,
+    "atkMax": 7
+  },
+  {
+    "slug": "guardia-corrotta",
+    "name": "Guardia Corrotta",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq104_m1",
+      "dq104_m3"
+    ],
+    "hpMin": 51,
+    "hpMax": 104,
+    "atkMin": 12,
+    "atkMax": 15
+  },
+  {
+    "slug": "guardiano-del-gelo",
+    "name": "Guardiano del Gelo",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq19_gg1",
+      "dq19_gg2"
+    ],
+    "hpMin": 88,
+    "hpMax": 88,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "guardiano-dell-abisso",
+    "name": "Guardiano dell'Abisso",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq11_ga1",
+      "mq11_ga2"
+    ],
+    "hpMin": 52,
+    "hpMax": 52,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "guardiano-della-fiamma",
+    "name": "Guardiano della Fiamma",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq29_gf1",
+      "mq29_gf2"
+    ],
+    "hpMin": 52,
+    "hpMax": 52,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "guardiano-di-cristallo",
+    "name": "Guardiano di Cristallo",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq26_gc1",
+      "mq26_gc2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "guardiano-di-edera",
+    "name": "Guardiano di Edera",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq46_ge1",
+      "mq46_ge2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "guardiano-meccanico",
+    "name": "Guardiano Meccanico",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq17_gm1",
+      "dq17_gm2"
+    ],
+    "hpMin": 88,
+    "hpMax": 88,
+    "atkMin": 18,
+    "atkMax": 18
+  },
+  {
+    "slug": "guardiano-reale-non-morto",
+    "name": "Guardiano Reale Non-Morto",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq33_grnd1",
+      "mq33_grnd2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "guerriero-del-ghiaccio",
+    "name": "Guerriero del Ghiaccio",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq28_gg1",
+      "mq28_gg2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "guerriero-di-cenere",
+    "name": "Guerriero di Cenere",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq50_gc1",
+      "mq50_gc2"
+    ],
+    "hpMin": 58,
+    "hpMax": 58,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "guerriero-mantide",
+    "name": "Guerriero Mantide",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq27_gm1",
+      "mq27_gm2"
+    ],
+    "hpMin": 52,
+    "hpMax": 52,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "guerriero-non-morto",
+    "name": "Guerriero Non-Morto",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq14_gnd1",
+      "mq14_gnd2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "imp-del-pozzo",
+    "name": "Imp del Pozzo",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq7_imp1",
+      "mq7_imp2"
+    ],
+    "hpMin": 40,
+    "hpMax": 40,
+    "atkMin": 10,
+    "atkMax": 10
+  },
+  {
+    "slug": "kraken-minore",
+    "name": "Kraken Minore",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq34_km1",
+      "mq34_km2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "ladro-del-bosco",
+    "name": "Ladro del Bosco",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq10_l1",
+      "fq10_l2"
+    ],
+    "hpMin": 22,
+    "hpMax": 22,
+    "atkMin": 7,
+    "atkMax": 7
+  },
+  {
+    "slug": "ladro-del-campanile",
+    "name": "Ladro del Campanile",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq42_lc1",
+      "fq42_lc2"
+    ],
+    "hpMin": 22,
+    "hpMax": 22,
+    "atkMin": 7,
+    "atkMax": 7
+  },
+  {
+    "slug": "larva-oscura",
+    "name": "Larva Oscura",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq39_lar1",
+      "fq39_lar2"
+    ],
+    "hpMin": 18,
+    "hpMax": 18,
+    "atkMin": 5,
+    "atkMax": 5
+  },
+  {
+    "slug": "lucertola-gigante",
+    "name": "Lucertola Gigante",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq22_lug1",
+      "mq22_lug2"
+    ],
+    "hpMin": 48,
+    "hpMax": 48,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "lumaca-gigante",
+    "name": "Lumaca Gigante",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq21_lum1",
+      "fq21_lum2"
+    ],
+    "hpMin": 22,
+    "hpMax": 22,
+    "atkMin": 5,
+    "atkMax": 5
+  },
+  {
+    "slug": "mangiatore-di-stella",
+    "name": "Mangiatore di Stella",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq38_ms1",
+      "mq38_ms2"
+    ],
+    "hpMin": 52,
+    "hpMax": 52,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "mannaro",
+    "name": "Mannaro",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq14_man1",
+      "dq14_man2"
+    ],
+    "hpMin": 88,
+    "hpMax": 88,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "marinaio-fantasma",
+    "name": "Marinaio Fantasma",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq15_mf1",
+      "mq15_mf2"
+    ],
+    "hpMin": 48,
+    "hpMax": 48,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "minatore-spettrale",
+    "name": "Minatore Spettrale",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq42_sp1",
+      "mq42_sp2"
+    ],
+    "hpMin": 52,
+    "hpMax": 52,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "monaco-della-lama",
+    "name": "Monaco della Lama",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq35_ml1",
+      "mq35_ml2"
+    ],
+    "hpMin": 52,
+    "hpMax": 52,
+    "atkMin": 14,
+    "atkMax": 14
+  },
+  {
+    "slug": "morto-potenziato",
+    "name": "Morto Potenziato",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq9_mp1",
+      "dq9_mp2"
+    ],
+    "hpMin": 82,
+    "hpMax": 82,
+    "atkMin": 18,
+    "atkMax": 18
+  },
+  {
+    "slug": "muffa-vivente",
+    "name": "Muffa Vivente",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq34_m1",
+      "fq34_m2"
+    ],
+    "hpMin": 24,
+    "hpMax": 24,
+    "atkMin": 5,
+    "atkMax": 5
+  },
+  {
+    "slug": "nano-corrotto",
+    "name": "Nano Corrotto",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq10_nc1",
+      "mq10_nc2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "nobile-scheletro",
+    "name": "Nobile Scheletro",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq47_ns1",
+      "mq47_ns2"
+    ],
+    "hpMin": 58,
+    "hpMax": 58,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "nomade-guerriero",
+    "name": "Nomade Guerriero",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq32_ng1",
+      "mq32_ng2"
+    ],
+    "hpMin": 52,
+    "hpMax": 52,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "non-morto-potenziato",
+    "name": "Non-Morto Potenziato",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq16_ndp1",
+      "dq16_ndp2"
+    ],
+    "hpMin": 82,
+    "hpMax": 82,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "ombra-nobile",
+    "name": "Ombra Nobile",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq5_on1",
+      "mq5_on2"
+    ],
+    "hpMin": 48,
+    "hpMax": 48,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "orco-di-brakgorr",
+    "name": "Orco di Brakgorr",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq12_or1",
+      "mq12_or2"
+    ],
+    "hpMin": 50,
+    "hpMax": 50,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "orrore-abissale",
+    "name": "Orrore Abissale",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq22_oa1",
+      "dq22_oa2"
+    ],
+    "hpMin": 92,
+    "hpMax": 92,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "pipistrello-spia",
+    "name": "Pipistrello Spia",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq47_pip1",
+      "fq47_pip2"
+    ],
+    "hpMin": 17,
+    "hpMax": 17,
+    "atkMin": 5,
+    "atkMax": 5
+  },
+  {
+    "slug": "pipistrello-vampiro",
+    "name": "Pipistrello Vampiro",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq40_pv1",
+      "fq40_pv2"
+    ],
+    "hpMin": 21,
+    "hpMax": 21,
+    "atkMin": 6,
+    "atkMax": 6
+  },
+  {
+    "slug": "ragno-selvatico",
+    "name": "Ragno Selvatico",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq11_rag1",
+      "fq11_rag2"
+    ],
+    "hpMin": 21,
+    "hpMax": 21,
+    "atkMin": 6,
+    "atkMax": 6
+  },
+  {
+    "slug": "raksha-cacciatore",
+    "name": "Raksha Cacciatore",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq41_rk1",
+      "mq41_rk2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 14,
+    "atkMax": 14
+  },
+  {
+    "slug": "rana-velenosa",
+    "name": "Rana Velenosa",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq4_f1",
+      "fq4_f2"
+    ],
+    "hpMin": 19,
+    "hpMax": 19,
+    "atkMin": 6,
+    "atkMax": 6
+  },
+  {
+    "slug": "rapace-della-cresta",
+    "name": "Rapace della Cresta",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq6_r1",
+      "fq6_r2"
+    ],
+    "hpMin": 20,
+    "hpMax": 20,
+    "atkMin": 7,
+    "atkMax": 7
+  },
+  {
+    "slug": "rapace-di-ghiaccio",
+    "name": "Rapace di Ghiaccio",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq35_rg1",
+      "fq35_rg2"
+    ],
+    "hpMin": 21,
+    "hpMax": 21,
+    "atkMin": 7,
+    "atkMax": 7
+  },
+  {
+    "slug": "sacerdote-del-serpente",
+    "name": "Sacerdote del Serpente",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq48_ss1",
+      "mq48_ss2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "salamandra-abissale",
+    "name": "Salamandra Abissale",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq13_sal1",
+      "dq13_sal2"
+    ],
+    "hpMin": 85,
+    "hpMax": 85,
+    "atkMin": 18,
+    "atkMax": 18
+  },
+  {
+    "slug": "satiro-guardiano",
+    "name": "Satiro Guardiano",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq2_sat1",
+      "mq2_sat2"
+    ],
+    "hpMin": 45,
+    "hpMax": 45,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "scimmia-selvatica",
+    "name": "Scimmia Selvatica",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq20_sc1",
+      "fq20_sc2"
+    ],
+    "hpMin": 20,
+    "hpMax": 20,
+    "atkMin": 6,
+    "atkMax": 6
+  },
+  {
+    "slug": "scorpione-del-deserto",
+    "name": "Scorpione del Deserto",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq37_sc1",
+      "fq37_sc2"
+    ],
+    "hpMin": 22,
+    "hpMax": 22,
+    "atkMin": 7,
+    "atkMax": 7
+  },
+  {
+    "slug": "serpe-delle-rovine",
+    "name": "Serpe delle Rovine",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq22_s1",
+      "fq22_s2"
+    ],
+    "hpMin": 21,
+    "hpMax": 21,
+    "atkMin": 6,
+    "atkMax": 6
+  },
+  {
+    "slug": "serpente-del-grano",
+    "name": "Serpente del Grano",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq8_ser1",
+      "fq8_ser2"
+    ],
+    "hpMin": 18,
+    "hpMax": 18,
+    "atkMin": 5,
+    "atkMax": 5
+  },
+  {
+    "slug": "serpente-del-veleno",
+    "name": "Serpente del Veleno",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq40_sv1",
+      "mq40_sv2"
+    ],
+    "hpMin": 52,
+    "hpMax": 52,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "serpente-della-fonte",
+    "name": "Serpente della Fonte",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq50_sa1",
+      "fq50_sa2"
+    ],
+    "hpMin": 21,
+    "hpMax": 21,
+    "atkMin": 6,
+    "atkMax": 6
+  },
+  {
+    "slug": "serpente-di-fiamma",
+    "name": "Serpente di Fiamma",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq45_sf1",
+      "fq45_sf2"
+    ],
+    "hpMin": 22,
+    "hpMax": 22,
+    "atkMin": 7,
+    "atkMax": 7
+  },
+  {
+    "slug": "serpente-di-palude",
+    "name": "Serpente di Palude",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq68_m1",
+      "dq214_m1"
+    ],
+    "hpMin": 39,
+    "hpMax": 113,
+    "atkMin": 7,
+    "atkMax": 24
+  },
+  {
+    "slug": "serpente-gigante",
+    "name": "Serpente Gigante",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq44_sg1",
+      "mq44_sg2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "servitore-del-vuoto",
+    "name": "Servitore del Vuoto",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq24_sv1",
+      "dq24_sv2"
+    ],
+    "hpMin": 92,
+    "hpMax": 92,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "signore-del-fango",
+    "name": "Signore del Fango",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq24_sf1",
+      "mq24_sf2"
+    ],
+    "hpMin": 55,
+    "hpMax": 55,
+    "atkMin": 13,
+    "atkMax": 13
+  },
+  {
+    "slug": "soldato-scheletro",
+    "name": "Soldato Scheletro",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq19_ss1",
+      "mq19_ss2"
+    ],
+    "hpMin": 50,
+    "hpMax": 50,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "spirito-del-grano",
+    "name": "Spirito del Grano",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq2_s1",
+      "fq2_s2"
+    ],
+    "hpMin": 20,
+    "hpMax": 20,
+    "atkMin": 6,
+    "atkMax": 6
+  },
+  {
+    "slug": "talpa-guerriera",
+    "name": "Talpa Guerriera",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq27_t1",
+      "fq27_t2"
+    ],
+    "hpMin": 21,
+    "hpMax": 21,
+    "atkMin": 6,
+    "atkMax": 6
+  },
+  {
+    "slug": "topo-guardia-del-re",
+    "name": "Topo Guardia del Re",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq33_tg1",
+      "fq33_tg2"
+    ],
+    "hpMin": 22,
+    "hpMax": 22,
+    "atkMin": 6,
+    "atkMax": 6
+  },
+  {
+    "slug": "troll-di-montagna",
+    "name": "Troll di Montagna",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "dq72_m1",
+      "dq177_m1"
+    ],
+    "hpMin": 48,
+    "hpMax": 107,
+    "atkMin": 7,
+    "atkMax": 22
+  },
+  {
+    "slug": "vedetta-oscura",
+    "name": "Vedetta Oscura",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "mq21_vo1",
+      "mq21_vo2"
+    ],
+    "hpMin": 45,
+    "hpMax": 45,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "zombi-del-rifiuto",
+    "name": "Zombi del Rifiuto",
+    "count": 4,
+    "boss": 0,
+    "sampleIds": [
+      "fq23_z1",
+      "fq23_z2"
+    ],
+    "hpMin": 24,
+    "hpMax": 24,
+    "atkMin": 7,
+    "atkMax": 7
+  },
+  {
+    "slug": "alchimista-vrex-il-pazzo",
+    "name": "Alchimista Vrex il Pazzo",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq1_vrex"
+    ],
+    "hpMin": 85,
+    "hpMax": 85,
+    "atkMin": 16,
+    "atkMax": 16
+  },
+  {
+    "slug": "ammiraglio-spettrale-ironbay",
+    "name": "Ammiraglio Spettrale Ironbay",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq18_ammir"
+    ],
+    "hpMin": 112,
+    "hpMax": 112,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "anaconda-reale-sseth",
+    "name": "Anaconda Reale Sseth",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq44_sseth"
+    ],
+    "hpMin": 115,
+    "hpMax": 115,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "antico-del-pantano-malagor",
+    "name": "Antico del Pantano Malagor",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq24_malg"
+    ],
+    "hpMin": 118,
+    "hpMax": 118,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "arcimago-rinnegato-thax",
+    "name": "Arcimago Rinnegato Thax",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq8_thax"
+    ],
+    "hpMin": 90,
+    "hpMax": 90,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "arconte-dei-venti-zephyrix",
+    "name": "Arconte dei Venti Zephyrix",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq17_zephy"
+    ],
+    "hpMin": 105,
+    "hpMax": 105,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "avatar-del-dio-del-fango",
+    "name": "Avatar del Dio del Fango",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq23_avatarmala"
+    ],
+    "hpMin": 225,
+    "hpMax": 225,
+    "atkMin": 29,
+    "atkMax": 29
+  },
+  {
+    "slug": "avatar-del-vuoto",
+    "name": "Avatar del Vuoto",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq24_avatarv"
+    ],
+    "hpMin": 235,
+    "hpMax": 235,
+    "atkMin": 31,
+    "atkMax": 31
+  },
+  {
+    "slug": "avatar-della-fiamma-antica",
+    "name": "Avatar della Fiamma Antica",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq29_avatar"
+    ],
+    "hpMin": 112,
+    "hpMax": 112,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "avatar-di-zogath",
+    "name": "Avatar di Zogath",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq40_boss"
+    ],
+    "hpMin": 535,
+    "hpMax": 535,
+    "atkMin": 40,
+    "atkMax": 40
+  },
+  {
+    "slug": "balrog",
+    "name": "Balrog",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq218_boss"
+    ],
+    "hpMin": 204,
+    "hpMax": 204,
+    "atkMin": 23,
+    "atkMax": 23
+  },
+  {
+    "slug": "basilisco-di-greystone",
+    "name": "Basilisco di Greystone",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq22_basil"
+    ],
+    "hpMin": 110,
+    "hpMax": 110,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "bestia-primordiale-del-baratro",
+    "name": "Bestia Primordiale del Baratro",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq18_bestia"
+    ],
+    "hpMin": 225,
+    "hpMax": 225,
+    "atkMin": 30,
+    "atkMax": 30
+  },
+  {
+    "slug": "boss-rexan-il-grigio",
+    "name": "Boss Rexan il Grigio",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq9_rexan"
+    ],
+    "hpMin": 95,
+    "hpMax": 95,
+    "atkMin": 18,
+    "atkMax": 18
+  },
+  {
+    "slug": "campione-korvas",
+    "name": "Campione Korvas",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq39_korvas"
+    ],
+    "hpMin": 115,
+    "hpMax": 115,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "campione-nomade-rakash",
+    "name": "Campione Nomade Rakash",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq32_rakash"
+    ],
+    "hpMin": 105,
+    "hpMax": 105,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "capitano-nero-halrek",
+    "name": "Capitano Nero Halrek",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq3_halrek"
+    ],
+    "hpMin": 95,
+    "hpMax": 95,
+    "atkMin": 18,
+    "atkMax": 18
+  },
+  {
+    "slug": "capitano-spettrale-korven",
+    "name": "Capitano Spettrale Korven",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq15_korven"
+    ],
+    "hpMin": 100,
+    "hpMax": 100,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "capo-spettrale-elden",
+    "name": "Capo Spettrale Elden",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq42_elden"
+    ],
+    "hpMin": 108,
+    "hpMax": 108,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "capobanda-l-ombra-revan",
+    "name": "Capobanda l'Ombra Revan",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq30_revan"
+    ],
+    "hpMin": 95,
+    "hpMax": 95,
+    "atkMin": 18,
+    "atkMax": 18
+  },
+  {
+    "slug": "cecchino-maestro-voss",
+    "name": "Cecchino Maestro Voss",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq13_voss"
+    ],
+    "hpMin": 88,
+    "hpMax": 88,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "chimera-del-deserto-cremisi",
+    "name": "Chimera del Deserto Cremisi",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq21_chim"
+    ],
+    "hpMin": 215,
+    "hpMax": 215,
+    "atkMin": 29,
+    "atkMax": 29
+  },
+  {
+    "slug": "comandante-traditore-aldran",
+    "name": "Comandante Traditore Aldran",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq45_aldran"
+    ],
+    "hpMin": 112,
+    "hpMax": 112,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "condottiero-spettrale-alderon",
+    "name": "Condottiero Spettrale Alderon",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq14_alderon"
+    ],
+    "hpMin": 108,
+    "hpMax": 108,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "costrutto-del-giudizio",
+    "name": "Costrutto del Giudizio",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq17_costr"
+    ],
+    "hpMin": 210,
+    "hpMax": 210,
+    "atkMin": 28,
+    "atkMax": 28
+  },
+  {
+    "slug": "cristallo-antico-violaceo",
+    "name": "Cristallo Antico Violaceo",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq26_criantico"
+    ],
+    "hpMin": 112,
+    "hpMax": 112,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "cuore-del-labirinto",
+    "name": "Cuore del Labirinto",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq46_cuore"
+    ],
+    "hpMin": 118,
+    "hpMax": 118,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "custode-dell-apocalisse",
+    "name": "Custode dell'Apocalisse",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq27_custode"
+    ],
+    "hpMin": 250,
+    "hpMax": 250,
+    "atkMin": 31,
+    "atkMax": 31
+  },
+  {
+    "slug": "diavolo-del-pozzo-skarrex",
+    "name": "Diavolo del Pozzo Skarrex",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq7_skarrex"
+    ],
+    "hpMin": 100,
+    "hpMax": 100,
+    "atkMin": 18,
+    "atkMax": 18
+  },
+  {
+    "slug": "domatore-corrotto-harlequin",
+    "name": "Domatore Corrotto Harlequin",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq43_harl"
+    ],
+    "hpMin": 105,
+    "hpMax": 105,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "drago-del-ghiaccio-eterno-glacyon",
+    "name": "Drago del Ghiaccio Eterno Glacyon",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq19_glacyon"
+    ],
+    "hpMin": 220,
+    "hpMax": 220,
+    "atkMin": 29,
+    "atkMax": 29
+  },
+  {
+    "slug": "drago-di-bronzo-keldrath",
+    "name": "Drago di Bronzo Keldrath",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq8_drkeld"
+    ],
+    "hpMin": 200,
+    "hpMax": 200,
+    "atkMin": 27,
+    "atkMax": 27
+  },
+  {
+    "slug": "fabbro-spettrale-maldren",
+    "name": "Fabbro Spettrale Maldren",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq4_maldren"
+    ],
+    "hpMin": 105,
+    "hpMax": 105,
+    "atkMin": 18,
+    "atkMax": 18
+  },
+  {
+    "slug": "generale-non-morto-valdric",
+    "name": "Generale Non-Morto Valdric",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq19_valdric"
+    ],
+    "hpMin": 118,
+    "hpMax": 118,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "generale-non-morto-valdrix",
+    "name": "Generale Non-Morto Valdrix",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq26_valdrix"
+    ],
+    "hpMin": 220,
+    "hpMax": 220,
+    "atkMin": 28,
+    "atkMax": 28
+  },
+  {
+    "slug": "golem-antico",
+    "name": "Golem Antico",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq6_gantico"
+    ],
+    "hpMin": 115,
+    "hpMax": 115,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "gran-maestro-corrotto-shin",
+    "name": "Gran Maestro Corrotto Shin",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq35_shin"
+    ],
+    "hpMin": 108,
+    "hpMax": 108,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "gran-sacerdote-pyrax",
+    "name": "Gran Sacerdote Pyrax",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq25_pyrax"
+    ],
+    "hpMin": 95,
+    "hpMax": 95,
+    "atkMin": 18,
+    "atkMax": 18
+  },
+  {
+    "slug": "grande-demonio-azkarath",
+    "name": "Grande Demonio Azkarath",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq10_azk"
+    ],
+    "hpMin": 195,
+    "hpMax": 195,
+    "atkMin": 28,
+    "atkMax": 28
+  },
+  {
+    "slug": "guardiano-del-portale-corrotto",
+    "name": "Guardiano del Portale Corrotto",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq36_guardp"
+    ],
+    "hpMin": 112,
+    "hpMax": 112,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "guardiano-dell-abisso-infinito",
+    "name": "Guardiano dell'Abisso Infinito",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq22_guardab"
+    ],
+    "hpMin": 230,
+    "hpMax": 230,
+    "atkMin": 30,
+    "atkMax": 30
+  },
+  {
+    "slug": "hydra-delle-profondita",
+    "name": "Hydra delle Profondità",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq13_hydra"
+    ],
+    "hpMin": 220,
+    "hpMax": 220,
+    "atkMin": 29,
+    "atkMax": 29
+  },
+  {
+    "slug": "intelletto-divoratore",
+    "name": "Intelletto Divoratore",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq38_intell"
+    ],
+    "hpMin": 105,
+    "hpMax": 105,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "lich-morvane",
+    "name": "Lich Morvane",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq9_morvane"
+    ],
+    "hpMin": 185,
+    "hpMax": 185,
+    "atkMin": 26,
+    "atkMax": 26
+  },
+  {
+    "slug": "lich-paludoso",
+    "name": "Lich Paludoso",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq114_boss"
+    ],
+    "hpMin": 209,
+    "hpMax": 209,
+    "atkMin": 30,
+    "atkMax": 30
+  },
+  {
+    "slug": "lord-dell-ombra",
+    "name": "Lord dell'Ombra",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq5_lord"
+    ],
+    "hpMin": 100,
+    "hpMax": 100,
+    "atkMin": 17,
+    "atkMax": 17
+  },
+  {
+    "slug": "lord-della-caccia-keroon",
+    "name": "Lord della Caccia Keroon",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq49_keroon"
+    ],
+    "hpMin": 115,
+    "hpMax": 115,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "lord-vampiro-valthar",
+    "name": "Lord Vampiro Valthar",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq20_valthar"
+    ],
+    "hpMin": 200,
+    "hpMax": 200,
+    "atkMin": 27,
+    "atkMax": 27
+  },
+  {
+    "slug": "maestro-dei-veleni-sorrax",
+    "name": "Maestro dei Veleni Sorrax",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq31_sorrax"
+    ],
+    "hpMin": 98,
+    "hpMax": 98,
+    "atkMin": 18,
+    "atkMax": 18
+  },
+  {
+    "slug": "maestro-dello-sguardo-nyssar",
+    "name": "Maestro dello Sguardo Nyssar",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq21_nyssar"
+    ],
+    "hpMin": 92,
+    "hpMax": 92,
+    "atkMin": 17,
+    "atkMax": 17
+  },
+  {
+    "slug": "mago-folle-kaelix",
+    "name": "Mago Folle Kaelix",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq20_kaelix"
+    ],
+    "hpMin": 98,
+    "hpMax": 98,
+    "atkMin": 18,
+    "atkMax": 18
+  },
+  {
+    "slug": "minotauro-di-mirthedge",
+    "name": "Minotauro di Mirthedge",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq2_mino"
+    ],
+    "hpMin": 110,
+    "hpMax": 110,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "mostro-del-lago-nero",
+    "name": "Mostro del Lago Nero",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq34_mostro"
+    ],
+    "hpMin": 118,
+    "hpMax": 118,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "naga-velenos",
+    "name": "Naga Velenos",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq40_naga"
+    ],
+    "hpMin": 112,
+    "hpMax": 112,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "necromante-supremo-nekrath",
+    "name": "Necromante Supremo Nekrath",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq16_nekrath"
+    ],
+    "hpMin": 185,
+    "hpMax": 185,
+    "atkMin": 26,
+    "atkMax": 26
+  },
+  {
+    "slug": "principe-spettrale-aldrus",
+    "name": "Principe Spettrale Aldrus",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq33_aldrus"
+    ],
+    "hpMin": 112,
+    "hpMax": 112,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "re-dei-ladri",
+    "name": "Re dei Ladri",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq207_boss"
+    ],
+    "hpMin": 222,
+    "hpMax": 222,
+    "atkMin": 26,
+    "atkMax": 26
+  },
+  {
+    "slug": "re-delle-ceneri-malachar",
+    "name": "Re delle Ceneri Malachar",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq50_malach"
+    ],
+    "hpMin": 120,
+    "hpMax": 120,
+    "atkMin": 22,
+    "atkMax": 22
+  },
+  {
+    "slug": "re-ghoul-ikarus-del-nord",
+    "name": "Re Ghoul Ikarus del Nord",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq37_ikarus"
+    ],
+    "hpMin": 115,
+    "hpMax": 115,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "re-non-morto-aldras",
+    "name": "Re Non-Morto Aldras",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq47_aldras"
+    ],
+    "hpMin": 120,
+    "hpMax": 120,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "re-oberon",
+    "name": "Re Oberon",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq235_boss"
+    ],
+    "hpMin": 568,
+    "hpMax": 568,
+    "atkMin": 44,
+    "atkMax": 44
+  },
+  {
+    "slug": "re-rospo",
+    "name": "Re Rospo",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq68_boss"
+    ],
+    "hpMin": 383,
+    "hpMax": 383,
+    "atkMin": 43,
+    "atkMax": 43
+  },
+  {
+    "slug": "regina-degli-insetti-oscura",
+    "name": "Regina degli Insetti Oscura",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq27_regina"
+    ],
+    "hpMin": 115,
+    "hpMax": 115,
+    "atkMin": 20,
+    "atkMax": 20
+  },
+  {
+    "slug": "regina-degli-insetti-oscuri",
+    "name": "Regina degli Insetti Oscuri",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq15_reginaoscura"
+    ],
+    "hpMin": 200,
+    "hpMax": 200,
+    "atkMin": 27,
+    "atkMax": 27
+  },
+  {
+    "slug": "sacerdote-dell-abisso",
+    "name": "Sacerdote dell'Abisso",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq11_sacer"
+    ],
+    "hpMin": 105,
+    "hpMax": 105,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "serpente-antico-nessath",
+    "name": "Serpente Antico Nessath",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq48_nessath"
+    ],
+    "hpMin": 118,
+    "hpMax": 118,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "signore-dei-mannari-volkaan",
+    "name": "Signore dei Mannari Volkaan",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq14_volkaan"
+    ],
+    "hpMin": 195,
+    "hpMax": 195,
+    "atkMin": 28,
+    "atkMax": 28
+  },
+  {
+    "slug": "signore-del-gelo-frimor",
+    "name": "Signore del Gelo Frimor",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq28_frimor"
+    ],
+    "hpMin": 120,
+    "hpMax": 120,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "signore-dell-ombra",
+    "name": "Signore dell'Ombra",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq23_signore"
+    ],
+    "hpMin": 108,
+    "hpMax": 108,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "signore-della-morte-mordrex",
+    "name": "Signore della Morte Mordrex",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq11_mordrex"
+    ],
+    "hpMin": 190,
+    "hpMax": 190,
+    "atkMin": 27,
+    "atkMax": 27
+  },
+  {
+    "slug": "signore-nano-dorgrim-corrotto",
+    "name": "Signore Nano Dorgrim Corrotto",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq10_dorgrim"
+    ],
+    "hpMin": 110,
+    "hpMax": 110,
+    "atkMin": 19,
+    "atkMax": 19
+  },
+  {
+    "slug": "signore-raksha-tigraath",
+    "name": "Signore Raksha Tigraath",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq41_tigr"
+    ],
+    "hpMin": 118,
+    "hpMax": 118,
+    "atkMin": 22,
+    "atkMax": 22
+  },
+  {
+    "slug": "sommo-cultista",
+    "name": "Sommo Cultista",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq227_boss"
+    ],
+    "hpMin": 202,
+    "hpMax": 202,
+    "atkMin": 22,
+    "atkMax": 22
+  },
+  {
+    "slug": "spettro-del-sindaco",
+    "name": "Spettro del Sindaco",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq228_boss"
+    ],
+    "hpMin": 254,
+    "hpMax": 254,
+    "atkMin": 31,
+    "atkMax": 31
+  },
+  {
+    "slug": "spirito-dell-antichita",
+    "name": "Spirito dell'Antichità",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq183_boss"
+    ],
+    "hpMin": 262,
+    "hpMax": 262,
+    "atkMin": 22,
+    "atkMax": 22
+  },
+  {
+    "slug": "sposa-del-chaos",
+    "name": "Sposa del Chaos",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq25_sposa"
+    ],
+    "hpMin": 210,
+    "hpMax": 210,
+    "atkMin": 29,
+    "atkMax": 29
+  },
+  {
+    "slug": "strega-del-silenzio-morra",
+    "name": "Strega del Silenzio Morra",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq16_morra"
+    ],
+    "hpMin": 95,
+    "hpMax": 95,
+    "atkMin": 18,
+    "atkMax": 18
+  },
+  {
+    "slug": "strega-della-foresta",
+    "name": "Strega della Foresta",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq140_boss"
+    ],
+    "hpMin": 237,
+    "hpMax": 237,
+    "atkMin": 30,
+    "atkMax": 30
+  },
+  {
+    "slug": "titano-della-tempesta-zepheron",
+    "name": "Titano della Tempesta Zepheron",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq12_zepher"
+    ],
+    "hpMin": 210,
+    "hpMax": 210,
+    "atkMin": 29,
+    "atkMax": 29
+  },
+  {
+    "slug": "troll-delle-caverne",
+    "name": "Troll delle Caverne",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "e3"
+    ],
+    "hpMin": 95,
+    "hpMax": 95,
+    "atkMin": 16,
+    "atkMax": 16
+  },
+  {
+    "slug": "verme-delle-sabbie",
+    "name": "Verme delle Sabbie",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "dq238_boss"
+    ],
+    "hpMin": 240,
+    "hpMax": 240,
+    "atkMin": 26,
+    "atkMax": 26
+  },
+  {
+    "slug": "warlord-grommash",
+    "name": "Warlord Grommash",
+    "count": 2,
+    "boss": 2,
+    "sampleIds": [
+      "mq12_grommash"
+    ],
+    "hpMin": 115,
+    "hpMax": 115,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "ape-regina-velena",
+    "name": "Ape Regina Velena",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq18_regina"
+    ],
+    "hpMin": 42,
+    "hpMax": 42,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "aquila-maledetta",
+    "name": "Aquila Maledetta",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq6_aquila"
+    ],
+    "hpMin": 42,
+    "hpMax": 42,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "arbusto-carnivoro",
+    "name": "Arbusto Carnivoro",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq31_arb"
+    ],
+    "hpMin": 44,
+    "hpMax": 44,
+    "atkMin": 10,
+    "atkMax": 10
+  },
+  {
+    "slug": "boa-del-granaio",
+    "name": "Boa del Granaio",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq8_boa"
+    ],
+    "hpMin": 44,
+    "hpMax": 44,
+    "atkMin": 10,
+    "atkMax": 10
+  },
+  {
+    "slug": "cane-capo-verdebava",
+    "name": "Cane Capo Verdebava",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq29_cancapo"
+    ],
+    "hpMin": 36,
+    "hpMax": 36,
+    "atkMin": 10,
+    "atkMax": 10
+  },
+  {
+    "slug": "capo-vampiro-notturno",
+    "name": "Capo Vampiro Notturno",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq40_capovamp"
+    ],
+    "hpMin": 44,
+    "hpMax": 44,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "capobanda-brenn",
+    "name": "Capobanda Brenn",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq42_capob"
+    ],
+    "hpMin": 44,
+    "hpMax": 44,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "capobanda-fulmine",
+    "name": "Capobanda Fulmine",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq10_fulmine"
+    ],
+    "hpMin": 42,
+    "hpMax": 42,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "capobranco-scarface",
+    "name": "Capobranco Scarface",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq3_scarface"
+    ],
+    "hpMin": 44,
+    "hpMax": 44,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "cavalletta-sciamana",
+    "name": "Cavalletta Sciamana",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq48_sciamana"
+    ],
+    "hpMin": 38,
+    "hpMax": 38,
+    "atkMin": 9,
+    "atkMax": 9
+  },
+  {
+    "slug": "cinghiale-delle-zanne-di-ferro",
+    "name": "Cinghiale delle Zanne di Ferro",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq12_zanne"
+    ],
+    "hpMin": 46,
+    "hpMax": 46,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "coboldo-furbone-tipit",
+    "name": "Coboldo Furbone Tipit",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq14_tipit"
+    ],
+    "hpMin": 32,
+    "hpMax": 32,
+    "atkMin": 9,
+    "atkMax": 9
+  },
+  {
+    "slug": "corvo-oscuro-del-necromante",
+    "name": "Corvo Oscuro del Necromante",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq47_corvo"
+    ],
+    "hpMin": 40,
+    "hpMax": 40,
+    "atkMin": 10,
+    "atkMax": 10
+  },
+  {
+    "slug": "demone-minore",
+    "name": "Demone Minore",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "dq222_m3"
+    ],
+    "hpMin": 100,
+    "hpMax": 100,
+    "atkMin": 27,
+    "atkMax": 27
+  },
+  {
+    "slug": "diavoletto-capo-brux",
+    "name": "Diavoletto Capo Brux",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq32_brux"
+    ],
+    "hpMin": 38,
+    "hpMax": 38,
+    "atkMin": 10,
+    "atkMax": 10
+  },
+  {
+    "slug": "falco-glaciale",
+    "name": "Falco Glaciale",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq35_falcog"
+    ],
+    "hpMin": 44,
+    "hpMax": 44,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "falco-maledetto-di-vantis",
+    "name": "Falco Maledetto di Vantis",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq28_falco"
+    ],
+    "hpMin": 50,
+    "hpMax": 50,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "fantasma-del-locandiere",
+    "name": "Fantasma del Locandiere",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq9_fant"
+    ],
+    "hpMin": 35,
+    "hpMax": 35,
+    "atkMin": 9,
+    "atkMax": 9
+  },
+  {
+    "slug": "fantasma-del-palcoscenico",
+    "name": "Fantasma del Palcoscenico",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq49_fanpal"
+    ],
+    "hpMin": 44,
+    "hpMax": 44,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "femmina-alfa",
+    "name": "Femmina Alfa",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq1_alfa"
+    ],
+    "hpMin": 36,
+    "hpMax": 36,
+    "atkMin": 9,
+    "atkMax": 9
+  },
+  {
+    "slug": "fungo-antico",
+    "name": "Fungo Antico",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq38_fantico"
+    ],
+    "hpMin": 42,
+    "hpMax": 42,
+    "atkMin": 9,
+    "atkMax": 9
+  },
+  {
+    "slug": "gatto-selvatico-di-amberveil",
+    "name": "Gatto Selvatico di Amberveil",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq36_gattosel"
+    ],
+    "hpMin": 46,
+    "hpMax": 46,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "goblin-delle-rocce",
+    "name": "Goblin delle Rocce",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "e1"
+    ],
+    "hpMin": 22,
+    "hpMax": 22,
+    "atkMin": 6,
+    "atkMax": 6
+  },
+  {
+    "slug": "granchio-antico",
+    "name": "Granchio Antico",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq30_grantico"
+    ],
+    "hpMin": 44,
+    "hpMax": 44,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "grifone-guardiano",
+    "name": "Grifone Guardiano",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "dq21_grif"
+    ],
+    "hpMin": 95,
+    "hpMax": 95,
+    "atkMin": 21,
+    "atkMax": 21
+  },
+  {
+    "slug": "lumaca-madre",
+    "name": "Lumaca Madre",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq21_madre"
+    ],
+    "hpMin": 48,
+    "hpMax": 48,
+    "atkMin": 9,
+    "atkMax": 9
+  },
+  {
+    "slug": "lupo-grigio-anziano",
+    "name": "Lupo Grigio Anziano",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq5_anziano"
+    ],
+    "hpMin": 38,
+    "hpMax": 38,
+    "atkMin": 10,
+    "atkMax": 10
+  },
+  {
+    "slug": "mobili-animati",
+    "name": "Mobili Animati",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq9_mob"
+    ],
+    "hpMin": 22,
+    "hpMax": 22,
+    "atkMin": 5,
+    "atkMax": 5
+  },
+  {
+    "slug": "pipistrello-capo-notturno",
+    "name": "Pipistrello Capo Notturno",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq26_pipcapo"
+    ],
+    "hpMin": 42,
+    "hpMax": 42,
+    "atkMin": 10,
+    "atkMax": 10
+  },
+  {
+    "slug": "polpo-del-lago-cupo",
+    "name": "Polpo del Lago Cupo",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq44_polpo"
+    ],
+    "hpMin": 52,
+    "hpMax": 52,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "poltergeist-della-biblioteca",
+    "name": "Poltergeist della Biblioteca",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq17_polt"
+    ],
+    "hpMin": 33,
+    "hpMax": 33,
+    "atkMin": 9,
+    "atkMax": 9
+  },
+  {
+    "slug": "ragno-tessitore",
+    "name": "Ragno Tessitore",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq11_tess"
+    ],
+    "hpMin": 45,
+    "hpMax": 45,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "rana-madre",
+    "name": "Rana Madre",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq4_madre"
+    ],
+    "hpMin": 42,
+    "hpMax": 42,
+    "atkMin": 10,
+    "atkMax": 10
+  },
+  {
+    "slug": "re-topo-settecode",
+    "name": "Re Topo Settecode",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq33_retopo"
+    ],
+    "hpMin": 46,
+    "hpMax": 46,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "scheletro-corazzato",
+    "name": "Scheletro Corazzato",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq13_cor"
+    ],
+    "hpMin": 44,
+    "hpMax": 44,
+    "atkMin": 10,
+    "atkMax": 10
+  },
+  {
+    "slug": "scheletro-puzzolente",
+    "name": "Scheletro Puzzolente",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq23_skp"
+    ],
+    "hpMin": 35,
+    "hpMax": 35,
+    "atkMin": 9,
+    "atkMax": 9
+  },
+  {
+    "slug": "sciamano-coboldo-grix",
+    "name": "Sciamano Coboldo Grix",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq16_grix"
+    ],
+    "hpMin": 40,
+    "hpMax": 40,
+    "atkMin": 10,
+    "atkMax": 10
+  },
+  {
+    "slug": "sciame-di-api-furiose",
+    "name": "Sciame di Api Furiose",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq18_sciame"
+    ],
+    "hpMin": 28,
+    "hpMax": 28,
+    "atkMin": 8,
+    "atkMax": 8
+  },
+  {
+    "slug": "scimmia-capo-rosso",
+    "name": "Scimmia Capo Rosso",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq20_scapo"
+    ],
+    "hpMin": 38,
+    "hpMax": 38,
+    "atkMin": 9,
+    "atkMax": 9
+  },
+  {
+    "slug": "scorticatore",
+    "name": "Scorticatore",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq39_scort"
+    ],
+    "hpMin": 48,
+    "hpMax": 48,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "serpe-velenosissima",
+    "name": "Serpe Velenosissima",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq22_vel"
+    ],
+    "hpMin": 44,
+    "hpMax": 44,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "serpente-di-fuoco-antico",
+    "name": "Serpente di Fuoco Antico",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq45_sfantico"
+    ],
+    "hpMin": 46,
+    "hpMax": 46,
+    "atkMin": 12,
+    "atkMax": 12
+  },
+  {
+    "slug": "spettro-antico",
+    "name": "Spettro Antico",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq2_antico"
+    ],
+    "hpMin": 40,
+    "hpMax": 40,
+    "atkMin": 10,
+    "atkMax": 10
+  },
+  {
+    "slug": "spirito-dell-acqua",
+    "name": "Spirito dell'Acqua",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq50_spirito"
+    ],
+    "hpMin": 44,
+    "hpMax": 44,
+    "atkMin": 11,
+    "atkMax": 11
+  },
+  {
+    "slug": "spirito-volpe",
+    "name": "Spirito Volpe",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq41_spvol"
+    ],
+    "hpMin": 24,
+    "hpMax": 24,
+    "atkMin": 7,
+    "atkMax": 7
+  },
+  {
+    "slug": "spora-mostruosa",
+    "name": "Spora Mostruosa",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq34_spora"
+    ],
+    "hpMin": 38,
+    "hpMax": 38,
+    "atkMin": 9,
+    "atkMax": 9
+  },
+  {
+    "slug": "talpa-capo",
+    "name": "Talpa Capo",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq27_tcapo"
+    ],
+    "hpMin": 40,
+    "hpMax": 40,
+    "atkMin": 10,
+    "atkMax": 10
+  },
+  {
+    "slug": "tomi-volanti",
+    "name": "Tomi Volanti",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq17_tomi"
+    ],
+    "hpMin": 18,
+    "hpMax": 18,
+    "atkMin": 5,
+    "atkMax": 5
+  },
+  {
+    "slug": "truffatore-vrannix",
+    "name": "Truffatore Vrannix",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq7_vrannix"
+    ],
+    "hpMin": 30,
+    "hpMax": 30,
+    "atkMin": 9,
+    "atkMax": 9
+  },
+  {
+    "slug": "viticci-striscianti",
+    "name": "Viticci Striscianti",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq31_vit"
+    ],
+    "hpMin": 18,
+    "hpMax": 18,
+    "atkMin": 4,
+    "atkMax": 4
+  },
+  {
+    "slug": "volpe-incantata",
+    "name": "Volpe Incantata",
+    "count": 2,
+    "boss": 0,
+    "sampleIds": [
+      "fq41_volpe"
+    ],
+    "hpMin": 40,
+    "hpMax": 40,
+    "atkMin": 10,
+    "atkMax": 10
+  }
+]

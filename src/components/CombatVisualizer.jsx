@@ -1,44 +1,47 @@
 import { useEffect, useRef, useState } from 'react';
 
-function HpBar({ cur, max, dead }) {
+function HpBar({ cur, max, dead, dying }) {
   const pct = max > 0 ? Math.max(0, Math.min(100, Math.round((cur / max) * 100))) : 0;
   const color = dead ? '#374151'
+    : dying ? '#f97316'
     : pct > 60 ? '#22c55e'
     : pct > 30 ? '#f59e0b'
     : '#ef4444';
   return (
-    <div style={{ height: 7, background: 'rgba(30,41,59,0.7)', borderRadius: 4, overflow: 'hidden', marginTop: 4 }}>
+    <div style={{ height: 8, background: 'rgba(30,41,59,0.78)', borderRadius: 4, overflow: 'hidden', marginTop: 5 }}>
       <div style={{
         height: '100%', width: `${pct}%`,
         background: color,
         borderRadius: 4,
         transition: 'width 0.5s ease, background 0.4s',
-        boxShadow: dead ? 'none' : `0 0 6px ${color}88`,
+        boxShadow: dead ? 'none' : `0 0 8px ${color}88`,
       }} />
     </div>
   );
 }
 
-function FloatNumber({ value, onDone }) {
+function FloatNumber({ value, kind = 'damage', onDone }) {
   useEffect(() => {
     const t = setTimeout(onDone, 1400);
     return () => clearTimeout(t);
   }, [onDone]);
+  const heal = kind === 'heal';
+  const color = heal ? '#4ade80' : '#ef4444';
   return (
     <div style={{
       position: 'absolute', top: -8, left: '50%', transform: 'translateX(-50%)',
-      color: '#ef4444', fontWeight: 900, fontSize: '1.3rem',
-      pointerEvents: 'none', zIndex: 10,
+      color, fontWeight: 900, fontSize: '1.35rem',
+      pointerEvents: 'none', zIndex: 20,
       animation: 'floatUp 1.4s ease forwards',
-      textShadow: '0 2px 8px #000, 0 0 12px #ef4444',
+      textShadow: `0 2px 8px #000, 0 0 13px ${color}`,
       whiteSpace: 'nowrap',
     }}>
-      -{value}
+      {heal ? '+' : '-'}{value}
     </div>
   );
 }
 
-function CombatantCard({ c, isActive, floats, isMobile, imgSrc }) {
+function CombatantCard({ c, isActive, floats, isMobile, imgSrc, cueTarget }) {
   const isDead = c.dead || c.hp <= 0;
   const isDying = c.dying && !c.dead;
   const [imgErr, setImgErr] = useState(false);
@@ -49,38 +52,44 @@ function CombatantCard({ c, isActive, floats, isMobile, imgSrc }) {
     : c.isPlayer ? '#6d28d9'
     : '#7f1d1d';
 
-  const bgColor = isDead ? 'rgba(17,24,39,0.6)'
+  const bgColor = isDead ? 'rgba(17,24,39,0.62)'
     : isActive ? (c.isPlayer
-        ? 'linear-gradient(135deg,rgba(120,80,10,0.45),rgba(15,23,42,0.95))'
-        : 'linear-gradient(135deg,rgba(120,20,20,0.55),rgba(15,23,42,0.95))')
+        ? 'linear-gradient(135deg,rgba(120,80,10,0.45),rgba(15,23,42,0.96))'
+        : 'linear-gradient(135deg,rgba(120,20,20,0.55),rgba(15,23,42,0.96))')
     : 'rgba(15,23,42,0.88)';
 
   const cardFloats = floats.filter(f => f.id === c.id);
-  const imgSize = isMobile ? 72 : 96;
+  const imgSize = isMobile ? 70 : 94;
+  const hpPct = c.maxHp > 0 ? Math.round((Math.max(0, c.hp) / c.maxHp) * 100) : 0;
 
   return (
     <div style={{
       position: 'relative',
       background: bgColor,
       border: `2px solid ${borderColor}`,
-      borderRadius: 14,
-      padding: isMobile ? '0.6rem' : '0.85rem',
-      opacity: isDead ? 0.45 : 1,
-      transition: 'border-color 0.3s, opacity 0.4s',
+      borderRadius: 12,
+      padding: isMobile ? '0.58rem' : '0.82rem',
+      opacity: isDead ? 0.46 : 1,
+      transition: 'border-color 0.3s, opacity 0.4s, transform 0.2s',
+      transform: isActive ? 'translateY(-1px)' : 'none',
       boxShadow: isActive
         ? `0 0 22px ${c.isPlayer ? 'rgba(251,191,36,0.35)' : 'rgba(239,68,68,0.4)'}, 0 8px 24px rgba(0,0,0,0.4)`
+        : cueTarget ? `0 0 18px ${borderColor}66`
         : '0 4px 16px rgba(0,0,0,0.3)',
-      animation: cardFloats.length ? 'hitShake 0.45s ease' : 'none',
+      animation: cardFloats.length ? 'hitShake 0.45s ease' : cueTarget ? 'combatPulseRing 1.15s ease infinite' : 'none',
+      overflow: 'hidden',
     }}>
+      {cueTarget && (
+        <div style={{ position:'absolute', inset:0, pointerEvents:'none', background:`radial-gradient(circle at 50% 18%, ${borderColor}26, transparent 54%)` }} />
+      )}
       {cardFloats.map(f => (
-        <FloatNumber key={f.key} value={f.dmg} onDone={f.onDone} />
+        <FloatNumber key={f.key} value={f.amount} kind={f.kind} onDone={f.onDone} />
       ))}
 
-      {/* Portrait */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 8, position:'relative' }}>
         <div style={{
           width: imgSize, height: imgSize, minWidth: imgSize, flexShrink: 0,
-          borderRadius: 12, overflow: 'hidden',
+          borderRadius: 10, overflow: 'hidden',
           border: `2px solid ${borderColor}`,
           background: 'rgba(15,23,42,0.8)',
           boxShadow: isActive ? `0 0 14px ${c.isPlayer ? '#fbbf2466' : '#ef444466'}` : '0 4px 12px rgba(0,0,0,0.4)',
@@ -97,7 +106,7 @@ function CombatantCard({ c, isActive, floats, isMobile, imgSrc }) {
             />
           ) : (
             <span style={{
-              fontSize: isMobile ? '2.2rem' : '2.8rem',
+              fontSize: isMobile ? '2.15rem' : '2.75rem',
               filter: isDead ? 'grayscale(1)' : isActive ? 'drop-shadow(0 0 6px gold)' : 'none',
               lineHeight: 1,
             }}>
@@ -114,7 +123,7 @@ function CombatantCard({ c, isActive, floats, isMobile, imgSrc }) {
             fontWeight: 700,
             whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
           }}>
-            {c.name}{c.isBoss ? ' ⭐' : ''}
+            {c.name}{c.isBoss ? ' ★' : ''}
           </div>
           <div style={{ fontSize: '0.65rem', color: '#64748b', marginTop: 1 }}>
             {isDead ? 'Eliminato' : isDying ? '🕯️ Morente' : c.isSummon ? '🔮 Evocato' : c.isPlayer ? 'Alleato' : 'Nemico'}
@@ -135,19 +144,17 @@ function CombatantCard({ c, isActive, floats, isMobile, imgSrc }) {
         </div>
       </div>
 
-      {/* HP */}
-      <HpBar cur={c.hp} max={c.maxHp} dead={isDead} />
+      <HpBar cur={c.hp} max={c.maxHp} dead={isDead} dying={isDying} />
       <div style={{
         display: 'flex', justifyContent: 'space-between',
         fontSize: '0.68rem', color: '#94a3b8', marginTop: 3,
       }}>
         <span>❤️ {Math.max(0, c.hp)}/{c.maxHp}</span>
-        <span>{c.maxHp > 0 ? Math.round((Math.max(0, c.hp) / c.maxHp) * 100) : 0}%</span>
+        <span>{hpPct}%</span>
       </div>
 
-      {/* Stats row */}
       <div style={{
-        display: 'flex', gap: 8, marginTop: 5,
+        display: 'flex', gap: 8, marginTop: 6,
         fontSize: '0.62rem', color: '#64748b',
       }}>
         <span>⚔️ {c.atk}</span>
@@ -155,7 +162,6 @@ function CombatantCard({ c, isActive, floats, isMobile, imgSrc }) {
         {c.mag > 0 && <span>✨ {c.mag}</span>}
       </div>
 
-      {/* Status effects */}
       {(c.statusEffects || []).length > 0 && (
         <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap', marginTop: 5 }}>
           {c.statusEffects.map(fx => (
@@ -173,7 +179,35 @@ function CombatantCard({ c, isActive, floats, isMobile, imgSrc }) {
   );
 }
 
-export default function CombatVisualizer({ combat, myId, isMobile, images = {} }) {
+function InitiativeStrip({ combatants, activeIdx }) {
+  return (
+    <div style={{ display:'flex', gap:6, overflowX:'auto', padding:'0.35rem 0.2rem 0.65rem', marginBottom:10 }}>
+      {combatants.map((c, i) => {
+        const active = i === activeIdx;
+        const down = c.dead || c.hp <= 0;
+        return (
+          <div key={`${c.id || i}_turn`} style={{
+            minWidth: 92,
+            padding:'0.35rem 0.45rem',
+            borderRadius:8,
+            border:`1px solid ${active ? '#fbbf24' : down ? '#374151' : c.isPlayer ? '#4c1d95' : '#7f1d1d'}`,
+            background: active ? 'rgba(251,191,36,0.13)' : 'rgba(15,23,42,0.62)',
+            color: down ? '#475569' : active ? '#fde68a' : '#94a3b8',
+            fontSize:'0.65rem',
+            flexShrink:0,
+          }}>
+            <div style={{ fontFamily:"'Cinzel',serif", fontWeight:700, whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+              {active ? '▶ ' : ''}{c.emoji || (c.isPlayer ? '🧙' : '👾')} {c.name}
+            </div>
+            <div style={{ color: down ? '#374151' : '#64748b', marginTop:2 }}>{down ? 'fuori' : `${Math.max(0, c.hp)} HP`}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+export default function CombatVisualizer({ combat, myId, isMobile, images = {}, cue = null }) {
   const { combatants = [], turn = 0, round = 1 } = combat || {};
   const activeIdx = turn % Math.max(1, combatants.length);
 
@@ -184,11 +218,14 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {} }
     const newFloats = [];
     combatants.forEach(c => {
       const prev = prevHpRef.current[c.id];
-      if (prev !== undefined && c.hp < prev && prev > 0) {
+      if (prev !== undefined && c.hp !== prev) {
         const key = `${c.id}_${Date.now()}_${Math.random()}`;
-        const dmg = prev - c.hp;
+        const delta = Math.abs(c.hp - prev);
         newFloats.push({
-          id: c.id, dmg, key,
+          id: c.id,
+          amount: delta,
+          kind: c.hp > prev ? 'heal' : 'damage',
+          key,
           onDone: () => setFloats(f => f.filter(x => x.key !== key)),
         });
       }
@@ -200,6 +237,7 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {} }
   const players = combatants.filter(c => c.isPlayer);
   const monsters = combatants.filter(c => !c.isPlayer);
   const activeCombatant = combatants[activeIdx];
+  const cueTargetId = cue?.type && activeCombatant?.id;
 
   const colStyle = {
     display: 'flex',
@@ -211,7 +249,6 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {} }
 
   return (
     <div style={{ fontFamily: 'inherit' }}>
-      {/* Round banner */}
       <div style={{
         textAlign: 'center', marginBottom: isMobile ? 10 : 14,
         padding: '0.5rem 1rem',
@@ -225,20 +262,40 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {} }
         {activeCombatant && (
           <span style={{ color: '#94a3b8', fontSize: '0.75rem', marginLeft: 12 }}>
             Turno di <strong style={{ color: activeCombatant.isPlayer ? '#ddd6fe' : '#fca5a5' }}>{activeCombatant.name}</strong>
+            {activeCombatant.id === myId && <span style={{ color:'#fbbf24' }}> · sei tu</span>}
           </span>
         )}
       </div>
 
-      {/* Battlefield */}
+      <InitiativeStrip combatants={combatants} activeIdx={activeIdx} />
+
+      {cue && (
+        <div style={{
+          margin:'0 0 12px',
+          padding:'0.65rem 0.8rem',
+          borderRadius:10,
+          border:`1px solid ${cue.color}`,
+          background: cue.bg,
+          display:'flex',
+          alignItems:'center',
+          justifyContent:'center',
+          gap:10,
+          animation:'combatCueIn .24s ease both',
+        }}>
+          <span style={{ fontSize:'1.3rem' }}>{cue.icon}</span>
+          <span style={{ color:cue.color, fontFamily:"'Cinzel Decorative',serif", fontWeight:800, letterSpacing:'0.06em' }}>{cue.title}</span>
+          {cue.value && <span style={{ color:'#e2e8f0', fontSize:'0.78rem' }}>{cue.value}</span>}
+        </div>
+      )}
+
       <div style={{
         display: 'flex',
         gap: isMobile ? 8 : 16,
         alignItems: 'flex-start',
       }}>
-        {/* Party */}
         <div style={colStyle}>
           <div style={{
-            fontSize: '0.65rem', color: '#6d28d9', fontFamily: "'Cinzel',serif",
+            fontSize: '0.65rem', color: '#a78bfa', fontFamily: "'Cinzel',serif",
             letterSpacing: '0.1em', textAlign: 'center', marginBottom: 4,
             textTransform: 'uppercase',
           }}>
@@ -252,6 +309,7 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {} }
               floats={floats}
               isMobile={isMobile}
               imgSrc={images[c.id] || ''}
+              cueTarget={cueTargetId === c.id}
             />
           ))}
           {players.length === 0 && (
@@ -261,26 +319,18 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {} }
           )}
         </div>
 
-        {/* VS divider */}
         <div style={{
           display: 'flex', flexDirection: 'column', alignItems: 'center',
           gap: 6, paddingTop: 28, flexShrink: 0,
         }}>
-          <div style={{
-            width: 2, flex: 1, minHeight: 40,
-            background: 'linear-gradient(180deg,transparent,rgba(239,68,68,0.4),transparent)',
-          }} />
+          <div style={{ width: 2, flex: 1, minHeight: 40, background: 'linear-gradient(180deg,transparent,rgba(239,68,68,0.4),transparent)' }} />
           <span style={{ fontSize: isMobile ? '1.2rem' : '1.5rem', filter: 'drop-shadow(0 0 6px #ef4444)' }}>⚔️</span>
-          <div style={{
-            width: 2, flex: 1, minHeight: 40,
-            background: 'linear-gradient(180deg,transparent,rgba(239,68,68,0.4),transparent)',
-          }} />
+          <div style={{ width: 2, flex: 1, minHeight: 40, background: 'linear-gradient(180deg,transparent,rgba(239,68,68,0.4),transparent)' }} />
         </div>
 
-        {/* Monsters */}
         <div style={colStyle}>
           <div style={{
-            fontSize: '0.65rem', color: '#7f1d1d', fontFamily: "'Cinzel',serif",
+            fontSize: '0.65rem', color: '#f87171', fontFamily: "'Cinzel',serif",
             letterSpacing: '0.1em', textAlign: 'center', marginBottom: 4,
             textTransform: 'uppercase',
           }}>
@@ -294,6 +344,7 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {} }
               floats={floats}
               isMobile={isMobile}
               imgSrc={images[c.id] || ''}
+              cueTarget={cueTargetId === c.id}
             />
           ))}
           {monsters.length === 0 && (

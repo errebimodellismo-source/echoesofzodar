@@ -10,7 +10,9 @@
       "Bash(node -e \"const fs=require\\('fs'\\); const content=fs.readFileSync\\('src/App.jsx','utf8'\\); const lines=content.split\\('\\\\n'\\); for\\(let i=2583;i<=2610;i++\\) console.log\\(i+': '+JSON.stringify\\(lines[i-1]\\)\\);\")",
       "Bash(node -e ' *)",
       "Bash(npx netlify *)",
-      "Read(//c/Users/roppo/echoesofzodar/dist/assets/**)"
+      "Read(//c/Users/roppo/echoesofzodar/dist/assets/**)",
+      "Bash(Sort-Object)",
+      "Bash(node \"c:/Users/roppo/echoesofzodar/tmp/gen_quests.cjs\")"
     ],
     "additionalDirectories": [
       "C:\\Users\\roppo\\Downloads"

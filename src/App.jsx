@@ -27,9 +27,16 @@ import audioManager from "./utils/audioManager";
   style.textContent = `
     @keyframes fadeUp   { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:none} }
     @keyframes blink    { 0%,100%{opacity:1} 50%{opacity:0} }
+    @keyframes pulse    { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.72;transform:scale(1.02)} }
     @keyframes goldenGlow { 0%,100%{text-shadow:0 0 20px rgba(251,191,36,.5)} 50%{text-shadow:0 0 50px rgba(251,191,36,.9),0 0 100px rgba(245,158,11,.4)} }
     @keyframes legNotifIn { from{opacity:0;transform:translateY(-40px) scale(0.92)} to{opacity:1;transform:translateY(0) scale(1)} }
     @keyframes logAutoDismiss { from{width:100%} to{width:0%} }
+    @keyframes floatUp { 0%{opacity:0;transform:translate(-50%,10px) scale(.9)} 18%{opacity:1} 100%{opacity:0;transform:translate(-50%,-42px) scale(1.08)} }
+    @keyframes hitShake { 0%,100%{transform:translateX(0)} 18%{transform:translateX(-6px)} 36%{transform:translateX(5px)} 54%{transform:translateX(-3px)} 72%{transform:translateX(2px)} }
+    @keyframes combatCueIn { 0%{opacity:0;transform:translateY(10px) scale(.96)} 18%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:1;transform:translateY(0) scale(1)} }
+    @keyframes combatPulseRing { 0%,100%{box-shadow:0 0 0 rgba(251,191,36,0)} 50%{box-shadow:0 0 26px rgba(251,191,36,.28)} }
+    @keyframes dice-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
+    .dice-spin { animation:dice-spin .55s linear infinite; }
     @keyframes restOverlayIn { from{opacity:0} to{opacity:1} }
     @keyframes restStarFloat { 0%{opacity:0;transform:translateY(0) scale(.7)} 45%{opacity:.85} 100%{opacity:0;transform:translateY(-70px) scale(1.1)} }
     @keyframes restSigilPulse { 0%,100%{filter:drop-shadow(0 0 18px rgba(34,211,238,.3)) drop-shadow(0 0 42px rgba(251,191,36,.16));transform:scale(1)} 50%{filter:drop-shadow(0 0 32px rgba(34,211,238,.55)) drop-shadow(0 0 70px rgba(251,191,36,.28));transform:scale(1.015)} }
@@ -61,12 +68,13 @@ import audioManager from "./utils/audioManager";
 /* ----------------------------------------------
    CONSTANTS
 ---------------------------------------------- */
-const DIFF_COLOR = { facile:"#22c55e", medio:"#f97316", difficile:"#ef4444" };
+const DIFF_COLOR = { facile:"#22c55e", medio:"#f97316", difficile:"#ef4444", epica:"#a855f7" };
 function normalizeMissionDifficulty(value) {
   const key = String(value || "").trim().toLowerCase();
   if(key === "facile") return "facile";
   if(key === "difficile") return "difficile";
-  if(key === "speciale" || key === "molto difficile" || key === "leggendario") return "difficile";
+  if(key === "epica" || key === "epico" || key === "epic" || key === "leggendaria" || key === "leggendario") return "epica";
+  if(key === "speciale" || key === "molto difficile") return "difficile";
   return "medio";
 }
 function missionDifficultyLabel(value) {
@@ -74,11 +82,57 @@ function missionDifficultyLabel(value) {
     facile: "Facile",
     medio: "Medio",
     difficile: "Difficile",
+    epica: "Epica",
   })[normalizeMissionDifficulty(value)];
+}
+function questCombatSteps(q) {
+  return (q?.steps || []).filter(step => step?.type === "combat");
+}
+function questMonsters(q) {
+  const fromSteps = questCombatSteps(q).flatMap(step => step.monsters || []);
+  return fromSteps.length ? fromSteps : (q?.enemies || []);
+}
+function questBossCount(q) {
+  return questMonsters(q).filter(m => m?.isBoss || /boss|capo|signore|regina|re\b|troll|drago|lich/i.test(m?.name || "")).length;
+}
+function questRecommendedLevel(q) {
+  if(Number.isFinite(Number(q?.recommendedLevel))) return Math.max(1, Number(q.recommendedLevel));
+  if(Number.isFinite(Number(q?.minLevel))) return Math.max(1, Number(q.minLevel));
+  const diff = normalizeMissionDifficulty(q?.difficulty);
+  const diffBase = { facile:1, medio:3, difficile:6, epica:10 }[diff] || 3;
+  const monsters = questMonsters(q);
+  const maxHp = Math.max(0, ...monsters.map(m => Number(m?.maxHp || m?.hp || 0)));
+  const maxAtk = Math.max(0, ...monsters.map(m => Number(m?.atk || 0)));
+  const pressure = Math.floor(Math.max(maxHp / 45, maxAtk / 5, monsters.length / 2));
+  return Math.max(1, Math.min(20, diffBase + pressure + questBossCount(q)));
+}
+function questRiskProfile(q, partyPlayers = []) {
+  const monsters = questMonsters(q);
+  const bosses = questBossCount(q);
+  const combatCount = questCombatSteps(q).length;
+  const recommendedLevel = questRecommendedLevel(q);
+  const avgLevel = partyPlayers.length
+    ? partyPlayers.reduce((sum, p) => sum + Number(p?.level || 1), 0) / partyPlayers.length
+    : 1;
+  const levelDelta = avgLevel - recommendedLevel;
+  const diff = normalizeMissionDifficulty(q?.difficulty);
+  const dangerScore = ({ facile:1, medio:2, difficile:3, epica:4 }[diff] || 2) + bosses + Math.max(0, -levelDelta);
+  const risk = dangerScore >= 6 ? "Molto alta" : dangerScore >= 4 ? "Alta" : dangerScore >= 2 ? "Media" : "Bassa";
+  const riskColor = dangerScore >= 6 ? "#ef4444" : dangerScore >= 4 ? "#f97316" : dangerScore >= 2 ? "#fbbf24" : "#22c55e";
+  const advice = [];
+  if(levelDelta < -1) advice.push("Party sottolivellato");
+  if(bosses > 0) advice.push(`${bosses} boss`);
+  if(monsters.length >= 4) advice.push("Nemici numerosi");
+  if(combatCount >= 2) advice.push(`${combatCount} scontri`);
+  if((q?.steps || []).some(s => s?.type === "choice")) advice.push("Scelte narrative");
+  if(!combatCount) advice.push("Missione narrativa");
+  if(diff === "difficile" || diff === "epica" || levelDelta < 0) advice.push("Porta pozioni");
+  return { monsters, bosses, combatCount, recommendedLevel, avgLevel, risk, riskColor, advice: advice.slice(0, 4) };
 }
 const GAME_VERSION = "v1.4.0";
 const BACKGROUND_URL = "/assets/Zodarsfondo.png";
 const MAINTENANCE_CODE = "__maintenance__";
+const AUCTION_HOUSE_CODE = "__world_auctions__";
 const MASTER_PASSWORD = "ByBy101112!";
 const PORTRAIT_FALLBACK_URL = 'https://fv5-2.files.fm/thumb_show.php?i=p532qftvxy&view&v=1';
 function debugCharacterFlow(step, payload) {
@@ -1043,7 +1097,7 @@ function getDailyQuests(allQuests, counts = { facile: 3, medio: 3, difficile: 2 
     }
     return a;
   };
-  const byDiff = { facile: [], medio: [], difficile: [] };
+  const byDiff = { facile: [], medio: [], difficile: [], epica: [] };
   for (const q of allQuests) {
     if (!q.active) continue;
     const d = normalizeMissionDifficulty(q.difficulty);
@@ -1052,7 +1106,7 @@ function getDailyQuests(allQuests, counts = { facile: 3, medio: 3, difficile: 2 
   return [
     ...shuffle(byDiff.facile).slice(0, counts.facile),
     ...shuffle(byDiff.medio).slice(0, counts.medio),
-    ...shuffle(byDiff.difficile).slice(0, counts.difficile),
+    ...shuffle([...byDiff.difficile, ...byDiff.epica]).slice(0, counts.difficile),
   ];
 }
 function hoursUntilMidnight() {
@@ -1661,6 +1715,26 @@ function formatWeaponAttackLog(attacker, target, resolved, weaponName, targetHpA
   const resistLine = resisted ? `\n🛡️ **Resistenza!** Danno ridotto a **${resolved.damage}**` : "";
   const statusLine = statusApplied ? `\n${STATUS_EFFECTS[statusApplied]?.emoji || "✨"} **${target?.name}** è ora **${STATUS_EFFECTS[statusApplied]?.label || statusApplied}**!` : "";
   return `${header}\n${hitLine}\n✅ **Colpisce**${critNote}\n${dmgLine}\n${hpLine}${resistLine}${statusLine}`;
+}
+function combatLogCue(log) {
+  const text = String(log || "");
+  if(!text) return null;
+  const damageMatches = [...text.matchAll(/(?:Danno finale:|=>|danno.*?a|Danno ridotto a)\s*\**(\d+)\**/gi)].map(m => Number(m[1])).filter(Boolean);
+  const hpMatch = text.match(/recupera\s+\**(\d+)\**\s*HP/i);
+  const isCrit = /CRITICO|critico/i.test(text);
+  const isMiss = /Mancato|manca|fallisce/i.test(text);
+  const isHeal = /recupera|guarisce|cura/i.test(text);
+  const isResist = /Resistenza|ridotto/i.test(text);
+  const isSummon = /evocato|evoca/i.test(text);
+  const isDeath = /morte|muore|Eliminato|sconfitto/i.test(text);
+  if(isHeal) return { type:"heal", icon:"💚", title:"Cura", value:hpMatch ? `+${hpMatch[1]} HP` : "", color:"#22c55e", bg:"rgba(20,83,45,0.42)" };
+  if(isCrit) return { type:"crit", icon:"💥", title:"Colpo Critico", value:damageMatches.length ? `${Math.max(...damageMatches)} danni` : "", color:"#fbbf24", bg:"rgba(120,53,15,0.46)" };
+  if(isMiss) return { type:"miss", icon:"💨", title:"Mancato", value:"nessun danno", color:"#94a3b8", bg:"rgba(51,65,85,0.42)" };
+  if(isResist) return { type:"resist", icon:"🛡️", title:"Resistenza", value:damageMatches.length ? `${damageMatches.at(-1)} danni` : "danno ridotto", color:"#60a5fa", bg:"rgba(30,64,175,0.35)" };
+  if(isSummon) return { type:"summon", icon:"🔮", title:"Evocazione", value:"alleato in campo", color:"#a78bfa", bg:"rgba(76,29,149,0.38)" };
+  if(isDeath) return { type:"death", icon:"🕯️", title:"Momento Critico", value:"vita appesa a un filo", color:"#f87171", bg:"rgba(127,29,29,0.42)" };
+  if(damageMatches.length) return { type:"hit", icon:"⚔️", title:"Colpo a Segno", value:`${Math.max(...damageMatches)} danni`, color:"#f87171", bg:"rgba(127,29,29,0.38)" };
+  return { type:"event", icon:"✨", title:"Evento", value:"", color:"#cbd5e1", bg:"rgba(30,41,59,0.42)" };
 }
 function isDyingCombatant(combatant) {
   return !!combatant?.isPlayer && !!combatant?.dying && !combatant?.dead;
@@ -2458,6 +2532,28 @@ async function dbGetPlayerInventory(playerId, items = DEFAULT_ITEMS) {
 }
 async function dbRemovePlayerItem(rowId) {
   await supabase.from("player_items").delete().eq("id", rowId);
+}
+async function dbGetAuctionHouse() {
+  const { data, error } = await supabase.from("party_state").select("combat").eq("party_code", AUCTION_HOUSE_CODE).maybeSingle();
+  if(error) throw error;
+  const raw = data?.combat || {};
+  return {
+    auctions: Array.isArray(raw.auctions) ? raw.auctions : [],
+    updatedAt: raw.updatedAt || null,
+  };
+}
+async function dbSaveAuctionHouse(state) {
+  const payload = { auctions: state.auctions || [], updatedAt: new Date().toISOString() };
+  const { error } = await supabase.from("party_state").upsert({
+    party_code: AUCTION_HOUSE_CODE,
+    quest_active: false,
+    quest_id: "Mercato ad aste",
+    quest_step: 0,
+    quest_completed: [],
+    combat: payload,
+    updated_at: new Date().toISOString(),
+  }, { onConflict: "party_code" });
+  if(error) throw error;
 }
 async function dbDeleteCharacter(characterId) {
   await supabase.from("player_items").delete().eq("player_id", characterId);
@@ -3542,7 +3638,9 @@ function MasterPanel({ setScreen, authUser }) {
     setQuests(prev=>[...prev,q]); setEditQ({...q});
   }
   function saveEditQ() {
-    const normalizedQuest = normalizeQuest({ ...editQ, difficulty: normalizeMissionDifficulty(editQ?.difficulty) });
+    const rawDifficulty = String(editQ?.difficulty || "").trim().toLowerCase();
+    const savedDifficulty = rawDifficulty === "speciale" ? "speciale" : normalizeMissionDifficulty(editQ?.difficulty);
+    const normalizedQuest = normalizeQuest({ ...editQ, difficulty: savedDifficulty });
     setQuests(prev=>prev.map(x=>x.id===normalizedQuest.id ? normalizedQuest : x));
     setEditQ(null);
   }
@@ -3617,7 +3715,7 @@ function MasterPanel({ setScreen, authUser }) {
     const term = questSearch.trim().toLowerCase();
     const diff = normalizeMissionDifficulty(q.difficulty);
     const matchesTerm = !term || [q.title, q.desc, q.flavor, q.id].some(value => String(value || "").toLowerCase().includes(term));
-    const matchesDiff = questDifficultyFilter === "all" || diff === questDifficultyFilter || (questDifficultyFilter === "locked" && !!q.specialPassword);
+    const matchesDiff = questDifficultyFilter === "all" || diff === questDifficultyFilter || (questDifficultyFilter === "speciale" && !!q.specialPassword) || (questDifficultyFilter === "locked" && !!q.specialPassword);
     return matchesTerm && matchesDiff;
   });
   const visibleMonsters = monsters.filter(m => {
@@ -3794,6 +3892,7 @@ function MasterPanel({ setScreen, authUser }) {
               <option value="facile">Facili</option>
               <option value="medio">Medie</option>
               <option value="difficile">Difficili</option>
+              <option value="epica">Epiche</option>
               <option value="speciale">Speciali</option>
               <option value="locked">Con password</option>
             </select>
@@ -3846,10 +3945,11 @@ function MasterPanel({ setScreen, authUser }) {
               <div>
                 <label style={labelStyle}>Difficoltà</label>
                 <div style={{ color:"#64748b", fontSize:"0.7rem", marginBottom:4 }}>Facile/Medio/Difficile → rotazione giornaliera pubblica. <span style={{color:"#a78bfa"}}>Speciale</span> → solo con password.</div>
-                <select style={{...inputStyle,cursor:"pointer"}} value={normalizeMissionDifficulty(editQ.difficulty)} onChange={e=>setEditQ(q=>({...q,difficulty:e.target.value}))}>
+                <select style={{...inputStyle,cursor:"pointer"}} value={String(editQ.difficulty || "").toLowerCase() === "speciale" ? "speciale" : normalizeMissionDifficulty(editQ.difficulty)} onChange={e=>setEditQ(q=>({...q,difficulty:e.target.value}))}>
                   <option value="facile">Facile</option>
                   <option value="medio">Medio</option>
                   <option value="difficile">Difficile</option>
+                  <option value="epica">Epica</option>
                   <option value="speciale">Speciale (solo password)</option>
                 </select>
               </div>
@@ -6582,6 +6682,143 @@ function PartyTradeView({ me, players, groups, loading, equipment, onTrade }) {
   );
 }
 
+function AuctionHouseView({ me, groups, auctions, loading, busy, onRefresh, onCreateAuction, onBid, onCancel, onSettle }) {
+  const [mode, setMode] = useState("browse");
+  const [itemId, setItemId] = useState("");
+  const [startingBid, setStartingBid] = useState(10);
+  const [buyout, setBuyout] = useState("");
+  const [durationHours, setDurationHours] = useState(24);
+  const [bidValues, setBidValues] = useState({});
+  const listed = auctions.filter(a => a.status === "open");
+  const mine = auctions.filter(a => a.sellerId === me?.id || a.bidderId === me?.id);
+  const selectedGroup = groups.find(g => g.itemId === itemId) || null;
+  const minBidFor = a => {
+    const raw = Math.max(Number(a.startingBid || 1), Number(a.currentBid || 0) + Math.max(1, Math.ceil((a.currentBid || a.startingBid || 1) * 0.1)));
+    return a.buyout > 0 ? Math.min(raw, a.buyout) : raw;
+  };
+  const timeLeft = a => {
+    const ms = new Date(a.endsAt).getTime() - Date.now();
+    if(ms <= 0) return "scaduta";
+    const h = Math.floor(ms / 3600000);
+    const m = Math.floor((ms % 3600000) / 60000);
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  };
+
+  useEffect(() => {
+    if(groups.length && (!itemId || !groups.some(g => g.itemId === itemId))) setItemId(groups[0].itemId);
+  }, [groups, itemId]);
+
+  const renderAuction = (a) => {
+    const item = a.item || {};
+    const expired = new Date(a.endsAt).getTime() <= Date.now();
+    const isSeller = a.sellerId === me?.id;
+    const isWinner = a.bidderId === me?.id;
+    const minBid = minBidFor(a);
+    const bidValue = bidValues[a.id] ?? minBid;
+    return (
+      <div key={a.id} style={{ background:"rgba(15,23,42,0.72)", border:`1px solid ${expired?"#92400e":"#334155"}`, borderRadius:8, padding:"0.85rem", display:"flex", gap:12, alignItems:"flex-start", flexWrap:"wrap" }}>
+        <ArtThumb src={getItemImage(item)} alt={item.name} size={64} radius={8} />
+        <div style={{ flex:1, minWidth:240 }}>
+          <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap", marginBottom:4 }}>
+            <span style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{item.name}</span>
+            <span style={{ color:RARITY_COLOR_INV[item.rarity] || "#94a3b8", fontSize:"0.68rem", border:"1px solid rgba(148,163,184,0.18)", borderRadius:999, padding:"1px 7px" }}>{itemRarityLabel(item.rarity)}</span>
+            {isSeller && <span style={{ color:"#fbbf24", fontSize:"0.65rem" }}>tua asta</span>}
+            {isWinner && !isSeller && <span style={{ color:"#86efac", fontSize:"0.65rem" }}>miglior offerta</span>}
+          </div>
+          <div style={{ color:"#94a3b8", fontSize:"0.76rem", lineHeight:1.45, marginBottom:8 }}>{item.description}</div>
+          <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#cbd5e1" }}>
+            <span>Venditore: {a.sellerName}</span>
+            <span>Offerta: {a.currentBid ? `${a.currentBid} oro` : "nessuna"}</span>
+            {a.bidderName && <span>Leader: {a.bidderName}</span>}
+            {a.buyout > 0 && <span>Compra subito: {a.buyout} oro</span>}
+            <span style={{ color:expired ? "#fbbf24" : "#94a3b8" }}>Tempo: {timeLeft(a)}</span>
+          </div>
+        </div>
+        <div style={{ width:220, display:"grid", gap:7 }}>
+          {!expired && !isSeller && (
+            <>
+              <input style={inputStyle} type="number" min={minBid} value={bidValue} onChange={e=>setBidValues(v=>({...v,[a.id]:e.target.value}))} />
+              <BigBtn onClick={()=>onBid(a, Number(bidValue) || minBid)} gold disabled={busy || (Number(bidValue)||0) < minBid || (me?.gold||0) < (Number(bidValue)||0)}>
+                Rilancia
+              </BigBtn>
+              {a.buyout > 0 && <SmallBtn onClick={()=>onBid(a, a.buyout)} disabled={busy || (me?.gold||0) < a.buyout}>Compra subito</SmallBtn>}
+            </>
+          )}
+          {isSeller && !a.currentBid && !expired && <SmallBtn onClick={()=>onCancel(a)} disabled={busy}>Ritira asta</SmallBtn>}
+          {(expired || (a.buyout > 0 && a.currentBid >= a.buyout)) && (isSeller || isWinner) && <BigBtn onClick={()=>onSettle(a)} gold disabled={busy}>Chiudi asta</BigBtn>}
+          {expired && !a.currentBid && isSeller && <BigBtn onClick={()=>onCancel(a)} gold disabled={busy}>Riprendi oggetto</BigBtn>}
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.5)" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:"1rem", flexWrap:"wrap" }}>
+        <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, flex:1 }}>🏦 Mercato ad Aste</h3>
+        <SmallBtn onClick={onRefresh} disabled={loading || busy}>Aggiorna</SmallBtn>
+      </div>
+      <div style={{ display:"flex", gap:6, marginBottom:"1rem", flexWrap:"wrap" }}>
+        {[["browse","Aste aperte"],["sell","Metti all'asta"],["mine","Le mie aste"]].map(([k,l])=>(
+          <button key={k} onClick={()=>setMode(k)} style={{ padding:"0.45rem 0.75rem", borderRadius:6, border:`1px solid ${mode===k?"#fbbf24":"#334155"}`, background:mode===k?"rgba(251,191,36,0.14)":"rgba(15,23,42,0.6)", color:mode===k?"#fde68a":"#94a3b8", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.76rem" }}>{l}</button>
+        ))}
+      </div>
+
+      {mode === "sell" && (
+        <Card title="Crea Asta">
+          {!groups.length ? <div style={{ color:"#64748b" }}>Inventario vuoto.</div> : (
+            <>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(180px,1fr))", gap:10 }}>
+                <div>
+                  <label style={labelStyle}>Oggetto</label>
+                  <select style={{...inputStyle,cursor:"pointer"}} value={itemId} onChange={e=>setItemId(e.target.value)}>
+                    {groups.map(g => <option key={g.itemId} value={g.itemId}>{g.item.name} x{g.quantity}</option>)}
+                  </select>
+                </div>
+                <div><label style={labelStyle}>Base d'asta</label><input style={inputStyle} type="number" min="1" value={startingBid} onChange={e=>setStartingBid(e.target.value)} /></div>
+                <div><label style={labelStyle}>Compra subito</label><input style={inputStyle} type="number" min="0" placeholder="opzionale" value={buyout} onChange={e=>setBuyout(e.target.value)} /></div>
+                <div>
+                  <label style={labelStyle}>Durata</label>
+                  <select style={{...inputStyle,cursor:"pointer"}} value={durationHours} onChange={e=>setDurationHours(Number(e.target.value))}>
+                    <option value={6}>6 ore</option><option value={12}>12 ore</option><option value={24}>24 ore</option><option value={48}>48 ore</option>
+                  </select>
+                </div>
+              </div>
+              {selectedGroup && (
+                <div style={{ marginTop:"1rem", display:"flex", gap:10, alignItems:"center", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:8, padding:"0.75rem" }}>
+                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={selectedGroup.item.name} size={58} radius={8} />
+                  <div style={{ flex:1 }}>
+                    <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700 }}>{selectedGroup.item.name}</div>
+                    <div style={{ color:"#94a3b8", fontSize:"0.76rem" }}>{itemStatSummary(selectedGroup.item).join(" · ") || selectedGroup.item.description}</div>
+                  </div>
+                </div>
+              )}
+              <div style={{ display:"flex", justifyContent:"flex-end", marginTop:"1rem" }}>
+                <BigBtn onClick={()=>onCreateAuction(selectedGroup, { startingBid:Number(startingBid)||1, buyout:Number(buyout)||0, durationHours })} gold disabled={busy || !selectedGroup}>Apri asta</BigBtn>
+              </div>
+            </>
+          )}
+        </Card>
+      )}
+
+      {mode === "browse" && (
+        <div style={{ display:"grid", gap:10 }}>
+          {loading && <div style={{ color:"#94a3b8" }}>Caricamento aste...</div>}
+          {!loading && !listed.length && <div style={{ color:"#64748b", textAlign:"center", padding:"2rem", border:"1px dashed #334155", borderRadius:8 }}>Nessuna asta aperta.</div>}
+          {listed.map(renderAuction)}
+        </div>
+      )}
+
+      {mode === "mine" && (
+        <div style={{ display:"grid", gap:10 }}>
+          {!mine.length && <div style={{ color:"#64748b", textAlign:"center", padding:"2rem", border:"1px dashed #334155", borderRadius:8 }}>Non hai aste o offerte attive.</div>}
+          {mine.map(renderAuction)}
+        </div>
+      )}
+    </div>
+  );
+}
+
 const SLOT_CONFIG = [
   { key:"head",    label:"Testa",    icon:"⛑️",  pos:"top-left" },
   { key:"chest",   label:"Petto",    icon:"🧥",  pos:"left" },
@@ -8011,6 +8248,9 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [equipment, setEquipment] = useState({ weapon:null, armor:null, shield:null, accessory:null });
   const [preparedSpellIds, setPreparedSpellIds] = useState([]);
   const [inventoryLoading, setInventoryLoading] = useState(true);
+  const [auctions, setAuctions] = useState([]);
+  const [auctionsLoading, setAuctionsLoading] = useState(false);
+  const [auctionBusy, setAuctionBusy] = useState(false);
   const [selectedInventoryItemId, setSelectedInventoryItemId] = useState(null);
   const [specialPasswordInput, setSpecialPasswordInput] = useState("");
   const [specialQuestError, setSpecialQuestError] = useState("");
@@ -8215,6 +8455,22 @@ function GameScreen({ myId, setScreen, authUser }) {
       setInventoryLoading(false);
     }
   }, [myId]);
+
+  const refreshAuctions = useCallback(async () => {
+    setAuctionsLoading(true);
+    try {
+      const state = await dbGetAuctionHouse();
+      setAuctions(state.auctions || []);
+    } catch(e) {
+      console.error("Errore refresh aste:", e);
+    } finally {
+      setAuctionsLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    if(tab === "trade") refreshAuctions();
+  }, [tab, refreshAuctions]);
 
   useEffect(()=>{
     async function init() {
@@ -9624,6 +9880,160 @@ function GameScreen({ myId, setScreen, authUser }) {
     }
   }
 
+  async function createAuction(group, opts) {
+    if(!group?.item || !group.entries?.length || !me) return;
+    const startingBid = Math.max(1, Number(opts.startingBid) || 1);
+    const buyout = Math.max(0, Number(opts.buyout) || 0);
+    if(buyout > 0 && buyout <= startingBid) {
+      window.alert("Il compra subito deve essere maggiore della base d'asta.");
+      return;
+    }
+    if(!window.confirm(`Mettere all'asta ${group.item.name} con base ${startingBid} oro?`)) return;
+    setAuctionBusy(true);
+    try {
+      const latest = await dbGetAuctionHouse();
+      const entry = group.entries[0];
+      const slot = itemSlot(group.item);
+      const isEquippedLastCopy = !!slot && equipment?.[slot] === group.item.id && group.quantity <= 1;
+      const nextEquipment = isEquippedLastCopy ? { ...equipment, [slot]: null } : equipment;
+      let updatedSeller = me;
+      await dbRemovePlayerItem(entry.rowId);
+      if(isEquippedLastCopy) {
+        saveStoredEquipment(myId, nextEquipment);
+        setEquipment(nextEquipment);
+        updatedSeller = applyEquipmentToPlayer(me, nextEquipment, itemMap);
+        await dbSavePlayer(updatedSeller);
+        setMeRaw(updatedSeller);
+      }
+      const auction = {
+        id:`auc_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+        item:{ ...group.item },
+        sellerId:me.id,
+        sellerName:me.name,
+        sellerParty:code || "",
+        startingBid,
+        buyout,
+        currentBid:0,
+        bidderId:null,
+        bidderName:"",
+        bids:[],
+        status:"open",
+        createdAt:new Date().toISOString(),
+        endsAt:new Date(Date.now() + Math.max(1, Number(opts.durationHours)||24) * 3600000).toISOString(),
+      };
+      const auctionsNext = [auction, ...(latest.auctions || []).filter(a => a.status !== "settled").slice(0, 80)];
+      await dbSaveAuctionHouse({ auctions: auctionsNext });
+      setAuctions(auctionsNext);
+      await refreshInventory(updatedSeller);
+      await addMsg(`🏦 **${me.name}** mette all'asta **${group.item.name}**. Base: **${startingBid} oro**${buyout?` · Compra subito: **${buyout} oro**`:""}.`, "info", "Mercato");
+    } catch(e) {
+      console.error("Creazione asta fallita:", e);
+      window.alert(`Asta fallita: ${e?.message || "errore sconosciuto"}`);
+      await refreshInventory(me);
+    } finally {
+      setAuctionBusy(false);
+    }
+  }
+
+  async function bidAuction(auction, amount) {
+    if(!auction || !me || auction.sellerId === me.id) return;
+    const bid = Math.max(1, Math.floor(Number(amount) || 0));
+    setAuctionBusy(true);
+    try {
+      const latest = await dbGetAuctionHouse();
+      const current = (latest.auctions || []).find(a => a.id === auction.id);
+      if(!current || current.status !== "open") throw new Error("Asta non piu disponibile.");
+      if(new Date(current.endsAt).getTime() <= Date.now()) throw new Error("Asta scaduta. Chiudila dalla scheda aste.");
+      const rawMinBid = Math.max(Number(current.startingBid || 1), Number(current.currentBid || 0) + Math.max(1, Math.ceil((current.currentBid || current.startingBid || 1) * 0.1)));
+      const minBid = current.buyout > 0 ? Math.min(rawMinBid, current.buyout) : rawMinBid;
+      if(bid < minBid) throw new Error(`Offerta minima: ${minBid} oro.`);
+      const allPlayers = await dbGetPlayers();
+      const bidder = allPlayers.find(p => p.id === me.id);
+      if(!bidder || (bidder.gold || 0) < bid) throw new Error("Non hai abbastanza oro.");
+      const prevBidder = current.bidderId ? allPlayers.find(p => p.id === current.bidderId) : null;
+      if(prevBidder) await dbSavePlayer({ ...prevBidder, gold:(prevBidder.gold || 0) + (current.currentBid || 0) });
+      const updatedBidder = { ...bidder, gold:(bidder.gold || 0) - bid };
+      await dbSavePlayer(updatedBidder);
+      if(updatedBidder.id === myId) setMeRaw(updatedBidder);
+      const updatedAuction = {
+        ...current,
+        currentBid:bid,
+        bidderId:me.id,
+        bidderName:me.name,
+        bids:[...(current.bids || []), { bidderId:me.id, bidderName:me.name, amount:bid, at:new Date().toISOString() }].slice(-20),
+      };
+      const auctionsNext = (latest.auctions || []).map(a => a.id === current.id ? updatedAuction : a);
+      await dbSaveAuctionHouse({ auctions: auctionsNext });
+      setAuctions(auctionsNext);
+      await refreshAll(code);
+      await addMsg(`🏦 **${me.name}** offre **${bid} oro** per **${current.item.name}**.`, "info", "Mercato");
+    } catch(e) {
+      window.alert(`Offerta fallita: ${e?.message || "errore sconosciuto"}`);
+    } finally {
+      setAuctionBusy(false);
+    }
+  }
+
+  async function cancelAuction(auction) {
+    if(!auction || auction.sellerId !== me?.id) return;
+    if(auction.currentBid > 0) {
+      window.alert("Non puoi ritirare un'asta che ha gia ricevuto offerte.");
+      return;
+    }
+    setAuctionBusy(true);
+    try {
+      const latest = await dbGetAuctionHouse();
+      const current = (latest.auctions || []).find(a => a.id === auction.id);
+      if(!current || current.sellerId !== me.id || current.currentBid > 0) return;
+      await dbAddPlayerItem(me.id, current.item.id);
+      const auctionsNext = (latest.auctions || []).filter(a => a.id !== current.id);
+      await dbSaveAuctionHouse({ auctions: auctionsNext });
+      setAuctions(auctionsNext);
+      await refreshInventory(me);
+      await addMsg(`🏦 **${me.name}** ritira l'asta di **${current.item.name}**.`, "info", "Mercato");
+    } catch(e) {
+      window.alert(`Ritiro fallito: ${e?.message || "errore sconosciuto"}`);
+    } finally {
+      setAuctionBusy(false);
+    }
+  }
+
+  async function settleAuction(auction) {
+    if(!auction || !me) return;
+    setAuctionBusy(true);
+    try {
+      const latest = await dbGetAuctionHouse();
+      const current = (latest.auctions || []).find(a => a.id === auction.id);
+      if(!current || current.status !== "open") return;
+      const expired = new Date(current.endsAt).getTime() <= Date.now();
+      const boughtOut = current.buyout > 0 && current.currentBid >= current.buyout;
+      if(!expired && !boughtOut) throw new Error("L'asta non e ancora conclusa.");
+      if(!current.currentBid || !current.bidderId) {
+        if(current.sellerId !== me.id) throw new Error("Solo il venditore puo riprendere un'asta senza offerte.");
+        await dbAddPlayerItem(current.sellerId, current.item.id);
+      } else {
+        if(current.sellerId !== me.id && current.bidderId !== me.id) throw new Error("Solo venditore o vincitore possono chiudere questa asta.");
+        const allPlayers = await dbGetPlayers();
+        const seller = allPlayers.find(p => p.id === current.sellerId);
+        if(seller) await dbSavePlayer({ ...seller, gold:(seller.gold || 0) + current.currentBid });
+        await dbAddPlayerItem(current.bidderId, current.item.id);
+      }
+      const auctionsNext = (latest.auctions || []).filter(a => a.id !== current.id);
+      await dbSaveAuctionHouse({ auctions: auctionsNext });
+      setAuctions(auctionsNext);
+      await refreshAll(code);
+      await refreshInventory(latestMeRef.current);
+      await addMsg(current.currentBid
+        ? `🏦 Asta conclusa: **${current.item.name}** a **${current.bidderName}** per **${current.currentBid} oro**.`
+        : `🏦 Asta conclusa senza offerte: **${current.item.name}** torna a **${current.sellerName}**.`,
+        "info", "Mercato");
+    } catch(e) {
+      window.alert(`Chiusura asta fallita: ${e?.message || "errore sconosciuto"}`);
+    } finally {
+      setAuctionBusy(false);
+    }
+  }
+
   async function usePotion(entry) {
     if(!entry?.rowId || !me) return;
     if(entry.item?.type !== "potion") return;
@@ -10437,6 +10847,10 @@ function GameScreen({ myId, setScreen, authUser }) {
       setSpecialQuestError("Questa missione richiede una password.");
       return;
     }
+    const profile = questRiskProfile(q, partyPlayers);
+    const perPlayerCount = Math.max(partyPlayers.length || 1, 1);
+    const xpEachPreview = Math.floor((Number(q.xpReward) || 0) / perPlayerCount);
+    const goldEachPreview = Math.floor((Number(q.goldReward) || 0) / perPlayerCount);
     const newQs = { currentId:q.id, step:0, active:true, combat:null, completed:qs?.completed||[], questDmgLog:{}, currentDifficulty: q.difficulty };
     await saveQState(newQs);
     await addMsg(`📜 **MISSIONE: ${q.title}**
@@ -10445,7 +10859,13 @@ ${q.desc}
 
 *${q.flavor}*
 
-⭐ Ricompensa: **${q.xpReward} XP** — **${q.goldReward} oro**`, "quest","Master");
+🎚️ Difficoltà: **${missionDifficultyLabel(q.difficulty)}** — rischio **${profile.risk.toLowerCase()}**
+👥 Consigliato: **livello ${profile.recommendedLevel}+**
+⚔️ Scontri: **${profile.combatCount || 0}** — nemici stimati **${profile.monsters.length || 0}**${profile.bosses ? ` — boss **${profile.bosses}**` : ""}
+🎒 Preparazione: ${profile.advice.length ? profile.advice.join(" · ") : "nessun requisito particolare"}
+
+⭐ Ricompensa: **${q.xpReward} XP** — **${q.goldReward} oro** totali
+👤 Stima a testa: **${xpEachPreview} XP** — **${goldEachPreview} oro**`, "quest","Master");
     await postQuestStepMessage(q, 0);
   }
 
@@ -10517,20 +10937,22 @@ ${stepText(step)}`, "quest","Master");
       players: Object.entries(dmgLog).map(([, d]) => ({ name: d.name, dmg: d.dmg })).sort((a,b) => b.dmg - a.dmg),
     };
     const newQuestLog = [...(qs.questLog || []).filter(e => e.date === today), logEntry];
-    const diffLabel = q.difficulty==="difficile"?"difficile":q.difficulty==="facile"?"facile":"media";
+    const normalizedQuestDiff = normalizeMissionDifficulty(q.difficulty);
+    const diffLabel = missionDifficultyLabel(q.difficulty).toLowerCase();
     const newDiaryQuest = appendDiary(qs.partyDiary, { type:'quest', icon:'📜', text:`«${q.title}» completata! Missione di difficoltà ${diffLabel}. Ricompensa: +${xpE} XP e +${goldE} 💰 a testa.`, players: freshQuestPlayers.map(p=>p.name) });
     const historyEntry = { id: q.id, title: q.title, difficulty: q.difficulty, completedAt: new Date().toISOString(), xpEach: xpE, goldEach: goldE };
     const newQuestHistory = [...(qs.questHistory || []), historyEntry].slice(-100);
     const newQs={...qs,active:false,step:0,currentId:null,completed:[...(qs.completed||[]),q.id],questDmgLog:{},questLog:newQuestLog,partyDiary:newDiaryQuest,questHistory:newQuestHistory};
     await saveQState(newQs);
-    const guildXp = q.difficulty==="difficile"?120:q.difficulty==="facile"?40:70;
+    const guildXp = normalizedQuestDiff==="epica"?160:normalizedQuestDiff==="difficile"?120:normalizedQuestDiff==="facile"?40:70;
     if(myGuild) await addGuildXP(guildXp);
     const bonusNote = myGuild ? ` (bonus gilda +${Math.round((goldMult-1)*100)}%)` : "";
     // Material loot drop based on quest difficulty
     const isSpecial = !!(q.specialPassword);
     const matRarity = isSpecial ? "legendary"
-      : q.difficulty === "difficile" ? "epic"
-      : q.difficulty === "medio" ? "rare"
+      : normalizedQuestDiff === "epica" ? "legendary"
+      : normalizedQuestDiff === "difficile" ? "epic"
+      : normalizedQuestDiff === "medio" ? "rare"
       : (Math.random() < 0.5 ? "common" : "uncommon");
     const matPool = CRAFT_MATERIALS.filter(m => m.rarity === matRarity && m.available !== false);
     if (matPool.length > 0) {
@@ -11210,7 +11632,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["quest","📜 Missioni"],["story","📖 Storia"],["storylibrary","📚 Storie"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🤝 Scambi"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["quest","📜 Missioni"],["story","📖 Storia"],["storylibrary","📚 Storie"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🏦 Mercato"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
@@ -11558,13 +11980,17 @@ ${stepText(step)}`, "quest","Master");
           );
         })()}
         {tab==="trade" && (
-          <PartyTradeView
+          <AuctionHouseView
             me={me}
-            players={partyPlayers}
             groups={inventoryGroups}
-            loading={inventoryLoading}
-            equipment={equipment}
-            onTrade={handlePartyTrade}
+            auctions={auctions}
+            loading={auctionsLoading || inventoryLoading}
+            busy={auctionBusy}
+            onRefresh={refreshAuctions}
+            onCreateAuction={createAuction}
+            onBid={bidAuction}
+            onCancel={cancelAuction}
+            onSettle={settleAuction}
           />
         )}
         {tab==="donate" && (
@@ -11662,6 +12088,16 @@ ${stepText(step)}`, "quest","Master");
                   <div style={{ height:"100%", background:"linear-gradient(90deg,#b45309,#fbbf24)", width:`${(qs.step+1)/currentQ.steps.length*100}%`, transition:"width 0.5s" }} />
                 </div>
                 <p style={{ color:"#fde68a", fontSize:"0.85rem", marginBottom:10 }}>Scena {qs.step+1} di {currentQ.steps.length}</p>
+                {(() => {
+                  const profile = questRiskProfile(currentQ, partyPlayers);
+                  return (
+                    <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:12, fontSize:"0.72rem" }}>
+                      <span style={{ color:"#fde68a", padding:"2px 7px", border:"1px solid rgba(251,191,36,0.32)", borderRadius:999, background:"rgba(120,53,15,0.18)" }}>Liv. consigliato {profile.recommendedLevel}+</span>
+                      <span style={{ color:profile.riskColor, padding:"2px 7px", border:`1px solid ${profile.riskColor}`, borderRadius:999, background:"rgba(15,23,42,0.42)" }}>Rischio {profile.risk}</span>
+                      <span style={{ color:"#cbd5e1", padding:"2px 7px", border:"1px solid rgba(148,163,184,0.18)", borderRadius:999, background:"rgba(15,23,42,0.42)" }}>{profile.combatCount} scontri · {profile.monsters.length} nemici</span>
+                    </div>
+                  );
+                })()}
                 {(() => {
                   const stepData = currentQ?.steps?.[qs.step];
                   if(!stepData) return null;
@@ -11786,25 +12222,52 @@ ${stepText(step)}`, "quest","Master");
                       Tutte le missioni del giorno sono state completate!
                     </div>
                   )}
-                  {availableDaily.map(q => (
-                    <div key={q.id} style={{ background:PANEL_BG, border:"1px solid #475569", borderRadius:6, padding:"1rem", marginBottom:8 }}>
+                  {availableDaily.map(q => {
+                    const profile = questRiskProfile(q, partyPlayers);
+                    const diff = normalizeMissionDifficulty(q.difficulty);
+                    const perPlayerCount = Math.max(partyPlayers.length || 1, 1);
+                    const xpEachPreview = Math.floor((Number(q.xpReward) || 0) / perPlayerCount);
+                    const goldEachPreview = Math.floor((Number(q.goldReward) || 0) / perPlayerCount);
+                    const underleveled = profile.avgLevel + 0.5 < profile.recommendedLevel;
+                    return (
+                    <div key={q.id} style={{ background:PANEL_BG, border:`1px solid ${underleveled ? "rgba(239,68,68,0.58)" : "rgba(71,85,105,0.95)"}`, borderRadius:6, padding:"1rem", marginBottom:8 }}>
                       <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
                         <div style={{ flex:1 }}>
                           <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:5 }}>
                             <span style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontWeight:700 }}>{q.title}</span>
-                            <span style={{ padding:"1px 7px", border:`1px solid ${DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#374151"}`, borderRadius:3, fontSize:"0.65rem", color:DIFF_COLOR[normalizeMissionDifficulty(q.difficulty)]||"#6b7280" }}>{missionDifficultyLabel(q.difficulty)}</span>
+                            <span style={{ padding:"1px 7px", border:`1px solid ${DIFF_COLOR[diff]||"#374151"}`, borderRadius:3, fontSize:"0.65rem", color:DIFF_COLOR[diff]||"#6b7280" }}>{missionDifficultyLabel(q.difficulty)}</span>
+                            {underleveled && <span style={{ padding:"1px 7px", border:"1px solid #ef4444", borderRadius:3, fontSize:"0.65rem", color:"#fca5a5" }}>Sottolivellati</span>}
                           </div>
                           <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
                           {q.flavor&&<p style={{ color:"#94a3b8", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{q.flavor}</p>}
-                          <div style={{ display:"flex", gap:14, fontSize:"0.73rem", color:"#94a3b8", flexWrap:"wrap" }}>
-                            <span>⭐ {q.xpReward} XP</span><span>💰 {q.goldReward} oro</span><span>🎭 {q.steps.length} scene</span>
+                          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(128px,1fr))", gap:7, margin:"0.75rem 0" }}>
+                            <div style={{ padding:"0.45rem 0.55rem", border:"1px solid rgba(148,163,184,0.18)", borderRadius:6, background:"rgba(15,23,42,0.52)" }}>
+                              <div style={{ color:"#64748b", fontSize:"0.62rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>Consigliato</div>
+                              <div style={{ color:underleveled ? "#fca5a5" : "#dbeafe", fontSize:"0.78rem", fontWeight:700 }}>Liv. {profile.recommendedLevel}+ <span style={{ color:"#64748b", fontWeight:400 }}>(party {profile.avgLevel.toFixed(1)})</span></div>
+                            </div>
+                            <div style={{ padding:"0.45rem 0.55rem", border:`1px solid ${profile.riskColor}`, borderRadius:6, background:"rgba(15,23,42,0.52)" }}>
+                              <div style={{ color:"#64748b", fontSize:"0.62rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>Rischio</div>
+                              <div style={{ color:profile.riskColor, fontSize:"0.78rem", fontWeight:700 }}>{profile.risk}</div>
+                            </div>
+                            <div style={{ padding:"0.45rem 0.55rem", border:"1px solid rgba(148,163,184,0.18)", borderRadius:6, background:"rgba(15,23,42,0.52)" }}>
+                              <div style={{ color:"#64748b", fontSize:"0.62rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>Minacce</div>
+                              <div style={{ color:"#cbd5e1", fontSize:"0.78rem", fontWeight:700 }}>{profile.combatCount} scontri · {profile.monsters.length} nemici{profile.bosses ? ` · ${profile.bosses} boss` : ""}</div>
+                            </div>
+                            <div style={{ padding:"0.45rem 0.55rem", border:"1px solid rgba(251,191,36,0.28)", borderRadius:6, background:"rgba(120,53,15,0.16)" }}>
+                              <div style={{ color:"#92400e", fontSize:"0.62rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>A testa</div>
+                              <div style={{ color:"#fde68a", fontSize:"0.78rem", fontWeight:700 }}>{xpEachPreview} XP · {goldEachPreview} oro</div>
+                            </div>
+                          </div>
+                          <div style={{ display:"flex", gap:8, fontSize:"0.72rem", color:"#94a3b8", flexWrap:"wrap", alignItems:"center" }}>
+                            <span>🎭 {q.steps.length} scene</span>
+                            {profile.advice.map((tip, i) => <span key={i} style={{ padding:"2px 7px", border:"1px solid rgba(148,163,184,0.16)", borderRadius:999, background:"rgba(15,23,42,0.5)" }}>{tip}</span>)}
                             {q.location && <span>📍 {q.location}</span>}
                           </div>
                         </div>
                         {!qs?.active&&<BigBtn onClick={()=>acceptQuest(q)} gold icon="⭐">Accetta</BigBtn>}
                       </div>
                     </div>
-                  ))}
+                  );})}
                 </>
               );
             })()}
@@ -11828,7 +12291,12 @@ ${stepText(step)}`, "quest","Master");
             {unlockedSpecialQuests.filter(q => {
               const today = new Date().toLocaleDateString('en-CA');
               return !(qs?.questLog||[]).some(e => e.date === today && e.id === q.id);
-            }).map(q => (
+            }).map(q => {
+              const profile = questRiskProfile(q, partyPlayers);
+              const perPlayerCount = Math.max(partyPlayers.length || 1, 1);
+              const xpEachPreview = Math.floor((Number(q.xpReward) || 0) / perPlayerCount);
+              const goldEachPreview = Math.floor((Number(q.goldReward) || 0) / perPlayerCount);
+              return (
               <div key={q.id} style={{ background:"rgba(88,28,135,0.16)", border:"1px solid #7c3aed", borderRadius:6, padding:"1rem", marginBottom:8 }}>
                 <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
                   <div style={{ flex:1 }}>
@@ -11838,14 +12306,18 @@ ${stepText(step)}`, "quest","Master");
                     </div>
                     <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
                     {q.flavor&&<p style={{ color:"#94a3b8", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{q.flavor}</p>}
-                    <div style={{ display:"flex", gap:14, fontSize:"0.73rem", color:"#94a3b8" }}>
-                      <span>{q.xpReward} XP</span><span>{q.goldReward} oro</span><span>{q.steps.length} scene</span>
+                    <div style={{ display:"flex", gap:8, fontSize:"0.72rem", color:"#94a3b8", flexWrap:"wrap", marginTop:8 }}>
+                      <span style={{ color:"#fde68a" }}>👤 {xpEachPreview} XP · {goldEachPreview} oro a testa</span>
+                      <span>👥 Liv. {profile.recommendedLevel}+</span>
+                      <span style={{ color:profile.riskColor }}>⚠️ Rischio {profile.risk.toLowerCase()}</span>
+                      <span>⚔️ {profile.combatCount} scontri · {profile.monsters.length} nemici</span>
+                      <span>🎭 {q.steps.length} scene</span>
                     </div>
                   </div>
                   {!qs?.active&&<BigBtn onClick={()=>acceptQuest(q)} gold icon="⭐">Accetta</BigBtn>}
                 </div>
               </div>
-            ))}
+            );})}
             {(() => {
               const today = new Date().toLocaleDateString('en-CA');
               const todayLog = (qs?.questLog || []).filter(e => e.date === today);
@@ -12464,6 +12936,19 @@ ${stepText(step)}`, "quest","Master");
                 <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1.7fr) minmax(320px,0.95fr)", gap:"1rem", alignItems:"start" }}>
                   <div>
                     <div style={{ marginBottom:"1rem", padding:"1rem", background:"rgba(10,15,30,0.7)", border:"1px solid rgba(127,29,29,0.3)", borderRadius:14 }}>
+                      {combat.pendingLog && (() => {
+                        const cue = combatLogCue(combat.pendingLog);
+                        if(!cue) return null;
+                        return (
+                          <div style={{ marginBottom:"0.8rem", padding:"0.75rem 0.9rem", background:cue.bg, border:`1px solid ${cue.color}`, borderRadius:10, display:"flex", alignItems:"center", gap:10, animation:"combatCueIn .28s ease both" }}>
+                            <span style={{ fontSize:"1.5rem", filter:`drop-shadow(0 0 8px ${cue.color})` }}>{cue.icon}</span>
+                            <div style={{ flex:1 }}>
+                              <div style={{ color:cue.color, fontFamily:"'Cinzel Decorative',serif", fontWeight:800, letterSpacing:"0.06em", fontSize:"0.9rem" }}>{cue.title}</div>
+                              {cue.value && <div style={{ color:"#e2e8f0", fontSize:"0.78rem", marginTop:2 }}>{cue.value}</div>}
+                            </div>
+                          </div>
+                        );
+                      })()}
                       {/* Battle name + difficulty header */}
                       <div style={{ display:"flex", alignItems:"center", gap:"0.6rem", marginBottom:"0.75rem", paddingBottom:"0.6rem", borderBottom:"1px solid rgba(127,29,29,0.25)" }}>
                         <span style={{ fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:"0.95rem", color:"#fde68a", flex:1, letterSpacing:"0.04em" }}>
@@ -12483,18 +12968,33 @@ ${stepText(step)}`, "quest","Master");
                           c.id,
                           c.isSummon ? getMonsterImage(c) : c.isPlayer ? getPlayerPortrait(c) : getMonsterImage(c)
                         ]))}
+                        cue={combatLogCue(combat.pendingLog)}
                       />
                     </div>
                   </div>
 
                   <div style={{ display:"grid", gap:"1rem", position: isMobile ? "relative" : "sticky", top:0, order: isMobile ? -1 : 0 }}>
                     {combat.pendingLog && (
-                      <div style={{ padding:"1.1rem 1.2rem", background:"linear-gradient(180deg,rgba(10,20,10,0.97),rgba(15,23,42,0.97))", border:"1px solid rgba(34,197,94,0.35)", borderRadius:12, boxShadow:"0 8px 24px rgba(0,0,0,0.4)" }}>
-                        <div style={{ fontSize:"0.82rem", color:"#a3e8b0", lineHeight:1.75, whiteSpace:"pre-line", marginBottom:"0.75rem", fontFamily:"'Crimson Pro',Georgia,serif" }} dangerouslySetInnerHTML={{ __html: fmt(combat.pendingLog) }} />
-                        <div style={{ height:3, background:"rgba(34,197,94,0.15)", borderRadius:2, overflow:"hidden" }}>
-                          <div style={{ height:"100%", width:"100%", background:"rgba(34,197,94,0.5)", borderRadius:2, animation:"logAutoDismiss 3.5s linear forwards" }}/>
-                        </div>
-                      </div>
+                      (() => {
+                        const cue = combatLogCue(combat.pendingLog);
+                        return (
+                          <div style={{ padding:"1.1rem 1.2rem", background:"linear-gradient(180deg,rgba(10,20,10,0.97),rgba(15,23,42,0.97))", border:`1px solid ${cue?.color || "rgba(34,197,94,0.35)"}`, borderRadius:12, boxShadow:"0 8px 24px rgba(0,0,0,0.4)", animation:"combatCueIn .24s ease both" }}>
+                            {cue && (
+                              <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:"0.75rem", paddingBottom:"0.65rem", borderBottom:"1px solid rgba(148,163,184,0.13)" }}>
+                                <span style={{ fontSize:"1.55rem" }}>{cue.icon}</span>
+                                <div style={{ flex:1 }}>
+                                  <div style={{ color:cue.color, fontFamily:"'Cinzel Decorative',serif", fontSize:"0.92rem", fontWeight:800, letterSpacing:"0.06em" }}>{cue.title}</div>
+                                  {cue.value && <div style={{ color:"#cbd5e1", fontSize:"0.76rem" }}>{cue.value}</div>}
+                                </div>
+                              </div>
+                            )}
+                            <div style={{ fontSize:"0.82rem", color:"#d1fae5", lineHeight:1.75, whiteSpace:"pre-line", marginBottom:"0.75rem", fontFamily:"'Crimson Pro',Georgia,serif" }} dangerouslySetInnerHTML={{ __html: fmt(combat.pendingLog) }} />
+                            <div style={{ height:3, background:"rgba(34,197,94,0.15)", borderRadius:2, overflow:"hidden" }}>
+                              <div style={{ height:"100%", width:"100%", background:cue?.color || "rgba(34,197,94,0.5)", borderRadius:2, animation:"logAutoDismiss 3.5s linear forwards" }}/>
+                            </div>
+                          </div>
+                        );
+                      })()
                     )}
                     <div style={{ textAlign:"center", padding:"1.35rem 1.1rem", background:"linear-gradient(180deg, rgba(24,10,10,0.92), rgba(15,23,42,0.94))", border:"1px solid rgba(239,68,68,0.26)", borderRadius:12, boxShadow:"0 18px 40px rgba(0,0,0,0.22)" }}>
                       {combat.pendingLog ? null : isMySummonTurn ? (

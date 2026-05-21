@@ -79,12 +79,11 @@ function buildPrompt(item) {
 // ── DALL-E 3 call ─────────────────────────────────────────────────────────────
 async function generateImage(prompt) {
   const body = JSON.stringify({
-    model: 'dall-e-3',
+    model: 'gpt-image-1',
     prompt,
     n: 1,
     size: '1024x1024',
-    quality: 'standard',
-    response_format: 'url',
+    quality: 'medium',
   });
 
   return new Promise((resolve, reject) => {
@@ -104,7 +103,8 @@ async function generateImage(prompt) {
         try {
           const json = JSON.parse(data);
           if (json.error) reject(new Error(json.error.message));
-          else resolve(json.data[0].url);
+          else if (json.data[0].url) resolve({ type: 'url', value: json.data[0].url });
+          else resolve({ type: 'b64', value: json.data[0].b64_json });
         } catch (e) { reject(e); }
       });
     });
@@ -161,8 +161,12 @@ for (let idx = 0; idx < items.length; idx++) {
   process.stdout.write(`🖼️  [${idx + 1}/${total}] ${item.name} (${item.rarity})... `);
 
   try {
-    const url = await generateImage(prompt);
-    await downloadImage(url, destPath);
+    const result = await generateImage(prompt);
+    if (result.type === 'url') {
+      await downloadImage(result.value, destPath);
+    } else {
+      fs.writeFileSync(destPath, Buffer.from(result.value, 'base64'));
+    }
     console.log(`✅ salvata`);
     done++;
   } catch (e) {
