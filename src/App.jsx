@@ -7561,138 +7561,140 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
   );
 }
 
-function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, inventoryGroups, isMobile }) {
-  const [selectedSlot, setSelectedSlot] = useState(null);
-  const [pickerSlot, setPickerSlot] = useState(null);
-  const selectedItem = selectedSlot ? equippedItems[selectedSlot] : null;
+function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, inventoryGroups, onSell, onUse, canUseConsumables, isMobile }) {
+  const [activeSlot, setActiveSlot] = useState(null);
+  const [hoveredItem, setHoveredItem] = useState(null);
   const rarityColors = { common:"#94a3b8", uncommon:"#22c55e", rare:"#3b82f6", epic:"#a855f7", legendary:"#f59e0b" };
-
-  function openPicker(slotKey) {
-    setPickerSlot(slotKey);
-    setSelectedSlot(null);
-  }
-
-  // Items in inventory that fit this slot
-  const pickerSlotCfg = pickerSlot ? SLOT_CONFIG.find(s => s.key === pickerSlot) : null;
-  const pickerItems = pickerSlot && inventoryGroups ? inventoryGroups.filter(g => {
-    const item = g.item;
-    if(!item) return false;
-    // match by slot or type
-    return item.slot === pickerSlot || item.type === pickerSlotCfg?.type;
-  }) : [];
 
   const leftSlots  = ["head","chest","legs","boots","ring1"];
   const rightSlots = ["weapon","offhand","amulet","gloves","ring2"];
   const bottomSlots = ["cloak"];
 
+  // Filter inventory to show only items matching active slot
+  const activeSlotCfg = activeSlot ? SLOT_CONFIG.find(s => s.key === activeSlot) : null;
+  const filteredGroups = activeSlot && inventoryGroups
+    ? inventoryGroups.filter(g => g.item && (g.item.slot === activeSlot || g.item.type === activeSlotCfg?.type))
+    : inventoryGroups || [];
+
+  const equippableTypes = new Set(["weapon","armor","shield","head","legs","boots","gloves","cloak","accessory"]);
+
   return (
-    <div style={{ flex:1, overflowY:"auto", padding: isMobile ? "0.6rem" : "1rem" }}>
-      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"0.8rem" }}>🎽 Equipaggiamento</h3>
+    <div style={{ flex:1, display:"flex", overflow:"hidden", height:"100%" }}>
 
-      <div style={{ display:"flex", gap:isMobile?8:16, alignItems:"flex-start", flexWrap:"wrap" }}>
+      {/* ══ LEFT — mannequin + slots ══ */}
+      <div style={{ width: isMobile ? "100%" : 420, flexShrink:0, display:"flex", flexDirection:"column", borderRight:"1px solid rgba(255,255,255,0.07)", background:"rgba(5,8,18,0.6)" }}>
 
-        {/* ── Stats panel ── */}
-        <div style={{ minWidth:130, background:"rgba(0,0,0,0.4)", border:"1px solid rgba(255,255,255,0.08)", borderRadius:12, padding:"0.8rem", fontSize:"0.78rem" }}>
-          <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize:"0.68rem", letterSpacing:"0.1em", marginBottom:8 }}>STATISTICHE</div>
-          {[
-            ["⚔️","ATK", me.atk],
-            ["🛡️","DEF", me.def],
-            ["✨","MAG", me.mag],
-            ["🦶","INI", me.init],
-            ["❤️","HP",  me.maxHp],
-            ["🎲","Dado",equippedWeapon.weapon_die],
-          ].map(([icon,label,val]) => (
-            <div key={label} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"3px 0", borderBottom:"1px solid rgba(255,255,255,0.04)" }}>
-              <span style={{ color:"#64748b" }}>{icon} {label}</span>
-              <span style={{ color:"#e2d9c5", fontWeight:700 }}>{val}</span>
+        {/* Stats bar */}
+        <div style={{ display:"flex", gap:12, padding:"0.6rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.06)", flexWrap:"wrap" }}>
+          {[["⚔️",me.atk],["🛡️",me.def],["✨",me.mag],["🦶",me.init],["❤️",me.maxHp],["🎲",equippedWeapon.weapon_die]].map(([icon,val],i)=>(
+            <div key={i} style={{ display:"flex", alignItems:"center", gap:4, fontSize:"0.78rem" }}>
+              <span>{icon}</span><span style={{ color:"#e2d9c5", fontWeight:700 }}>{val}</span>
             </div>
           ))}
         </div>
 
-        {/* ── Character doll ── */}
-        <div style={{ flex:1, display:"flex", gap:16, alignItems:"center", justifyContent:"center", minWidth:480 }}>
+        {/* Doll area */}
+        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:10, padding:"0.75rem" }}>
           {/* Left slots */}
-          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
             {leftSlots.map(k => {
               const cfg = SLOT_CONFIG.find(s => s.key === k);
-              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} onPick={openPicker} />;
+              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={activeSlot===k} onSelect={setActiveSlot} onPick={setActiveSlot} />;
             })}
           </div>
 
-          {/* Center character */}
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:10 }}>
+          {/* Character */}
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:8 }}>
             <CharacterViewer me={me} equippedItems={equippedItems} />
-            <div style={{ display:"flex", gap:10 }}>
+            <div style={{ display:"flex", gap:8 }}>
               {bottomSlots.map(k => {
                 const cfg = SLOT_CONFIG.find(s => s.key === k);
-                return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} onPick={openPicker} />;
+                return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={activeSlot===k} onSelect={setActiveSlot} onPick={setActiveSlot} />;
               })}
             </div>
           </div>
 
           {/* Right slots */}
-          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
             {rightSlots.map(k => {
               const cfg = SLOT_CONFIG.find(s => s.key === k);
-              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} onPick={openPicker} />;
+              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={activeSlot===k} onSelect={setActiveSlot} onPick={setActiveSlot} />;
             })}
           </div>
         </div>
 
-        {/* ── Slot picker modal ── */}
-        {pickerSlot && (
-          <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", zIndex:9000, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={()=>setPickerSlot(null)}>
-            <div style={{ background:"rgba(10,15,30,0.98)", border:"1px solid #7c3aed", borderRadius:16, padding:"1.5rem", maxWidth:600, width:"90%", maxHeight:"80vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
-              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
-                <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize:"1rem" }}>{pickerSlotCfg?.icon} {pickerSlotCfg?.label} — Scegli item</div>
-                <button onClick={()=>setPickerSlot(null)} style={{ background:"none", border:"none", color:"#94a3b8", fontSize:"1.2rem", cursor:"pointer" }}>✕</button>
+        {/* Active slot label */}
+        {activeSlot && (
+          <div style={{ padding:"0.5rem 1rem", borderTop:"1px solid rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+            <span style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa" }}>
+              {activeSlotCfg?.icon} {activeSlotCfg?.label} — mostra compatibili
+            </span>
+            <button onClick={()=>setActiveSlot(null)} style={{ background:"none", border:"none", color:"#475569", cursor:"pointer", fontSize:"0.75rem" }}>Mostra tutti ✕</button>
+          </div>
+        )}
+      </div>
+
+      {/* ══ RIGHT — inventory grid ══ */}
+      <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+
+        {/* Item detail panel — shown on hover */}
+        {hoveredItem && (
+          <div style={{ display:"flex", gap:12, padding:"0.75rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.07)", background:"rgba(15,23,42,0.9)", alignItems:"flex-start" }}>
+            <ArtThumb src={getItemImage(hoveredItem.item)} alt={hoveredItem.item.name} size={80} radius={8} />
+            <div style={{ flex:1 }}>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.88rem", color: rarityColors[hoveredItem.item.rarity]||"#e2d9c5", fontWeight:700 }}>{hoveredItem.item.name}</div>
+              <div style={{ fontSize:"0.68rem", color:"#64748b", marginBottom:4 }}>{itemRarityLabel(hoveredItem.item.rarity)} · {itemTypeLabel(hoveredItem.item.type)}</div>
+              <div style={{ fontSize:"0.72rem", color:"#94a3b8", lineHeight:1.5 }}>{hoveredItem.item.description}</div>
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:4 }}>
+                {itemStatSummary(hoveredItem.item).map(s=>(
+                  <span key={s} style={{ fontSize:"0.68rem", background:"rgba(255,255,255,0.05)", border:"1px solid #1f2937", borderRadius:999, padding:"1px 7px", color:"#d1d5db" }}>{s}</span>
+                ))}
               </div>
-              {pickerItems.length === 0 && <div style={{ color:"#4b5563", fontSize:"0.85rem" }}>Nessun item di questo tipo nell'inventario.</div>}
-              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(130px,1fr))", gap:12 }}>
-                {pickerItems.map(g => {
-                  const item = g.item;
-                  const isEquipped = equippedItems[pickerSlot]?.id === item.id;
-                  const rc = rarityColors[item.rarity] || "#94a3b8";
-                  return (
-                    <div key={item.id} onClick={()=>{ onEquip(g.entries[0]); setPickerSlot(null); }}
-                      style={{ background: isEquipped?"rgba(251,191,36,0.1)":"rgba(15,23,42,0.8)", border:`2px solid ${isEquipped?"#fbbf24":rc}`, borderRadius:12, padding:"0.75rem", cursor:"pointer", textAlign:"center", transition:"transform 0.15s", position:"relative" }}
-                      onMouseEnter={e=>e.currentTarget.style.transform="scale(1.05)"}
-                      onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
-                      {isEquipped && <div style={{ position:"absolute", top:4, right:6, fontSize:"0.6rem", color:"#fbbf24", fontFamily:"'Cinzel',serif" }}>★ equip</div>}
-                      <ArtThumb src={getItemImage(item)} alt={item.name} size={90} radius={8} />
-                      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.7rem", color:rc, marginTop:6, fontWeight:700, lineHeight:1.3 }}>{item.name}</div>
-                      {g.quantity > 1 && <div style={{ fontSize:"0.6rem", color:"#64748b" }}>×{g.quantity}</div>}
-                    </div>
-                  );
-                })}
-              </div>
-              {equippedItems[pickerSlot] && (
-                <div style={{ marginTop:"1rem", borderTop:"1px solid #334155", paddingTop:"0.75rem" }}>
-                  <button onClick={()=>{ onUnequip(pickerSlot); setPickerSlot(null); }}
-                    style={{ padding:"0.4rem 1rem", background:"rgba(127,29,29,0.4)", border:"1px solid #7f1d1d", borderRadius:8, color:"#f87171", cursor:"pointer", fontSize:"0.8rem" }}>
-                    🗑 Rimuovi equipaggiamento
-                  </button>
-                </div>
+            </div>
+            <div style={{ display:"flex", flexDirection:"column", gap:6, flexShrink:0 }}>
+              {equippableTypes.has(hoveredItem.item.type) && (
+                <BigBtn onClick={()=>onEquip(hoveredItem.entries[0])} gold
+                  disabled={Object.values(equippedItems).some(i=>i?.id===hoveredItem.item.id)}>
+                  {Object.values(equippedItems).some(i=>i?.id===hoveredItem.item.id) ? "Equipaggiato" : "Equipaggia"}
+                </BigBtn>
               )}
+              {hoveredItem.item.type==="potion" && canUseConsumables && (
+                <BigBtn onClick={()=>onUse(hoveredItem.entries[0])} gold icon="🧪">Usa</BigBtn>
+              )}
+              <SmallBtn onClick={()=>onSell(hoveredItem)}>Vendi</SmallBtn>
             </div>
           </div>
         )}
 
-        {/* ── Selected item detail ── */}
-        {selectedItem && (
-          <div style={{ minWidth:220, maxWidth:260, background:"rgba(15,23,42,0.95)", border:`2px solid ${rarityColors[selectedItem.rarity]||"#334155"}`, borderRadius:16, padding:"1.2rem", boxShadow:`0 0 24px ${rarityColors[selectedItem.rarity]||"#334155"}44` }}>
-            <ArtThumb src={getItemImage(selectedItem)} alt={selectedItem.name} size={180} radius={12} />
-            <div style={{ fontFamily:"'Cinzel',serif", color: rarityColors[selectedItem.rarity]||"#e2d9c5", fontSize:"0.95rem", fontWeight:700, textAlign:"center", marginTop:10, marginBottom:4 }}>{selectedItem.name}</div>
-            <div style={{ fontSize:"0.7rem", color:"#64748b", textAlign:"center", marginBottom:10 }}>{itemRarityLabel(selectedItem.rarity)} • {itemTypeLabel(selectedItem.type)}</div>
-            <div style={{ display:"flex", flexDirection:"column", gap:4, marginBottom:12 }}>
-              {itemStatSummary(selectedItem).map(stat => (
-                <div key={stat} style={{ fontSize:"0.78rem", color:"#94a3b8", background:"rgba(255,255,255,0.04)", borderRadius:6, padding:"4px 8px" }}>{stat}</div>
-              ))}
-            </div>
-            {selectedItem.desc && <div style={{ fontSize:"0.75rem", color:"#64748b", fontStyle:"italic", marginBottom:12, lineHeight:1.6 }}>{selectedItem.desc}</div>}
-            <SmallBtn red onClick={() => { onUnequip(selectedSlot); setSelectedSlot(null); }}>Rimuovi</SmallBtn>
+        {/* Grid */}
+        <div style={{ flex:1, overflowY:"auto", padding:"0.75rem" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(90px,1fr))", gap:8 }}>
+            {filteredGroups.map(g => {
+              const item = g.item;
+              if(!item) return null;
+              const rc = rarityColors[item.rarity] || "#94a3b8";
+              const isEquipped = Object.values(equippedItems).some(i=>i?.id===item.id);
+              const isHovered = hoveredItem?.item.id === item.id;
+              return (
+                <div key={item.id}
+                  onMouseEnter={()=>setHoveredItem(g)}
+                  onMouseLeave={()=>setHoveredItem(null)}
+                  onClick={()=>{ if(equippableTypes.has(item.type)) onEquip(g.entries[0]); else if(item.type==="potion"&&canUseConsumables) onUse(g.entries[0]); }}
+                  style={{
+                    background: isEquipped?"rgba(251,191,36,0.08)": isHovered?"rgba(99,102,241,0.12)":"rgba(15,23,42,0.7)",
+                    border:`2px solid ${isEquipped?"#fbbf24": isHovered?rc:"rgba(255,255,255,0.08)"}`,
+                    borderRadius:10, padding:"0.5rem", cursor:"pointer", textAlign:"center",
+                    transition:"border-color 0.15s, background 0.15s", position:"relative",
+                  }}>
+                  {isEquipped && <div style={{ position:"absolute", top:3, right:4, fontSize:"0.5rem", color:"#fbbf24" }}>★</div>}
+                  {g.quantity > 1 && <div style={{ position:"absolute", top:3, left:4, fontSize:"0.55rem", color:"#c4b5fd", fontWeight:700 }}>×{g.quantity}</div>}
+                  <ArtThumb src={getItemImage(item)} alt={item.name} size={70} radius={6} />
+                  <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.58rem", color:rc, marginTop:4, lineHeight:1.2, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{item.name}</div>
+                </div>
+              );
+            })}
           </div>
-        )}
+        </div>
       </div>
     </div>
   );
@@ -12069,6 +12071,9 @@ ${stepText(step)}`, "quest","Master");
             onUnequip={unequipItem}
             onEquip={equipItem}
             inventoryGroups={inventoryGroups}
+            onSell={handleInventorySell}
+            onUse={usePotion}
+            canUseConsumables={!isInCombat}
             isMobile={isMobile}
           />
         )}
