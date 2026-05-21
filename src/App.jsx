@@ -12073,7 +12073,7 @@ ${stepText(step)}`, "quest","Master");
             inventoryGroups={inventoryGroups}
             onSell={handleInventorySell}
             onUse={usePotion}
-            canUseConsumables={!isInCombat}
+            canUseConsumables={!combat}
             isMobile={isMobile}
           />
         )}
