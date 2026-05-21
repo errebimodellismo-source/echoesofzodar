@@ -7647,14 +7647,14 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
       {/* ══ RIGHT — inventory grid ══ */}
       <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
 
-        {/* Item detail panel — shown on hover */}
-        {hoveredItem && (
-          <div style={{ display:"flex", gap:12, padding:"0.75rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.07)", background:"rgba(15,23,42,0.9)", alignItems:"flex-start" }}>
+        {/* Item detail panel — fixed height, always visible */}
+        <div style={{ height:120, flexShrink:0, display:"flex", gap:12, padding:"0.75rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.07)", background:"rgba(15,23,42,0.9)", alignItems:"flex-start", overflow:"hidden" }}>
+          {hoveredItem ? (<>
             <ArtThumb src={getItemImage(hoveredItem.item)} alt={hoveredItem.item.name} size={80} radius={8} />
-            <div style={{ flex:1 }}>
+            <div style={{ flex:1, minWidth:0 }}>
               <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.88rem", color: rarityColors[hoveredItem.item.rarity]||"#e2d9c5", fontWeight:700 }}>{hoveredItem.item.name}</div>
               <div style={{ fontSize:"0.68rem", color:"#64748b", marginBottom:4 }}>{itemRarityLabel(hoveredItem.item.rarity)} · {itemTypeLabel(hoveredItem.item.type)}</div>
-              <div style={{ fontSize:"0.72rem", color:"#94a3b8", lineHeight:1.5 }}>{hoveredItem.item.description}</div>
+              <div style={{ fontSize:"0.72rem", color:"#94a3b8", lineHeight:1.5, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{hoveredItem.item.description}</div>
               <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:4 }}>
                 {itemStatSummary(hoveredItem.item).map(s=>(
                   <span key={s} style={{ fontSize:"0.68rem", background:"rgba(255,255,255,0.05)", border:"1px solid #1f2937", borderRadius:999, padding:"1px 7px", color:"#d1d5db" }}>{s}</span>
@@ -7673,8 +7673,12 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
               )}
               <SmallBtn onClick={()=>onSell(hoveredItem)}>Vendi</SmallBtn>
             </div>
-          </div>
-        )}
+          </>) : (
+            <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <span style={{ fontSize:"0.75rem", color:"#1e293b" }}>Passa il mouse su un item per vedere i dettagli</span>
+            </div>
+          )}
+        </div>
 
         {/* Sort bar */}
         <div style={{ display:"flex", gap:6, padding:"0.5rem 0.75rem", borderBottom:"1px solid rgba(255,255,255,0.06)", flexShrink:0 }}>
