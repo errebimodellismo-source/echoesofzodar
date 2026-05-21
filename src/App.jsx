@@ -6886,7 +6886,7 @@ function CharacterViewer({ me, equippedItems, size, fillContainer }) {
         src={baseSprite}
         alt="personaggio"
         onError={e => { e.currentTarget.style.display="none"; }}
-        style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none" }}
+        style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none", filter:"brightness(1.4) contrast(1.1)" }}
       />
       {/* Equipment overlays */}
       {overlaySlots.map(slot => {
@@ -7611,7 +7611,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
 
           {/* Character */}
           <div style={{ flex:1, alignSelf:"stretch", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, minWidth:0, overflow:"hidden" }}>
-            <div style={{ flex:1, width:"100%", minHeight:0, position:"relative", borderRadius:12 }}>
+            <div style={{ flex:1, width:"100%", minHeight:0, position:"relative", borderRadius:12, background:"rgba(80,70,100,0.25)" }}>
               <CharacterViewer me={me} equippedItems={equippedItems} fillContainer />
             </div>
             <div style={{ display:"flex", gap:8, flexShrink:0 }}>
