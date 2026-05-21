@@ -6844,7 +6844,7 @@ function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick }
     <div
       onClick={() => onPick ? onPick(slotCfg.key) : (isEmpty ? null : onSelect(slotCfg.key))}
       style={{
-        width:90, height:90, borderRadius:12,
+        width:76, height:76, borderRadius:10,
         background: isEmpty ? "rgba(0,0,0,0.35)" : "rgba(15,23,42,0.9)",
         border: `2px solid ${isSelected ? "#fbbf24" : borderColor}`,
         display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
@@ -6863,7 +6863,7 @@ function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick }
         </>
       ) : (
         <>
-          <ArtThumb src={getItemImage(item)} alt={item.name} size={72} radius={8} />
+          <ArtThumb src={getItemImage(item)} alt={item.name} size={60} radius={6} />
           <span style={{ fontSize:"0.44rem", color: rarityColors[item.rarity] || "#94a3b8", marginTop:2, fontFamily:"'Cinzel',serif", maxWidth:84, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.name}</span>
         </>
       )}
@@ -7592,7 +7592,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
     <div style={{ flex:1, display:"flex", overflow:"hidden", height:"100%" }}>
 
       {/* ══ LEFT — mannequin + slots ══ */}
-      <div style={{ width: isMobile ? "100%" : 420, flexShrink:0, display:"flex", flexDirection:"column", borderRight:"1px solid rgba(255,255,255,0.07)", background:"rgba(5,8,18,0.6)" }}>
+      <div style={{ width: isMobile ? "100%" : 360, flexShrink:0, display:"flex", flexDirection:"column", borderRight:"1px solid rgba(255,255,255,0.07)", background:"rgba(5,8,18,0.6)" }}>
 
         {/* Stats bar */}
         <div style={{ display:"flex", gap:12, padding:"0.6rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.06)", flexWrap:"wrap" }}>
@@ -7692,7 +7692,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
 
         {/* Grid */}
         <div style={{ flex:1, overflowY:"auto", padding:"0.75rem" }}>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(12, 1fr)", gap:8 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(80px, 1fr))", gap:8 }}>
             {filteredGroups.map(g => {
               const item = g.item;
               if(!item) return null;
@@ -7707,13 +7707,14 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
                   style={{
                     background: isEquipped?"rgba(251,191,36,0.08)": isHovered?"rgba(99,102,241,0.12)":"rgba(15,23,42,0.7)",
                     border:`2px solid ${isEquipped?"#fbbf24": isHovered?rc:"rgba(255,255,255,0.08)"}`,
-                    borderRadius:10, padding:"0.5rem", cursor:"pointer", textAlign:"center",
+                    borderRadius:10, padding:"0.4rem 0.3rem", cursor:"pointer", textAlign:"center",
                     transition:"border-color 0.15s, background 0.15s", position:"relative",
+                    display:"flex", flexDirection:"column", alignItems:"center",
                   }}>
                   {isEquipped && <div style={{ position:"absolute", top:3, right:4, fontSize:"0.5rem", color:"#fbbf24" }}>★</div>}
                   {g.quantity > 1 && <div style={{ position:"absolute", top:3, left:4, fontSize:"0.55rem", color:"#c4b5fd", fontWeight:700 }}>×{g.quantity}</div>}
-                  <ArtThumb src={getItemImage(item)} alt={item.name} size={70} radius={6} />
-                  <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.58rem", color:rc, marginTop:4, lineHeight:1.2, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{item.name}</div>
+                  <ArtThumb src={getItemImage(item)} alt={item.name} size={64} radius={6} />
+                  <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.56rem", color:rc, marginTop:3, lineHeight:1.2, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", width:"100%" }}>{item.name}</div>
                 </div>
               );
             })}
