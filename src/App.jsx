@@ -6836,13 +6836,13 @@ const SLOT_CONFIG = [
   { key:"cloak",   label:"Mantello", icon:"🧣",  pos:"right2" },
 ];
 
-function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect }) {
+function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick }) {
   const isEmpty = !item;
   const rarityColors = { common:"#94a3b8", uncommon:"#22c55e", rare:"#3b82f6", epic:"#a855f7", legendary:"#f59e0b" };
   const borderColor = isEmpty ? "rgba(255,255,255,0.1)" : (rarityColors[item?.rarity] || "#94a3b8");
   return (
     <div
-      onClick={() => isEmpty ? null : onSelect(slotCfg.key)}
+      onClick={() => onPick ? onPick(slotCfg.key) : (isEmpty ? null : onSelect(slotCfg.key))}
       style={{
         width:90, height:90, borderRadius:12,
         background: isEmpty ? "rgba(0,0,0,0.35)" : "rgba(15,23,42,0.9)",
@@ -7561,10 +7561,25 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
   );
 }
 
-function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, isMobile }) {
+function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, inventoryGroups, isMobile }) {
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [pickerSlot, setPickerSlot] = useState(null);
   const selectedItem = selectedSlot ? equippedItems[selectedSlot] : null;
   const rarityColors = { common:"#94a3b8", uncommon:"#22c55e", rare:"#3b82f6", epic:"#a855f7", legendary:"#f59e0b" };
+
+  function openPicker(slotKey) {
+    setPickerSlot(slotKey);
+    setSelectedSlot(null);
+  }
+
+  // Items in inventory that fit this slot
+  const pickerSlotCfg = pickerSlot ? SLOT_CONFIG.find(s => s.key === pickerSlot) : null;
+  const pickerItems = pickerSlot && inventoryGroups ? inventoryGroups.filter(g => {
+    const item = g.item;
+    if(!item) return false;
+    // match by slot or type
+    return item.slot === pickerSlot || item.type === pickerSlotCfg?.type;
+  }) : [];
 
   const leftSlots  = ["head","chest","legs","boots","ring1"];
   const rightSlots = ["weapon","offhand","amulet","gloves","ring2"];
@@ -7600,7 +7615,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, isMobile 
           <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
             {leftSlots.map(k => {
               const cfg = SLOT_CONFIG.find(s => s.key === k);
-              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} />;
+              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} onPick={openPicker} />;
             })}
           </div>
 
@@ -7610,7 +7625,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, isMobile 
             <div style={{ display:"flex", gap:10 }}>
               {bottomSlots.map(k => {
                 const cfg = SLOT_CONFIG.find(s => s.key === k);
-                return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} />;
+                return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} onPick={openPicker} />;
               })}
             </div>
           </div>
@@ -7619,10 +7634,49 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, isMobile 
           <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
             {rightSlots.map(k => {
               const cfg = SLOT_CONFIG.find(s => s.key === k);
-              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} />;
+              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} onPick={openPicker} />;
             })}
           </div>
         </div>
+
+        {/* ── Slot picker modal ── */}
+        {pickerSlot && (
+          <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", zIndex:9000, display:"flex", alignItems:"center", justifyContent:"center" }} onClick={()=>setPickerSlot(null)}>
+            <div style={{ background:"rgba(10,15,30,0.98)", border:"1px solid #7c3aed", borderRadius:16, padding:"1.5rem", maxWidth:600, width:"90%", maxHeight:"80vh", overflowY:"auto" }} onClick={e=>e.stopPropagation()}>
+              <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"1rem" }}>
+                <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize:"1rem" }}>{pickerSlotCfg?.icon} {pickerSlotCfg?.label} — Scegli item</div>
+                <button onClick={()=>setPickerSlot(null)} style={{ background:"none", border:"none", color:"#94a3b8", fontSize:"1.2rem", cursor:"pointer" }}>✕</button>
+              </div>
+              {pickerItems.length === 0 && <div style={{ color:"#4b5563", fontSize:"0.85rem" }}>Nessun item di questo tipo nell'inventario.</div>}
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(130px,1fr))", gap:12 }}>
+                {pickerItems.map(g => {
+                  const item = g.item;
+                  const isEquipped = equippedItems[pickerSlot]?.id === item.id;
+                  const rc = rarityColors[item.rarity] || "#94a3b8";
+                  return (
+                    <div key={item.id} onClick={()=>{ onEquip(g.entries[0]); setPickerSlot(null); }}
+                      style={{ background: isEquipped?"rgba(251,191,36,0.1)":"rgba(15,23,42,0.8)", border:`2px solid ${isEquipped?"#fbbf24":rc}`, borderRadius:12, padding:"0.75rem", cursor:"pointer", textAlign:"center", transition:"transform 0.15s", position:"relative" }}
+                      onMouseEnter={e=>e.currentTarget.style.transform="scale(1.05)"}
+                      onMouseLeave={e=>e.currentTarget.style.transform="scale(1)"}>
+                      {isEquipped && <div style={{ position:"absolute", top:4, right:6, fontSize:"0.6rem", color:"#fbbf24", fontFamily:"'Cinzel',serif" }}>★ equip</div>}
+                      <ArtThumb src={getItemImage(item)} alt={item.name} size={90} radius={8} />
+                      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.7rem", color:rc, marginTop:6, fontWeight:700, lineHeight:1.3 }}>{item.name}</div>
+                      {g.quantity > 1 && <div style={{ fontSize:"0.6rem", color:"#64748b" }}>×{g.quantity}</div>}
+                    </div>
+                  );
+                })}
+              </div>
+              {equippedItems[pickerSlot] && (
+                <div style={{ marginTop:"1rem", borderTop:"1px solid #334155", paddingTop:"0.75rem" }}>
+                  <button onClick={()=>{ onUnequip(pickerSlot); setPickerSlot(null); }}
+                    style={{ padding:"0.4rem 1rem", background:"rgba(127,29,29,0.4)", border:"1px solid #7f1d1d", borderRadius:8, color:"#f87171", cursor:"pointer", fontSize:"0.8rem" }}>
+                    🗑 Rimuovi equipaggiamento
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* ── Selected item detail ── */}
         {selectedItem && (
@@ -12013,6 +12067,8 @@ ${stepText(step)}`, "quest","Master");
             equippedItems={equippedItems}
             equippedWeapon={equippedWeapon}
             onUnequip={unequipItem}
+            onEquip={equipItem}
+            inventoryGroups={inventoryGroups}
             isMobile={isMobile}
           />
         )}
