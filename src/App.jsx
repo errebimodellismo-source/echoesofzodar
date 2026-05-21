@@ -7561,20 +7561,30 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
   );
 }
 
+const RARITY_ORDER_INV = { common:0, uncommon:1, rare:2, epic:3, legendary:4 };
+
 function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, inventoryGroups, onSell, onUse, canUseConsumables, isMobile }) {
   const [activeSlot, setActiveSlot] = useState(null);
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [sortBy, setSortBy] = useState("type"); // type | rarity | price | name
   const rarityColors = { common:"#94a3b8", uncommon:"#22c55e", rare:"#3b82f6", epic:"#a855f7", legendary:"#f59e0b" };
 
   const leftSlots  = ["head","chest","legs","boots","ring1"];
   const rightSlots = ["weapon","offhand","amulet","gloves","ring2"];
   const bottomSlots = ["cloak"];
 
-  // Filter inventory to show only items matching active slot
   const activeSlotCfg = activeSlot ? SLOT_CONFIG.find(s => s.key === activeSlot) : null;
-  const filteredGroups = activeSlot && inventoryGroups
+  const baseGroups = activeSlot && inventoryGroups
     ? inventoryGroups.filter(g => g.item && (g.item.slot === activeSlot || g.item.type === activeSlotCfg?.type))
     : inventoryGroups || [];
+
+  const filteredGroups = [...baseGroups].sort((a, b) => {
+    if(sortBy === "type")   return (a.item.type||"").localeCompare(b.item.type||"") || a.item.name.localeCompare(b.item.name);
+    if(sortBy === "rarity") return (RARITY_ORDER_INV[b.item.rarity]||0) - (RARITY_ORDER_INV[a.item.rarity]||0);
+    if(sortBy === "price")  return (b.item.price||0) - (a.item.price||0);
+    if(sortBy === "name")   return a.item.name.localeCompare(b.item.name);
+    return 0;
+  });
 
   const equippableTypes = new Set(["weapon","armor","shield","head","legs","boots","gloves","cloak","accessory"]);
 
@@ -7666,9 +7676,23 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
           </div>
         )}
 
+        {/* Sort bar */}
+        <div style={{ display:"flex", gap:6, padding:"0.5rem 0.75rem", borderBottom:"1px solid rgba(255,255,255,0.06)", flexShrink:0 }}>
+          <span style={{ fontSize:"0.68rem", color:"#475569", alignSelf:"center", marginRight:4 }}>Ordina:</span>
+          {[["type","📦 Tipo"],["rarity","💎 Rarità"],["price","💰 Prezzo"],["name","🔤 Nome"]].map(([k,l])=>(
+            <button key={k} onClick={()=>setSortBy(k)}
+              style={{ padding:"2px 10px", fontSize:"0.68rem", borderRadius:6, cursor:"pointer", fontFamily:"'Cinzel',serif",
+                background: sortBy===k ? "rgba(124,58,237,0.35)" : "rgba(15,23,42,0.6)",
+                border: `1px solid ${sortBy===k?"#7c3aed":"#334155"}`,
+                color: sortBy===k ? "#c4b5fd" : "#64748b" }}>
+              {l}
+            </button>
+          ))}
+        </div>
+
         {/* Grid */}
         <div style={{ flex:1, overflowY:"auto", padding:"0.75rem" }}>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(90px,1fr))", gap:8 }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(12, 1fr)", gap:8 }}>
             {filteredGroups.map(g => {
               const item = g.item;
               if(!item) return null;
