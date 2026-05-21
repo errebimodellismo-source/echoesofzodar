@@ -6844,7 +6844,7 @@ function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect }) {
     <div
       onClick={() => isEmpty ? null : onSelect(slotCfg.key)}
       style={{
-        width:54, height:54, borderRadius:10,
+        width:90, height:90, borderRadius:12,
         background: isEmpty ? "rgba(0,0,0,0.35)" : "rgba(15,23,42,0.9)",
         border: `2px solid ${isSelected ? "#fbbf24" : borderColor}`,
         display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
@@ -6852,19 +6852,19 @@ function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect }) {
         transition:"border-color 0.2s, transform 0.15s",
         transform: isSelected ? "scale(1.08)" : "scale(1)",
         boxShadow: isSelected ? "0 0 12px rgba(251,191,36,0.4)" : isEmpty ? "none" : `0 0 8px ${borderColor}44`,
-        position:"relative",
+        position:"relative", overflow:"hidden",
       }}
       title={slotCfg.label}
     >
       {isEmpty ? (
         <>
-          <span style={{ fontSize:"1.2rem", opacity:0.3 }}>{slotCfg.icon}</span>
-          <span style={{ fontSize:"0.45rem", color:"#475569", marginTop:1, fontFamily:"'Cinzel',serif" }}>{slotCfg.label}</span>
+          <span style={{ fontSize:"1.8rem", opacity:0.3 }}>{slotCfg.icon}</span>
+          <span style={{ fontSize:"0.5rem", color:"#475569", marginTop:2, fontFamily:"'Cinzel',serif" }}>{slotCfg.label}</span>
         </>
       ) : (
         <>
-          <span style={{ fontSize:"1.4rem" }}>{item.emoji || slotCfg.icon}</span>
-          <span style={{ fontSize:"0.42rem", color: rarityColors[item.rarity] || "#94a3b8", marginTop:1, fontFamily:"'Cinzel',serif", maxWidth:50, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.name}</span>
+          <ArtThumb src={getItemImage(item)} alt={item.name} size={72} radius={8} />
+          <span style={{ fontSize:"0.44rem", color: rarityColors[item.rarity] || "#94a3b8", marginTop:2, fontFamily:"'Cinzel',serif", maxWidth:84, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.name}</span>
         </>
       )}
     </div>
