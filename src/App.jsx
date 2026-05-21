@@ -6902,13 +6902,15 @@ function CharacterViewer({ me, equippedItems, size, fillContainer }) {
           />
         );
       })}
-      {/* Fallback silhouette if no base sprite */}
-      <div style={{
-        position:"absolute", inset:0, display:"flex", alignItems:"center", justifyContent:"center",
-        fontSize:"5rem", opacity: 0.15, userSelect:"none", pointerEvents:"none",
-      }}>
-        👤
-      </div>
+      {/* Fallback silhouette */}
+      <svg viewBox="0 0 100 200" style={{ position:"absolute", inset:0, width:"100%", height:"100%", opacity:0.18, pointerEvents:"none" }} fill="rgba(167,139,250,0.8)">
+        <ellipse cx="50" cy="22" rx="16" ry="18"/>
+        <rect x="28" y="42" width="44" height="70" rx="8"/>
+        <rect x="10" y="44" width="18" height="55" rx="7"/>
+        <rect x="72" y="44" width="18" height="55" rx="7"/>
+        <rect x="30" y="112" width="17" height="70" rx="7"/>
+        <rect x="53" y="112" width="17" height="70" rx="7"/>
+      </svg>
     </div>
   );
 }
@@ -7618,8 +7620,8 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
 
           {/* Character */}
           <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, minWidth:0, overflow:"hidden" }}>
-            <div style={{ flex:1, width:"100%", display:"flex", alignItems:"center", justifyContent:"center", minHeight:0 }}>
-              <CharacterViewer me={me} equippedItems={equippedItems} fillContainer />
+            <div style={{ width:200, height:400, flexShrink:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+              <CharacterViewer me={me} equippedItems={equippedItems} size={200} />
             </div>
             <div style={{ display:"flex", gap:8, flexShrink:0 }}>
               {bottomSlots.map(k => {
