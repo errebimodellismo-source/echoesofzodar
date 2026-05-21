@@ -90,11 +90,10 @@ class AudioManager {
 
     if (this.bgm) {
       const oldBgm = this.bgm;
-      this.bgm = null; // dissocia subito così _startBGM non lo usa
+      this.bgm = null;
       oldBgm.fade(oldBgm.volume(), 0, 800);
       this._fadeTimer = setTimeout(() => {
         oldBgm.stop();
-        oldBgm.unload();
         this._fadeTimer = null;
         this._startBGM(theme);
       }, 850);
@@ -104,12 +103,11 @@ class AudioManager {
   }
 
   _startBGM(theme) {
-    if (!this.musicEnabled) return; // rispetta lo stato OFF
+    if (!this.musicEnabled) return;
     const url = this.bgmUrls[theme];
     if (!url) return;
 
-    // Stoppa eventuale BGM rimasto
-    if (this.bgm) { this.bgm.stop(); this.bgm.unload(); }
+    if (this.bgm) { this.bgm.stop(); }
 
     this.bgm = new Howl({ src: [url], html5: true, loop: true, volume: 0 });
     this.bgm.play();
