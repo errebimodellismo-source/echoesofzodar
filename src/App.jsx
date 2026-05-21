@@ -6871,13 +6871,16 @@ function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick }
   );
 }
 
-function CharacterViewer({ me, equippedItems }) {
+function CharacterViewer({ me, equippedItems, size, fillContainer }) {
   const race = me?.race || "human";
   const gender = me?.gender || "male";
   const baseSprite = `/assets/equip/base_${race}_${gender}.png`;
   const overlaySlots = ["chest","legs","boots","gloves","head","weapon","offhand","cloak","amulet"];
+  const containerStyle = fillContainer
+    ? { position:"relative", width:"100%", height:"100%", maxWidth:"100%", maxHeight:"100%" }
+    : { position:"relative", width: size||240, height: size ? size*2 : 480, margin:"0 auto", flexShrink:0 };
   return (
-    <div style={{ position:"relative", width:240, height:480, margin:"0 auto" }}>
+    <div style={containerStyle}>
       {/* Base character */}
       <img
         src={baseSprite}
@@ -7604,7 +7607,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
         </div>
 
         {/* Doll area */}
-        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:10, padding:"0.75rem" }}>
+        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:14, padding:"0.75rem", overflow:"hidden" }}>
           {/* Left slots */}
           <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
             {leftSlots.map(k => {
@@ -7614,9 +7617,11 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
           </div>
 
           {/* Character */}
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:8 }}>
-            <CharacterViewer me={me} equippedItems={equippedItems} />
-            <div style={{ display:"flex", gap:8 }}>
+          <div style={{ flex:1, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, minWidth:0, overflow:"hidden" }}>
+            <div style={{ flex:1, width:"100%", display:"flex", alignItems:"center", justifyContent:"center", minHeight:0 }}>
+              <CharacterViewer me={me} equippedItems={equippedItems} fillContainer />
+            </div>
+            <div style={{ display:"flex", gap:8, flexShrink:0 }}>
               {bottomSlots.map(k => {
                 const cfg = SLOT_CONFIG.find(s => s.key === k);
                 return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={activeSlot===k} onSelect={setActiveSlot} onPick={setActiveSlot} />;
