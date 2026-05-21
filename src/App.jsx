@@ -7595,9 +7595,9 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, isMobile 
         </div>
 
         {/* ── Character doll ── */}
-        <div style={{ flex:1, display:"flex", gap:8, alignItems:"center", justifyContent:"center", minWidth:360 }}>
+        <div style={{ flex:1, display:"flex", gap:16, alignItems:"center", justifyContent:"center", minWidth:480 }}>
           {/* Left slots */}
-          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
             {leftSlots.map(k => {
               const cfg = SLOT_CONFIG.find(s => s.key === k);
               return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} />;
@@ -7605,16 +7605,18 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, isMobile 
           </div>
 
           {/* Center character */}
-          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:6 }}>
+          <div style={{ display:"flex", flexDirection:"column", alignItems:"center", gap:10 }}>
             <CharacterViewer me={me} equippedItems={equippedItems} />
-            {bottomSlots.map(k => {
-              const cfg = SLOT_CONFIG.find(s => s.key === k);
-              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} />;
-            })}
+            <div style={{ display:"flex", gap:10 }}>
+              {bottomSlots.map(k => {
+                const cfg = SLOT_CONFIG.find(s => s.key === k);
+                return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} />;
+              })}
+            </div>
           </div>
 
           {/* Right slots */}
-          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
             {rightSlots.map(k => {
               const cfg = SLOT_CONFIG.find(s => s.key === k);
               return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={selectedSlot===k} onSelect={setSelectedSlot} />;
