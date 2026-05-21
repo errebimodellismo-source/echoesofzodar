@@ -1921,6 +1921,9 @@ function getItemImage(item) {
   if(!item) return "";
   if(item.image) return item.image;
   if(item.image_url) return item.image_url;
+  // Strip enhancement suffix (e.g. "weapon_sword+2" → "weapon_sword") and try PNG
+  const baseId = item.id ? item.id.replace(/[+\-]\d+$/, '') : null;
+  if(baseId) return `/assets/items/${baseId}.png`;
   const theme = itemImageTheme(item);
   return makeArchetypeImage({ ...theme, title:theme.title || itemTypeLabel(item.type), subtitle:itemRarityLabel(item.rarity) });
 }
