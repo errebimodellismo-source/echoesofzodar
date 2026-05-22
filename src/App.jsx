@@ -3327,6 +3327,11 @@ function CreateChar({ setScreen, goGame, authUser }) {
   const [secretInput, setSecretInput] = useState("");
   const [secretUnlocked, setSecretUnlocked] = useState(() => localStorage.getItem(SECRET_UNLOCK_KEY) === "1");
   const [secretError, setSecretError] = useState(false);
+  const [faceVariant, setFaceVariant] = useState(1);
+  const [hairVariant, setHairVariant] = useState(1);
+  const [eyesVariant, setEyesVariant] = useState(1);
+  const [scarVariant, setScarVariant] = useState(0); // 0 = nessuna
+  const [beardVariant, setBeardVariant] = useState(0); // 0 = nessuna
   const c = CLASSES[cls]; const r = RACES[race];
 
   function tryUnlock() {
@@ -3355,6 +3360,11 @@ function CreateChar({ setScreen, goGame, authUser }) {
         hp:maxHp, maxHp, atk:c.atk+r.atkB, def:c.def+r.defB,
         mag:c.mag+r.magB, init:c.init+r.initB,
         xp:0, level:1, gold:20, dead:false,
+        portrait_face: faceVariant,
+        portrait_hair: hairVariant,
+        portrait_eyes: eyesVariant,
+        portrait_scar: scarVariant,
+        portrait_beard: beardVariant,
       };
       debugCharacterFlow("create_player_generated", player);
       debugCharacterFlow("save_attempt", { id: player.id, accountId: player.accountId, partyCode: player.partyCode });
@@ -3401,7 +3411,11 @@ function CreateChar({ setScreen, goGame, authUser }) {
   }
 
   const canContinueFromName = name.trim() && realPlayerName.trim();
-  const steps = ["Nomi","Classe","Razza e Genere","Party"];
+  const RACES_WITH_HAIR = ["human","elf","dwarf","halfling","gnome","halfelf","halforc"];
+  const RACES_WITH_BEARD = ["human","dwarf","gnome","halfelf","halforc"];
+  const hasHair = RACES_WITH_HAIR.includes(race);
+  const hasBeard = RACES_WITH_BEARD.includes(race) && gender === "male";
+  const steps = ["Nomi","Classe","Razza e Genere","Aspetto","Party"];
   return (
     <div style={{ position:"relative", zIndex:1, maxWidth:620, margin:"0 auto", padding:"1.5rem 1rem", minHeight:"100vh" }}>
       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:"1.5rem" }}>
@@ -3499,6 +3513,91 @@ function CreateChar({ setScreen, goGame, authUser }) {
         </Card>
       )}
       {step===3 && (
+        <Card title="🎨 Personalizza il tuo Aspetto">
+          {/* Anteprima ritratto */}
+          <div style={{ display:"flex", justifyContent:"center", marginBottom:"1rem" }}>
+            <div style={{ position:"relative", width:160, height:160, borderRadius:"50%", overflow:"hidden", border:"3px solid #a78bfa", boxShadow:"0 0 20px rgba(167,139,250,0.3)", background:"#0a0e17" }}>
+              <img src={`/assets/portraits/${race}_${gender}_face_${faceVariant}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} alt="viso" />
+              {hasHair && <img src={`/assets/portraits/${race}_${gender}_hair_${hairVariant}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} alt="capelli" />}
+              <img src={`/assets/portraits/${race}_${gender}_eyes_${eyesVariant}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} alt="occhi" />
+              {scarVariant > 0 && <img src={`/assets/portraits/${race}_${gender}_scar_${scarVariant}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} alt="cicatrice" />}
+              {hasBeard && beardVariant > 0 && <img src={`/assets/portraits/${race}_${gender}_beard_${beardVariant}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} alt="barba" />}
+            </div>
+          </div>
+
+          {/* Viso */}
+          <div style={{ marginBottom:"1rem" }}>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>👤 Viso</div>
+            <div style={{ display:"flex", gap:8 }}>
+              {[1,2,3,4,5].map(i => (
+                <button key={i} onClick={()=>setFaceVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${faceVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0 }}>
+                  <img src={`/assets/portraits/${race}_${gender}_face_${i}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ width:"100%", height:"100%", objectFit:"cover" }} alt={`Viso ${i}`} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Capelli */}
+          {hasHair && (
+            <div style={{ marginBottom:"1rem" }}>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>💇 Capelli</div>
+              <div style={{ display:"flex", gap:8 }}>
+                {[1,2,3].map(i => (
+                  <button key={i} onClick={()=>setHairVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${hairVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0 }}>
+                    <img src={`/assets/portraits/${race}_${gender}_hair_${i}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ width:"100%", height:"100%", objectFit:"cover" }} alt={`Capelli ${i}`} />
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Occhi */}
+          <div style={{ marginBottom:"1rem" }}>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>👁️ Occhi</div>
+            <div style={{ display:"flex", gap:8 }}>
+              {[1,2,3].map(i => (
+                <button key={i} onClick={()=>setEyesVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${eyesVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0 }}>
+                  <img src={`/assets/portraits/${race}_${gender}_eyes_${i}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ width:"100%", height:"100%", objectFit:"cover" }} alt={`Occhi ${i}`} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Cicatrice */}
+          <div style={{ marginBottom:"1rem" }}>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>⚔️ Cicatrice</div>
+            <div style={{ display:"flex", gap:8 }}>
+              {[0,1,2].map(i => (
+                <button key={i} onClick={()=>setScarVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${scarVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  {i===0 ? <span style={{ color:"#475569", fontSize:"0.65rem", fontFamily:"'Cinzel',serif" }}>Nessuna</span> :
+                    <img src={`/assets/portraits/${race}_${gender}_scar_${i}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ width:"100%", height:"100%", objectFit:"cover" }} alt={`Cicatrice ${i}`} />}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Barba (maschio con razze compatibili) */}
+          {hasBeard && (
+            <div style={{ marginBottom:"1rem" }}>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>🧔 Barba</div>
+              <div style={{ display:"flex", gap:8 }}>
+                {[0,1,2].map(i => (
+                  <button key={i} onClick={()=>setBeardVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${beardVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    {i===0 ? <span style={{ color:"#475569", fontSize:"0.65rem", fontFamily:"'Cinzel',serif" }}>Nessuna</span> :
+                      <img src={`/assets/portraits/${race}_${gender}_beard_${i}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ width:"100%", height:"100%", objectFit:"cover" }} alt={`Barba ${i}`} />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div style={{ display:"flex", gap:8, marginTop:"1rem" }}>
+            <SmallBtn onClick={()=>setStep(2)}>🔙 Indietro</SmallBtn>
+            <BigBtn onClick={()=>setStep(4)} gold>Avanti ⏩</BigBtn>
+          </div>
+        </Card>
+      )}
+      {step===4 && (
         <Card title="👥 Conferma Eroe & Party">
           <div style={{ background:"rgba(10,14,23,0.8)", border:"1px solid #374151", borderRadius:6, padding:"1.2rem", marginBottom:"1rem", display:"flex", flexDirection:"column", alignItems:"center", gap:15 }}>
             <div style={{ width: 140, height: 140, borderRadius: '50%', overflow: 'hidden', border: '3px solid #fbbf24', boxShadow: '0 0 20px rgba(251,191,36,0.3)', backgroundColor: '#000', position:'relative' }}>
@@ -3524,7 +3623,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
           <input style={inputStyle} value={code} onChange={e=>setCode(e.target.value.toUpperCase())} placeholder="Es: DRAGON8" maxLength={8} />
           <p style={{ color:"#64748b", fontSize:"0.75rem", margin:"6px 0 0", lineHeight:1.5 }}>Se giochi da solo, lascia vuoto. Se giochi con amici, inserite tutti lo stesso codice.</p>
           <div style={{ display:"flex", gap:8, marginTop:"1.5rem" }}>
-            <SmallBtn onClick={()=>setStep(2)}>🔙 Indietro</SmallBtn>
+            <SmallBtn onClick={()=>setStep(3)}>🔙 Indietro</SmallBtn>
             <BigBtn onClick={create} gold icon="⭐" disabled={loading}>{loading?"Creazione in corso...":"Conferma ed Entra"}</BigBtn>
           </div>
         </Card>
