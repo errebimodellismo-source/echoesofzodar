@@ -3234,7 +3234,7 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
             <BigBtn onClick={()=>setScreen("create")} gold icon="🛠️">Nuovo Eroe</BigBtn>
             <BigBtn onClick={logout} dark icon="🚪">Esci</BigBtn>
             {canAccessMasterPanel(authUser) && <BigBtn onClick={()=>setScreen("master")} dark icon="🛡️">Pannello Master</BigBtn>}
-            {authUser?.email === "errebimodellismo@gmail.com" && (
+            {["errebimodellismo@gmail.com","roppo@hotmail.it"].includes(authUser?.email) && (
               <button onClick={()=>setScreen("create_zodar")}
                 style={{ padding:"0.6rem 1.2rem", background:"linear-gradient(135deg,rgba(109,40,217,0.3),rgba(30,0,60,0.6))", border:"1px solid rgba(168,85,247,0.5)", borderRadius:8, color:"#c084fc", fontFamily:"'Cinzel',serif", fontSize:"0.8rem", letterSpacing:"0.08em", cursor:"pointer", display:"flex", alignItems:"center", gap:6 }}>
                 ⚖️ Incarnati come Zodar
