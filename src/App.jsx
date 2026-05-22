@@ -7683,6 +7683,85 @@ const MAP_ZONES = [
     x:42, y:72, w:14, h:16, color:"#a855f7", isDangerous:true },
 ];
 
+// ── LoreView ─────────────────────────────────────────────────────────────────
+function LoreView() {
+  const S = {
+    wrap: { flex:1, overflow:"auto", display:"flex", flexDirection:"column", alignItems:"center", padding:"2rem 1rem 4rem", background:"rgba(2,4,15,0.7)" },
+    card: { maxWidth:720, width:"100%", background:"rgba(10,8,30,0.92)", border:"1px solid rgba(124,58,237,0.35)", borderRadius:16, padding:"2.5rem 2rem", boxShadow:"0 0 60px rgba(80,0,200,0.15)", position:"relative", overflow:"hidden" },
+    glow: { position:"absolute", top:-80, left:"50%", transform:"translateX(-50%)", width:400, height:200, background:"radial-gradient(ellipse, rgba(124,58,237,0.18) 0%, transparent 70%)", pointerEvents:"none" },
+    symbol: { textAlign:"center", fontSize:"3.5rem", marginBottom:"0.5rem" },
+    title: { textAlign:"center", fontFamily:"'Cinzel',serif", fontSize:"1.7rem", color:"#c4b5fd", letterSpacing:"0.1em", marginBottom:"0.3rem" },
+    subtitle: { textAlign:"center", fontFamily:"'Cinzel',serif", fontSize:"0.85rem", color:"#6d28d9", letterSpacing:"0.15em", marginBottom:"2rem" },
+    divider: { border:"none", borderTop:"1px solid rgba(124,58,237,0.25)", margin:"1.5rem 0" },
+    quote: { borderLeft:"3px solid #7c3aed", paddingLeft:"1.2rem", margin:"1.5rem 0", color:"#a78bfa", fontStyle:"italic", lineHeight:1.8, fontSize:"0.95rem" },
+    p: { color:"#cbd5e1", lineHeight:1.9, fontSize:"0.95rem", marginBottom:"1rem" },
+    pBig: { color:"#e2e8f0", lineHeight:1.9, fontSize:"1.05rem", fontFamily:"'Cinzel',serif", marginBottom:"1rem", textAlign:"center" },
+    highlight: { color:"#c4b5fd", fontFamily:"'Cinzel',serif", fontSize:"1.1rem", display:"block", textAlign:"center", margin:"0.8rem 0" },
+    tag: { display:"inline-block", background:"rgba(109,40,217,0.25)", border:"1px solid rgba(124,58,237,0.4)", borderRadius:20, padding:"0.3rem 1rem", color:"#c4b5fd", fontFamily:"'Cinzel',serif", fontSize:"0.8rem", letterSpacing:"0.12em", margin:"0.3rem auto", textAlign:"center" },
+    echoes: { marginTop:"2.5rem", padding:"1.5rem", background:"rgba(109,40,217,0.08)", border:"1px solid rgba(124,58,237,0.2)", borderRadius:12 },
+    echoTitle: { fontFamily:"'Cinzel',serif", color:"#a78bfa", fontSize:"1rem", letterSpacing:"0.1em", marginBottom:"0.8rem" },
+  };
+  return (
+    <div style={S.wrap}>
+      <div style={S.card}>
+        <div style={S.glow} />
+        <div style={S.symbol}>⚖️</div>
+        <div style={S.title}>Chi è Zodar?</div>
+        <div style={S.subtitle}>IL CUSTODE DEL BILANCIAMENTO</div>
+
+        <div style={S.quote}>
+          "Alcuni pregano gli dèi.<br/>
+          Altri li temono.<br/>
+          Ma persino gli dèi… osservano Zodar in silenzio."
+        </div>
+
+        <p style={S.p}>Zodar non è un re.<br/>Non è un dio della luce.<br/>Non è nemmeno il male.</p>
+
+        <span style={S.highlight}>Zodar è l'Equilibrio.</span>
+
+        <p style={S.p}>Un'entità antica quanto l'universo stesso, esistente prima degli imperi, prima dei draghi… forse persino prima del tempo. Nessuno conosce il suo vero aspetto: alcuni lo descrivono come un uomo avvolto nell'ombra, altri come un gigante dagli occhi stellari, altri ancora sostengono che cambi forma a seconda di chi lo osserva.</p>
+
+        <hr style={S.divider} />
+
+        <p style={S.pBig}>Non governa il mondo.<br/>Non salva gli innocenti.<br/>Non distrugge i malvagi.</p>
+        <span style={S.highlight}>Osserva.</span>
+
+        <p style={S.p}>Quando il bene cresce troppo, Zodar permette al caos di rialzarsi.<br/>Quando il male divora ogni cosa, lascia filtrare speranza nelle tenebre.</p>
+
+        <hr style={S.divider} />
+
+        <div style={{ textAlign:"center", marginBottom:"1rem" }}>
+          <span style={S.tag}>⚖️ Il Custode del Bilanciamento</span>
+        </div>
+
+        <p style={S.p}>Le leggende narrano che persino i draghi eterni evitino di sfidarlo apertamente. Si dice che abbia spezzato il canino di Strabo, il Dio Supremo dei Draghi, durante un antico scontro capace di scuotere interi mondi.</p>
+
+        <hr style={S.divider} />
+
+        <p style={S.p}>Eppure…</p>
+        <p style={S.p}>Chi incontra Zodar raramente trova un essere solenne. Le storie parlano di una figura imprevedibile, ironica, quasi folle.<br/>Ride nei momenti sbagliati. Fa domande assurde. Beve, scherza, provoca.</p>
+        <p style={S.p}>Ma dietro quel caos apparente… si nasconde qualcosa di infinitamente più grande.</p>
+
+        <span style={S.highlight}>Perché Zodar vede tutto.</span>
+
+        <p style={S.pBig} style={{ color:"#94a3b8", fontFamily:"inherit", fontSize:"0.95rem", textAlign:"center", lineHeight:2.2 }}>
+          Ogni guerra.<br/>Ogni morte.<br/>Ogni scelta.
+        </p>
+
+        <p style={{ ...S.p, textAlign:"center", color:"#a78bfa", fontSize:"1.05rem", marginTop:"1.5rem" }}>
+          E forse…<br/><br/>
+          <span style={{ color:"#c4b5fd", fontFamily:"'Cinzel',serif", fontSize:"1.1rem" }}>anche te.</span>
+        </p>
+
+        <div style={S.echoes}>
+          <div style={S.echoTitle}>✨ E gli Echi?</div>
+          <p style={{ ...S.p, marginBottom:0 }}>Gli Echi di Zodar sono i riflessi della sua volontà nel mondo: avventurieri, eroi, anime scelte — non sempre consapevolmente — per mantenere il bilanciamento. Tu sei uno di loro. Non sai ancora perché. Forse non lo scoprirai mai. Ma Zodar… lo sa già.</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function MapView({ me, onNavigate }) {
   const [hovered, setHovered] = useState(null);
   const [warning, setWarning] = useState(null);
@@ -8535,6 +8614,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [selectedAllyTarget, setSelectedAllyTarget] = useState(null);
   const [battleChatInput, setBattleChatInput] = useState("");
   const [tab, setTab] = useState("quest");
+  const [showLoreModal, setShowLoreModal] = useState(() => !localStorage.getItem('zodar_lore_seen'));
   const [dismissedVictoryTs, setDismissedVictoryTs] = useState(null);
   const [declinedCombatAt, setDeclinedCombatAt] = useState(null);
   const [nowTick, setNowTick] = useState(Date.now());
@@ -11668,6 +11748,42 @@ ${stepText(step)}`, "quest","Master");
         </div>
       )}
 
+      {/* ── Lore first-access modal ── */}
+      {showLoreModal && (
+        <div style={{ position:"fixed", inset:0, zIndex:99997, background:"rgba(0,0,10,0.88)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
+          <div style={{ width:"min(640px,100%)", maxHeight:"90vh", overflowY:"auto", background:"linear-gradient(160deg,rgba(10,5,30,0.99),rgba(4,2,18,0.99))", border:"1px solid rgba(124,58,237,0.4)", borderRadius:16, boxShadow:"0 0 100px rgba(109,40,217,0.25)", padding:"2.5rem 2rem", position:"relative" }}>
+            <div style={{ position:"absolute", top:0, left:"50%", transform:"translateX(-50%)", width:300, height:120, background:"radial-gradient(ellipse, rgba(109,40,217,0.2) 0%, transparent 70%)", pointerEvents:"none" }} />
+            <div style={{ textAlign:"center", fontSize:"3rem", marginBottom:"0.5rem" }}>⚖️</div>
+            <div style={{ textAlign:"center", fontFamily:"'Cinzel',serif", fontSize:"1.5rem", color:"#c4b5fd", letterSpacing:"0.1em", marginBottom:"0.2rem" }}>Echoes of Zodar</div>
+            <div style={{ textAlign:"center", fontFamily:"'Cinzel',serif", fontSize:"0.75rem", color:"#6d28d9", letterSpacing:"0.2em", marginBottom:"2rem" }}>IL CUSTODE DEL BILANCIAMENTO</div>
+            <div style={{ borderLeft:"3px solid #7c3aed", paddingLeft:"1.2rem", marginBottom:"1.5rem", color:"#a78bfa", fontStyle:"italic", lineHeight:1.8, fontSize:"0.9rem" }}>
+              "Alcuni pregano gli dèi.<br/>Altri li temono.<br/>Ma persino gli dèi… osservano Zodar in silenzio."
+            </div>
+            <p style={{ color:"#cbd5e1", lineHeight:1.9, fontSize:"0.9rem", marginBottom:"1rem" }}>
+              Zodar non è un re. Non è un dio della luce. Non è nemmeno il male.<br/><br/>
+              <span style={{ color:"#c4b5fd", fontFamily:"'Cinzel',serif" }}>Zodar è l'Equilibrio.</span><br/><br/>
+              Un'entità antica quanto l'universo stesso. Quando il bene cresce troppo, permette al caos di rialzarsi. Quando il male divora ogni cosa, lascia filtrare speranza nelle tenebre.
+            </p>
+            <p style={{ color:"#94a3b8", lineHeight:1.9, fontSize:"0.9rem", marginBottom:"1.5rem" }}>
+              Gli <span style={{ color:"#c4b5fd" }}>Echi di Zodar</span> sono i riflessi della sua volontà nel mondo: avventurieri scelti — non sempre consapevolmente — per mantenere il bilanciamento.<br/><br/>
+              Tu sei uno di loro.
+            </p>
+            <div style={{ textAlign:"center" }}>
+              <button onClick={() => { localStorage.setItem('zodar_lore_seen','1'); setShowLoreModal(false); }}
+                style={{ padding:"0.75rem 2.5rem", background:"linear-gradient(135deg,#6d28d9,#4c1d95)", border:"1px solid rgba(196,181,253,0.3)", borderRadius:8, color:"#e9d5ff", fontFamily:"'Cinzel',serif", fontSize:"0.95rem", letterSpacing:"0.08em", cursor:"pointer", boxShadow:"0 0 20px rgba(109,40,217,0.3)" }}>
+                Inizia il tuo viaggio ⚖️
+              </button>
+              <div style={{ marginTop:"0.8rem" }}>
+                <button onClick={() => { localStorage.setItem('zodar_lore_seen','1'); setShowLoreModal(false); setTab('lore'); }}
+                  style={{ background:"none", border:"none", color:"#6d28d9", fontSize:"0.78rem", cursor:"pointer", fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>
+                  Leggi la storia completa →
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* ── Patch Notes modal ── */}
       {!!patchModal && (
         <div style={{ position:"fixed", inset:0, zIndex:99998, background:"rgba(2,6,23,0.82)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
@@ -11940,7 +12056,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["quest","📜 Missioni"],["story","📖 Storia"],["storylibrary","📚 Storie"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["map","🗺️ Mappa"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🏦 Mercato"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["quest","📜 Missioni"],["story","📖 Storia"],["storylibrary","📚 Storie"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["map","🗺️ Mappa"],["lore","⚖️ Zodar"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🏦 Mercato"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
@@ -12370,6 +12486,8 @@ ${stepText(step)}`, "quest","Master");
             />
           </div>
         )}
+
+        {tab==="lore" && <LoreView />}
 
         {tab==="map" && (
           <MapView me={me} onNavigate={(zone) => { audioManager.playBGM(zone.bgm || 'dungeon'); setTab('dungeon'); }} />
