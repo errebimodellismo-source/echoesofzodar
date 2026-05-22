@@ -3362,7 +3362,7 @@ function CreateZodar({ setScreen, goGame, authUser }) {
       <div style={{ width:"min(520px,100%)", position:"relative", zIndex:1 }}>
         {phase === 0 && (
           <div style={{ textAlign:"center" }}>
-            <div style={{ fontSize:"4rem", animation:"zodar-float 3s ease-in-out infinite", marginBottom:"1rem" }}>⚖️</div>
+            <img src="/assets/zodar/zodar-full.png" alt="Zodar" style={{ width:"100%", maxHeight:280, objectFit:"cover", objectPosition:"top center", borderRadius:14, marginBottom:"1rem", boxShadow:"0 0 50px rgba(109,40,217,0.4)", border:"1px solid rgba(168,85,247,0.3)" }} onError={e=>{e.currentTarget.replaceWith(Object.assign(document.createElement('div'),{style:"font-size:4rem;animation:zodar-float 3s ease-in-out infinite;margin-bottom:1rem",textContent:"⚖️"}))}} />
             <h1 style={{ fontFamily:"'Cinzel',serif", color:"#e9d5ff", fontSize:"2rem", letterSpacing:"0.1em", marginBottom:"0.3rem" }}>Zodar</h1>
             <div style={{ fontFamily:"'Cinzel',serif", color:"#6d28d9", fontSize:"0.8rem", letterSpacing:"0.2em", marginBottom:"2rem" }}>CUSTODE DELL'EQUILIBRIO</div>
             <div style={{ background:"rgba(10,0,30,0.8)", border:"1px solid rgba(168,85,247,0.3)", borderRadius:14, padding:"2rem", marginBottom:"2rem", textAlign:"left" }}>
@@ -7796,12 +7796,145 @@ const MAP_ZONES = [
     x:42, y:72, w:14, h:16, color:"#a855f7", isDangerous:true },
 ];
 
+// ── OsservatorioView — Zodar only ────────────────────────────────────────────
+function OsservatorioView({ me, myId, code, supabase, onJoinParty, onJoinCombat }) {
+  const [allPlayers, setAllPlayers] = useState([]);
+  const [partyStates, setPartyStates] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [joiningCode, setJoiningCode] = useState(null);
+
+  async function refresh() {
+    setLoading(true);
+    const { data: players } = await supabase.from("players").select("*").eq("dead", false).order("updated_at", { ascending: false });
+    const validPlayers = (players || []).filter(p => p.party_code && p.class !== 'custode_equilibrio');
+    setAllPlayers(validPlayers);
+
+    const codes = [...new Set(validPlayers.map(p => p.party_code))];
+    const states = {};
+    await Promise.all(codes.map(async pc => {
+      const { data } = await supabase.from("party_state").select("party_code,combat").eq("party_code", pc).maybeSingle();
+      if (data) states[pc] = data;
+    }));
+    setPartyStates(states);
+    setLoading(false);
+  }
+
+  useEffect(() => { refresh(); const t = setInterval(refresh, 15000); return () => clearInterval(t); }, []);
+
+  const grouped = allPlayers.reduce((acc, p) => {
+    const pc = p.party_code;
+    if (!acc[pc]) acc[pc] = [];
+    acc[pc].push(p);
+    return acc;
+  }, {});
+
+  const isOnline = (p) => {
+    if (!p.updated_at) return false;
+    return (Date.now() - new Date(p.updated_at).getTime()) < 10 * 60 * 1000;
+  };
+
+  const S = {
+    wrap: { flex:1, overflow:"auto", padding:"1.5rem", background:"rgba(2,0,10,0.7)" },
+    header: { fontFamily:"'Cinzel',serif", color:"#c084fc", fontSize:"1.1rem", letterSpacing:"0.1em", marginBottom:"1.5rem", display:"flex", alignItems:"center", gap:12 },
+    grid: { display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(300px,1fr))", gap:16 },
+    card: (hasCombat) => ({ background: hasCombat ? "rgba(127,29,29,0.15)" : "rgba(10,5,30,0.8)", border:`1px solid ${hasCombat ? "rgba(239,68,68,0.4)" : "rgba(109,40,217,0.3)"}`, borderRadius:12, padding:"1rem", position:"relative", overflow:"hidden" }),
+    combatBadge: { position:"absolute", top:10, right:10, padding:"2px 8px", background:"rgba(239,68,68,0.3)", border:"1px solid rgba(239,68,68,0.5)", borderRadius:999, fontSize:"0.62rem", color:"#fca5a5", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em" },
+    partyCode: { fontFamily:"'Cinzel',serif", color:"#a78bfa", fontSize:"0.85rem", letterSpacing:"0.12em", marginBottom:"0.6rem" },
+    playerRow: { display:"flex", alignItems:"center", gap:8, marginBottom:"0.4rem" },
+    btn: (active) => ({ padding:"0.4rem 0.9rem", background: active ? "linear-gradient(135deg,#6d28d9,#4c1d95)" : "rgba(109,40,217,0.15)", border:"1px solid rgba(168,85,247,0.4)", borderRadius:6, color: active ? "#e9d5ff" : "#7c3aed", fontFamily:"'Cinzel',serif", fontSize:"0.7rem", letterSpacing:"0.06em", cursor:"pointer", marginTop:"0.8rem", width:"100%" }),
+    combatBtn: { padding:"0.4rem 0.9rem", background:"linear-gradient(135deg,#7f1d1d,#991b1b)", border:"1px solid rgba(239,68,68,0.5)", borderRadius:6, color:"#fecaca", fontFamily:"'Cinzel',serif", fontSize:"0.7rem", letterSpacing:"0.06em", cursor:"pointer", marginTop:"0.4rem", width:"100%" },
+  };
+
+  return (
+    <div style={S.wrap}>
+      <div style={S.header}>
+        <span style={{ fontSize:"1.5rem", animation:"zodar-float 3s ease-in-out infinite" }}>🔭</span>
+        Osservatorio di Zodar
+        <button onClick={refresh} style={{ marginLeft:"auto", background:"rgba(109,40,217,0.15)", border:"1px solid rgba(168,85,247,0.3)", borderRadius:6, color:"#7c3aed", padding:"0.3rem 0.8rem", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.7rem" }}>↻ Aggiorna</button>
+      </div>
+
+      {loading && <div style={{ color:"#6d28d9", fontFamily:"'Cinzel',serif", textAlign:"center", padding:"2rem", animation:"zodar-pulse 2s ease-in-out infinite" }}>Zodar osserva il mondo…</div>}
+
+      {!loading && Object.keys(grouped).length === 0 && (
+        <div style={{ color:"#374151", textAlign:"center", padding:"3rem", fontFamily:"'Cinzel',serif" }}>Nessun avventuriero attivo nel mondo.</div>
+      )}
+
+      <div style={S.grid}>
+        {!loading && Object.entries(grouped).map(([partyCode, players]) => {
+          const state = partyStates[partyCode];
+          const combat = state?.combat;
+          const hasCombat = !!combat?.active;
+          const isCurrent = partyCode === code;
+          const isJoining = joiningCode === partyCode;
+
+          return (
+            <div key={partyCode} style={S.card(hasCombat)}>
+              {hasCombat && <span style={S.combatBadge}>⚔️ BATTAGLIA LIVE</span>}
+              {isCurrent && <span style={{ ...S.combatBadge, background:"rgba(109,40,217,0.3)", border:"1px solid rgba(168,85,247,0.5)", color:"#c084fc", top:10, right: hasCombat ? 110 : 10 }}>← QUI</span>}
+
+              <div style={S.partyCode}>👥 Party: {partyCode}</div>
+
+              {players.map(p => {
+                const online = isOnline(p);
+                const hpPct = p.maxHp > 0 ? Math.max(0, Math.min(100, (p.hp / p.maxHp) * 100)) : 0;
+                return (
+                  <div key={p.id} style={S.playerRow}>
+                    <span style={{ fontSize:"0.9rem", opacity: online ? 1 : 0.4 }}>{CLASSES[p.class]?.emoji || "⚔️"}</span>
+                    <div style={{ flex:1, minWidth:0 }}>
+                      <div style={{ fontSize:"0.75rem", color: online ? "#e2e8f0" : "#4b5563", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
+                        {p.name} <span style={{ color:"#4b5563", fontSize:"0.6rem" }}>Lv.{p.level || 1}</span>
+                      </div>
+                      <div style={{ height:3, background:"#0f172a", borderRadius:2, overflow:"hidden", marginTop:2 }}>
+                        <div style={{ height:"100%", width:`${hpPct}%`, background: hpPct > 50 ? "#22c55e" : hpPct > 25 ? "#f59e0b" : "#ef4444" }} />
+                      </div>
+                    </div>
+                    <span style={{ fontSize:"0.55rem", color: online ? "#22c55e" : "#374151", flexShrink:0 }}>{online ? "●" : "○"}</span>
+                  </div>
+                );
+              })}
+
+              {hasCombat && (
+                <div style={{ marginTop:"0.6rem", padding:"0.5rem", background:"rgba(127,29,29,0.2)", border:"1px solid rgba(239,68,68,0.25)", borderRadius:6 }}>
+                  <div style={{ fontSize:"0.65rem", color:"#fca5a5", fontFamily:"'Cinzel',serif", marginBottom:"0.3rem" }}>⚔️ Round {combat.round} — {combat.combatants?.length || 0} combattenti</div>
+                  {combat.combatants?.slice(0,4).map(c => (
+                    <div key={c.id} style={{ fontSize:"0.6rem", color: c.dead ? "#6b7280" : c.dying ? "#f97316" : "#d1d5db", marginBottom:1 }}>
+                      {c.dead ? "💀" : c.dying ? "🩸" : c.isPlayer ? "👤" : "👾"} {c.name} {c.hp != null ? `(${c.hp}/${c.maxHp})` : ""}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {!isCurrent && (
+                <button style={S.btn(false)} disabled={isJoining} onClick={async () => {
+                  setJoiningCode(partyCode);
+                  await onJoinParty(partyCode);
+                }}>
+                  {isJoining ? "Manifestazione…" : "⚖️ Manifestati in questo party"}
+                </button>
+              )}
+              {!isCurrent && hasCombat && (
+                <button style={S.combatBtn} disabled={isJoining} onClick={async () => {
+                  setJoiningCode(partyCode);
+                  await onJoinCombat(partyCode, combat);
+                }}>
+                  ⚔️ Entra nella battaglia
+                </button>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 // ── LoreView ─────────────────────────────────────────────────────────────────
 function LoreView() {
   const S = {
     wrap: { flex:1, overflow:"auto", display:"flex", flexDirection:"column", alignItems:"center", padding:"2rem 1rem 4rem", background:"rgba(2,4,15,0.7)" },
     card: { maxWidth:720, width:"100%", background:"rgba(10,8,30,0.92)", border:"1px solid rgba(124,58,237,0.35)", borderRadius:16, padding:"2.5rem 2rem", boxShadow:"0 0 60px rgba(80,0,200,0.15)", position:"relative", overflow:"hidden" },
     glow: { position:"absolute", top:-80, left:"50%", transform:"translateX(-50%)", width:400, height:200, background:"radial-gradient(ellipse, rgba(124,58,237,0.18) 0%, transparent 70%)", pointerEvents:"none" },
+    heroImg: { width:"100%", maxHeight:360, objectFit:"cover", objectPosition:"top", borderRadius:12, marginBottom:"1.5rem", boxShadow:"0 0 40px rgba(109,40,217,0.3)" },
     symbol: { textAlign:"center", fontSize:"3.5rem", marginBottom:"0.5rem" },
     title: { textAlign:"center", fontFamily:"'Cinzel',serif", fontSize:"1.7rem", color:"#c4b5fd", letterSpacing:"0.1em", marginBottom:"0.3rem" },
     subtitle: { textAlign:"center", fontFamily:"'Cinzel',serif", fontSize:"0.85rem", color:"#6d28d9", letterSpacing:"0.15em", marginBottom:"2rem" },
@@ -7818,6 +7951,7 @@ function LoreView() {
     <div style={S.wrap}>
       <div style={S.card}>
         <div style={S.glow} />
+        <img src="/assets/zodar/zodar-full.png" alt="Zodar" style={S.heroImg} onError={e=>{e.currentTarget.style.display='none'}} />
         <div style={S.symbol}>⚖️</div>
         <div style={S.title}>Chi è Zodar?</div>
         <div style={S.subtitle}>IL CUSTODE DEL BILANCIAMENTO</div>
@@ -11866,7 +12000,9 @@ ${stepText(step)}`, "quest","Master");
         <div style={{ position:"fixed", inset:0, zIndex:99997, background:"rgba(0,0,10,0.88)", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
           <div style={{ width:"min(640px,100%)", maxHeight:"90vh", overflowY:"auto", background:"linear-gradient(160deg,rgba(10,5,30,0.99),rgba(4,2,18,0.99))", border:"1px solid rgba(124,58,237,0.4)", borderRadius:16, boxShadow:"0 0 100px rgba(109,40,217,0.25)", padding:"2.5rem 2rem", position:"relative" }}>
             <div style={{ position:"absolute", top:0, left:"50%", transform:"translateX(-50%)", width:300, height:120, background:"radial-gradient(ellipse, rgba(109,40,217,0.2) 0%, transparent 70%)", pointerEvents:"none" }} />
-            <div style={{ textAlign:"center", fontSize:"3rem", marginBottom:"0.5rem" }}>⚖️</div>
+            <div style={{ textAlign:"center", marginBottom:"1rem" }}>
+              <img src="/assets/zodar/zodar-portrait.png" alt="Zodar" style={{ width:100, height:100, borderRadius:"50%", objectFit:"cover", border:"2px solid rgba(168,85,247,0.5)", boxShadow:"0 0 30px rgba(109,40,217,0.4)" }} onError={e=>{e.currentTarget.outerHTML='<div style="font-size:3rem">⚖️</div>'}} />
+            </div>
             <div style={{ textAlign:"center", fontFamily:"'Cinzel',serif", fontSize:"1.5rem", color:"#c4b5fd", letterSpacing:"0.1em", marginBottom:"0.2rem" }}>Echoes of Zodar</div>
             <div style={{ textAlign:"center", fontFamily:"'Cinzel',serif", fontSize:"0.75rem", color:"#6d28d9", letterSpacing:"0.2em", marginBottom:"2rem" }}>IL CUSTODE DEL BILANCIAMENTO</div>
             <div style={{ borderLeft:"3px solid #7c3aed", paddingLeft:"1.2rem", marginBottom:"1.5rem", color:"#a78bfa", fontStyle:"italic", lineHeight:1.8, fontSize:"0.9rem" }}>
@@ -12050,8 +12186,8 @@ ${stepText(step)}`, "quest","Master");
             <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, transparent 65%)", pointerEvents:"none" }} />
             {/* Name & title */}
             <div style={{ textAlign:"center", marginBottom:"0.5rem", position:"relative" }}>
-              <div style={{ fontSize:"2rem", animation:"zodar-float 3s ease-in-out infinite" }}>🌌</div>
-              <div style={{ fontFamily:"'Cinzel',serif", color:"#e9d5ff", fontSize:"0.9rem", fontWeight:700, letterSpacing:"0.08em", marginTop:"0.2rem" }}>{me?.name}</div>
+              <img src="/assets/zodar/zodar-portrait.png" alt="Zodar" style={{ width:80, height:80, borderRadius:"50%", objectFit:"cover", border:"2px solid rgba(168,85,247,0.6)", boxShadow:"0 0 20px rgba(109,40,217,0.5)", animation:"zodar-float 3s ease-in-out infinite" }} onError={e=>{e.currentTarget.style.display='none'}} />
+              <div style={{ fontFamily:"'Cinzel',serif", color:"#e9d5ff", fontSize:"0.9rem", fontWeight:700, letterSpacing:"0.08em", marginTop:"0.4rem" }}>{me?.name}</div>
               <div style={{ fontSize:"0.58rem", color:"#7c3aed", fontFamily:"'Cinzel',serif", letterSpacing:"0.15em", marginTop:"0.1rem" }}>ENTITÀ PRIMORDIALE</div>
             </div>
             {/* Bilancia animata — al posto degli HP */}
@@ -12207,7 +12343,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["quest","📜 Missioni"],["story","📖 Storia"],["storylibrary","📚 Storie"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["map","🗺️ Mappa"],["lore","⚖️ Zodar"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🏦 Mercato"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["quest","📜 Missioni"],["story","📖 Storia"],["storylibrary","📚 Storie"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["map","🗺️ Mappa"],["lore","⚖️ Zodar"],...(me?.class==="custode_equilibrio"?[["osservatorio","🔭 Osservatorio"]]: []),["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🏦 Mercato"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
@@ -12639,6 +12775,7 @@ ${stepText(step)}`, "quest","Master");
         )}
 
         {tab==="lore" && <LoreView />}
+        {tab==="osservatorio" && me?.class==="custode_equilibrio" && <OsservatorioView me={me} myId={myId} code={code} supabase={supabase} onJoinParty={async(partyCode)=>{ const upd={...me,partyCode}; await dbSavePlayer(upd); window.location.reload(); }} onJoinCombat={async(partyCode,combatant)=>{ const upd={...me,partyCode}; await dbSavePlayer(upd); window.location.reload(); }} />}
 
         {tab==="map" && (
           <MapView me={me} onNavigate={(zone) => { audioManager.playBGM(zone.bgm || 'dungeon'); setTab('dungeon'); }} />
