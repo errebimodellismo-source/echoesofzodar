@@ -11360,12 +11360,11 @@ function GameScreen({ myId, setScreen, authUser }) {
       newCombatants = newCombatants.map(c=>!c.isPlayer ? {...c,hp:0} : c);
       log += `💠 **FRATTURA DEL DESTINO**\n⚖️ Zodar ha deciso. Il combattimento è finito.\n"La vostra storia non finisce qui — ma questa battaglia sì."`;
     } else if(spell.type === "zodar_observe") {
-      log += `👁️ **ZODAR VI OSSERVA**\n⚖️ Il Custode dell'Equilibrio volge il suo sguardo su di voi.\nNessuno sfugge alla sua visione. Nessuna azione è nascosta.\n*"Vi osservo da prima che nasceste. Vi osserverò dopo che sarete cenere."*`;
-      await addMsg(log, "system", "Sistema");
+      const enemies5 = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
+      newCombatants = newCombatants.map(c=>!c.isPlayer && c.hp>0 ? {...c, hp:Math.max(1, c.hp - Math.floor(c.maxHp*0.1))} : c);
       setZodarObserves(true);
       setTimeout(()=>setZodarObserves(false), 5000);
-      setSpellMenu(false);
-      return;
+      log += `👁️ **ZODAR VI OSSERVA**\n⚖️ Il suo sguardo brucia come luce cosmica — tutti i nemici perdono il 10% della vita massima.\n${enemies5.map(e=>`• ${e.name}: ${Math.max(1,e.hp-Math.floor(e.maxHp*0.1))}/${e.maxHp} HP`).join("\n")}`;
     } else if(spell.type === "defense") {
       // Potenzia il caster (es. Forma Demoniaca)
       const aidx = newCombatants.findIndex(c=>c.id===attacker.id);
