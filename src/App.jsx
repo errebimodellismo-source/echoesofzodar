@@ -11318,8 +11318,8 @@ function GameScreen({ myId, setScreen, authUser }) {
       log += `☄️ **FLAGELLO DELL'EQUILIBRIO**\n⚡ La bilancia cade — tutti i nemici sono annientati!\n${enemies3.map(e=>`💀 ${e.name} — distrutto`).join("\n")}`;
     } else if(spell.type === "zodar_divine_punishment") {
       const enemies4 = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
-      newCombatants = newCombatants.map(c=>!c.isPlayer && c.hp>0 ? {...c, hp:Math.max(0,c.hp-9999), statusEffects:[...(c.statusEffects||[]),{type:"stun",duration:2}]} : c);
-      log += `⚡ **PUNIZIONE DIVINA**\n🔥 9999 danni + stordimento a tutti i nemici!\n${enemies4.map(e=>`💥 ${e.name}: 0/${e.maxHp} HP 💫stordito`).join("\n")}`;
+      newCombatants = newCombatants.map(c=>!c.isPlayer && c.hp>0 ? {...c, hp:Math.max(0,c.hp-500), statusEffects:[...(c.statusEffects||[]),{type:"stun",duration:2}]} : c);
+      log += `⚡ **PUNIZIONE DIVINA**\n🔥 500 danni + stordimento 2 round a tutti i nemici!\n${enemies4.map(e=>`💥 ${e.name}: ${Math.max(0,e.hp-500)}/${e.maxHp} HP 💫stordito`).join("\n")}`;
     } else if(spell.type === "zodar_revive_all") {
       const allDead2 = newCombatants.filter(c=>c.isPlayer && !c.isSummon && (c.dead||c.dying||c.hp<=0));
       newCombatants = newCombatants.map(c => {
