@@ -2877,6 +2877,7 @@ export default function App() {
       {screen!=="master" && !authUser && <AuthScreen setAuthUser={setAuthUser} setScreen={setScreen} setMyId={setMyId} />}
       {screen!=="master" && authUser && screen==="landing" && <Landing setScreen={setScreen} goGame={goGame} myId={myId} authUser={authUser} setAuthUser={setAuthUser} />}
       {screen!=="master" && authUser && screen==="create"  && <CreateChar setScreen={setScreen} goGame={goGame} authUser={authUser} />}
+      {screen!=="master" && authUser && screen==="create_zodar" && <CreateZodar setScreen={setScreen} goGame={goGame} authUser={authUser} />}
       {screen!=="master" && authUser && screen==="game" && (
         <ErrorBoundary onReset={()=>setScreen("landing")}> 
           <GameScreen myId={myId} setScreen={setScreen} authUser={authUser} />
@@ -3233,6 +3234,12 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
             <BigBtn onClick={()=>setScreen("create")} gold icon="🛠️">Nuovo Eroe</BigBtn>
             <BigBtn onClick={logout} dark icon="🚪">Esci</BigBtn>
             {canAccessMasterPanel(authUser) && <BigBtn onClick={()=>setScreen("master")} dark icon="🛡️">Pannello Master</BigBtn>}
+            {authUser?.email === "errebimodellismo@gmail.com" && (
+              <button onClick={()=>setScreen("create_zodar")}
+                style={{ padding:"0.6rem 1.2rem", background:"linear-gradient(135deg,rgba(109,40,217,0.3),rgba(30,0,60,0.6))", border:"1px solid rgba(168,85,247,0.5)", borderRadius:8, color:"#c084fc", fontFamily:"'Cinzel',serif", fontSize:"0.8rem", letterSpacing:"0.08em", cursor:"pointer", display:"flex", alignItems:"center", gap:6 }}>
+                ⚖️ Incarnati come Zodar
+              </button>
+            )}
           </div>
         </div>
 
@@ -3308,6 +3315,112 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
         ❤️ Supporta il progetto
       </a>
       </div>{/* /zIndex wrapper */}
+    </div>
+  );
+}
+
+/* ----------------------------------------------
+   CREATE ZODAR — personaggio unico del creatore
+---------------------------------------------- */
+function CreateZodar({ setScreen, goGame, authUser }) {
+  const [code, setCode] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [phase, setPhase] = useState(0); // 0=intro, 1=party, 2=creating
+
+  async function incarnate() {
+    if(loading) return;
+    setLoading(true); setPhase(2);
+    try {
+      const partyCode = code.trim().toUpperCase() || Math.random().toString(36).slice(2,6).toUpperCase();
+      const id = `zodar_${Date.now().toString(36)}`;
+      const player = {
+        id, name:"Zodar", class:"custode_equilibrio", race:"entita_primordiale", gender:"male", partyCode,
+        accountId: authUser?.id || null,
+        hp:9999, maxHp:9999, atk:99, def:99, mag:99, init:99,
+        xp:0, level:1, gold:0, dead:false,
+        portrait_face:1, portrait_hair:0, portrait_eyes:0, portrait_scar:0, portrait_beard:0,
+      };
+      const { error, data: saved } = await dbSavePlayer(player);
+      if(error || !saved?.id) throw error || new Error("Errore salvataggio");
+      await dbSendMessage({ party_code:partyCode, author:"Sistema", type:"system",
+        content:`⚖️ **Zodar, il Custode dell'Equilibrio**, si è manifestato nel mondo. Tremate.` });
+      await goGame({ id: saved.id, dead:false, accountId: saved.account_id || authUser?.id || null });
+    } catch(e) {
+      alert("Errore: " + (e?.message || "sconosciuto"));
+      setLoading(false); setPhase(1);
+    }
+  }
+
+  const starsBg = { background:"radial-gradient(ellipse at 50% 30%, rgba(109,40,217,0.22) 0%, transparent 60%), linear-gradient(160deg,#030008 0%,#070014 100%)" };
+
+  return (
+    <div style={{ minHeight:"100vh", display:"flex", alignItems:"center", justifyContent:"center", padding:"1.5rem", ...starsBg, position:"relative", overflow:"hidden" }}>
+      {/* Ambient glows */}
+      <div style={{ position:"absolute", top:"10%", left:"20%", width:300, height:300, borderRadius:"50%", background:"rgba(109,40,217,0.07)", filter:"blur(60px)", pointerEvents:"none" }} />
+      <div style={{ position:"absolute", bottom:"15%", right:"15%", width:250, height:250, borderRadius:"50%", background:"rgba(168,85,247,0.06)", filter:"blur(50px)", pointerEvents:"none" }} />
+
+      <div style={{ width:"min(520px,100%)", position:"relative", zIndex:1 }}>
+        {phase === 0 && (
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontSize:"4rem", animation:"zodar-float 3s ease-in-out infinite", marginBottom:"1rem" }}>⚖️</div>
+            <h1 style={{ fontFamily:"'Cinzel',serif", color:"#e9d5ff", fontSize:"2rem", letterSpacing:"0.1em", marginBottom:"0.3rem" }}>Zodar</h1>
+            <div style={{ fontFamily:"'Cinzel',serif", color:"#6d28d9", fontSize:"0.8rem", letterSpacing:"0.2em", marginBottom:"2rem" }}>CUSTODE DELL'EQUILIBRIO</div>
+            <div style={{ background:"rgba(10,0,30,0.8)", border:"1px solid rgba(168,85,247,0.3)", borderRadius:14, padding:"2rem", marginBottom:"2rem", textAlign:"left" }}>
+              <p style={{ color:"#94a3b8", lineHeight:1.9, fontSize:"0.9rem", fontStyle:"italic", borderLeft:"3px solid #7c3aed", paddingLeft:"1rem", marginBottom:"1.5rem" }}>
+                "Non sono un re. Non sono un dio. Sono ciò che rimane quando tutto il resto è già stato."
+              </p>
+              <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:10 }}>
+                {[
+                  {icon:"🌀", l:"Influenza", v:"∞"},
+                  {icon:"🌪️", l:"Caos",      v:"∞"},
+                  {icon:"🔮", l:"Ordine",    v:"∞"},
+                  {icon:"👁️", l:"Visione",   v:"∞"},
+                ].map(s=>(
+                  <div key={s.l} style={{ background:"rgba(109,40,217,0.1)", border:"1px solid rgba(168,85,247,0.2)", borderRadius:8, padding:"0.6rem 0.8rem", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+                    <span style={{ fontSize:"0.8rem", color:"#94a3b8" }}>{s.icon} {s.l}</span>
+                    <span style={{ fontFamily:"'Cinzel',serif", color:"#c084fc", fontSize:"1.1rem" }}>{s.v}</span>
+                  </div>
+                ))}
+              </div>
+              <div style={{ marginTop:"1.2rem", display:"flex", justifyContent:"space-between", fontSize:"0.78rem" }}>
+                <span style={{ color:"#64748b" }}>Razza</span><span style={{ color:"#a78bfa", fontFamily:"'Cinzel',serif" }}>🌌 Entità Primordiale</span>
+              </div>
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.78rem", marginTop:"0.4rem" }}>
+                <span style={{ color:"#64748b" }}>Livello</span><span style={{ color:"#a78bfa", fontFamily:"'Cinzel',serif", animation:"zodar-pulse 3s ease-in-out infinite" }}>Prima del Tempo</span>
+              </div>
+            </div>
+            <button onClick={()=>setPhase(1)}
+              style={{ width:"100%", padding:"0.9rem", background:"linear-gradient(135deg,#6d28d9,#4c1d95)", border:"1px solid rgba(196,181,253,0.3)", borderRadius:10, color:"#e9d5ff", fontFamily:"'Cinzel',serif", fontSize:"1rem", letterSpacing:"0.1em", cursor:"pointer", boxShadow:"0 0 30px rgba(109,40,217,0.35)" }}>
+              Manifesta la tua presenza ⚖️
+            </button>
+            <button onClick={()=>setScreen("landing")} style={{ marginTop:"1rem", background:"none", border:"none", color:"#374151", fontSize:"0.75rem", cursor:"pointer" }}>← Torna indietro</button>
+          </div>
+        )}
+
+        {phase === 1 && (
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontSize:"2.5rem", animation:"zodar-balance 4s ease-in-out infinite", marginBottom:"1rem" }}>⚖️</div>
+            <h2 style={{ fontFamily:"'Cinzel',serif", color:"#c084fc", fontSize:"1.3rem", letterSpacing:"0.1em", marginBottom:"1.5rem" }}>In quale mondo ti manifesti?</h2>
+            <div style={{ background:"rgba(10,0,30,0.8)", border:"1px solid rgba(168,85,247,0.3)", borderRadius:14, padding:"1.5rem", marginBottom:"1.5rem" }}>
+              <label style={{ display:"block", fontFamily:"'Cinzel',serif", color:"#7c3aed", fontSize:"0.72rem", letterSpacing:"0.12em", marginBottom:"0.5rem" }}>CODICE PARTY (vuoto = auto)</label>
+              <input value={code} onChange={e=>setCode(e.target.value.toUpperCase())} maxLength={6} placeholder="es: ALFA"
+                style={{ width:"100%", padding:"0.7rem 1rem", background:"rgba(0,0,0,0.4)", border:"1px solid rgba(168,85,247,0.3)", borderRadius:8, color:"#e9d5ff", fontFamily:"'Cinzel',serif", fontSize:"1rem", letterSpacing:"0.15em", textAlign:"center", outline:"none" }} />
+            </div>
+            <button onClick={incarnate}
+              style={{ width:"100%", padding:"0.9rem", background:"linear-gradient(135deg,#6d28d9,#4c1d95)", border:"1px solid rgba(196,181,253,0.3)", borderRadius:10, color:"#e9d5ff", fontFamily:"'Cinzel',serif", fontSize:"1rem", letterSpacing:"0.1em", cursor:"pointer", boxShadow:"0 0 30px rgba(109,40,217,0.35)" }}>
+              Incarnati in questo mondo
+            </button>
+            <button onClick={()=>setPhase(0)} style={{ marginTop:"1rem", background:"none", border:"none", color:"#374151", fontSize:"0.75rem", cursor:"pointer" }}>← Indietro</button>
+          </div>
+        )}
+
+        {phase === 2 && (
+          <div style={{ textAlign:"center" }}>
+            <div style={{ fontSize:"3rem", animation:"zodar-balance 2s ease-in-out infinite", marginBottom:"1rem" }}>⚖️</div>
+            <p style={{ fontFamily:"'Cinzel',serif", color:"#a78bfa", fontSize:"1rem", letterSpacing:"0.1em", animation:"zodar-pulse 2s ease-in-out infinite" }}>L'equilibrio si manifesta…</p>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -11931,48 +12044,86 @@ ${stepText(step)}`, "quest","Master");
           <button onClick={()=>setSidebarOpen(false)} style={{ alignSelf:"flex-end", background:"rgba(255,255,255,0.06)", border:"1px solid #1f2937", borderRadius:6, color:"#94a3b8", padding:"4px 10px", cursor:"pointer", fontSize:"1rem", marginBottom:4 }}>✕</button>
         )}
         <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.75rem", color:"#4c1d95", letterSpacing:"0.1em", paddingBottom:8, borderBottom:"1px solid #0f172a" }}>⚔️ {getMeta().worldName}</div>
-        <div style={{ background:"rgba(109,40,217,0.1)", border:"1px solid #3b0764", borderRadius:5, padding:"0.6rem" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
-            <ArtThumb src={getPlayerPortrait(me)} alt={me?.name || "Eroe"} size={56} radius={14} />
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontFamily:"'Cinzel',serif", color:"#f9fafb", fontSize:"0.82rem", fontWeight:700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{me?.name}</div>
-              <div style={{ color:"#94a3b8", fontSize:"0.62rem" }}>{RACES[me?.race]?.name} {CLASSES[me?.class]?.name}</div>
-              {(() => { const t = getPlayerTitle(me?.stats); return t ? <div style={{ fontSize:"0.6rem", color: t.tier===4?"#fbbf24":t.tier===3?"#a855f7":t.tier===2?"#22c55e":"#94a3b8", fontStyle:"italic" }}>{t.icon} {t.title}</div> : null; })()}
+        {me?.class === 'custode_equilibrio' ? (
+          /* ── ZODAR SIDEBAR ─────────────────────────────── */
+          <div style={{ background:"linear-gradient(160deg,rgba(30,0,60,0.95),rgba(10,0,30,0.98))", border:"1px solid rgba(168,85,247,0.5)", borderRadius:8, padding:"0.75rem 0.65rem", position:"relative", overflow:"hidden" }}>
+            <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse at 50% 0%, rgba(109,40,217,0.18) 0%, transparent 65%)", pointerEvents:"none" }} />
+            {/* Name & title */}
+            <div style={{ textAlign:"center", marginBottom:"0.5rem", position:"relative" }}>
+              <div style={{ fontSize:"2rem", animation:"zodar-float 3s ease-in-out infinite" }}>🌌</div>
+              <div style={{ fontFamily:"'Cinzel',serif", color:"#e9d5ff", fontSize:"0.9rem", fontWeight:700, letterSpacing:"0.08em", marginTop:"0.2rem" }}>{me?.name}</div>
+              <div style={{ fontSize:"0.58rem", color:"#7c3aed", fontFamily:"'Cinzel',serif", letterSpacing:"0.15em", marginTop:"0.1rem" }}>ENTITÀ PRIMORDIALE</div>
             </div>
-            <span style={{ padding:"1px 5px", background:"#3b0764", borderRadius:3, fontSize:"0.62rem", color:"#a78bfa", flexShrink:0 }}>Lv.{me.level}</span>
+            {/* Bilancia animata — al posto degli HP */}
+            <div style={{ textAlign:"center", margin:"0.6rem 0", padding:"0.5rem", background:"rgba(109,40,217,0.1)", borderRadius:8, border:"1px solid rgba(168,85,247,0.2)" }}>
+              <div style={{ fontSize:"1.8rem", display:"inline-block", animation:"zodar-balance 4s ease-in-out infinite", transformOrigin:"center top" }}>⚖️</div>
+              <div style={{ fontSize:"0.55rem", color:"#a78bfa", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em", marginTop:"0.2rem" }}>EQUILIBRIO</div>
+            </div>
+            {/* Livello */}
+            <div style={{ textAlign:"center", marginBottom:"0.6rem" }}>
+              <span style={{ fontSize:"0.62rem", color:"#6d28d9", fontFamily:"'Cinzel',serif", letterSpacing:"0.1em", animation:"zodar-pulse 3s ease-in-out infinite", display:"inline-block" }}>Prima del Tempo</span>
+            </div>
+            {/* Stat cosmiche */}
+            {[
+              { label:"Influenza", icon:"🌀", val:"∞", color:"#c084fc" },
+              { label:"Caos",      icon:"🌪️", val:"∞", color:"#f87171" },
+              { label:"Ordine",    icon:"🔮", val:"∞", color:"#60a5fa" },
+              { label:"Visione",   icon:"👁️", val:"∞", color:"#34d399" },
+            ].map(s => (
+              <div key={s.label} style={{ display:"flex", justifyContent:"space-between", alignItems:"center", padding:"0.2rem 0.3rem", marginBottom:"0.2rem", background:"rgba(0,0,0,0.2)", borderRadius:4 }}>
+                <span style={{ fontSize:"0.7rem" }}>{s.icon} <span style={{ fontFamily:"'Cinzel',serif", fontSize:"0.55rem", color:"#64748b", letterSpacing:"0.08em" }}>{s.label}</span></span>
+                <span style={{ color:s.color, fontFamily:"'Cinzel',serif", fontSize:"0.8rem", fontWeight:700 }}>{s.val}</span>
+              </div>
+            ))}
+            {/* Classe */}
+            <div style={{ marginTop:"0.6rem", padding:"0.3rem 0.5rem", background:"rgba(109,40,217,0.15)", border:"1px solid rgba(168,85,247,0.25)", borderRadius:6, textAlign:"center" }}>
+              <span style={{ fontSize:"0.58rem", color:"#a78bfa", fontFamily:"'Cinzel',serif", letterSpacing:"0.1em" }}>⚖️ Custode dell'Equilibrio</span>
+            </div>
+            {/* Quote */}
+            <div style={{ marginTop:"0.7rem", padding:"0.4rem 0.5rem", borderLeft:"2px solid #7c3aed", fontSize:"0.55rem", color:"#64748b", fontStyle:"italic", lineHeight:1.6 }}>
+              "Osserva ogni guerra, ogni morte, ogni scelta."
+            </div>
+            <MusicToggleBtn />
+            <VoiceChat myId={myId} myName={me?.name || "Avventuriero"} partyCode={code} supabase={supabase} hasCrystal={equippedItems?.amulet?.id === "crystal_sintonia"} />
           </div>
-          <HpBar cur={me.hp} max={me.maxHp} />
-          <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.65rem", marginTop:4 }}>
-            <span style={{ color:"#f87171" }}>❤️{me.hp}/{me.maxHp}</span>
-            <span style={{ color:"#fb923c" }}>⚔️{me.atk}</span>
-            <span style={{ color:"#60a5fa" }}>🛡️{me.def}</span>
-          </div>
-          {isCaster && (
+        ) : (
+          <div style={{ background:"rgba(109,40,217,0.1)", border:"1px solid #3b0764", borderRadius:5, padding:"0.6rem" }}>
+            <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
+              <ArtThumb src={getPlayerPortrait(me)} alt={me?.name || "Eroe"} size={56} radius={14} />
+              <div style={{ flex:1, minWidth:0 }}>
+                <div style={{ fontFamily:"'Cinzel',serif", color:"#f9fafb", fontSize:"0.82rem", fontWeight:700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{me?.name}</div>
+                <div style={{ color:"#94a3b8", fontSize:"0.62rem" }}>{RACES[me?.race]?.name} {CLASSES[me?.class]?.name}</div>
+                {(() => { const t = getPlayerTitle(me?.stats); return t ? <div style={{ fontSize:"0.6rem", color: t.tier===4?"#fbbf24":t.tier===3?"#a855f7":t.tier===2?"#22c55e":"#94a3b8", fontStyle:"italic" }}>{t.icon} {t.title}</div> : null; })()}
+              </div>
+              <span style={{ padding:"1px 5px", background:"#3b0764", borderRadius:3, fontSize:"0.62rem", color:"#a78bfa", flexShrink:0 }}>Lv.{me.level}</span>
+            </div>
+            <HpBar cur={me.hp} max={me.maxHp} />
             <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.65rem", marginTop:4 }}>
-              <span style={{ color:"#a78bfa" }}>✨{me.mag}</span>
-              <span style={{ color:"#c4b4ff" }}>📿 Slot: {totalSlots(spellSlots)} ({formatSpellSlots(spellSlots)})</span>
+              <span style={{ color:"#f87171" }}>❤️{me.hp}/{me.maxHp}</span>
+              <span style={{ color:"#fb923c" }}>⚔️{me.atk}</span>
+              <span style={{ color:"#60a5fa" }}>🛡️{me.def}</span>
             </div>
-          )}
-          <div style={{ height:3, background:"#0f172a", borderRadius:2, overflow:"hidden", marginTop:5 }}>
-            <div style={{ height:"100%", background:"linear-gradient(90deg,#6d28d9,#a78bfa)", width:`${Math.min(100,me.xp/xpForLevel(me.level)*100)}%`, transition:"width .5s" }} />
+            {isCaster && (
+              <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.65rem", marginTop:4 }}>
+                <span style={{ color:"#a78bfa" }}>✨{me.mag}</span>
+                <span style={{ color:"#c4b4ff" }}>📿 Slot: {totalSlots(spellSlots)} ({formatSpellSlots(spellSlots)})</span>
+              </div>
+            )}
+            <div style={{ height:3, background:"#0f172a", borderRadius:2, overflow:"hidden", marginTop:5 }}>
+              <div style={{ height:"100%", background:"linear-gradient(90deg,#6d28d9,#a78bfa)", width:`${Math.min(100,me.xp/xpForLevel(me.level)*100)}%`, transition:"width .5s" }} />
+            </div>
+            <div style={{ fontSize:"0.58rem", color:"#64748b", textAlign:"right", marginTop:1 }}>{me.xp}/{xpForLevel(me.level)} XP</div>
+            <div style={{ marginTop:6, padding:"0.35rem 0.45rem", background:"rgba(180,83,9,0.12)", border:"1px solid #78350f", borderRadius:4, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
+              <span style={{ fontSize:"0.58rem", color:"#92400e", textTransform:"uppercase", letterSpacing:"0.08em" }}>Tesoro</span>
+              <span style={{ fontSize:"0.74rem", color:"#fbbf24", fontWeight:700 }}>💰 {me.gold || 0} oro</span>
+            </div>
+            <button onClick={toggleAfk} title={isAfk ? "Sei in modalità AFK — non partecipi alle battaglie. Clicca per tornare attivo." : "Sei attivo — clicca per passare in modalità AFK e non essere incluso nelle battaglie."} style={{ marginTop:6, width:"100%", padding:"0.3rem 0.4rem", background: isAfk ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.1)", border:`1px solid ${isAfk ? "#7f1d1d" : "#14532d"}`, borderRadius:4, color: isAfk ? "#f87171" : "#4ade80", fontSize:"0.62rem", cursor:"pointer", letterSpacing:"0.06em", textAlign:"center" }}>
+              {isAfk ? "⏸ AFK — Non in battaglia" : "✅ Attivo — Pronto a combattere"}
+            </button>
+            <MusicToggleBtn />
+            <VoiceChat myId={myId} myName={me?.name || "Avventuriero"} partyCode={code} supabase={supabase} hasCrystal={equippedItems?.amulet?.id === "crystal_sintonia"} />
           </div>
-          <div style={{ fontSize:"0.58rem", color:"#64748b", textAlign:"right", marginTop:1 }}>{me.xp}/{xpForLevel(me.level)} XP</div>
-          <div style={{ marginTop:6, padding:"0.35rem 0.45rem", background:"rgba(180,83,9,0.12)", border:"1px solid #78350f", borderRadius:4, display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-            <span style={{ fontSize:"0.58rem", color:"#92400e", textTransform:"uppercase", letterSpacing:"0.08em" }}>Tesoro</span>
-            <span style={{ fontSize:"0.74rem", color:"#fbbf24", fontWeight:700 }}>💰 {me.gold || 0} oro</span>
-          </div>
-          <button onClick={toggleAfk} title={isAfk ? "Sei in modalità AFK — non partecipi alle battaglie. Clicca per tornare attivo." : "Sei attivo — clicca per passare in modalità AFK e non essere incluso nelle battaglie."} style={{ marginTop:6, width:"100%", padding:"0.3rem 0.4rem", background: isAfk ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.1)", border:`1px solid ${isAfk ? "#7f1d1d" : "#14532d"}`, borderRadius:4, color: isAfk ? "#f87171" : "#4ade80", fontSize:"0.62rem", cursor:"pointer", letterSpacing:"0.06em", textAlign:"center" }}>
-            {isAfk ? "⏸ AFK — Non in battaglia" : "✅ Attivo — Pronto a combattere"}
-          </button>
-          <MusicToggleBtn />
-          <VoiceChat
-            myId={myId}
-            myName={me?.name || "Avventuriero"}
-            partyCode={code}
-            supabase={supabase}
-            hasCrystal={equippedItems?.amulet?.id === "crystal_sintonia"}
-          />
-        </div>
+        )}
 
         <div style={{ background:PANEL_BG_SOFT, border:`1px solid ${PANEL_BORDER}`, borderRadius:4, padding:"0.5rem" }}>
           <div style={{ fontSize:"0.58rem", color:"#64748b", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>👥 Party — {code}</div>

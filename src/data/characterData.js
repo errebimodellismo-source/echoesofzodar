@@ -14,6 +14,9 @@ export const CLASSES = {
   warlock:  { name:"Warlock",   emoji:"🔮", color:"#7c3aed", hp:72,  atk:8,  def:4,  mag:20, init:2, desc:"Patti con entità oscure e potere proibito" },
   mage:     { name:"Mago",      emoji:"🔮", color:"#3b82f6", hp:12,  atk:1,  def:2,  mag:6,  init:3, desc:"Governa le forze arcane per distruggere a distanza." },
 
+  // ── Classe Unica — Zodar ──
+  custode_equilibrio: { name:"Custode dell'Equilibrio", emoji:"⚖️", color:"#a855f7", hp:9999, atk:99, def:99, mag:99, init:99, _zodar:true, desc:"L'Equilibrio fatto persona. Né luce né tenebra — entrambe." },
+
   // ── Classi Segrete ── sbloccabili solo con password
   necromancer: { name:"Negromante", emoji:"💀", color:"#6d28d9", hp:95,  atk:10, def:6,  mag:32, init:2, _secret:true, desc:"Signore della morte. Anima i cadaveri e comanda orde di non-morti." },
   artificer:   { name:"Artefice",   emoji:"⚙️", color:"#f59e0b", hp:115, atk:18, def:16, mag:10, init:4, _secret:true, desc:"Costruttore di gadget letali e armature potenziate. Scienza e magia fuse insieme." },
@@ -31,6 +34,9 @@ export const RACES = {
   halfelf:   { name:"Mezzelfo",  emoji:"🧝‍♂️", hpB:0,  atkB:2, defB:1, magB:2,  initB:2,  desc:"Il meglio di due mondi, carismatici" },
   halforc:   { name:"Mezzorco",  emoji:"👹", hpB:15, atkB:5, defB:1, magB:0,  initB:1,  desc:"Forza bruta e resistenza feroce" },
   tiefling:  { name:"Tiefling",  emoji:"👿", hpB:0,  atkB:0, defB:1, magB:5,  initB:1,  desc:"Sangue infernale, resistenza al fuoco" },
+
+  // ── Razza Unica — Zodar ──
+  entita_primordiale: { name:"Entità Primordiale", emoji:"🌌", hpB:0, atkB:0, defB:0, magB:0, initB:0, _zodar:true, desc:"Esistente prima del tempo stesso. Oltre ogni catalogazione." },
 
   // ── Razze Segrete ── sbloccabili solo con password
   minotaur:  { name:"Minotauro", emoji:"🐂", hpB:50, atkB:10, defB:4, magB:0,  initB:-1, _secret:true, desc:"Colosso delle pianure. Forza devastante e resistenza leggendaria." },
