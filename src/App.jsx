@@ -1049,6 +1049,9 @@ function getSpellSlots(level) {
 }
 
 function availableSpellsFor(className, level) {
+  if(className === 'custode_equilibrio') {
+    return (SPELLS.custode_equilibrio?.[0] || []).map(s => ({ ...s, slot: 0 }));
+  }
   const packs = SPELLS[className] || {};
   const slotsForLevel = SPELL_SLOTS[level] || SPELL_SLOTS[1];
   const maxSlot = Math.max(...Object.entries(slotsForLevel).filter(([,v])=>v>0).map(([k])=>Number(k)), 1);
@@ -8862,6 +8865,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [battleChatInput, setBattleChatInput] = useState("");
   const [tab, setTab] = useState("quest");
   const [showLoreModal, setShowLoreModal] = useState(() => !localStorage.getItem('zodar_lore_seen'));
+  const [zodarObserves, setZodarObserves] = useState(false);
   const [dismissedVictoryTs, setDismissedVictoryTs] = useState(null);
   const [declinedCombatAt, setDeclinedCombatAt] = useState(null);
   const [nowTick, setNowTick] = useState(Date.now());
@@ -11294,12 +11298,75 @@ function GameScreen({ myId, setScreen, authUser }) {
         if(cidx !== -1) newCombatants[cidx] = {...newCombatants[cidx], statusEffects:[...(newCombatants[cidx].statusEffects||[]),{type:"stun",duration:1}]};
         log += `💜 **${spell.name}**\n${ctarget.name} è ammaliato/stordito e salta il prossimo turno!`;
       }
+    } else if(spell.type === "zodar_heal_all") {
+      const allies = newCombatants.filter(c=>c.isPlayer && !c.isSummon);
+      newCombatants = newCombatants.map(c => {
+        if(!c.isPlayer || c.isSummon) return c;
+        const revived = { ...c, hp: c.maxHp, dead:false, dying:false, stable:false, deathSuccesses:0, deathFailures:0 };
+        const pData = partyPlayers.find(p=>p.id===c.id)||(c.id===myId?me:null);
+        if(pData) { const u={...pData,hp:c.maxHp,dead:false}; dbSavePlayer(u); if(c.id===myId) setMeRaw(u); }
+        return revived;
+      });
+      log += `⚖️ **EQUILIBRIO UNIVERSALE**\n✨ L'equilibrio si ristabilisce — tutti gli alleati sono guariti al massimo!\n${allies.map(a=>`❤️ ${a.name}: ${a.maxHp}/${a.maxHp} HP`).join("\n")}`;
+    } else if(spell.type === "zodar_heal_monsters") {
+      const enemies2 = newCombatants.filter(c=>!c.isPlayer);
+      newCombatants = newCombatants.map(c=>!c.isPlayer ? {...c, hp:c.maxHp, dead:false, dying:false} : c);
+      log += `🌪️ **BENEDIZIONE DEL CAOS**\n⚠️ Zodar ristabilisce il caos — tutti i mostri sono guariti al massimo!\n${enemies2.map(e=>`💀 ${e.name}: ${e.maxHp}/${e.maxHp} HP`).join("\n")}`;
+    } else if(spell.type === "zodar_smite_all") {
+      const enemies3 = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
+      newCombatants = newCombatants.map(c=>!c.isPlayer ? {...c,hp:0} : c);
+      log += `☄️ **FLAGELLO DELL'EQUILIBRIO**\n⚡ La bilancia cade — tutti i nemici sono annientati!\n${enemies3.map(e=>`💀 ${e.name} — distrutto`).join("\n")}`;
+    } else if(spell.type === "zodar_divine_punishment") {
+      const enemies4 = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
+      newCombatants = newCombatants.map(c=>!c.isPlayer && c.hp>0 ? {...c, hp:Math.max(0,c.hp-9999), statusEffects:[...(c.statusEffects||[]),{type:"stun",duration:2}]} : c);
+      log += `⚡ **PUNIZIONE DIVINA**\n🔥 9999 danni + stordimento a tutti i nemici!\n${enemies4.map(e=>`💥 ${e.name}: 0/${e.maxHp} HP 💫stordito`).join("\n")}`;
+    } else if(spell.type === "zodar_revive_all") {
+      const allDead2 = newCombatants.filter(c=>c.isPlayer && !c.isSummon && (c.dead||c.dying||c.hp<=0));
+      newCombatants = newCombatants.map(c => {
+        if(!c.isPlayer || c.isSummon || (!c.dead && !c.dying && c.hp>0)) return c;
+        const revived = {...c, hp:c.maxHp, dead:false, dying:false, stable:false, deathSuccesses:0, deathFailures:0};
+        const pData = partyPlayers.find(p=>p.id===c.id)||(c.id===myId?me:null);
+        if(pData) { const u={...pData,hp:c.maxHp,dead:false}; dbSavePlayer(u); if(c.id===myId) setMeRaw(u); }
+        return revived;
+      });
+      if(allDead2.length) log += `✝️ **RICHIAMO DALL'OBLIO**\n🌟 Zodar sfida la morte stessa — tutti risorgono a HP pieno!\n${allDead2.map(a=>`✨ ${a.name} risorge — ${a.maxHp}/${a.maxHp} HP`).join("\n")}`;
+      else log += `✝️ **RICHIAMO DALL'OBLIO**\nNessun alleato da riportare in vita. L'equilibrio è già ristabilito.`;
+    } else if(spell.type === "zodar_balance_hp") {
+      const alive = newCombatants.filter(c=>!c.dead && c.hp>0);
+      const totalHp = alive.reduce((s,c)=>s+c.hp,0);
+      const share = Math.floor(totalHp/Math.max(alive.length,1));
+      newCombatants = newCombatants.map(c=>(!c.dead && c.hp>0) ? {...c, hp:Math.min(c.maxHp,share)} : c);
+      log += `🔮 **BILANCIA DELLA VITA**\n⚖️ HP totali redistribuiti equamente: ${share} HP a ciascuno.\n${alive.map(c=>`• ${c.name}: ${Math.min(c.maxHp,share)}/${c.maxHp}`).join("\n")}`;
+    } else if(spell.type === "zodar_immortal") {
+      newCombatants = newCombatants.map(c=>c.isPlayer && !c.isSummon ? {...c, statusEffects:[...(c.statusEffects||[]),{type:"shield",duration:2}]} : c);
+      const allies2 = newCombatants.filter(c=>c.isPlayer && !c.isSummon);
+      log += `🌫️ **VELO DELL'ETERNITÀ**\n✨ Tutti gli alleati sono intoccabili per 2 round!\n${allies2.map(a=>`🛡️ ${a.name} — immortale`).join("\n")}`;
+    } else if(spell.type === "zodar_chaos") {
+      const roll = Math.random();
+      if(roll < 0.33) {
+        newCombatants = newCombatants.map(c=>c.isPlayer && !c.isSummon ? {...c,hp:c.maxHp,dead:false,dying:false} : (!c.isPlayer ? {...c,hp:0} : c));
+        log += `🎲 **VOLERE DEL CAOS** — Il dado cade sul lato della Luce!\n⚖️ Alleati guariti al massimo, nemici annientati!`;
+      } else if(roll < 0.66) {
+        newCombatants = newCombatants.map(c=>!c.isPlayer ? {...c,hp:c.maxHp} : (c.isPlayer && !c.isSummon ? {...c,hp:Math.max(1,Math.floor(c.hp*0.5))} : c));
+        log += `🎲 **VOLERE DEL CAOS** — Il dado cade sul lato del Caos!\n🌪️ I mostri sono rinvigoriti, gli alleati perdono metà HP. L'equilibrio è oscuro oggi.`;
+      } else {
+        const tmp = newCombatants.map(c=>({...c, _tmpHp:c.hp}));
+        const avgPlayerHp = Math.floor(tmp.filter(c=>c.isPlayer&&!c.isSummon).reduce((s,c)=>s+c.hp,0)/Math.max(1,tmp.filter(c=>c.isPlayer&&!c.isSummon).length));
+        const avgEnemyHp = Math.floor(tmp.filter(c=>!c.isPlayer&&c.hp>0).reduce((s,c)=>s+c.hp,0)/Math.max(1,tmp.filter(c=>!c.isPlayer&&c.hp>0).length));
+        newCombatants = newCombatants.map(c=>c.isPlayer&&!c.isSummon ? {...c,hp:Math.min(c.maxHp,avgEnemyHp)} : (!c.isPlayer ? {...c,hp:Math.min(c.maxHp,avgPlayerHp)} : c));
+        log += `🎲 **VOLERE DEL CAOS** — Il dado ribalta tutto!\n🔄 HP di alleati e nemici scambiati! Il caos regna sovrano.`;
+      }
+    } else if(spell.type === "zodar_end_combat") {
+      newCombatants = newCombatants.map(c=>!c.isPlayer ? {...c,hp:0} : c);
+      log += `💠 **FRATTURA DEL DESTINO**\n⚖️ Zodar ha deciso. Il combattimento è finito.\n"La vostra storia non finisce qui — ma questa battaglia sì."`;
+    } else if(spell.type === "zodar_observe") {
+      log += `👁️ **ZODAR VI OSSERVA**\n⚖️ Il Custode dell'Equilibrio volge il suo sguardo su di voi.\nNessuno sfugge alla sua visione. Nessuna azione è nascosta.\n*"Vi osservo da prima che nasceste. Vi osserverò dopo che sarete cenere."*`;
+      await addMsg(log, "system", "Sistema");
+      setZodarObserves(true);
+      setTimeout(()=>setZodarObserves(false), 5000);
+      setSpellMenu(false);
+      return;
     } else if(spell.type === "defense") {
-      // Buff difensivo temporaneo sul caster
-      const aidx = newCombatants.findIndex(c=>c.id===attacker.id);
-      if(aidx !== -1) newCombatants[aidx] = {...newCombatants[aidx], statusEffects:[...(newCombatants[aidx].statusEffects||[]),{type:"shield",duration:1}]};
-      log += `🌫️ **${spell.name}**\n${attacker.name} crea un'illusione protettiva — assorbirà il prossimo attacco nemico!`;
-    } else if(spell.type === "buff") {
       // Potenzia il caster (es. Forma Demoniaca)
       const aidx = newCombatants.findIndex(c=>c.id===attacker.id);
       if(aidx !== -1) {
@@ -11834,7 +11901,7 @@ ${stepText(step)}`, "quest","Master");
   const myTurn = combat?.active && activeCombatant?.id===myId;
   const myDeathTurn = myTurn && isDyingCombatant(activeCombatant);
   const isMySummonTurn = combat?.active && activeCombatant?.isSummon && activeCombatant?.summonOwner === myId;
-  const isCaster = MAGIC_CLASSES.includes(me?.class);
+  const isCaster = MAGIC_CLASSES.includes(me?.class) || me?.class === 'custode_equilibrio';
   const spellSlots = (() => {
     const computed = getSpellSlots(me?.level || 1);
     // Detect stale level-1 data: all higher tiers are 0 but computed has slots there
@@ -11991,6 +12058,22 @@ ${stepText(step)}`, "quest","Master");
                 {dailyRewardModal.newStreak === 6 && " 👑 Domani il premio finale!"}
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* ── ZODAR VI OSSERVA overlay ── */}
+      {zodarObserves && (
+        <div style={{ position:"fixed", inset:0, zIndex:999999, pointerEvents:"none", display:"flex", alignItems:"center", justifyContent:"center", animation:"zodar-observe-bg 5s ease forwards" }}>
+          <div style={{ position:"absolute", inset:0, background:"radial-gradient(ellipse at center, rgba(109,40,217,0.35) 0%, rgba(0,0,10,0.7) 60%, rgba(0,0,0,0.85) 100%)" }} />
+          <div style={{ position:"relative", textAlign:"center" }}>
+            <div style={{ fontSize:"5rem", animation:"zodar-eye-pulse 1.2s ease-in-out infinite", marginBottom:"1rem" }}>👁️</div>
+            <div style={{ fontFamily:"'Cinzel',serif", color:"#e9d5ff", fontSize:"clamp(1.4rem,4vw,2.8rem)", letterSpacing:"0.25em", fontWeight:700, animation:"zodar-observe-in 5s ease forwards", textShadow:"0 0 40px rgba(168,85,247,0.8), 0 0 80px rgba(109,40,217,0.5)" }}>
+              ZODAR VI OSSERVA
+            </div>
+            <div style={{ marginTop:"1.2rem", fontFamily:"'Cinzel',serif", color:"#7c3aed", fontSize:"clamp(0.7rem,2vw,1rem)", letterSpacing:"0.2em", opacity:0.8 }}>
+              ⚖️ &nbsp; IL CUSTODE DELL'EQUILIBRIO &nbsp; ⚖️
+            </div>
           </div>
         </div>
       )}
@@ -12413,15 +12496,22 @@ ${stepText(step)}`, "quest","Master");
                     <div style={{ color:"#334155", fontSize:"0.78rem", marginTop:"0.4rem" }}>Sii il primo a scrivere.</div>
                   </div>
                 )}
-                {shownMsgs.map(msg => (
-                  <div key={msg.id} style={{ padding:"0.55rem 0.85rem", borderRadius:6, background:"rgba(15,23,42,0.82)", borderLeft:`3px solid ${ch.accent}`, display:"flex", flexDirection:"column", gap:2 }}>
+                {shownMsgs.map(msg => {
+                  const isZodarMsg = msg.author === "Zodar";
+                  return (
+                  <div key={msg.id} style={{ padding:"0.55rem 0.85rem", borderRadius:6, background: isZodarMsg ? "linear-gradient(135deg,rgba(30,0,60,0.95),rgba(10,0,30,0.9))" : "rgba(15,23,42,0.82)", borderLeft:`3px solid ${isZodarMsg ? "#a855f7" : ch.accent}`, display:"flex", flexDirection:"column", gap:2, boxShadow: isZodarMsg ? "0 0 18px rgba(109,40,217,0.25)" : "none" }}>
                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"baseline", gap:8 }}>
-                      <span style={{ fontSize:"0.68rem", letterSpacing:"0.1em", textTransform:"uppercase", color:ch.accent, fontFamily:"'Cinzel',serif", fontWeight:700 }}>{msg.author || "Anonimo"}</span>
+                      {isZodarMsg ? (
+                        <span style={{ fontSize:"0.7rem", letterSpacing:"0.18em", textTransform:"uppercase", fontFamily:"'Cinzel',serif", fontWeight:700, background:"linear-gradient(90deg,#c084fc,#e9d5ff,#a855f7)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", animation:"zodar-pulse 3s ease-in-out infinite" }}>⚖️ Zodar</span>
+                      ) : (
+                        <span style={{ fontSize:"0.68rem", letterSpacing:"0.1em", textTransform:"uppercase", color:ch.accent, fontFamily:"'Cinzel',serif", fontWeight:700 }}>{msg.author || "Anonimo"}</span>
+                      )}
                       <span style={{ fontSize:"0.62rem", color:"#334155" }}>{new Date(msg.created_at).toLocaleString("it-IT",{day:"2-digit",month:"2-digit",hour:"2-digit",minute:"2-digit"})}</span>
                     </div>
-                    <div style={{ fontSize:"0.88rem", lineHeight:1.6, color:"#e2e8f0" }} dangerouslySetInnerHTML={{ __html: fmt(msg.content) }} />
+                    <div style={{ fontSize: isZodarMsg ? "0.95rem" : "0.88rem", lineHeight:1.6, color: isZodarMsg ? "#e9d5ff" : "#e2e8f0", fontFamily: isZodarMsg ? "'Cinzel',serif" : "inherit", fontStyle: isZodarMsg ? "italic" : "normal" }} dangerouslySetInnerHTML={{ __html: fmt(msg.content) }} />
                   </div>
-                ))}
+                  );
+                })}
                 <div ref={msgEnd} />
               </div>
               {/* Input */}

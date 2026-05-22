@@ -437,4 +437,50 @@ export const SPELLS = {
       {id:"sd53",name:"Dominio Totale",         emoji:"👑",dmg:"0",    type:"control",area:true, slots:5,desc:"Nessuno resiste: TUTTI i nemici saltano il turno e si attaccano a vicenda per 1 round"},
     ],
   },
+
+  // ── ZODAR — Custode dell'Equilibrio ──────────────────────────────────────
+  custode_equilibrio: {
+    0: [
+      {
+        id:"zd01", name:"Equilibrio Universale", emoji:"⚖️", slots:0, type:"zodar_heal_all",
+        desc:"Porta tutti gli alleati al massimo HP istantaneamente. L'equilibrio ripristina ciò che è stato spezzato."
+      },
+      {
+        id:"zd02", name:"Benedizione del Caos", emoji:"🌪️", slots:0, type:"zodar_heal_monsters",
+        desc:"Porta tutti i mostri al massimo HP. Zodar ristabilisce il caos quando l'ordine è troppo forte."
+      },
+      {
+        id:"zd03", name:"Flagello dell'Equilibrio", emoji:"☄️", slots:0, type:"zodar_smite_all",
+        desc:"Elimina istantaneamente tutti i mostri. Quando il caos diventa troppo, Zodar interviene."
+      },
+      {
+        id:"zd04", name:"Punizione Divina", emoji:"⚡", slots:0, type:"zodar_divine_punishment",
+        desc:"9999 danni + stun a tutti i nemici. La bilancia cade sul lato della distruzione."
+      },
+      {
+        id:"zd05", name:"Richiamo dall'Oblio", emoji:"✝️", slots:0, type:"zodar_revive_all",
+        desc:"Riporta in vita TUTTI gli alleati caduti — sia chi sta morendo che chi è già morto — a HP pieno."
+      },
+      {
+        id:"zd06", name:"Bilancia della Vita", emoji:"🔮", slots:0, type:"zodar_balance_hp",
+        desc:"Ridistribuisce equamente tutti gli HP tra tutti i combattenti. L'equilibrio non conosce preferenze."
+      },
+      {
+        id:"zd07", name:"Velo dell'Eternità", emoji:"🌫️", slots:0, type:"zodar_immortal",
+        desc:"Tutti gli alleati diventano immortali per 2 round. Nessun danno può ucciderli."
+      },
+      {
+        id:"zd08", name:"Volere del Caos", emoji:"🎲", slots:0, type:"zodar_chaos",
+        desc:"Effetto casuale cosmico: può guarire tutti, distruggere tutti, o ribaltare HP tra alleati e nemici. Imprevedibile."
+      },
+      {
+        id:"zd09", name:"Frattura del Destino", emoji:"💠", slots:0, type:"zodar_end_combat",
+        desc:"Termina il combattimento istantaneamente. Zodar decide che è finita — e nessuno può contraddirlo."
+      },
+      {
+        id:"zd10", name:"ZODAR VI OSSERVA", emoji:"👁️", slots:0, type:"zodar_observe",
+        desc:"Nessun effetto. Ma tutti sapranno che Zodar è presente. Un messaggio cosmico attraversa il mondo."
+      },
+    ],
+  },
 };
