@@ -12774,7 +12774,7 @@ ${stepText(step)}`, "quest","Master");
           </div>
         )}
 
-        {tab==="lore" && <LoreView />}
+        {tab==="lore" && <div style={{ flex:1, overflow:"hidden", display:"flex", flexDirection:"column" }}><LoreView /></div>}
         {tab==="osservatorio" && me?.class==="custode_equilibrio" && <OsservatorioView me={me} myId={myId} code={code} supabase={supabase} onJoinParty={async(partyCode)=>{ const upd={...me,partyCode}; await dbSavePlayer(upd); window.location.reload(); }} onJoinCombat={async(partyCode,combatant)=>{ const upd={...me,partyCode}; await dbSavePlayer(upd); window.location.reload(); }} />}
 
         {tab==="map" && (
