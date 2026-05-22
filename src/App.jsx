@@ -7659,6 +7659,126 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
 
 const RARITY_ORDER_INV = { common:0, uncommon:1, rare:2, epic:3, legendary:4 };
 
+// ── MAPPA DEL MONDO ───────────────────────────────────────────────────────────
+const MAP_ZONES = [
+  { id:"city",      name:"Città di Zodar",      icon:"🏰", desc:"Cuore del continente. Negozio, Gilda, Forgia, Taverna.", levels:"Tutti i livelli", bgm:"town",
+    x:47, y:48, w:10, h:10, color:"#fbbf24", isCity:true },
+  { id:"forest",    name:"Foresta di Eldara",   icon:"🌲", desc:"Boschi antichi abitati da creature misteriose e spiriti.", levels:"Liv. 1-5", bgm:"dungeon",
+    x:22, y:45, w:14, h:18, color:"#22c55e" },
+  { id:"mines",     name:"Miniere di Rocciafonda", icon:"⛏️", desc:"Gallerie profonde infestaste da goblin e orrori sotterranei.", levels:"Liv. 3-8", bgm:"dungeon",
+    x:20, y:25, w:16, h:16, color:"#a78bfa" },
+  { id:"plains",    name:"Pianure del Vento",   icon:"🌾", desc:"Sconfinate pianure battute dal vento, piene di banditi e nomadi.", levels:"Liv. 5-10", bgm:"dungeon",
+    x:62, y:42, w:16, h:16, color:"#f59e0b" },
+  { id:"mountains", name:"Montagne dei Giganti",icon:"🏔️", desc:"Vette impossibili dove i giganti regnano incontrastati.", levels:"Liv. 8-15", bgm:"dungeon",
+    x:42, y:18, w:14, h:16, color:"#94a3b8" },
+  { id:"coast",     name:"Costa dei Naufraghi", icon:"🌊", desc:"Scogliere tradiori, grotte marine e pirati spietati.", levels:"Liv. 10-18", bgm:"dungeon",
+    x:72, y:60, w:16, h:18, color:"#38bdf8" },
+  { id:"lava",      name:"Terre Bruciate",      icon:"🌋", desc:"Terra devastata da eruzioni continue. Mostri di fuoco ovunque.", levels:"Liv. 15-22", bgm:"combat",
+    x:14, y:62, w:16, h:18, color:"#ef4444" },
+  { id:"swamp",     name:"Palude Maledetta",    icon:"🏚️", desc:"Paludi corrotte da magie oscure. I morti non restano morti.", levels:"Liv. 20-28", bgm:"magic",
+    x:68, y:22, w:16, h:16, color:"#84cc16" },
+  { id:"tundra",    name:"Tundra Eterna",       icon:"❄️", desc:"Ghiacci senza fine. Il freddo uccide prima dei mostri.", levels:"Liv. 28-35", bgm:"dungeon",
+    x:52, y:5,  w:20, h:12, color:"#bae6fd" },
+  { id:"abyss",     name:"Abisso di Zodar",     icon:"💀", desc:"Isola maledetta. Il male primordiale dimora qui. Solo i più forti sopravvivono.", levels:"Liv. 35-40 ⚠️", bgm:"combat",
+    x:42, y:72, w:14, h:16, color:"#a855f7", isDangerous:true },
+];
+
+function MapView({ me, onNavigate }) {
+  const [hovered, setHovered] = useState(null);
+  const [warning, setWarning] = useState(null);
+  const myLevel = me?.level || 1;
+
+  function handleZoneClick(zone) {
+    if(zone.isCity) { onNavigate(zone); return; }
+    const minLevel = parseInt(zone.levels.match(/\d+/)?.[0] || "1");
+    if(myLevel < minLevel - 2) {
+      setWarning(zone);
+    } else {
+      onNavigate(zone);
+    }
+  }
+
+  return (
+    <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", position:"relative", background:"#0a0e17" }}>
+
+      {/* Warning modal */}
+      {warning && (
+        <div style={{ position:"absolute", inset:0, zIndex:100, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(0,0,0,0.75)" }}>
+          <div style={{ background:"rgba(10,14,23,0.98)", border:"2px solid #ef4444", borderRadius:12, padding:"2rem", maxWidth:380, textAlign:"center" }}>
+            <div style={{ fontSize:"3rem", marginBottom:"0.5rem" }}>{warning.icon}</div>
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#ef4444", fontSize:"1.1rem", marginBottom:"0.5rem" }}>⚠️ Zona Pericolosa</div>
+            <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontSize:"0.9rem", marginBottom:"0.5rem" }}>{warning.name}</div>
+            <div style={{ color:"#94a3b8", fontSize:"0.82rem", marginBottom:"1rem" }}>
+              Livello consigliato: <strong style={{ color:"#fbbf24" }}>{warning.levels}</strong><br/>
+              Il tuo livello: <strong style={{ color:"#ef4444" }}>{myLevel}</strong><br/><br/>
+              Sei sicuro di voler procedere? Potresti morire in modo molto doloroso.
+            </div>
+            <div style={{ display:"flex", gap:8, justifyContent:"center" }}>
+              <button onClick={()=>setWarning(null)} style={{ padding:"0.5rem 1.2rem", background:"rgba(255,255,255,0.05)", border:"1px solid #374151", borderRadius:8, color:"#94a3b8", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.8rem" }}>← Torna indietro</button>
+              <button onClick={()=>{ setWarning(null); onNavigate(warning); }} style={{ padding:"0.5rem 1.2rem", background:"rgba(239,68,68,0.2)", border:"1px solid #ef4444", borderRadius:8, color:"#fca5a5", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.8rem" }}>Procedi comunque ☠️</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mappa */}
+      <div style={{ flex:1, position:"relative", overflow:"hidden" }}>
+        <img src="/assets/map.png" alt="Mappa di Zodar" style={{ width:"100%", height:"100%", objectFit:"contain" }} />
+
+        {/* Zone overlay */}
+        {MAP_ZONES.map(zone => (
+          <div
+            key={zone.id}
+            onMouseEnter={()=>setHovered(zone)}
+            onMouseLeave={()=>setHovered(null)}
+            onClick={()=>handleZoneClick(zone)}
+            style={{
+              position:"absolute",
+              left:`${zone.x}%`, top:`${zone.y}%`,
+              width:`${zone.w}%`, height:`${zone.h}%`,
+              cursor:"pointer",
+              borderRadius:8,
+              border:`2px solid ${hovered?.id===zone.id ? zone.color : "transparent"}`,
+              background: hovered?.id===zone.id ? `${zone.color}22` : "transparent",
+              transition:"all 0.2s",
+              display:"flex", alignItems:"flex-start", justifyContent:"flex-start",
+            }}
+          >
+            {/* Pin visibile sempre */}
+            <div style={{
+              position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)",
+              fontSize: hovered?.id===zone.id ? "2rem" : "1.4rem",
+              filter:`drop-shadow(0 0 8px ${zone.color})`,
+              transition:"font-size 0.2s",
+              pointerEvents:"none",
+            }}>{zone.icon}</div>
+          </div>
+        ))}
+
+        {/* Tooltip zona */}
+        {hovered && (
+          <div style={{
+            position:"absolute", bottom:16, left:"50%", transform:"translateX(-50%)",
+            background:"rgba(5,8,18,0.97)", border:`1px solid ${hovered.color}`,
+            borderRadius:12, padding:"1rem 1.4rem", minWidth:280, textAlign:"center",
+            pointerEvents:"none", zIndex:10,
+            boxShadow:`0 0 24px ${hovered.color}44`,
+          }}>
+            <div style={{ fontSize:"2rem", marginBottom:4 }}>{hovered.icon}</div>
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:hovered.color, fontSize:"1rem", marginBottom:4 }}>{hovered.name}</div>
+            <div style={{ color:"#94a3b8", fontSize:"0.78rem", marginBottom:6 }}>{hovered.desc}</div>
+            <div style={{ display:"flex", gap:12, justifyContent:"center", alignItems:"center" }}>
+              <span style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize:"0.75rem" }}>⚔️ {hovered.levels}</span>
+              {!hovered.isCity && <span style={{ color:"#a78bfa", fontSize:"0.75rem", fontFamily:"'Cinzel',serif" }}>Clicca per entrare →</span>}
+              {hovered.isCity && <span style={{ color:"#22c55e", fontSize:"0.75rem", fontFamily:"'Cinzel',serif" }}>🏪 Hub centrale</span>}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, inventoryGroups, onSell, onUse, canUseConsumables, isMobile }) {
   const [activeSlot, setActiveSlot] = useState(null);
   const [hoveredItem, setHoveredItem] = useState(null);
@@ -11820,7 +11940,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["quest","📜 Missioni"],["story","📖 Storia"],["storylibrary","📚 Storie"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🏦 Mercato"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["quest","📜 Missioni"],["story","📖 Storia"],["storylibrary","📚 Storie"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["map","🗺️ Mappa"],["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🏦 Mercato"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
@@ -12251,6 +12371,9 @@ ${stepText(step)}`, "quest","Master");
           </div>
         )}
 
+        {tab==="map" && (
+          <MapView me={me} onNavigate={(zone) => { audioManager.playBGM(zone.bgm || 'dungeon'); setTab('dungeon'); }} />
+        )}
         {tab==="dungeon" && (
           <div style={{ flex:1, overflow:"hidden", display:"flex", flexDirection:"column", background:"rgba(3,7,18,0.5)" }}>
             {(() => {
