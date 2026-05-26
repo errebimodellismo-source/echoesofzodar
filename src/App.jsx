@@ -2063,16 +2063,16 @@ function CharacterEyesOverlay({ variant = 1 }) {
   const p = EYE_PRESETS[variant] || EYE_PRESETS[1];
   const eyeStyle = side => ({
     position:"absolute",
-    top:"40.5%",
-    left:side === "left" ? "33.4%" : "58.6%",
-    width:"8.2%",
-    height:"5.6%",
+    top:"41%",
+    left:side === "left" ? "34.2%" : "58.2%",
+    width:"5.2%",
+    height:"3.8%",
     transform:"translate(-50%,-50%)",
     borderRadius:"50%",
-    background:`radial-gradient(circle at 50% 50%, ${p.pupil} 0 16%, ${p.iris} 18% 48%, #e5e7eb 52% 74%, rgba(15,23,42,0.22) 78% 100%)`,
-    boxShadow:`0 0 7px ${p.glow}cc, inset 0 0 2px rgba(0,0,0,0.8)`,
+    background:`radial-gradient(circle at 50% 50%, ${p.pupil} 0 14%, ${p.iris} 18% 48%, ${p.glow}99 52% 64%, transparent 72% 100%)`,
+    boxShadow:`0 0 4px ${p.glow}99, inset 0 0 1px rgba(0,0,0,0.65)`,
     mixBlendMode:"screen",
-    opacity:0.9,
+    opacity:0.58,
     pointerEvents:"none",
   });
   return (
@@ -2116,6 +2116,7 @@ function CharacterPortrait({ player, race, gender, face=1, eyes=1, scar=0, size=
   const finalEyes = Number(player?.portrait_eyes || eyes || 1);
   const finalScar = Number(player?.portrait_scar || scar || 0);
   const baseSrc = `/assets/portraits/${finalRace}_${finalGender}_face_${finalFace}.png`;
+  const generatedFaceMode = !player || !!player?.portrait_face;
   return (
     <div style={{
       position:"relative",
@@ -2136,8 +2137,8 @@ function CharacterPortrait({ player, race, gender, face=1, eyes=1, scar=0, size=
           }}
           style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", display:"block" }}
         />
-        {!player?.portrait && !player?.image && <CharacterEyesOverlay variant={finalEyes} />}
-        {!player?.portrait && !player?.image && <CharacterScarOverlay variant={finalScar} />}
+        {generatedFaceMode && !player?.portrait && !player?.image && <CharacterEyesOverlay variant={finalEyes} />}
+        {generatedFaceMode && !player?.portrait && !player?.image && <CharacterScarOverlay variant={finalScar} />}
       </div>
     </div>
   );
@@ -3402,7 +3403,9 @@ function LandingHeroCard({ character, onPlay, onDelete }) {
             background:`conic-gradient(from 210deg, transparent, ${accent}, transparent 70%)`,
             boxShadow:`0 0 34px ${accent}33`,
           }}>
-            <CharacterPortrait player={character} size={128} radius="50%" />
+            {character?.portrait_face
+              ? <CharacterPortrait player={character} size={128} radius="50%" />
+              : <ArtThumb src={getPlayerPortrait(character)} alt={character.name} size={128} radius={999} />}
           </div>
         </div>
 
