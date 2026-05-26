@@ -2046,11 +2046,19 @@ function getPlayerPortrait(player) {
   const cls  = (player.class  || "warrior").toLowerCase();
   const race = (player.race   || "human").toLowerCase();
   const gender = player.gender || getStoredCharacterGender(player.id, "male");
-  if(player.portrait_face) return `/assets/portraits/${race}_${gender}_face_${player.portrait_face || 1}.png`;
+  if(hasGeneratedAppearance(player)) return `/assets/portraits/${race}_${gender}_face_${player.portrait_face || 1}.png`;
   // Secret races don't have class-specific portraits — use race_gender directly
   const SECRET_RACES = ['minotaur','angel','succubus'];
   if(SECRET_RACES.includes(race)) return getRacePortraitPath(race, gender);
   return getPortraitPath(cls, race, gender);
+}
+
+function hasGeneratedAppearance(player) {
+  if(!player?.portrait_face) return false;
+  const cls = CLASSES[player.class || "warrior"];
+  const race = RACES[player.race || "human"];
+  if(cls?._zodar || race?._zodar || race?._secret) return false;
+  return true;
 }
 
 const EYE_PRESETS = {
@@ -2121,7 +2129,7 @@ function CharacterPortrait({ player, race, gender, face=1, eyes=1, scar=0, size=
   const finalEyes = Number(player?.portrait_eyes || eyes || 1);
   const finalScar = Number(player?.portrait_scar || scar || 0);
   const baseSrc = `/assets/portraits/${finalRace}_${finalGender}_face_${finalFace}.png`;
-  const generatedFaceMode = !player || !!player?.portrait_face;
+  const generatedFaceMode = !player || hasGeneratedAppearance(player);
   return (
     <div style={{
       position:"relative",
@@ -2202,7 +2210,7 @@ function getMannequinHeadFrame(race, gender) {
 }
 
 function MannequinHeadOverlay({ me }) {
-  if(!me?.portrait_face && !me?.portrait && !me?.image) return null;
+  if(!hasGeneratedAppearance(me) && !me?.portrait && !me?.image) return null;
   const race = (me?.race || "human").toLowerCase();
   const gender = me?.gender || getStoredCharacterGender(me?.id, "male");
   const frame = getMannequinHeadFrame(race, gender);
@@ -2516,6 +2524,15 @@ async function dbGetPlayerMasterMeta() {
 }
 
 async function dbSavePlayer(p) {
+  const previousAvatarConfig = (p.avatar_config && typeof p.avatar_config === 'object')
+    ? p.avatar_config
+    : (p.avatarConfig && typeof p.avatarConfig === 'object' ? p.avatarConfig : {});
+  const appearance = {
+    ...(previousAvatarConfig.appearance || {}),
+    portrait_face: p.portrait_face ?? previousAvatarConfig.appearance?.portrait_face ?? null,
+    portrait_eyes: p.portrait_eyes ?? previousAvatarConfig.appearance?.portrait_eyes ?? 1,
+    portrait_scar: p.portrait_scar ?? previousAvatarConfig.appearance?.portrait_scar ?? 0,
+  };
   const payload = {
     id: p.id, name: p.name, party_code: p.partyCode,
     class: p?.class || 'warrior', race: p?.race || 'human',
@@ -2525,7 +2542,14 @@ async function dbSavePlayer(p) {
     updated_at: new Date().toISOString(),
   };
   if(p.accountId) payload.account_id = p.accountId;
-  payload.avatar_config = { gender: p.gender || 'male', stats: p.stats || {}, achievements: p.achievements || [], subclass: p.subclass || null };
+  payload.avatar_config = {
+    ...previousAvatarConfig,
+    gender: p.gender || previousAvatarConfig.gender || 'male',
+    stats: p.stats || previousAvatarConfig.stats || {},
+    achievements: p.achievements || previousAvatarConfig.achievements || [],
+    subclass: p.subclass ?? previousAvatarConfig.subclass ?? null,
+    appearance,
+  };
   const { data, error } = await supabase.from("players").upsert(payload).select("id,account_id,dead").single();
   return { data, error };
 }
@@ -2534,32 +2558,48 @@ async function dbGetPlayers(partyCode) {
   let query = supabase.from("players").select("*");
   if(partyCode) query = query.eq("party_code", partyCode);
   const { data } = await query;
-  return (data || []).map(r => ({
+  return (data || []).map(r => {
+    const cfg = (r?.avatar_config && typeof r.avatar_config === 'object') ? r.avatar_config : {};
+    const appearance = cfg.appearance || {};
+    return ({
     id: r?.id, name: r?.name, partyCode: r?.party_code,
     accountId: r?.account_id || null,
-    gender: getStoredCharacterGender(r?.id, typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male')),
-    stats: (r?.avatar_config && typeof r.avatar_config === 'object') ? (r.avatar_config.stats || {}) : {},
-    achievements: (r?.avatar_config && typeof r.avatar_config === 'object') ? (r.avatar_config.achievements || []) : [],
-    subclass: (r?.avatar_config && typeof r.avatar_config === 'object') ? (r.avatar_config.subclass || null) : null,
+    avatar_config: cfg,
+    gender: getStoredCharacterGender(r?.id, typeof r?.avatar_config === 'string' ? r.avatar_config : (cfg.gender || 'male')),
+    stats: cfg.stats || {},
+    achievements: cfg.achievements || [],
+    subclass: cfg.subclass || null,
+    portrait_face: appearance.portrait_face || null,
+    portrait_eyes: appearance.portrait_eyes || 1,
+    portrait_scar: appearance.portrait_scar || 0,
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
     mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
-  }));
+    });
+  });
 }
 async function dbGetAccountCharacters(accountId) {
   if(!accountId) return [];
   const { data } = await supabase.from("players").select("*").eq("account_id", accountId).order("updated_at", { ascending:false });
-  return (data || []).map(r => ({
+  return (data || []).map(r => {
+    const cfg = (r?.avatar_config && typeof r.avatar_config === 'object') ? r.avatar_config : {};
+    const appearance = cfg.appearance || {};
+    return ({
     id: r?.id, name: r?.name, partyCode: r?.party_code,
     accountId: r?.account_id || null,
-    gender: getStoredCharacterGender(r?.id, typeof r?.avatar_config === 'string' ? r.avatar_config : (r?.avatar_config?.gender || 'male')),
-    stats: (r?.avatar_config && typeof r.avatar_config === 'object') ? (r.avatar_config.stats || {}) : {},
-    achievements: (r?.avatar_config && typeof r.avatar_config === 'object') ? (r.avatar_config.achievements || []) : [],
-    subclass: (r?.avatar_config && typeof r.avatar_config === 'object') ? (r.avatar_config.subclass || null) : null,
+    avatar_config: cfg,
+    gender: getStoredCharacterGender(r?.id, typeof r?.avatar_config === 'string' ? r.avatar_config : (cfg.gender || 'male')),
+    stats: cfg.stats || {},
+    achievements: cfg.achievements || [],
+    subclass: cfg.subclass || null,
+    portrait_face: appearance.portrait_face || null,
+    portrait_eyes: appearance.portrait_eyes || 1,
+    portrait_scar: appearance.portrait_scar || 0,
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
     mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
-  }));
+    });
+  });
 }
 
 async function dbGetMessages(partyCode) {
@@ -3408,7 +3448,7 @@ function LandingHeroCard({ character, onPlay, onDelete }) {
             background:`conic-gradient(from 210deg, transparent, ${accent}, transparent 70%)`,
             boxShadow:`0 0 34px ${accent}33`,
           }}>
-            {character?.portrait_face
+            {hasGeneratedAppearance(character)
               ? <CharacterPortrait player={character} size={128} radius="50%" />
               : <ArtThumb src={getPlayerPortrait(character)} alt={character.name} size={128} radius={999} />}
           </div>
@@ -3637,7 +3677,7 @@ function CreateZodar({ setScreen, goGame, authUser }) {
         accountId: authUser?.id || null,
         hp:9999, maxHp:9999, atk:99, def:99, mag:99, init:99,
         xp:0, level:1, gold:0, dead:false,
-        portrait_face:1, portrait_hair:0, portrait_eyes:0, portrait_scar:0, portrait_beard:0,
+        portrait_hair:0, portrait_eyes:0, portrait_scar:0, portrait_beard:0,
       };
       const { error, data: saved } = await dbSavePlayer(player);
       if(error || !saved?.id) throw error || new Error("Errore salvataggio");
@@ -9401,7 +9441,18 @@ function GameScreen({ myId, setScreen, authUser }) {
           setScreen("landing");
           return;
         }
-        const p = { id:data.id, name:data.name, partyCode:data.party_code, accountId:data.account_id||null, class:data.class, race:data.race, hp:data.hp, maxHp:data.max_hp, atk:data.atk, def:data.def, mag:data.mag, init:data.init, xp:data.xp, level:data.level, gold:data.gold };
+        const cfg = (data.avatar_config && typeof data.avatar_config === "object") ? data.avatar_config : {};
+        const appearance = cfg.appearance || {};
+        const p = {
+          id:data.id, name:data.name, partyCode:data.party_code, accountId:data.account_id||null,
+          class:data.class, race:data.race, gender:getStoredCharacterGender(data.id, cfg.gender || "male"),
+          avatar_config:cfg, stats:cfg.stats || {}, achievements:cfg.achievements || [], subclass:cfg.subclass || null,
+          portrait_face:appearance.portrait_face || null,
+          portrait_eyes:appearance.portrait_eyes || 1,
+          portrait_scar:appearance.portrait_scar || 0,
+          hp:data.hp, maxHp:data.max_hp, atk:data.atk, def:data.def, mag:data.mag, init:data.init, xp:data.xp, level:data.level, gold:data.gold,
+          dead:!!data.dead,
+        };
         setMeRaw(p);
         await refreshAll(p.partyCode);
         await refreshInventory(p);
@@ -12575,7 +12626,7 @@ ${stepText(step)}`, "quest","Master");
         ) : (
           <div style={{ background:"rgba(109,40,217,0.1)", border:"1px solid #3b0764", borderRadius:5, padding:"0.6rem" }}>
             <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
-              {me?.portrait_face
+              {hasGeneratedAppearance(me)
                 ? <CharacterPortrait player={me} size={56} radius={14} />
                 : <ArtThumb src={getPlayerPortrait(me)} alt={me?.name || "Eroe"} size={56} radius={14} />}
               <div style={{ flex:1, minWidth:0 }}>
