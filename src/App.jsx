@@ -2197,14 +2197,6 @@ const MANNEQUIN_HEAD_FRAME = {
   },
 };
 
-const MANNEQUIN_BASE_ASPECT = {
-  human: { male: 887 / 1774 },
-};
-
-function getMannequinBaseAspect(race, gender) {
-  return MANNEQUIN_BASE_ASPECT[race]?.[gender] || 1024 / 1536;
-}
-
 function getMannequinHeadFrame(race, gender) {
   return MANNEQUIN_HEAD_FRAME[race]?.[gender] || MANNEQUIN_HEAD_FRAME[race]?.male || MANNEQUIN_HEAD_FRAME.default;
 }
@@ -7393,39 +7385,32 @@ function CharacterViewer({ me, equippedItems, size, fillContainer }) {
   const gender = me?.gender || "male";
   const baseSprite = `/assets/equip/base_${race}_${gender}.png`;
   const overlaySlots = ["chest","legs","boots","gloves","head","weapon","offhand","cloak","amulet"];
-  const baseAspect = getMannequinBaseAspect(race, gender);
   const containerStyle = fillContainer
     ? { position:"absolute", inset:0 }
     : { position:"relative", width: size||240, height: size ? size*2 : 480, margin:"0 auto", flexShrink:0 };
-  const stageStyle = fillContainer
-    ? { position:"absolute", left:"50%", top:"50%", transform:"translate(-50%,-50%)", height:"100%", width:"auto", maxWidth:"100%", maxHeight:"100%", aspectRatio:baseAspect, overflow:"visible" }
-    : { position:"absolute", inset:0, aspectRatio:baseAspect, overflow:"visible" };
   return (
     <div style={containerStyle}>
-      <div style={stageStyle}>
-        {/* Base character */}
-        <img
-          src={baseSprite}
-          alt="personaggio"
-          onError={e => { e.currentTarget.style.display="none"; }}
-          style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"fill", userSelect:"none", filter:"brightness(1.4) contrast(1.1)", zIndex:1 }}
-        />
-        {false && <MannequinHeadOverlay me={me} />}
-        {/* Equipment overlays */}
-        {overlaySlots.map(slot => {
-          const item = equippedItems[slot];
-          if(!item?.equipSprite) return null;
-          return (
-            <img
-              key={slot}
-              src={`/assets/equip/${item.equipSprite}.png`}
-              alt={item.name}
-              onError={e => { e.currentTarget.style.display="none"; }}
-              style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"fill", userSelect:"none", pointerEvents:"none", zIndex:slot === "head" ? 5 : 3 }}
-            />
-          );
-        })}
-      </div>
+      {/* Base character */}
+      <img
+        src={baseSprite}
+        alt="personaggio"
+        onError={e => { e.currentTarget.style.display="none"; }}
+        style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none", filter:"brightness(1.25) contrast(1.05)", zIndex:1 }}
+      />
+      {/* Equipment overlays */}
+      {overlaySlots.map(slot => {
+        const item = equippedItems[slot];
+        if(!item?.equipSprite) return null;
+        return (
+          <img
+            key={slot}
+            src={`/assets/equip/${item.equipSprite}.png`}
+            alt={item.name}
+            onError={e => { e.currentTarget.style.display="none"; }}
+            style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none", pointerEvents:"none", zIndex:slot === "head" ? 5 : 3 }}
+          />
+        );
+      })}
     </div>
   );
 }
