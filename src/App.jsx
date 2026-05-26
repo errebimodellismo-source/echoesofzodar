@@ -2063,16 +2063,16 @@ function CharacterEyesOverlay({ variant = 1 }) {
   const p = EYE_PRESETS[variant] || EYE_PRESETS[1];
   const eyeStyle = side => ({
     position:"absolute",
-    top:"41%",
-    left:side === "left" ? "34.2%" : "58.2%",
-    width:"5.2%",
-    height:"3.8%",
+    top:"41.4%",
+    left:side === "left" ? "36.1%" : "58.9%",
+    width:"3.4%",
+    height:"2.5%",
     transform:"translate(-50%,-50%)",
     borderRadius:"50%",
-    background:`radial-gradient(circle at 50% 50%, ${p.pupil} 0 14%, ${p.iris} 18% 48%, ${p.glow}99 52% 64%, transparent 72% 100%)`,
-    boxShadow:`0 0 4px ${p.glow}99, inset 0 0 1px rgba(0,0,0,0.65)`,
-    mixBlendMode:"screen",
-    opacity:0.58,
+    background:`radial-gradient(circle at 50% 50%, ${p.iris} 0 38%, ${p.glow}88 44% 58%, transparent 72% 100%)`,
+    boxShadow:`0 0 2px ${p.glow}66`,
+    mixBlendMode:"color",
+    opacity:0.34,
     pointerEvents:"none",
   });
   return (
@@ -2086,25 +2086,30 @@ function CharacterEyesOverlay({ variant = 1 }) {
 function CharacterScarOverlay({ variant = 0 }) {
   if(!variant) return null;
   return (
-    <svg viewBox="0 0 100 100" aria-hidden="true" style={{ position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none", mixBlendMode:"multiply", opacity:0.92 }}>
+    <svg viewBox="0 0 100 100" aria-hidden="true" style={{ position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none", mixBlendMode:"multiply", opacity:0.82 }}>
       <defs>
         <filter id={`scar-soft-${variant}`} x="-20%" y="-20%" width="140%" height="140%">
-          <feGaussianBlur stdDeviation="0.35" />
+          <feGaussianBlur stdDeviation="0.22" />
         </filter>
+        <clipPath id={`scar-face-clip-${variant}`}>
+          <ellipse cx="50" cy="49" rx="22" ry="30" />
+        </clipPath>
       </defs>
-      {variant === 1 ? (
-        <>
-          <path d="M61 51 L74 64" stroke="#7f1d1d" strokeWidth="1.55" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
-          <path d="M61.5 50.5 L73.5 63.5" stroke="#fca5a5" strokeWidth="0.38" strokeLinecap="round" opacity="0.55" />
-        </>
-      ) : (
-        <>
-          <path d="M30 39 L39 48" stroke="#7f1d1d" strokeWidth="1.2" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
-          <path d="M67 36 L78 43" stroke="#7f1d1d" strokeWidth="1.1" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
-          <path d="M58 61 L70 58" stroke="#7f1d1d" strokeWidth="1.25" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
-          <path d="M30.5 38.5 L38.5 47.5 M67.5 35.5 L77.5 42.5 M58.5 60.5 L69.5 57.5" stroke="#fca5a5" strokeWidth="0.32" strokeLinecap="round" opacity="0.48" />
-        </>
-      )}
+      <g clipPath={`url(#scar-face-clip-${variant})`}>
+        {variant === 1 ? (
+          <>
+            <path d="M57 52 L65 61" stroke="#7f1d1d" strokeWidth="0.95" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
+            <path d="M57.3 51.8 L64.7 60.8" stroke="#fca5a5" strokeWidth="0.22" strokeLinecap="round" opacity="0.45" />
+          </>
+        ) : (
+          <>
+            <path d="M35 49 L41 55" stroke="#7f1d1d" strokeWidth="0.78" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
+            <path d="M60 38 L67 43" stroke="#7f1d1d" strokeWidth="0.74" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
+            <path d="M56 61 L64 59" stroke="#7f1d1d" strokeWidth="0.82" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
+            <path d="M35.2 48.8 L40.8 54.8 M60.2 37.8 L66.8 42.8 M56.2 60.8 L63.8 58.8" stroke="#fca5a5" strokeWidth="0.18" strokeLinecap="round" opacity="0.4" />
+          </>
+        )}
+      </g>
     </svg>
   );
 }
