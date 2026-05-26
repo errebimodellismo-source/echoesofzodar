@@ -2046,11 +2046,188 @@ function getPlayerPortrait(player) {
   const cls  = (player.class  || "warrior").toLowerCase();
   const race = (player.race   || "human").toLowerCase();
   const gender = player.gender || getStoredCharacterGender(player.id, "male");
+  if(player.portrait_face) return `/assets/portraits/${race}_${gender}_face_${player.portrait_face || 1}.png`;
   // Secret races don't have class-specific portraits — use race_gender directly
   const SECRET_RACES = ['minotaur','angel','succubus'];
   if(SECRET_RACES.includes(race)) return getRacePortraitPath(race, gender);
   return getPortraitPath(cls, race, gender);
 }
+
+const EYE_PRESETS = {
+  1: { label:"Argento", iris:"#cbd5e1", glow:"#93c5fd", pupil:"#0f172a" },
+  2: { label:"Oro", iris:"#ca8a04", glow:"#fde047", pupil:"#1c1917" },
+  3: { label:"Ambra", iris:"#92400e", glow:"#f59e0b", pupil:"#1c1917" },
+};
+
+function CharacterEyesOverlay({ variant = 1 }) {
+  const p = EYE_PRESETS[variant] || EYE_PRESETS[1];
+  const eyeStyle = side => ({
+    position:"absolute",
+    top:"40.5%",
+    left:side === "left" ? "33.4%" : "58.6%",
+    width:"8.2%",
+    height:"5.6%",
+    transform:"translate(-50%,-50%)",
+    borderRadius:"50%",
+    background:`radial-gradient(circle at 50% 50%, ${p.pupil} 0 16%, ${p.iris} 18% 48%, #e5e7eb 52% 74%, rgba(15,23,42,0.22) 78% 100%)`,
+    boxShadow:`0 0 7px ${p.glow}cc, inset 0 0 2px rgba(0,0,0,0.8)`,
+    mixBlendMode:"screen",
+    opacity:0.9,
+    pointerEvents:"none",
+  });
+  return (
+    <>
+      <span style={eyeStyle("left")} />
+      <span style={eyeStyle("right")} />
+    </>
+  );
+}
+
+function CharacterScarOverlay({ variant = 0 }) {
+  if(!variant) return null;
+  return (
+    <svg viewBox="0 0 100 100" aria-hidden="true" style={{ position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none", mixBlendMode:"multiply", opacity:0.92 }}>
+      <defs>
+        <filter id={`scar-soft-${variant}`} x="-20%" y="-20%" width="140%" height="140%">
+          <feGaussianBlur stdDeviation="0.35" />
+        </filter>
+      </defs>
+      {variant === 1 ? (
+        <>
+          <path d="M61 51 L74 64" stroke="#7f1d1d" strokeWidth="1.55" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
+          <path d="M61.5 50.5 L73.5 63.5" stroke="#fca5a5" strokeWidth="0.38" strokeLinecap="round" opacity="0.55" />
+        </>
+      ) : (
+        <>
+          <path d="M30 39 L39 48" stroke="#7f1d1d" strokeWidth="1.2" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
+          <path d="M67 36 L78 43" stroke="#7f1d1d" strokeWidth="1.1" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
+          <path d="M58 61 L70 58" stroke="#7f1d1d" strokeWidth="1.25" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
+          <path d="M30.5 38.5 L38.5 47.5 M67.5 35.5 L77.5 42.5 M58.5 60.5 L69.5 57.5" stroke="#fca5a5" strokeWidth="0.32" strokeLinecap="round" opacity="0.48" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+function CharacterPortrait({ player, race, gender, face=1, eyes=1, scar=0, size=160, radius="50%", style={}, contentStyle={} }) {
+  const finalRace = (player?.race || race || "human").toLowerCase();
+  const finalGender = player?.gender || gender || getStoredCharacterGender(player?.id, "male");
+  const finalFace = Number(player?.portrait_face || face || 1);
+  const finalEyes = Number(player?.portrait_eyes || eyes || 1);
+  const finalScar = Number(player?.portrait_scar || scar || 0);
+  const baseSrc = `/assets/portraits/${finalRace}_${finalGender}_face_${finalFace}.png`;
+  return (
+    <div style={{
+      position:"relative",
+      width:size,
+      height:size,
+      borderRadius:radius,
+      overflow:"hidden",
+      background:"#0a0e17",
+      ...style,
+    }}>
+      <div style={{ position:"absolute", inset:0, transformOrigin:"50% 50%", ...contentStyle }}>
+        <img
+          src={player?.portrait || player?.image || baseSrc}
+          alt={player?.name || "Ritratto"}
+          onError={e=>{
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = getRacePortraitPath(finalRace, finalGender);
+          }}
+          style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", display:"block" }}
+        />
+        {!player?.portrait && !player?.image && <CharacterEyesOverlay variant={finalEyes} />}
+        {!player?.portrait && !player?.image && <CharacterScarOverlay variant={finalScar} />}
+      </div>
+    </div>
+  );
+}
+
+const MANNEQUIN_HEAD_FRAME = {
+  default: { left:50, top:10.5, width:24.5, height:16.5, scale:1.55, y:9, radius:"48% 48% 44% 44%" },
+  human: {
+    male: { left:50, top:9.2, width:26.5, height:15.5, scale:1.62, y:10, radius:"48% 48% 44% 44%" },
+    female: { left:50, top:9.8, width:24.2, height:15.0, scale:1.58, y:10, radius:"48% 48% 44% 44%" },
+  },
+  elf: {
+    male: { left:50, top:10.1, width:27.5, height:16.0, scale:1.55, y:10, radius:"50% 50% 44% 44%" },
+    female: { left:50, top:10.0, width:26.5, height:15.7, scale:1.54, y:10, radius:"50% 50% 44% 44%" },
+  },
+  halfelf: {
+    male: { left:50, top:10.0, width:26.5, height:15.7, scale:1.55, y:10, radius:"50% 50% 44% 44%" },
+    female: { left:50, top:9.9, width:25.8, height:15.4, scale:1.55, y:10, radius:"50% 50% 44% 44%" },
+  },
+  dwarf: {
+    male: { left:50, top:10.5, width:28.5, height:16.2, scale:1.52, y:9, radius:"46% 46% 42% 42%" },
+    female: { left:50, top:10.4, width:26.6, height:15.7, scale:1.54, y:9, radius:"46% 46% 42% 42%" },
+  },
+  halfling: {
+    male: { left:50, top:10.3, width:24.8, height:15.0, scale:1.58, y:10, radius:"48% 48% 44% 44%" },
+    female: { left:50, top:10.2, width:24.2, height:14.8, scale:1.58, y:10, radius:"48% 48% 44% 44%" },
+  },
+  gnome: {
+    male: { left:50, top:10.2, width:25.0, height:15.2, scale:1.58, y:10, radius:"48% 48% 44% 44%" },
+    female: { left:50, top:10.1, width:24.4, height:15.0, scale:1.58, y:10, radius:"48% 48% 44% 44%" },
+  },
+  halforc: {
+    male: { left:50, top:10.4, width:28.0, height:16.2, scale:1.52, y:9, radius:"46% 46% 42% 42%" },
+    female: { left:50, top:10.3, width:27.0, height:15.8, scale:1.54, y:9, radius:"46% 46% 42% 42%" },
+  },
+  tiefling: {
+    male: { left:50, top:9.6, width:31.0, height:18.0, scale:1.42, y:10, radius:"50% 50% 43% 43%" },
+    female: { left:50, top:9.5, width:30.0, height:17.8, scale:1.42, y:10, radius:"50% 50% 43% 43%" },
+  },
+  dragonborn: {
+    male: { left:50, top:10.4, width:32.0, height:20.0, scale:1.35, y:9, radius:"42% 42% 48% 48%" },
+    female: { left:50, top:10.3, width:31.0, height:19.5, scale:1.35, y:9, radius:"42% 42% 48% 48%" },
+  },
+};
+
+const MANNEQUIN_BASE_ASPECT = {
+  human: { male: 887 / 1774 },
+};
+
+function getMannequinBaseAspect(race, gender) {
+  return MANNEQUIN_BASE_ASPECT[race]?.[gender] || 1024 / 1536;
+}
+
+function getMannequinHeadFrame(race, gender) {
+  return MANNEQUIN_HEAD_FRAME[race]?.[gender] || MANNEQUIN_HEAD_FRAME[race]?.male || MANNEQUIN_HEAD_FRAME.default;
+}
+
+function MannequinHeadOverlay({ me }) {
+  if(!me?.portrait_face && !me?.portrait && !me?.image) return null;
+  const race = (me?.race || "human").toLowerCase();
+  const gender = me?.gender || getStoredCharacterGender(me?.id, "male");
+  const frame = getMannequinHeadFrame(race, gender);
+  return (
+    <div style={{
+      position:"absolute",
+      left:`${frame.left}%`,
+      top:`${frame.top}%`,
+      width:`${frame.width}%`,
+      height:`${frame.height}%`,
+      transform:"translate(-50%,-50%)",
+      borderRadius:frame.radius,
+      overflow:"hidden",
+      zIndex:2,
+      pointerEvents:"none",
+      filter:"brightness(1.08) contrast(1.03)",
+      boxShadow:"0 0 0 1px rgba(0,0,0,0.12)",
+      WebkitMaskImage:"radial-gradient(ellipse at 50% 50%, #000 0 61%, rgba(0,0,0,0.82) 72%, transparent 100%)",
+      maskImage:"radial-gradient(ellipse at 50% 50%, #000 0 61%, rgba(0,0,0,0.82) 72%, transparent 100%)",
+    }}>
+      <CharacterPortrait
+        player={me}
+        size="100%"
+        radius={0}
+        style={{ width:"100%", height:"100%", background:"transparent" }}
+        contentStyle={{ transform:`scale(${frame.scale || 1.5}) translateY(${frame.y || 9}%)` }}
+      />
+    </div>
+  );
+}
+
 function getMonsterImage(monster) {
   if(!monster) return "";
   if(monster.image) return monster.image;
@@ -3225,7 +3402,7 @@ function LandingHeroCard({ character, onPlay, onDelete }) {
             background:`conic-gradient(from 210deg, transparent, ${accent}, transparent 70%)`,
             boxShadow:`0 0 34px ${accent}33`,
           }}>
-            <ArtThumb src={getPlayerPortrait(character)} alt={character.name} size={128} radius={999} />
+            <CharacterPortrait player={character} size={128} radius="50%" />
           </div>
         </div>
 
@@ -3555,10 +3732,8 @@ function CreateChar({ setScreen, goGame, authUser }) {
   const [secretUnlocked, setSecretUnlocked] = useState(() => localStorage.getItem(SECRET_UNLOCK_KEY) === "1");
   const [secretError, setSecretError] = useState(false);
   const [faceVariant, setFaceVariant] = useState(1);
-  const [hairVariant, setHairVariant] = useState(1);
   const [eyesVariant, setEyesVariant] = useState(1);
   const [scarVariant, setScarVariant] = useState(0); // 0 = nessuna
-  const [beardVariant, setBeardVariant] = useState(0); // 0 = nessuna
   const c = CLASSES[cls]; const r = RACES[race];
 
   function tryUnlock() {
@@ -3588,10 +3763,10 @@ function CreateChar({ setScreen, goGame, authUser }) {
         mag:c.mag+r.magB, init:c.init+r.initB,
         xp:0, level:1, gold:20, dead:false,
         portrait_face: faceVariant,
-        portrait_hair: hairVariant,
+        portrait_hair: 0,
         portrait_eyes: eyesVariant,
         portrait_scar: scarVariant,
-        portrait_beard: beardVariant,
+        portrait_beard: 0,
       };
       debugCharacterFlow("create_player_generated", player);
       debugCharacterFlow("save_attempt", { id: player.id, accountId: player.accountId, partyCode: player.partyCode });
@@ -3638,10 +3813,6 @@ function CreateChar({ setScreen, goGame, authUser }) {
   }
 
   const canContinueFromName = name.trim() && realPlayerName.trim();
-  const RACES_WITH_HAIR = ["human","elf","dwarf","halfling","gnome","halfelf","halforc"];
-  const RACES_WITH_BEARD = ["human","dwarf","gnome","halfelf","halforc"];
-  const hasHair = RACES_WITH_HAIR.includes(race);
-  const hasBeard = RACES_WITH_BEARD.includes(race) && gender === "male";
   const steps = ["Nomi","Classe","Razza e Genere","Aspetto","Party"];
   return (
     <div style={{ position:"relative", zIndex:1, maxWidth:620, margin:"0 auto", padding:"1.5rem 1rem", minHeight:"100vh" }}>
@@ -3672,7 +3843,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
       {step===1 && (
         <Card title="⚔️ Scegli la tua Classe">
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))", gap:8 }}>
-            {Object.entries(CLASSES).filter(([,v]) => !v._secret || secretUnlocked).map(([k,v])=>(
+            {Object.entries(CLASSES).filter(([,v]) => !v._zodar && (!v._secret || secretUnlocked)).map(([k,v])=>(
               <button key={k} onClick={()=>setCls(k)} style={{ padding:"0.8rem 0.5rem", background:cls===k?`${v.color}30`:"rgba(255,255,255,0.03)", border:`2px solid ${cls===k?v.color:v._secret?"#4b0082":"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:4, position:"relative" }}>
                 {v._secret && <span style={{ position:"absolute", top:4, right:4, fontSize:"0.5rem", color:"#a78bfa", fontFamily:"'Cinzel',serif", letterSpacing:"0.05em" }}>✦ SEGRETO</span>}
                 <span style={{ fontSize:"1.8rem", filter:v._secret?"drop-shadow(0 0 6px #a78bfa)":"none" }}>{v.emoji}</span>
@@ -3721,7 +3892,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
             </div>
           )}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))", gap:8 }}>
-            {Object.entries(RACES).filter(([,v]) => !v._secret || secretUnlocked).map(([k,v])=>(
+            {Object.entries(RACES).filter(([,v]) => !v._zodar && (!v._secret || secretUnlocked)).map(([k,v])=>(
               <button key={k} onClick={()=>{ setRace(k); if(v._femaleOnly) setGender("female"); }} style={{ padding:"0.7rem 0.4rem", background:race===k?`rgba(109,40,217,0.3)`:"rgba(255,255,255,0.03)", border:`2px solid ${race===k?"#a78bfa":v._secret?"#4b0082":"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:3, position:"relative" }}>
                 {v._secret && <span style={{ position:"absolute", top:3, right:3, fontSize:"0.45rem", color:"#a78bfa", fontFamily:"'Cinzel',serif" }}>✦</span>}
                 {v._femaleOnly && <span style={{ position:"absolute", top:3, left:3, fontSize:"0.45rem", color:"#f472b6" }}>♀</span>}
@@ -3743,13 +3914,16 @@ function CreateChar({ setScreen, goGame, authUser }) {
         <Card title="🎨 Personalizza il tuo Aspetto">
           {/* Anteprima ritratto */}
           <div style={{ display:"flex", justifyContent:"center", marginBottom:"1rem" }}>
-            <div style={{ position:"relative", width:160, height:160, borderRadius:"50%", overflow:"hidden", border:"3px solid #a78bfa", boxShadow:"0 0 20px rgba(167,139,250,0.3)", background:"#0a0e17" }}>
-              <img src={`/assets/portraits/${race}_${gender}_face_${faceVariant}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} alt="viso" />
-              {hasHair && <img src={`/assets/portraits/${race}_${gender}_hair_${hairVariant}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} alt="capelli" />}
-              <img src={`/assets/portraits/${race}_${gender}_eyes_${eyesVariant}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} alt="occhi" />
-              {scarVariant > 0 && <img src={`/assets/portraits/${race}_${gender}_scar_${scarVariant}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} alt="cicatrice" />}
-              {hasBeard && beardVariant > 0 && <img src={`/assets/portraits/${race}_${gender}_beard_${beardVariant}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover" }} alt="barba" />}
-            </div>
+            <CharacterPortrait
+              race={race}
+              gender={gender}
+              face={faceVariant}
+              eyes={eyesVariant}
+              scar={scarVariant}
+              size={160}
+              radius="50%"
+              style={{ border:"3px solid #a78bfa", boxShadow:"0 0 20px rgba(167,139,250,0.3)" }}
+            />
           </div>
 
           {/* Viso */}
@@ -3764,27 +3938,13 @@ function CreateChar({ setScreen, goGame, authUser }) {
             </div>
           </div>
 
-          {/* Capelli */}
-          {hasHair && (
-            <div style={{ marginBottom:"1rem" }}>
-              <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>💇 Capelli</div>
-              <div style={{ display:"flex", gap:8 }}>
-                {[1,2,3].map(i => (
-                  <button key={i} onClick={()=>setHairVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${hairVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0 }}>
-                    <img src={`/assets/portraits/${race}_${gender}_hair_${i}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ width:"100%", height:"100%", objectFit:"cover" }} alt={`Capelli ${i}`} />
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
           {/* Occhi */}
           <div style={{ marginBottom:"1rem" }}>
             <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>👁️ Occhi</div>
             <div style={{ display:"flex", gap:8 }}>
               {[1,2,3].map(i => (
                 <button key={i} onClick={()=>setEyesVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${eyesVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0 }}>
-                  <img src={`/assets/portraits/${race}_${gender}_eyes_${i}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ width:"100%", height:"100%", objectFit:"cover" }} alt={`Occhi ${i}`} />
+                  <CharacterPortrait race={race} gender={gender} face={faceVariant} eyes={i} scar={scarVariant} size="100%" radius={0} />
                 </button>
               ))}
             </div>
@@ -3797,26 +3957,11 @@ function CreateChar({ setScreen, goGame, authUser }) {
               {[0,1,2].map(i => (
                 <button key={i} onClick={()=>setScarVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${scarVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
                   {i===0 ? <span style={{ color:"#475569", fontSize:"0.65rem", fontFamily:"'Cinzel',serif" }}>Nessuna</span> :
-                    <img src={`/assets/portraits/${race}_${gender}_scar_${i}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ width:"100%", height:"100%", objectFit:"cover" }} alt={`Cicatrice ${i}`} />}
+                    <CharacterPortrait race={race} gender={gender} face={faceVariant} eyes={eyesVariant} scar={i} size="100%" radius={0} />}
                 </button>
               ))}
             </div>
           </div>
-
-          {/* Barba (maschio con razze compatibili) */}
-          {hasBeard && (
-            <div style={{ marginBottom:"1rem" }}>
-              <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>🧔 Barba</div>
-              <div style={{ display:"flex", gap:8 }}>
-                {[0,1,2].map(i => (
-                  <button key={i} onClick={()=>setBeardVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${beardVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                    {i===0 ? <span style={{ color:"#475569", fontSize:"0.65rem", fontFamily:"'Cinzel',serif" }}>Nessuna</span> :
-                      <img src={`/assets/portraits/${race}_${gender}_beard_${i}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ width:"100%", height:"100%", objectFit:"cover" }} alt={`Barba ${i}`} />}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
 
           <div style={{ display:"flex", gap:8, marginTop:"1rem" }}>
             <SmallBtn onClick={()=>setStep(2)}>🔙 Indietro</SmallBtn>
@@ -3827,19 +3972,16 @@ function CreateChar({ setScreen, goGame, authUser }) {
       {step===4 && (
         <Card title="👥 Conferma Eroe & Party">
           <div style={{ background:"rgba(10,14,23,0.8)", border:"1px solid #374151", borderRadius:6, padding:"1.2rem", marginBottom:"1rem", display:"flex", flexDirection:"column", alignItems:"center", gap:15 }}>
-            <div style={{ width: 140, height: 140, borderRadius: '50%', overflow: 'hidden', border: '3px solid #fbbf24', boxShadow: '0 0 20px rgba(251,191,36,0.3)', backgroundColor: '#000', position:'relative' }}>
-              <img key={`${cls}-${race}-${gender}`}
-                src={RACES[race]?._secret ? getRacePortraitPath(race, gender) : getPortraitPath(cls, race, gender)}
-                alt={`${RACES[race].name} ${c.name} ${gender === "female" ? "femmina" : "maschio"}`}
-                onError={(e)=>{
-                  const racePort = getRacePortraitPath(race, gender);
-                  const clsPort  = getClassPortraitPath(cls, gender);
-                  if(!e.currentTarget.src.includes(`${race}_${gender}`)) { e.currentTarget.src = racePort; }
-                  else if(!e.currentTarget.src.includes(`${cls}_${gender}`)) { e.currentTarget.src = clsPort; }
-                  else { e.currentTarget.onerror = null; }
-                }}
-                style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-            </div>
+            <CharacterPortrait
+              race={race}
+              gender={gender}
+              face={faceVariant}
+              eyes={eyesVariant}
+              scar={scarVariant}
+              size={140}
+              radius="50%"
+              style={{ border:'3px solid #fbbf24', boxShadow:'0 0 20px rgba(251,191,36,0.3)' }}
+            />
             <div style={{ textAlign: 'center' }}>
               <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize: "1.4rem", fontWeight:700 }}>{name||"Senza Nome"}</div>
               <div style={{ color:"#cbd5e1", fontSize:"0.9rem", margin: '4px 0' }}>{RACES[race].emoji} {RACES[race].name} • {c.emoji} {c.name}</div>
@@ -7203,32 +7345,39 @@ function CharacterViewer({ me, equippedItems, size, fillContainer }) {
   const gender = me?.gender || "male";
   const baseSprite = `/assets/equip/base_${race}_${gender}.png`;
   const overlaySlots = ["chest","legs","boots","gloves","head","weapon","offhand","cloak","amulet"];
+  const baseAspect = getMannequinBaseAspect(race, gender);
   const containerStyle = fillContainer
     ? { position:"absolute", inset:0 }
     : { position:"relative", width: size||240, height: size ? size*2 : 480, margin:"0 auto", flexShrink:0 };
+  const stageStyle = fillContainer
+    ? { position:"absolute", left:"50%", top:"50%", transform:"translate(-50%,-50%)", height:"100%", width:"auto", maxWidth:"100%", maxHeight:"100%", aspectRatio:baseAspect, overflow:"visible" }
+    : { position:"absolute", inset:0, aspectRatio:baseAspect, overflow:"visible" };
   return (
     <div style={containerStyle}>
-      {/* Base character */}
-      <img
-        src={baseSprite}
-        alt="personaggio"
-        onError={e => { e.currentTarget.style.display="none"; }}
-        style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none", filter:"brightness(1.4) contrast(1.1)" }}
-      />
-      {/* Equipment overlays */}
-      {overlaySlots.map(slot => {
-        const item = equippedItems[slot];
-        if(!item?.equipSprite) return null;
-        return (
-          <img
-            key={slot}
-            src={`/assets/equip/${item.equipSprite}.png`}
-            alt={item.name}
-            onError={e => { e.currentTarget.style.display="none"; }}
-            style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none", pointerEvents:"none" }}
-          />
-        );
-      })}
+      <div style={stageStyle}>
+        {/* Base character */}
+        <img
+          src={baseSprite}
+          alt="personaggio"
+          onError={e => { e.currentTarget.style.display="none"; }}
+          style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"fill", userSelect:"none", filter:"brightness(1.4) contrast(1.1)", zIndex:1 }}
+        />
+        <MannequinHeadOverlay me={me} />
+        {/* Equipment overlays */}
+        {overlaySlots.map(slot => {
+          const item = equippedItems[slot];
+          if(!item?.equipSprite) return null;
+          return (
+            <img
+              key={slot}
+              src={`/assets/equip/${item.equipSprite}.png`}
+              alt={item.name}
+              onError={e => { e.currentTarget.style.display="none"; }}
+              style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"fill", userSelect:"none", pointerEvents:"none", zIndex:slot === "head" ? 5 : 3 }}
+            />
+          );
+        })}
+      </div>
     </div>
   );
 }
@@ -8105,7 +8254,7 @@ function LoreView() {
 
         <span style={S.highlight}>Perché Zodar vede tutto.</span>
 
-        <p style={S.pBig} style={{ color:"#94a3b8", fontFamily:"inherit", fontSize:"0.95rem", textAlign:"center", lineHeight:2.2 }}>
+        <p style={{ ...S.pBig, color:"#94a3b8", fontFamily:"inherit", fontSize:"0.95rem", textAlign:"center", lineHeight:2.2 }}>
           Ogni guerra.<br/>Ogni morte.<br/>Ogni scelta.
         </p>
 
@@ -12418,7 +12567,9 @@ ${stepText(step)}`, "quest","Master");
         ) : (
           <div style={{ background:"rgba(109,40,217,0.1)", border:"1px solid #3b0764", borderRadius:5, padding:"0.6rem" }}>
             <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:5 }}>
-              <ArtThumb src={getPlayerPortrait(me)} alt={me?.name || "Eroe"} size={56} radius={14} />
+              {me?.portrait_face
+                ? <CharacterPortrait player={me} size={56} radius={14} />
+                : <ArtThumb src={getPlayerPortrait(me)} alt={me?.name || "Eroe"} size={56} radius={14} />}
               <div style={{ flex:1, minWidth:0 }}>
                 <div style={{ fontFamily:"'Cinzel',serif", color:"#f9fafb", fontSize:"0.82rem", fontWeight:700, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{me?.name}</div>
                 <div style={{ color:"#94a3b8", fontSize:"0.62rem" }}>{RACES[me?.race]?.name} {CLASSES[me?.class]?.name}</div>
