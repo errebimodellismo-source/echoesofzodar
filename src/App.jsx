@@ -7410,7 +7410,7 @@ function CharacterViewer({ me, equippedItems, size, fillContainer }) {
           onError={e => { e.currentTarget.style.display="none"; }}
           style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"fill", userSelect:"none", filter:"brightness(1.4) contrast(1.1)", zIndex:1 }}
         />
-        <MannequinHeadOverlay me={me} />
+        {false && <MannequinHeadOverlay me={me} />}
         {/* Equipment overlays */}
         {overlaySlots.map(slot => {
           const item = equippedItems[slot];
