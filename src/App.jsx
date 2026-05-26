@@ -2098,15 +2098,15 @@ function CharacterScarOverlay({ variant = 0 }) {
       <g clipPath={`url(#scar-face-clip-${variant})`}>
         {variant === 1 ? (
           <>
-            <path d="M57 52 L65 61" stroke="#7f1d1d" strokeWidth="0.95" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
-            <path d="M57.3 51.8 L64.7 60.8" stroke="#fca5a5" strokeWidth="0.22" strokeLinecap="round" opacity="0.45" />
+            <path d="M59 47 C62 51 65 55 68 60" stroke="#6f1d1b" strokeWidth="1.05" strokeLinecap="round" fill="none" filter={`url(#scar-soft-${variant})`} />
+            <path d="M59.2 46.8 C62.1 50.8 64.9 54.8 67.8 59.8" stroke="#fca5a5" strokeWidth="0.24" strokeLinecap="round" fill="none" opacity="0.42" />
+            <path d="M61 50 L58.8 51.5 M63.7 54.2 L61.4 55.8 M66 57.7 L64 59.1" stroke="#5f1717" strokeWidth="0.46" strokeLinecap="round" opacity="0.6" />
           </>
         ) : (
           <>
-            <path d="M35 49 L41 55" stroke="#7f1d1d" strokeWidth="0.78" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
-            <path d="M60 38 L67 43" stroke="#7f1d1d" strokeWidth="0.74" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
-            <path d="M56 61 L64 59" stroke="#7f1d1d" strokeWidth="0.82" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
-            <path d="M35.2 48.8 L40.8 54.8 M60.2 37.8 L66.8 42.8 M56.2 60.8 L63.8 58.8" stroke="#fca5a5" strokeWidth="0.18" strokeLinecap="round" opacity="0.4" />
+            <path d="M42 33 L48 37 M50 35 L57 39 M61 43 L67 46" stroke="#701a1a" strokeWidth="0.72" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
+            <path d="M37 53 L45 51 M39 58 L47 56" stroke="#701a1a" strokeWidth="0.78" strokeLinecap="round" filter={`url(#scar-soft-${variant})`} />
+            <path d="M42.2 32.8 L47.8 36.8 M50.2 34.8 L56.8 38.8 M61.2 42.8 L66.8 45.8 M37.2 52.8 L44.8 50.8 M39.2 57.8 L46.8 55.8" stroke="#fca5a5" strokeWidth="0.16" strokeLinecap="round" opacity="0.36" />
           </>
         )}
       </g>
