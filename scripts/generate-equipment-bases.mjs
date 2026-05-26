@@ -47,18 +47,18 @@ if (!API_KEY && !DRY) {
 const RACES = {
   dwarf: {
     label: "dwarf",
-    body: "short, broad, sturdy fantasy dwarf proportions; powerful torso, thick arms, strong legs",
-    details: "rugged but clean anatomy, stocky silhouette, dwarven face and subtle rounded ears",
+    body: "short, broad, sturdy adult fantasy dwarf proportions; powerful torso, thick arms, strong legs, compact height",
+    details: "rugged but clean anatomy, stocky silhouette, dwarven face, natural head size, subtle rounded ears",
   },
   halfling: {
     label: "halfling",
-    body: "short, compact, friendly halfling proportions; rounded face, smaller frame, large bare feet",
-    details: "warm adventurer anatomy, not childlike, believable adult fantasy halfling",
+    body: "short, compact adult halfling proportions; smaller frame, rounded but realistic face, large bare feet",
+    details: "warm adventurer anatomy, explicitly adult, not childlike, natural head size, believable fantasy halfling",
   },
   gnome: {
     label: "gnome",
-    body: "short, slim, whimsical adult gnome proportions; compact frame, lively posture, small pointed ears",
-    details: "adult fantasy gnome anatomy, charming but not cartoonish, balanced head size",
+    body: "short, slim adult gnome proportions; compact frame, small pointed ears, restrained fantasy silhouette",
+    details: "adult fantasy gnome anatomy, not cartoonish, no oversized head, no doll-like face, balanced head size",
   },
   human: {
     label: "human",
@@ -103,12 +103,12 @@ function buildPrompt(raceKey, gender) {
     `Body: ${race.body}.`,
     `Race details: ${race.details}.`,
     "Outfit: simple off-white linen tunic and shorts/trousers, plain beginner clothing, no armor, no helmet, no cloak, no weapon, no jewelry.",
-    "Pose: front-facing symmetrical neutral T-pose relaxed into a natural stance, arms slightly away from torso, hands visible, feet visible.",
-    "Composition: full body from head to feet, centered, generous padding, no crop, 2:3 vertical sprite layout.",
+    "Pose: strict front-facing symmetrical neutral paper-doll stance, arms slightly away from torso, hands visible, feet visible, no tilt, no twist.",
+    "Composition: full body from head to feet, centered on the vertical axis, head near y=9%, feet near y=96%, consistent scale, generous padding, no crop, 2:3 vertical sprite layout.",
     "Style: realistic premium dark fantasy game asset, coherent with modern RPG paper-doll equipment screen.",
-    "Lighting: soft neutral studio light, readable edges, no cast shadow.",
+    "Lighting: soft neutral studio light, readable edges, no cast shadow, no floor contact shadow.",
     "Background: perfectly flat solid #00ff00 chroma-key background only.",
-    "Avoid: diagonal pose, side view, cropped feet, cropped horns, oversized head, childlike body, armor, weapon, shield, UI frame, text, logo, watermark, checkerboard background, white background, shadow, floor plane.",
+    "Avoid: diagonal pose, side view, three-quarter view, crossed legs, cropped feet, cropped horns, oversized head, childlike body, sexy pose, armor, weapon, shield, UI frame, text, logo, watermark, checkerboard background, white background, shadow, floor plane.",
   ].join(" ");
 }
 
