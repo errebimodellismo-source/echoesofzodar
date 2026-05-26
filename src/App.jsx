@@ -3160,6 +3160,124 @@ function FallingLeaves() {
   );
 }
 
+function LandingStatPill({ children, tone = "slate" }) {
+  const palette = {
+    gold: ["rgba(251,191,36,0.16)", "rgba(251,191,36,0.42)", "#fde68a"],
+    red: ["rgba(127,29,29,0.34)", "rgba(248,113,113,0.42)", "#fecaca"],
+    violet: ["rgba(91,33,182,0.28)", "rgba(167,139,250,0.36)", "#ddd6fe"],
+    slate: ["rgba(15,23,42,0.72)", "rgba(148,163,184,0.18)", "#cbd5e1"],
+  }[tone] || ["rgba(15,23,42,0.72)", "rgba(148,163,184,0.18)", "#cbd5e1"];
+  return (
+    <span style={{
+      padding:"0.28rem 0.58rem",
+      borderRadius:999,
+      background:palette[0],
+      border:`1px solid ${palette[1]}`,
+      color:palette[2],
+      fontSize:"0.68rem",
+      fontWeight:700,
+      whiteSpace:"nowrap",
+    }}>
+      {children}
+    </span>
+  );
+}
+
+function LandingHeroCard({ character, onPlay, onDelete }) {
+  const cls = CLASSES[character.class || "warrior"] || CLASSES.warrior;
+  const race = RACES[character.race || "human"] || RACES.human;
+  const dead = !!character.dead;
+  const hp = Math.max(0, Number(character.hp) || 0);
+  const maxHp = Math.max(1, Number(character.maxHp) || 1);
+  const hpPct = Math.max(0, Math.min(100, Math.round((hp / maxHp) * 100)));
+  const accent = dead ? "#ef4444" : (cls.color || "#fbbf24");
+  const status = dead ? "Morto" : hpPct <= 30 ? "Ferito" : "Pronto";
+
+  return (
+    <div style={{
+      position:"relative",
+      minHeight:310,
+      overflow:"hidden",
+      borderRadius:12,
+      border:`1px solid ${dead ? "rgba(248,113,113,0.42)" : "rgba(251,191,36,0.2)"}`,
+      background:`
+        radial-gradient(circle at 50% 0%, ${accent}2b 0%, transparent 42%),
+        linear-gradient(180deg, rgba(15,23,42,0.76), rgba(2,6,23,0.96))
+      `,
+      boxShadow:`0 22px 54px rgba(0,0,0,0.38), inset 0 1px 0 rgba(255,255,255,0.06)`,
+      opacity:dead ? 0.74 : 1,
+    }}>
+      <div style={{ position:"absolute", inset:"0 0 auto", height:2, background:`linear-gradient(90deg, transparent, ${accent}, transparent)`, opacity:dead ? 0.45 : 0.75 }} />
+      <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg, transparent 0%, rgba(2,6,23,0.34) 58%, rgba(2,6,23,0.88) 100%)", pointerEvents:"none" }} />
+
+      <div style={{ position:"relative", zIndex:1, padding:"1rem", display:"flex", flexDirection:"column", minHeight:310 }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:10, marginBottom:12 }}>
+          <LandingStatPill tone={dead ? "red" : "gold"}>{status}</LandingStatPill>
+          <LandingStatPill tone="violet">Lv. {character.level || 1}</LandingStatPill>
+        </div>
+
+        <div style={{ display:"grid", placeItems:"center", margin:"0.2rem 0 0.9rem" }}>
+          <div style={{
+            width:136,
+            height:136,
+            borderRadius:"50%",
+            padding:4,
+            background:`conic-gradient(from 210deg, transparent, ${accent}, transparent 70%)`,
+            boxShadow:`0 0 34px ${accent}33`,
+          }}>
+            <ArtThumb src={getPlayerPortrait(character)} alt={character.name} size={128} radius={999} />
+          </div>
+        </div>
+
+        <div style={{ textAlign:"center", minWidth:0 }}>
+          <div style={{
+            fontFamily:"'Cinzel Decorative',serif",
+            color:dead ? "#fecaca" : "#fff7ed",
+            fontSize:"1.08rem",
+            fontWeight:900,
+            lineHeight:1.25,
+            overflow:"hidden",
+            textOverflow:"ellipsis",
+            whiteSpace:"nowrap",
+            textShadow:"0 2px 14px rgba(0,0,0,0.65)",
+          }}>
+            {character.name}
+          </div>
+          <div style={{ color:"#b6a9c9", fontSize:"0.74rem", marginTop:5 }}>
+            {race.emoji} {race.name} <span style={{ color:"#475569" }}>•</span> {cls.emoji} {cls.name}
+          </div>
+        </div>
+
+        <div style={{ marginTop:"1rem" }}>
+          <div style={{ display:"flex", justifyContent:"space-between", color:"#94a3b8", fontSize:"0.68rem", marginBottom:5 }}>
+            <span>Vigore</span>
+            <span>{hp}/{maxHp}</span>
+          </div>
+          <div style={{ height:9, borderRadius:999, background:"rgba(15,23,42,0.86)", overflow:"hidden", border:"1px solid rgba(148,163,184,0.12)" }}>
+            <div style={{
+              width:`${hpPct}%`,
+              height:"100%",
+              borderRadius:999,
+              background:dead ? "#7f1d1d" : hpPct > 60 ? "linear-gradient(90deg,#16a34a,#86efac)" : hpPct > 30 ? "linear-gradient(90deg,#d97706,#fbbf24)" : "linear-gradient(90deg,#991b1b,#ef4444)",
+              boxShadow:dead ? "none" : "0 0 16px rgba(251,191,36,0.28)",
+            }} />
+          </div>
+        </div>
+
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap", justifyContent:"center", marginTop:"0.9rem" }}>
+          <LandingStatPill tone="slate">Oro {character.gold || 0}</LandingStatPill>
+          <LandingStatPill tone="slate">Party {character.partyCode || "-"}</LandingStatPill>
+        </div>
+
+        <div style={{ marginTop:"auto", paddingTop:"1rem", display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
+          {!dead && <BigBtn onClick={onPlay} gold icon="⚔️">Gioca</BigBtn>}
+          <SmallBtn red onClick={onDelete}>🗑️ Elimina</SmallBtn>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   const meta = getMeta();
   const [characters, setCharacters] = useState([]);
@@ -3213,27 +3331,38 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
   }
 
   return (
-    <div onClick={() => audioManager.playBGM("intro")} style={{ minHeight:"100vh", width:"100vw", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"2rem 1rem", position:"relative" }}>
-      <div style={{ position:"absolute", inset:0, background:"radial-gradient(at 15% 50%, rgba(109,40,217,0.3) 0%, rgba(0,0,0,0) 55%), radial-gradient(at 85% 30%, rgba(109,40,217,0.2) 0%, rgba(0,0,0,0) 50%), rgba(0,0,0,0.42)" }} />
+    <div onClick={() => audioManager.playBGM("intro")} style={{ minHeight:"100vh", width:"100vw", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", textAlign:"center", padding:"clamp(1rem,3vw,2.5rem)", position:"relative", overflowX:"hidden" }}>
+      <div style={{
+        position:"absolute",
+        inset:0,
+        background:`
+          linear-gradient(180deg, rgba(2,6,23,0.36) 0%, rgba(2,6,23,0.66) 54%, rgba(2,6,23,0.9) 100%),
+          radial-gradient(circle at 18% 42%, rgba(251,191,36,0.22) 0%, transparent 30%),
+          radial-gradient(circle at 82% 22%, rgba(124,58,237,0.3) 0%, transparent 34%),
+          radial-gradient(circle at 50% 100%, rgba(15,118,110,0.12) 0%, transparent 32%)
+        `
+      }} />
       <FireEmbers />
       <FallingLeaves />
-      <div style={{ position:"relative", zIndex:2, display:"flex", flexDirection:"column", alignItems:"center", width:"100%" }}>
-      {meta.logo
-        ? <img src={meta.logo} alt="logo" style={{ maxWidth:260, maxHeight:160, objectFit:"contain", marginBottom:"1rem", filter:"drop-shadow(0 0 24px rgba(251,191,36,.5))" }} />
-        : <p style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontSize:"1rem", letterSpacing:"0.6em", margin:"0 0 0.5rem" }}>⚔ ZODAR ⚔</p>
-      }
-      <h1 style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(2.2rem,8vw,5rem)", margin:"0.2rem 0", background:"linear-gradient(135deg,#fbbf24,#f59e0b,#b45309)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", letterSpacing:"0.12em", animation:"goldenGlow 4s ease-in-out infinite" }}>
-        {meta.worldName}
-      </h1>
-      <p style={{ fontFamily:"'Cinzel',serif", fontSize:"clamp(0.65rem,2vw,0.85rem)", color:"#7c3aed", letterSpacing:"0.3em", textTransform:"uppercase", margin:"0.2rem 0 1.6rem" }}>{meta.worldSub}</p>
+      <div style={{ position:"relative", zIndex:2, display:"flex", flexDirection:"column", alignItems:"center", width:"100%", maxWidth:1180 }}>
+        <header style={{ width:"100%", display:"grid", gridTemplateColumns:"minmax(0,1fr)", justifyItems:"center", marginBottom:"clamp(1rem,3vw,1.7rem)" }}>
+          {meta.logo
+            ? <img src={meta.logo} alt="logo" style={{ maxWidth:280, maxHeight:150, objectFit:"contain", marginBottom:"0.8rem", filter:"drop-shadow(0 0 28px rgba(251,191,36,.48))" }} />
+            : <p style={{ fontFamily:"'Cinzel',serif", color:"#d8b4fe", fontSize:"0.86rem", letterSpacing:"0.62em", margin:"0 0 0.45rem", textShadow:"0 0 18px rgba(124,58,237,0.5)" }}>⚔ ZODAR ⚔</p>
+          }
+          <h1 style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(2.35rem,8vw,5.4rem)", margin:"0", background:"linear-gradient(135deg,#fff7ed 0%,#fbbf24 34%,#d97706 70%,#7c2d12 100%)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", letterSpacing:"0.08em", animation:"goldenGlow 4s ease-in-out infinite", lineHeight:1.05 }}>
+            {meta.worldName}
+          </h1>
+          <p style={{ fontFamily:"'Cinzel',serif", fontSize:"clamp(0.66rem,2vw,0.86rem)", color:"#c4b5fd", letterSpacing:"0.28em", textTransform:"uppercase", margin:"0.5rem 0 0" }}>{meta.worldSub}</p>
+        </header>
 
-      <div style={{ width:"100%", maxWidth:940, background:"rgba(0,0,0,0.42)", border:"1px solid #374151", borderRadius:14, padding:"1.4rem", backdropFilter:"blur(8px)" }}>
-        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginBottom:"1rem", flexWrap:"wrap" }}>
+      <div style={{ width:"100%", background:"linear-gradient(180deg,rgba(3,7,18,0.74),rgba(3,7,18,0.54))", border:"1px solid rgba(251,191,36,0.18)", borderRadius:12, padding:"clamp(1rem,2.2vw,1.45rem)", backdropFilter:"blur(12px)", boxShadow:"0 30px 90px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.05)" }}>
+        <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:14, marginBottom:"1rem", flexWrap:"wrap" }}>
           <div style={{ textAlign:"left" }}>
-            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#f8e7b9", fontSize:"1.25rem" }}>Selezione Eroe</div>
-            <div style={{ color:"#9ca3af", fontSize:"0.82rem" }}>Scegli quale eroe far varcare il portale.</div>
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#f8e7b9", fontSize:"clamp(1.05rem,2vw,1.35rem)", lineHeight:1.25 }}>Il Portale degli Eroi</div>
+            <div style={{ color:"#9ca3af", fontSize:"0.82rem", marginTop:3 }}>Scegli chi guiderà il prossimo eco nel mondo.</div>
           </div>
-          <div style={{ display:"flex", gap:10, flexWrap:"wrap" }}>
+          <div style={{ display:"flex", gap:10, flexWrap:"wrap", justifyContent:"flex-end" }}>
             <BigBtn onClick={()=>setScreen("create")} gold icon="🛠️">Nuovo Eroe</BigBtn>
             <BigBtn onClick={logout} dark icon="🚪">Esci</BigBtn>
             {canAccessMasterPanel(authUser) && <BigBtn onClick={()=>setScreen("master")} dark icon="🛡️">Pannello Master</BigBtn>}
@@ -3246,42 +3375,24 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
           </div>
         </div>
 
-        {loadingChars && <div style={{ color:"#9ca3af", padding:"2rem 0" }}>Caricamento personaggi...</div>}
+        {loadingChars && <div style={{ color:"#9ca3af", padding:"2.8rem 0" }}>Caricamento personaggi...</div>}
         {!loadingChars && !characters.length && (
-          <div style={{ color:"#9ca3af", padding:"2.5rem 1rem", border:"1px dashed #374151", borderRadius:10 }}>
-            Nessun eroe su questo account. Crea la tua prima scheda.
+          <div style={{ color:"#9ca3af", padding:"3rem 1rem", border:"1px dashed rgba(251,191,36,0.22)", borderRadius:10, background:"rgba(15,23,42,0.32)" }}>
+            <div style={{ fontSize:"2.2rem", marginBottom:"0.5rem" }}>⚔️</div>
+            <div style={{ fontFamily:"'Cinzel',serif", color:"#f8e7b9", marginBottom:5 }}>Nessun eroe attende al portale</div>
+            <div style={{ fontSize:"0.82rem" }}>Crea la tua prima scheda e apri il viaggio.</div>
           </div>
         )}
         {!loadingChars && !!characters.length && (
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:12, textAlign:"left" }}>
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(245px,1fr))", gap:14, textAlign:"left" }}>
             {characters.map(ch=>{
-              const cls = CLASSES[ch.class || "warrior"] || CLASSES.warrior;
-              const race = RACES[ch.race || "human"] || RACES.human;
-              const dead = !!ch.dead;
-              const status = dead ? "Morto" : (ch.hp || 0) > 0 ? "Pronto" : "Ferito";
               return (
-                <div key={ch.id} style={{ background:dead?"rgba(38,10,10,0.66)":"rgba(15,23,42,0.72)", border:`1px solid ${dead?"#7f1d1d":"#334155"}`, borderRadius:12, padding:"1rem", boxShadow:"0 14px 34px rgba(0,0,0,0.22)" }}>
-                  <div style={{ display:"flex", gap:10, alignItems:"center", marginBottom:10 }}>
-                    <ArtThumb src={getPlayerPortrait(ch)} alt={ch.name} size={72} radius={18} />
-                    <div style={{ flex:1, minWidth:0 }}>
-                      <div style={{ fontFamily:"'Cinzel',serif", color:dead?"#fca5a5":"#f8fafc", fontWeight:700, fontSize:"1rem", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{ch.name}</div>
-                      <div style={{ color:"#9ca3af", fontSize:"0.74rem" }}>{race.emoji} {race.name} • {cls.emoji} {cls.name}</div>
-                      <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:6 }}>
-                        <span style={{ padding:"2px 8px", borderRadius:999, background:dead?"rgba(127,29,29,0.45)":"rgba(51,65,85,0.62)", color:dead?"#fecaca":"#cbd5e1", fontSize:"0.68rem" }}>{status}</span>
-                        <span style={{ padding:"2px 8px", borderRadius:999, background:"rgba(91,33,182,0.35)", color:"#ddd6fe", fontSize:"0.68rem" }}>Lv.{ch.level || 1}</span>
-                      </div>
-                    </div>
-                  </div>
-                  <div style={{ display:"flex", justifyContent:"space-between", gap:10, fontSize:"0.74rem", color:"#94a3b8", marginBottom:10 }}>
-                    <span>❤️ {ch.hp}/{ch.maxHp}</span>
-                    <span>💰 {ch.gold || 0} oro</span>
-                    <span>👥 {ch.partyCode || "-"}</span>
-                  </div>
-                  <div style={{ display:"flex", gap:8, flexWrap:"wrap", alignItems:"center" }}>
-                    {!dead && <BigBtn onClick={()=>goGame(ch)} gold icon="⚔️">Gioca</BigBtn>}
-                    <SmallBtn red onClick={()=>handleDeleteCharacter(ch)}>🗑️ Elimina</SmallBtn>
-                  </div>
-                </div>
+                <LandingHeroCard
+                  key={ch.id}
+                  character={ch}
+                  onPlay={()=>goGame(ch)}
+                  onDelete={()=>handleDeleteCharacter(ch)}
+                />
               );
             })}
           </div>
@@ -3289,8 +3400,8 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
       </div>
 
       {/* Recupero personaggio per ID */}
-      <div style={{ marginTop:"1rem", width:"100%", maxWidth:940, background:"rgba(0,0,0,0.32)", border:"1px solid #1f2937", borderRadius:10, padding:"0.85rem 1.2rem", backdropFilter:"blur(6px)" }}>
-        <div style={{ color:"#64748b", fontSize:"0.74rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.06em", marginBottom:8 }}>🔍 Recupera personaggio per ID</div>
+      <div style={{ marginTop:"0.9rem", width:"100%", background:"rgba(2,6,23,0.44)", border:"1px solid rgba(148,163,184,0.12)", borderRadius:10, padding:"0.85rem 1rem", backdropFilter:"blur(8px)" }}>
+        <div style={{ color:"#94a3b8", fontSize:"0.72rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em", marginBottom:8, textAlign:"left" }}>🔍 Recupera personaggio per ID</div>
         <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
           <input
             value={recoverId}
