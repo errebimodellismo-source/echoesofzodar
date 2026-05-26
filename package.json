@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
+    "equip:bases": "node scripts/generate-equipment-bases.mjs",
     "monster:prompts": "node scripts/build-monster-image-prompts.mjs",
     "portraits:faces": "node scripts/generate-character-faces.mjs",
     "preview": "vite preview"
