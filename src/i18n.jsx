@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useMemo, useState } from "react";
 import { ITEM_TRANSLATIONS } from "./data/itemTranslations";
+import { QUEST_TRANSLATIONS } from "./data/questTranslations";
 
 const LANG_KEY = "eoz_language";
 
@@ -281,6 +282,38 @@ export function I18nProvider({ children }) {
       const id = typeof itemOrId === "string" ? itemOrId : itemOrId?.id;
       const source = typeof itemOrId === "string" ? fallback : itemOrId?.description;
       return ITEM_TRANSLATIONS[lang]?.[id]?.description || source || fallback || "";
+    },
+    localizeQuest: (quest) => {
+      if (!quest) return quest;
+      const tx = QUEST_TRANSLATIONS[lang]?.[quest.id];
+      if (!tx) return quest;
+      return {
+        ...quest,
+        title: tx.title || quest.title,
+        desc: tx.desc || quest.desc,
+        flavor: tx.flavor || quest.flavor,
+        difficulty: tx.difficulty || quest.difficulty,
+        steps: (quest.steps || []).map((step, idx) => {
+          const stx = tx.steps?.[idx] || tx.steps?.[String(idx)] || {};
+          return {
+            ...step,
+            text: stx.text || step.text,
+            choices: (step.choices || []).map((choice, cidx) => ({
+              ...choice,
+              label: stx.choices?.[cidx]?.label || stx.choices?.[String(cidx)]?.label || choice.label,
+            })),
+            monsters: (step.monsters || []).map((monster, midx) => ({
+              ...monster,
+              name: stx.monsters?.[midx]?.name || stx.monsters?.[String(midx)]?.name || monster.name,
+            })),
+            loot: step.loot,
+          };
+        }),
+        enemies: (quest.enemies || []).map((enemy, eidx) => ({
+          ...enemy,
+          name: tx.enemies?.[eidx]?.name || tx.enemies?.[String(eidx)]?.name || enemy.name,
+        })),
+      };
     },
   }), [lang]);
 

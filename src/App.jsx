@@ -72,8 +72,9 @@ import { I18nProvider, LanguageToggle, useI18n } from "./i18n.jsx";
 const DIFF_COLOR = { facile:"#22c55e", medio:"#f97316", difficile:"#ef4444", epica:"#a855f7" };
 function normalizeMissionDifficulty(value) {
   const key = String(value || "").trim().toLowerCase();
-  if(key === "facile") return "facile";
-  if(key === "difficile") return "difficile";
+  if(key === "facile" || key === "easy") return "facile";
+  if(key === "difficile" || key === "hard") return "difficile";
+  if(key === "medio" || key === "media" || key === "medium" || key === "normal") return "medio";
   if(key === "epica" || key === "epico" || key === "epic" || key === "leggendaria" || key === "leggendario") return "epica";
   if(key === "speciale" || key === "molto difficile") return "difficile";
   return "medio";
@@ -107,7 +108,14 @@ function questRecommendedLevel(q) {
   const pressure = Math.floor(Math.max(maxHp / 45, maxAtk / 5, monsters.length / 2));
   return Math.max(1, Math.min(20, diffBase + pressure + questBossCount(q)));
 }
-function questRiskProfile(q, partyPlayers = []) {
+function missionDifficultyLabelForLang(value, lang = "it") {
+  const diff = normalizeMissionDifficulty(value);
+  if(lang === "en") {
+    return ({ facile: "Easy", medio: "Medium", difficile: "Hard", epica: "Epic" })[diff];
+  }
+  return missionDifficultyLabel(value);
+}
+function questRiskProfile(q, partyPlayers = [], lang = "it") {
   const monsters = questMonsters(q);
   const bosses = questBossCount(q);
   const combatCount = questCombatSteps(q).length;
@@ -118,16 +126,18 @@ function questRiskProfile(q, partyPlayers = []) {
   const levelDelta = avgLevel - recommendedLevel;
   const diff = normalizeMissionDifficulty(q?.difficulty);
   const dangerScore = ({ facile:1, medio:2, difficile:3, epica:4 }[diff] || 2) + bosses + Math.max(0, -levelDelta);
-  const risk = dangerScore >= 6 ? "Molto alta" : dangerScore >= 4 ? "Alta" : dangerScore >= 2 ? "Media" : "Bassa";
+  const risk = lang === "en"
+    ? (dangerScore >= 6 ? "Very high" : dangerScore >= 4 ? "High" : dangerScore >= 2 ? "Medium" : "Low")
+    : (dangerScore >= 6 ? "Molto alta" : dangerScore >= 4 ? "Alta" : dangerScore >= 2 ? "Media" : "Bassa");
   const riskColor = dangerScore >= 6 ? "#ef4444" : dangerScore >= 4 ? "#f97316" : dangerScore >= 2 ? "#fbbf24" : "#22c55e";
   const advice = [];
-  if(levelDelta < -1) advice.push("Party sottolivellato");
+  if(levelDelta < -1) advice.push(lang === "en" ? "Underleveled party" : "Party sottolivellato");
   if(bosses > 0) advice.push(`${bosses} boss`);
-  if(monsters.length >= 4) advice.push("Nemici numerosi");
-  if(combatCount >= 2) advice.push(`${combatCount} scontri`);
-  if((q?.steps || []).some(s => s?.type === "choice")) advice.push("Scelte narrative");
-  if(!combatCount) advice.push("Missione narrativa");
-  if(diff === "difficile" || diff === "epica" || levelDelta < 0) advice.push("Porta pozioni");
+  if(monsters.length >= 4) advice.push(lang === "en" ? "Many enemies" : "Nemici numerosi");
+  if(combatCount >= 2) advice.push(lang === "en" ? `${combatCount} encounters` : `${combatCount} scontri`);
+  if((q?.steps || []).some(s => s?.type === "choice")) advice.push(lang === "en" ? "Narrative choices" : "Scelte narrative");
+  if(!combatCount) advice.push(lang === "en" ? "Narrative quest" : "Missione narrativa");
+  if(diff === "difficile" || diff === "epica" || levelDelta < 0) advice.push(lang === "en" ? "Bring potions" : "Porta pozioni");
   return { monsters, bosses, combatCount, recommendedLevel, avgLevel, risk, riskColor, advice: advice.slice(0, 4) };
 }
 const GAME_VERSION = "v1.4.0";
@@ -9129,7 +9139,7 @@ function GlobalLeaderboardView({ myId, partyCode }) {
    GAME SCREEN
 ---------------------------------------------- */
 function GameScreen({ myId, setScreen, authUser }) {
-  const { t, itemName } = useI18n();
+  const { t, lang, itemName, localizeQuest } = useI18n();
   const [me, setMeRaw] = useState(null);
   const latestMeRef = useRef(null);
   const [isAfk, setIsAfkState] = useState(() => myId ? localStorage.getItem(`afk_${myId}`) === '1' : false);
@@ -11873,19 +11883,32 @@ function GameScreen({ myId, setScreen, authUser }) {
       setSpecialQuestError("Questa missione richiede una password.");
       return;
     }
-    const profile = questRiskProfile(q, partyPlayers);
+    const lq = localizeQuest(q);
+    const profile = questRiskProfile(q, partyPlayers, lang);
     const perPlayerCount = Math.max(partyPlayers.length || 1, 1);
     const xpEachPreview = Math.floor((Number(q.xpReward) || 0) / perPlayerCount);
     const goldEachPreview = Math.floor((Number(q.goldReward) || 0) / perPlayerCount);
     const newQs = { currentId:q.id, step:0, active:true, combat:null, completed:qs?.completed||[], questDmgLog:{}, currentDifficulty: q.difficulty };
     await saveQState(newQs);
-    await addMsg(`📜 **MISSIONE: ${q.title}**
+    await addMsg(lang === "en" ? `📜 **QUEST: ${lq.title}**
 
-${q.desc}
+${lq.desc}
 
-*${q.flavor}*
+*${lq.flavor}*
 
-🎚️ Difficoltà: **${missionDifficultyLabel(q.difficulty)}** — rischio **${profile.risk.toLowerCase()}**
+🎚️ Difficulty: **${missionDifficultyLabelForLang(q.difficulty, lang)}** — risk **${profile.risk.toLowerCase()}**
+👥 Recommended: **level ${profile.recommendedLevel}+**
+⚔️ Encounters: **${profile.combatCount || 0}** — estimated enemies **${profile.monsters.length || 0}**${profile.bosses ? ` — bosses **${profile.bosses}**` : ""}
+🎒 Preparation: ${profile.advice.length ? profile.advice.join(" · ") : "no special requirements"}
+
+⭐ Reward: **${q.xpReward} XP** — **${q.goldReward} gold** total
+👤 Estimated each: **${xpEachPreview} XP** — **${goldEachPreview} gold**` : `📜 **MISSIONE: ${lq.title}**
+
+${lq.desc}
+
+*${lq.flavor}*
+
+🎚️ Difficoltà: **${missionDifficultyLabelForLang(q.difficulty, lang)}** — rischio **${profile.risk.toLowerCase()}**
 👥 Consigliato: **livello ${profile.recommendedLevel}+**
 ⚔️ Scontri: **${profile.combatCount || 0}** — nemici stimati **${profile.monsters.length || 0}**${profile.bosses ? ` — boss **${profile.bosses}**` : ""}
 🎒 Preparazione: ${profile.advice.length ? profile.advice.join(" · ") : "nessun requisito particolare"}
@@ -11920,14 +11943,16 @@ ${q.desc}
   }
 
   async function postQuestStepMessage(q, stepIndex) {
-    const step = q.steps[stepIndex];
+    const lq = localizeQuest(q);
+    const step = lq.steps[stepIndex];
     const icon = isCombatStep(step)?"⚔️":isLootStep(step)?"💰":isChoiceStep(step)?"🎯":"📜";
-    await addMsg(`${icon} **${q.title} — Scena ${stepIndex+1}/${q.steps.length}**
+    await addMsg(`${icon} **${lq.title} — ${lang === "en" ? "Scene" : "Scena"} ${stepIndex+1}/${lq.steps.length}**
 
 ${stepText(step)}`, "quest","Master");
   }
 
   async function completeQuest(q) {
+    const lq = localizeQuest(q);
     const myGuild = getPlayerGuild(guilds, myId);
     const goldMult = myGuild ? (1 + getGuildGoldBonus(myGuild.level||1) / 100) : 1;
     // Fetch fresh player data — endCombat may have updated stats in DB since partyPlayers was last set
@@ -11957,22 +11982,22 @@ ${stepText(step)}`, "quest","Master");
     const today = new Date().toLocaleDateString('en-CA');
     const dmgLog = qs.questDmgLog || {};
     const logEntry = {
-      id: q.id, title: q.title,
+      id: q.id, title: lq.title,
       completedAt: new Date().toISOString(), date: today,
       xpEach: xpE, goldEach: goldE,
       players: Object.entries(dmgLog).map(([, d]) => ({ name: d.name, dmg: d.dmg })).sort((a,b) => b.dmg - a.dmg),
     };
     const newQuestLog = [...(qs.questLog || []).filter(e => e.date === today), logEntry];
     const normalizedQuestDiff = normalizeMissionDifficulty(q.difficulty);
-    const diffLabel = missionDifficultyLabel(q.difficulty).toLowerCase();
-    const newDiaryQuest = appendDiary(qs.partyDiary, { type:'quest', icon:'📜', text:`«${q.title}» completata! Missione di difficoltà ${diffLabel}. Ricompensa: +${xpE} XP e +${goldE} 💰 a testa.`, players: freshQuestPlayers.map(p=>p.name) });
-    const historyEntry = { id: q.id, title: q.title, difficulty: q.difficulty, completedAt: new Date().toISOString(), xpEach: xpE, goldEach: goldE };
+    const diffLabel = missionDifficultyLabelForLang(q.difficulty, lang).toLowerCase();
+    const newDiaryQuest = appendDiary(qs.partyDiary, { type:'quest', icon:'📜', text: lang === "en" ? `«${lq.title}» completed! ${diffLabel} quest. Reward: +${xpE} XP and +${goldE} 💰 each.` : `«${lq.title}» completata! Missione di difficoltà ${diffLabel}. Ricompensa: +${xpE} XP e +${goldE} 💰 a testa.`, players: freshQuestPlayers.map(p=>p.name) });
+    const historyEntry = { id: q.id, title: lq.title, difficulty: lq.difficulty, completedAt: new Date().toISOString(), xpEach: xpE, goldEach: goldE };
     const newQuestHistory = [...(qs.questHistory || []), historyEntry].slice(-100);
     const newQs={...qs,active:false,step:0,currentId:null,completed:[...(qs.completed||[]),q.id],questDmgLog:{},questLog:newQuestLog,partyDiary:newDiaryQuest,questHistory:newQuestHistory};
     await saveQState(newQs);
     const guildXp = normalizedQuestDiff==="epica"?160:normalizedQuestDiff==="difficile"?120:normalizedQuestDiff==="facile"?40:70;
     if(myGuild) await addGuildXP(guildXp);
-    const bonusNote = myGuild ? ` (bonus gilda +${Math.round((goldMult-1)*100)}%)` : "";
+    const bonusNote = myGuild ? (lang === "en" ? ` (guild bonus +${Math.round((goldMult-1)*100)}%)` : ` (bonus gilda +${Math.round((goldMult-1)*100)}%)`) : "";
     // Material loot drop based on quest difficulty
     const isSpecial = !!(q.specialPassword);
     const matRarity = isSpecial ? "legendary"
@@ -11986,10 +12011,12 @@ ${stepText(step)}`, "quest","Master");
       for (const p of partyPlayers) {
         await dbAddPlayerItem(p.id, droppedMat.id);
       }
-      const rarityLabel = matRarity === "legendary" ? "🟣 Leggendario" : matRarity === "epic" ? "🔴 Epico" : matRarity === "rare" ? "🔵 Raro" : matRarity === "uncommon" ? "🟢 Non comune" : "⚪ Comune";
-      await addMsg(`⚔️ **MISSIONE COMPLETATA: ${q.title}!**\n\n⭐ +${xpE} XP a testa · 💰 +${goldE} oro a testa${bonusNote}\n\n🎁 **Bottino materiale trovato:** ${droppedMat.emoji} **${itemName(droppedMat)}** [${rarityLabel}] — ricevuto da tutti!\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, "victory","Master");
+      const rarityLabel = lang === "en"
+        ? (matRarity === "legendary" ? "🟣 Legendary" : matRarity === "epic" ? "🔴 Epic" : matRarity === "rare" ? "🔵 Rare" : matRarity === "uncommon" ? "🟢 Uncommon" : "⚪ Common")
+        : (matRarity === "legendary" ? "🟣 Leggendario" : matRarity === "epic" ? "🔴 Epico" : matRarity === "rare" ? "🔵 Raro" : matRarity === "uncommon" ? "🟢 Non comune" : "⚪ Comune");
+      await addMsg(lang === "en" ? `⚔️ **QUEST COMPLETED: ${lq.title}!**\n\n⭐ +${xpE} XP each · 💰 +${goldE} gold each${bonusNote}\n\n🎁 **Material loot found:** ${droppedMat.emoji} **${itemName(droppedMat)}** [${rarityLabel}] — received by everyone!\n\nIf you have enough XP, open the **Level** tab to level up.` : `⚔️ **MISSIONE COMPLETATA: ${lq.title}!**\n\n⭐ +${xpE} XP a testa · 💰 +${goldE} oro a testa${bonusNote}\n\n🎁 **Bottino materiale trovato:** ${droppedMat.emoji} **${itemName(droppedMat)}** [${rarityLabel}] — ricevuto da tutti!\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, "victory","Master");
     } else {
-      await addMsg(`⚔️ **MISSIONE COMPLETATA: ${q.title}!**\n\n⭐ +${xpE} XP a testa · 💰 +${goldE} oro a testa${bonusNote}\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, "victory","Master");
+      await addMsg(lang === "en" ? `⚔️ **QUEST COMPLETED: ${lq.title}!**\n\n⭐ +${xpE} XP each · 💰 +${goldE} gold each${bonusNote}\n\nIf you have enough XP, open the **Level** tab to level up.` : `⚔️ **MISSIONE COMPLETATA: ${lq.title}!**\n\n⭐ +${xpE} XP a testa · 💰 +${goldE} oro a testa${bonusNote}\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, "victory","Master");
     }
   }
 
@@ -12063,7 +12090,8 @@ ${stepText(step)}`, "quest","Master");
     const quests = getQuests();
     const q = quests.find(x=>x.id===qs?.currentId);
     if(!q||!qs?.active) return;
-    const stepData = q.steps[qs.step];
+    const lq = localizeQuest(q);
+    const stepData = lq.steps[qs.step];
     // Block if combat not yet won
     if(isCombatStep(stepData) && !qs?.combat?.won) return;
     // Block if choice (must pick an option)
@@ -12083,7 +12111,8 @@ ${stepText(step)}`, "quest","Master");
     const q = quests.find(x=>x.id===qs?.currentId);
     if(!q||!qs?.active) return;
     const step = qs.step;
-    const stepData = q.steps[step];
+    const lq = localizeQuest(q);
+    const stepData = lq.steps[step];
     if(!isChoiceStep(stepData)) return;
     const choice = stepData.choices[choiceIndex];
     if(!choice) return;
@@ -12091,7 +12120,7 @@ ${stepText(step)}`, "quest","Master");
     const quality = choice.quality || (choice.correct === true ? "good" : "bad");
     const xpE = Math.max(0, Number(choice.xp)||0);
     const goldE = Math.max(0, Number(choice.gold)||0);
-    await addMsg(`🎯 **Scelta:** ${choice.label}`, "quest", "Master");
+    await addMsg(`🎯 **${lang === "en" ? "Choice" : "Scelta"}:** ${choice.label}`, "quest", "Master");
 
     if(quality === "good" || choice.correct === true) {
       if(xpE||goldE) {
@@ -12101,7 +12130,7 @@ ${stepText(step)}`, "quest","Master");
           if(up.id===myId) setMeRaw(up);
         }
       }
-      await addMsg(`✅ Risposta giusta!${xpE ? ` ⭐ +${xpE} XP a testa` : ""}${goldE ? ` 💰 +${goldE} oro a testa` : ""}`, "victory", "Master");
+      await addMsg(lang === "en" ? `✅ Correct answer!${xpE ? ` ⭐ +${xpE} XP each` : ""}${goldE ? ` 💰 +${goldE} gold each` : ""}` : `✅ Risposta giusta!${xpE ? ` ⭐ +${xpE} XP a testa` : ""}${goldE ? ` 💰 +${goldE} oro a testa` : ""}`, "victory", "Master");
     } else if(quality === "neutral") {
       if(xpE||goldE) {
         for(const p of partyPlayers) {
@@ -12110,9 +12139,9 @@ ${stepText(step)}`, "quest","Master");
           if(up.id===myId) setMeRaw(up);
         }
       }
-      await addMsg(`🟡 Risposta quasi giusta!${xpE ? ` ⭐ +${xpE} XP a testa` : ""}${goldE ? ` 💰 +${goldE} oro a testa` : ""}`, "system", "Master");
+      await addMsg(lang === "en" ? `🟡 Almost right!${xpE ? ` ⭐ +${xpE} XP each` : ""}${goldE ? ` 💰 +${goldE} gold each` : ""}` : `🟡 Risposta quasi giusta!${xpE ? ` ⭐ +${xpE} XP a testa` : ""}${goldE ? ` 💰 +${goldE} oro a testa` : ""}`, "system", "Master");
     } else {
-      await addMsg(`❌ Risposta sbagliata... il party non guadagna nulla e avanza comunque.`, "system", "Sistema");
+      await addMsg(lang === "en" ? `❌ Wrong answer... the party gains nothing and still moves on.` : `❌ Risposta sbagliata... il party non guadagna nulla e avanza comunque.`, "system", lang === "en" ? "System" : "Sistema");
     }
 
     const nextStep = choice.next != null ? Number(choice.next) : step+1;
@@ -12256,7 +12285,7 @@ ${stepText(step)}`, "quest","Master");
     acc[lvl] = preparedSpells.filter(s => Number(s.slots) === lvl);
     return acc;
   }, {});
-  const currentQ = qs?.active ? getQuests().find(x=>x.id===qs.currentId) : null;
+  const currentQ = qs?.active ? localizeQuest(getQuests().find(x=>x.id===qs.currentId)) : null;
   const allActiveQuests = getQuests().filter(q => q.active && (!q.minLevel || (me?.level || 1) >= q.minLevel));
   const dailyQuestIds = new Set(getDailyQuests(allActiveQuests.filter(q => !q.specialPassword), undefined, qs?.longRestSeed || 0).map(q => q.id));
   const publicDailyQuests = allActiveQuests.filter(q => dailyQuestIds.has(q.id));
@@ -13227,7 +13256,7 @@ ${stepText(step)}`, "quest","Master");
                 </div>
                 <p style={{ color:"#fde68a", fontSize:"0.85rem", marginBottom:10 }}>Scena {qs.step+1} di {currentQ.steps.length}</p>
                 {(() => {
-                  const profile = questRiskProfile(currentQ, partyPlayers);
+                  const profile = questRiskProfile(currentQ, partyPlayers, lang);
                   return (
                     <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginBottom:12, fontSize:"0.72rem" }}>
                       <span style={{ color:"#fde68a", padding:"2px 7px", border:"1px solid rgba(251,191,36,0.32)", borderRadius:999, background:"rgba(120,53,15,0.18)" }}>Liv. consigliato {profile.recommendedLevel}+</span>
@@ -13361,7 +13390,8 @@ ${stepText(step)}`, "quest","Master");
                     </div>
                   )}
                   {availableDaily.map(q => {
-                    const profile = questRiskProfile(q, partyPlayers);
+                    const lq = localizeQuest(q);
+                    const profile = questRiskProfile(q, partyPlayers, lang);
                     const diff = normalizeMissionDifficulty(q.difficulty);
                     const perPlayerCount = Math.max(partyPlayers.length || 1, 1);
                     const xpEachPreview = Math.floor((Number(q.xpReward) || 0) / perPlayerCount);
@@ -13372,12 +13402,12 @@ ${stepText(step)}`, "quest","Master");
                       <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
                         <div style={{ flex:1 }}>
                           <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:5 }}>
-                            <span style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontWeight:700 }}>{q.title}</span>
-                            <span style={{ padding:"1px 7px", border:`1px solid ${DIFF_COLOR[diff]||"#374151"}`, borderRadius:3, fontSize:"0.65rem", color:DIFF_COLOR[diff]||"#6b7280" }}>{missionDifficultyLabel(q.difficulty)}</span>
+                            <span style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontWeight:700 }}>{lq.title}</span>
+                            <span style={{ padding:"1px 7px", border:`1px solid ${DIFF_COLOR[diff]||"#374151"}`, borderRadius:3, fontSize:"0.65rem", color:DIFF_COLOR[diff]||"#6b7280" }}>{missionDifficultyLabelForLang(q.difficulty, lang)}</span>
                             {underleveled && <span style={{ padding:"1px 7px", border:"1px solid #ef4444", borderRadius:3, fontSize:"0.65rem", color:"#fca5a5" }}>Sottolivellati</span>}
                           </div>
-                          <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
-                          {q.flavor&&<p style={{ color:"#94a3b8", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{q.flavor}</p>}
+                          <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 6px" }}>{lq.desc}</p>
+                          {lq.flavor&&<p style={{ color:"#94a3b8", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{lq.flavor}</p>}
                           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(128px,1fr))", gap:7, margin:"0.75rem 0" }}>
                             <div style={{ padding:"0.45rem 0.55rem", border:"1px solid rgba(148,163,184,0.18)", borderRadius:6, background:"rgba(15,23,42,0.52)" }}>
                               <div style={{ color:"#64748b", fontSize:"0.62rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>Consigliato</div>
@@ -13430,7 +13460,8 @@ ${stepText(step)}`, "quest","Master");
               const today = new Date().toLocaleDateString('en-CA');
               return !(qs?.questLog||[]).some(e => e.date === today && e.id === q.id);
             }).map(q => {
-              const profile = questRiskProfile(q, partyPlayers);
+              const lq = localizeQuest(q);
+              const profile = questRiskProfile(q, partyPlayers, lang);
               const perPlayerCount = Math.max(partyPlayers.length || 1, 1);
               const xpEachPreview = Math.floor((Number(q.xpReward) || 0) / perPlayerCount);
               const goldEachPreview = Math.floor((Number(q.goldReward) || 0) / perPlayerCount);
@@ -13439,11 +13470,11 @@ ${stepText(step)}`, "quest","Master");
                 <div style={{ display:"flex", alignItems:"flex-start", gap:10 }}>
                   <div style={{ flex:1 }}>
                     <div style={{ display:"flex", gap:8, alignItems:"center", marginBottom:5 }}>
-                      <span style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontWeight:700 }}>{q.title}</span>
+                      <span style={{ fontFamily:"'Cinzel',serif", color:"#c4b5fd", fontWeight:700 }}>{lq.title}</span>
                       <span style={{ padding:"1px 7px", border:"1px solid #7c3aed", borderRadius:3, fontSize:"0.65rem", color:"#c4b5fd" }}>Speciale</span>
                     </div>
-                    <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 6px" }}>{q.desc}</p>
-                    {q.flavor&&<p style={{ color:"#94a3b8", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{q.flavor}</p>}
+                    <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 6px" }}>{lq.desc}</p>
+                    {lq.flavor&&<p style={{ color:"#94a3b8", fontSize:"0.78rem", fontStyle:"italic", margin:"0 0 8px" }}>{lq.flavor}</p>}
                     <div style={{ display:"flex", gap:8, fontSize:"0.72rem", color:"#94a3b8", flexWrap:"wrap", marginTop:8 }}>
                       <span style={{ color:"#fde68a" }}>👤 {xpEachPreview} XP · {goldEachPreview} oro a testa</span>
                       <span>👥 Liv. {profile.recommendedLevel}+</span>
