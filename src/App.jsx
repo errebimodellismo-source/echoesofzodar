@@ -8428,10 +8428,10 @@ function OsservatorioView({ me, myId, code, supabase, onJoinParty, onJoinCombat 
 // ── LoreView ─────────────────────────────────────────────────────────────────
 function LoreView() {
   const S = {
-    wrap: { flex:1, overflow:"auto", display:"flex", flexDirection:"column", alignItems:"center", padding:"2rem 1rem 4rem", background:"rgba(2,4,15,0.7)" },
-    card: { maxWidth:720, width:"100%", background:"rgba(10,8,30,0.92)", border:"1px solid rgba(124,58,237,0.35)", borderRadius:16, padding:"2.5rem 2rem", boxShadow:"0 0 60px rgba(80,0,200,0.15)", position:"relative", overflow:"hidden" },
+    wrap: { flex:1, minHeight:0, overflowY:"auto", overflowX:"hidden", WebkitOverflowScrolling:"touch", display:"flex", flexDirection:"column", alignItems:"center", padding:"clamp(0.8rem,2vw,2rem) clamp(0.6rem,2vw,1rem) 5rem", background:"rgba(2,4,15,0.7)" },
+    card: { maxWidth:860, width:"100%", background:"rgba(10,8,30,0.92)", border:"1px solid rgba(124,58,237,0.35)", borderRadius:16, padding:"clamp(1rem,3vw,2.5rem) clamp(0.9rem,2.5vw,2rem)", boxShadow:"0 0 60px rgba(80,0,200,0.15)", position:"relative", overflow:"visible" },
     glow: { position:"absolute", top:-80, left:"50%", transform:"translateX(-50%)", width:400, height:200, background:"radial-gradient(ellipse, rgba(124,58,237,0.18) 0%, transparent 70%)", pointerEvents:"none" },
-    heroImg: { width:"100%", maxHeight:360, objectFit:"cover", objectPosition:"top", borderRadius:12, marginBottom:"1.5rem", boxShadow:"0 0 40px rgba(109,40,217,0.3)" },
+    heroImg: { width:"100%", height:"auto", maxHeight:"none", objectFit:"contain", objectPosition:"center", borderRadius:12, marginBottom:"1.5rem", boxShadow:"0 0 40px rgba(109,40,217,0.3)", display:"block", background:"rgba(0,0,0,0.25)" },
     symbol: { textAlign:"center", fontSize:"3.5rem", marginBottom:"0.5rem" },
     title: { textAlign:"center", fontFamily:"'Cinzel',serif", fontSize:"1.7rem", color:"#c4b5fd", letterSpacing:"0.1em", marginBottom:"0.3rem" },
     subtitle: { textAlign:"center", fontFamily:"'Cinzel',serif", fontSize:"0.85rem", color:"#6d28d9", letterSpacing:"0.15em", marginBottom:"2rem" },
@@ -13461,7 +13461,7 @@ ${stepText(step)}`, "quest","Master");
           </div>
         )}
 
-        {tab==="lore" && <div style={{ flex:1, overflow:"hidden", display:"flex", flexDirection:"column" }}><LoreView /></div>}
+        {tab==="lore" && <div style={{ flex:1, minHeight:0, overflow:"hidden", display:"flex", flexDirection:"column" }}><LoreView /></div>}
         {tab==="osservatorio" && me?.class==="custode_equilibrio" && <OsservatorioView me={me} myId={myId} code={code} supabase={supabase} onJoinParty={async(partyCode)=>{ const upd={...me,partyCode}; await dbSavePlayer(upd); window.location.reload(); }} onJoinCombat={async(partyCode,combatant)=>{ const upd={...me,partyCode}; await dbSavePlayer(upd); window.location.reload(); }} />}
 
         {tab==="map" && (
