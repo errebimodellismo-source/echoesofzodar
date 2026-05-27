@@ -14,6 +14,7 @@ import CombatVisualizer from "./components/CombatVisualizer";
 import AnimatedBackground from "./components/AnimatedBackground";
 import VoiceChat from "./components/VoiceChat";
 import audioManager from "./utils/audioManager";
+import { I18nProvider, LanguageToggle, useI18n } from "./i18n.jsx";
 
 /* ----------------------------------------------
    FONTS & GLOBAL CSS
@@ -2899,7 +2900,8 @@ class ErrorBoundary extends React.Component {
 /* ----------------------------------------------
    ROOT
 ---------------------------------------------- */
-export default function App() {
+function AppContent() {
+  const { t } = useI18n();
   const [screen, setScreen] = useState("landing");
   const [myId, setMyId] = useState(() => localStorage.getItem("eoz_myId") || null);
   const [authUser, setAuthUser] = useState(null);
@@ -3051,7 +3053,7 @@ export default function App() {
     <div style={{ minHeight:"100vh", width:"100vw", display:"flex", alignItems:"center", justifyContent:"center", position:"relative" }}>
       <AnimatedBackground screen={screen} />
       <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.32)" }} />
-      <div style={{ position:"relative", zIndex:1, color:"#e2d9c5", fontFamily:"'Cinzel',serif" }}>Caricamento...</div>
+      <div style={{ position:"relative", zIndex:1, color:"#e2d9c5", fontFamily:"'Cinzel',serif" }}>{t("loading")}</div>
     </div>
   );
 
@@ -3063,12 +3065,12 @@ export default function App() {
       <div style={{ position:"absolute", inset:0, background:"rgba(2,4,14,0.97)", zIndex:0 }} />
       <div style={{ position:"relative", zIndex:1, display:"flex", flexDirection:"column", alignItems:"center", gap:"1.2rem" }}>
         <div style={{ fontSize:"4rem" }}>🔧</div>
-        <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.6rem", fontWeight:700, letterSpacing:"0.04em" }}>Gioco in Manutenzione</div>
+        <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.6rem", fontWeight:700, letterSpacing:"0.04em" }}>{t("maintenance.title")}</div>
         <div style={{ color:"#94a3b8", fontSize:"0.95rem", maxWidth:440, lineHeight:1.7 }}>
-          {appMaintenanceMsg || "Il Dungeon Master sta aggiornando il mondo. Riprova tra qualche minuto."}
+          {appMaintenanceMsg || t("maintenance.body")}
         </div>
         <div style={{ padding:"0.6rem 1.4rem", background:"rgba(251,191,36,0.08)", border:"1px solid rgba(251,191,36,0.3)", borderRadius:8, color:"#fbbf24", fontSize:"0.78rem" }}>
-          La pagina si aggiornerà automaticamente quando il gioco sarà di nuovo disponibile.
+          {t("maintenance.auto")}
         </div>
       </div>
     </div>
@@ -3077,6 +3079,7 @@ export default function App() {
   return (
     <div style={{ minHeight:"100vh", width:"100vw", fontFamily:"'Crimson Pro',Georgia,serif", color:"#e2d9c5", position:"relative" }}>
       <AnimatedBackground screen={screen} />
+      <LanguageToggle />
       <style>{`
         *, *::before, *::after { box-sizing: border-box; }
         body { overflow-x: hidden; }
@@ -3109,6 +3112,7 @@ export default function App() {
    AUTH SCREEN
 ---------------------------------------------- */
 function AuthScreen({ setAuthUser, setScreen, setMyId }) {
+  const { t } = useI18n();
   const [mode, setMode] = useState("login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -3123,7 +3127,7 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
     setLoading(true); setError(""); setSuccess("");
     if(mode==="login") {
       const {data,error:e} = await supabase.auth.signInWithPassword({email,password});
-      if(e) { setError("Email o password errati."); setLoading(false); return; }
+      if(e) { setError(t("auth.badCredentials")); setLoading(false); return; }
       setAuthUser(data.user);
       await dbSaveUserMasterMeta(data.user);
       const savedId = (localStorage.getItem("eoz_myId") || "").trim();
@@ -3133,7 +3137,7 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
       const {data,error:e} = await supabase.auth.signUp({email,password});
       if(e) { setError(e.message); setLoading(false); return; }
       if(data?.user) await dbSaveUserMasterMeta(data.user, new Date().toISOString());
-      setSuccess("? Registrazione completata! Ora puoi accedere.");
+      setSuccess(t("auth.registered"));
       setMode("login");
     }
     setLoading(false);
@@ -3149,7 +3153,7 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
       </h1>
       <div style={{ width:"100%", maxWidth:400, background:"rgba(0,0,0,0.55)", border:"1px solid #374151", borderRadius:8, padding:"2rem" }}>
         <div style={{ display:"flex", gap:0, marginBottom:"1.5rem", border:"1px solid #1f2937", borderRadius:6, overflow:"hidden" }}>
-          {[["login","🔐 Accedi"],["register","📝 Registrati"]].map(([k,l])=>(
+          {[["login",`🔐 ${t("auth.login")}`],["register",`📝 ${t("auth.register")}`]].map(([k,l])=>(
             <button key={k} onClick={()=>{ setMode(k); setError(""); setSuccess(""); }}
               style={{ flex:1, padding:"0.6rem", background:mode===k?"rgba(109,40,217,0.3)":"transparent", border:"none", color:mode===k?"#c4b5fd":"#6b7280", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.8rem", letterSpacing:"0.05em" }}>
               {l}
@@ -3163,7 +3167,7 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
         {error && <div style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:12, padding:"0.5rem 0.7rem", background:"rgba(239,68,68,0.1)", border:"1px solid #7f1d1d", borderRadius:4 }}>{error}</div>}
         {success && <div style={{ color:"#6ee7b7", fontSize:"0.82rem", marginBottom:12, padding:"0.5rem 0.7rem", background:"rgba(52,211,153,0.1)", border:"1px solid #065f46", borderRadius:4 }}>{success}</div>}
         <BigBtn onClick={handleAuth} gold disabled={loading} icon={mode==="login"?"🔑":"📝"}>
-          {loading?"Attendere..." : mode==="login"?"Entra nel Mondo":"Crea Account"}
+          {loading?t("auth.wait") : mode==="login"?t("auth.enterWorld"):t("auth.createAccount")}
         </BigBtn>
         <button
           onClick={()=>setScreen("master")}
@@ -3182,7 +3186,7 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
             fontWeight:700,
           }}
         >
-          🛡️ Accesso Master
+          🛡️ {t("auth.masterAccess")}
         </button>
       </div>
       <div style={{ marginTop:"2rem", color:"rgba(148,163,184,0.45)", fontSize:"0.68rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>
@@ -3197,6 +3201,7 @@ function AuthScreen({ setAuthUser, setScreen, setMyId }) {
    MASTER PANEL AUTH WRAPPER
 ---------------------------------------------- */
 function MasterPanelAuth({ setScreen, authUser }) {
+  const { t } = useI18n();
   const [pwd, setPwd] = useState("");
   const [ok, setOk] = useState(() => canAccessMasterPanel(authUser));
   const [err, setErr] = useState(false);
@@ -3212,9 +3217,9 @@ function MasterPanelAuth({ setScreen, authUser }) {
       <div style={{ position:"absolute", inset:0, background:"rgba(0,0,0,0.36)" }} />
       <div style={{ position:"relative", zIndex:1, width:"100%", maxWidth:360, background:"rgba(0,0,0,0.55)", border:"1px solid #374151", borderRadius:8, padding:"2rem", textAlign:"center" }}>
         <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>🛡️</div>
-        <h2 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.2rem", marginBottom:"0.5rem" }}>🛡️ Pannello Master</h2>
-        <p style={{ color:"#9ca3af", fontSize:"0.78rem", marginBottom:"1.5rem" }}>Accesso riservato al Master</p>
-        <label style={labelStyle}>Password Master</label>
+        <h2 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.2rem", marginBottom:"0.5rem" }}>🛡️ {t("master.panel")}</h2>
+        <p style={{ color:"#9ca3af", fontSize:"0.78rem", marginBottom:"1.5rem" }}>{t("master.restricted")}</p>
+        <label style={labelStyle}>{t("master.password")}</label>
         <input
           style={{...inputStyle,marginBottom:12,textAlign:"center",letterSpacing:"0.2em"}}
           type="password"
@@ -3223,10 +3228,10 @@ function MasterPanelAuth({ setScreen, authUser }) {
           placeholder="Password"
           onKeyDown={e=>{ if(e.key==="Enter"){ if(pwd===MASTER_PASSWORD){ _masterPasswordVerified=true; setOk(true); } else setErr(true); } }}
         />
-        {err && <div style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:12 }}>Password errata.</div>}
+        {err && <div style={{ color:"#fca5a5", fontSize:"0.82rem", marginBottom:12 }}>{t("master.wrongPassword")}</div>}
         <div style={{ display:"flex", gap:8, justifyContent:"center" }}>
-          <BigBtn onClick={()=>{ if(pwd===MASTER_PASSWORD){ _masterPasswordVerified=true; setOk(true); } else setErr(true); }} gold icon="🗝️">Entra</BigBtn>
-          <SmallBtn onClick={()=>setScreen("landing")}>← Torna alla home</SmallBtn>
+          <BigBtn onClick={()=>{ if(pwd===MASTER_PASSWORD){ _masterPasswordVerified=true; setOk(true); } else setErr(true); }} gold icon="🗝️">{t("common.enter")}</BigBtn>
+          <SmallBtn onClick={()=>setScreen("landing")}>← {t("common.backHome")}</SmallBtn>
         </div>
       </div>
     </div>
@@ -3399,6 +3404,7 @@ function LandingStatPill({ children, tone = "slate" }) {
 }
 
 function LandingHeroCard({ character, onPlay, onDelete }) {
+  const { t, className, raceName } = useI18n();
   const cls = CLASSES[character.class || "warrior"] || CLASSES.warrior;
   const race = RACES[character.race || "human"] || RACES.human;
   const dead = !!character.dead;
@@ -3461,13 +3467,13 @@ function LandingHeroCard({ character, onPlay, onDelete }) {
             {character.name}
           </div>
           <div style={{ color:"#b6a9c9", fontSize:"0.74rem", marginTop:5 }}>
-            {race.emoji} {race.name} <span style={{ color:"#475569" }}>•</span> {cls.emoji} {cls.name}
+            {race.emoji} {raceName(character.race, race.name)} <span style={{ color:"#475569" }}>•</span> {cls.emoji} {className(character.class, cls.name)}
           </div>
         </div>
 
         <div style={{ marginTop:"1rem" }}>
           <div style={{ display:"flex", justifyContent:"space-between", color:"#94a3b8", fontSize:"0.68rem", marginBottom:5 }}>
-            <span>Vigore</span>
+            <span>{t("stats.vigor")}</span>
             <span>{hp}/{maxHp}</span>
           </div>
           <div style={{ height:9, borderRadius:999, background:"rgba(15,23,42,0.86)", overflow:"hidden", border:"1px solid rgba(148,163,184,0.12)" }}>
@@ -3482,13 +3488,13 @@ function LandingHeroCard({ character, onPlay, onDelete }) {
         </div>
 
         <div style={{ display:"flex", gap:8, flexWrap:"wrap", justifyContent:"center", marginTop:"0.9rem" }}>
-          <LandingStatPill tone="slate">Oro {character.gold || 0}</LandingStatPill>
-          <LandingStatPill tone="slate">Party {character.partyCode || "-"}</LandingStatPill>
+          <LandingStatPill tone="slate">{t("common.gold")} {character.gold || 0}</LandingStatPill>
+          <LandingStatPill tone="slate">{t("common.party")} {character.partyCode || "-"}</LandingStatPill>
         </div>
 
         <div style={{ marginTop:"auto", paddingTop:"1rem", display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
-          {!dead && <BigBtn onClick={onPlay} gold icon="⚔️">Gioca</BigBtn>}
-          <SmallBtn red onClick={onDelete}>🗑️ Elimina</SmallBtn>
+          {!dead && <BigBtn onClick={onPlay} gold icon="⚔️">{t("common.play")}</BigBtn>}
+          <SmallBtn red onClick={onDelete}>🗑️ {t("common.delete")}</SmallBtn>
         </div>
       </div>
     </div>
@@ -3496,6 +3502,7 @@ function LandingHeroCard({ character, onPlay, onDelete }) {
 }
 
 function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
+  const { t } = useI18n();
   const meta = getMeta();
   const [characters, setCharacters] = useState([]);
   const [loadingChars, setLoadingChars] = useState(true);
@@ -3576,28 +3583,28 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
       <div style={{ width:"100%", background:"linear-gradient(180deg,rgba(3,7,18,0.74),rgba(3,7,18,0.54))", border:"1px solid rgba(251,191,36,0.18)", borderRadius:12, padding:"clamp(1rem,2.2vw,1.45rem)", backdropFilter:"blur(12px)", boxShadow:"0 30px 90px rgba(0,0,0,0.34), inset 0 1px 0 rgba(255,255,255,0.05)" }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:14, marginBottom:"1rem", flexWrap:"wrap" }}>
           <div style={{ textAlign:"left" }}>
-            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#f8e7b9", fontSize:"clamp(1.05rem,2vw,1.35rem)", lineHeight:1.25 }}>Il Portale degli Eroi</div>
-            <div style={{ color:"#9ca3af", fontSize:"0.82rem", marginTop:3 }}>Scegli chi guiderà il prossimo eco nel mondo.</div>
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#f8e7b9", fontSize:"clamp(1.05rem,2vw,1.35rem)", lineHeight:1.25 }}>{t("landing.portalTitle")}</div>
+            <div style={{ color:"#9ca3af", fontSize:"0.82rem", marginTop:3 }}>{t("landing.portalSubtitle")}</div>
           </div>
           <div style={{ display:"flex", gap:10, flexWrap:"wrap", justifyContent:"flex-end" }}>
-            <BigBtn onClick={()=>setScreen("create")} gold icon="🛠️">Nuovo Eroe</BigBtn>
-            <BigBtn onClick={logout} dark icon="🚪">Esci</BigBtn>
-            {canAccessMasterPanel(authUser) && <BigBtn onClick={()=>setScreen("master")} dark icon="🛡️">Pannello Master</BigBtn>}
+            <BigBtn onClick={()=>setScreen("create")} gold icon="🛠️">{t("landing.newHero")}</BigBtn>
+            <BigBtn onClick={logout} dark icon="🚪">{t("landing.logout")}</BigBtn>
+            {canAccessMasterPanel(authUser) && <BigBtn onClick={()=>setScreen("master")} dark icon="🛡️">{t("master.panel")}</BigBtn>}
             {["errebimodellismo@gmail.com","roppo@hotmail.it"].includes(authUser?.email) && (
               <button onClick={()=>setScreen("create_zodar")}
                 style={{ padding:"0.6rem 1.2rem", background:"linear-gradient(135deg,rgba(109,40,217,0.3),rgba(30,0,60,0.6))", border:"1px solid rgba(168,85,247,0.5)", borderRadius:8, color:"#c084fc", fontFamily:"'Cinzel',serif", fontSize:"0.8rem", letterSpacing:"0.08em", cursor:"pointer", display:"flex", alignItems:"center", gap:6 }}>
-                ⚖️ Incarnati come Zodar
+                ⚖️ {t("landing.incarnateZodar")}
               </button>
             )}
           </div>
         </div>
 
-        {loadingChars && <div style={{ color:"#9ca3af", padding:"2.8rem 0" }}>Caricamento personaggi...</div>}
+        {loadingChars && <div style={{ color:"#9ca3af", padding:"2.8rem 0" }}>{t("common.loadingCharacters")}</div>}
         {!loadingChars && !characters.length && (
           <div style={{ color:"#9ca3af", padding:"3rem 1rem", border:"1px dashed rgba(251,191,36,0.22)", borderRadius:10, background:"rgba(15,23,42,0.32)" }}>
             <div style={{ fontSize:"2.2rem", marginBottom:"0.5rem" }}>⚔️</div>
-            <div style={{ fontFamily:"'Cinzel',serif", color:"#f8e7b9", marginBottom:5 }}>Nessun eroe attende al portale</div>
-            <div style={{ fontSize:"0.82rem" }}>Crea la tua prima scheda e apri il viaggio.</div>
+            <div style={{ fontFamily:"'Cinzel',serif", color:"#f8e7b9", marginBottom:5 }}>{t("landing.noHeroTitle")}</div>
+            <div style={{ fontSize:"0.82rem" }}>{t("landing.noHeroBody")}</div>
           </div>
         )}
         {!loadingChars && !!characters.length && (
@@ -3618,32 +3625,32 @@ function Landing({ setScreen, goGame, myId, authUser, setAuthUser }) {
 
       {/* Recupero personaggio per ID */}
       <div style={{ marginTop:"0.9rem", width:"100%", background:"rgba(2,6,23,0.44)", border:"1px solid rgba(148,163,184,0.12)", borderRadius:10, padding:"0.85rem 1rem", backdropFilter:"blur(8px)" }}>
-        <div style={{ color:"#94a3b8", fontSize:"0.72rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em", marginBottom:8, textAlign:"left" }}>🔍 Recupera personaggio per ID</div>
+        <div style={{ color:"#94a3b8", fontSize:"0.72rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em", marginBottom:8, textAlign:"left" }}>🔍 {t("landing.recoverTitle")}</div>
         <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
           <input
             value={recoverId}
             onChange={e=>{ setRecoverId(e.target.value.trim()); setRecoverError(""); }}
             onKeyDown={e=>{ if(e.key==="Enter" && recoverId) goGame(recoverId).catch(err=>setRecoverError(err?.message||"Errore")); }}
-            placeholder="Incolla qui l'ID del personaggio (chiedi al Master)"
+            placeholder={t("landing.recoverPlaceholder")}
             style={{ flex:"1 1 280px", padding:"0.5rem 0.75rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.8rem", outline:"none" }}
           />
           <button
-            onClick={async ()=>{ if(!recoverId){ setRecoverError("Inserisci un ID."); return; } try{ await goGame(recoverId); }catch(e){ setRecoverError(e?.message||"ID non trovato o non valido."); } }}
+            onClick={async ()=>{ if(!recoverId){ setRecoverError(t("landing.insertId")); return; } try{ await goGame(recoverId); }catch(e){ setRecoverError(e?.message||t("landing.invalidId")); } }}
             style={{ padding:"0.5rem 1rem", background:"rgba(109,40,217,0.3)", border:"1px solid #7c3aed", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", whiteSpace:"nowrap" }}>
-            Recupera →
+            {t("landing.recover")} →
           </button>
         </div>
         {recoverError && <div style={{ color:"#fca5a5", fontSize:"0.74rem", marginTop:6 }}>{recoverError}</div>}
       </div>
 
-      {authUser && <p style={{ marginTop:"1rem", color:"#64748b", fontSize:"0.72rem" }}>Connesso come {authUser.email}</p>}
-      <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>GDR TESTUALE • FANTASY • MULTIPLAYER ONLINE</p>
+      {authUser && <p style={{ marginTop:"1rem", color:"#64748b", fontSize:"0.72rem" }}>{t("landing.connectedAs")} {authUser.email}</p>}
+      <p style={{ marginTop:"1.5rem", color:"#1f2937", fontSize:"0.7rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.12em" }}>{t("landing.tagline")}</p>
       <p style={{ marginTop:"0.5rem", color:"rgba(148,163,184,0.4)", fontSize:"0.65rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.14em" }}>{GAME_VERSION}</p>
       <a href="https://paypal.me/echoesofzodar" target="_blank" rel="noopener noreferrer"
         style={{ marginTop:"0.6rem", color:"rgba(148,163,184,0.35)", fontSize:"0.62rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.1em", textDecoration:"none" }}
         onMouseEnter={e=>e.currentTarget.style.color="rgba(251,191,36,0.7)"}
         onMouseLeave={e=>e.currentTarget.style.color="rgba(148,163,184,0.35)"}>
-        ❤️ Supporta il progetto
+        ❤️ {t("landing.support")}
       </a>
       </div>{/* /zIndex wrapper */}
     </div>
@@ -3760,6 +3767,7 @@ function CreateZodar({ setScreen, goGame, authUser }) {
    CREATE CHARACTER
 ---------------------------------------------- */
 function CreateChar({ setScreen, goGame, authUser }) {
+  const { t, className, raceName } = useI18n();
   const [name, setName] = useState("");
   const [realPlayerName, setRealPlayerName] = useState("");
   const [cls,  setCls]  = useState("warrior");
@@ -3853,12 +3861,12 @@ function CreateChar({ setScreen, goGame, authUser }) {
   }
 
   const canContinueFromName = name.trim() && realPlayerName.trim();
-  const steps = ["Nomi","Classe","Razza e Genere","Aspetto","Party"];
+  const steps = [t("create.steps.names"),t("create.steps.class"),t("create.steps.raceGender"),t("create.steps.appearance"),t("create.steps.party")];
   return (
     <div style={{ position:"relative", zIndex:1, maxWidth:620, margin:"0 auto", padding:"1.5rem 1rem", minHeight:"100vh" }}>
       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:"1.5rem" }}>
-        <button onClick={()=>setScreen("landing")} style={backBtnStyle}>← Indietro</button>
-        <h2 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.2rem", margin:0 }}>Forgia il tuo Destino</h2>
+        <button onClick={()=>setScreen("landing")} style={backBtnStyle}>← {t("common.back")}</button>
+        <h2 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.2rem", margin:0 }}>{t("create.title")}</h2>
       </div>
       <div style={{ display:"flex", gap:6, marginBottom:"1.5rem" }}>
         {steps.map((s,i)=>(
@@ -3869,66 +3877,66 @@ function CreateChar({ setScreen, goGame, authUser }) {
       </div>
 
       {step===0 && (
-        <Card title="✏️ Nomi dell'eroe e del giocatore">
-          <label style={labelStyle}>Nome dell'eroe</label>
-          <input style={inputStyle} value={name} onChange={e=>setName(e.target.value)} placeholder="Il nome del tuo eroe..." maxLength={24} autoFocus onKeyDown={e=>e.key==="Enter"&&canContinueFromName&&setStep(1)} />
-          <label style={{...labelStyle, marginTop:"0.9rem"}}>Nome e cognome del giocatore</label>
-          <input style={inputStyle} value={realPlayerName} onChange={e=>setRealPlayerName(e.target.value)} placeholder="Es: Mario Rossi" maxLength={60} onKeyDown={e=>e.key==="Enter"&&canContinueFromName&&setStep(1)} />
+        <Card title={`✏️ ${t("create.namesTitle")}`}>
+          <label style={labelStyle}>{t("create.heroName")}</label>
+          <input style={inputStyle} value={name} onChange={e=>setName(e.target.value)} placeholder={t("create.heroNamePlaceholder")} maxLength={24} autoFocus onKeyDown={e=>e.key==="Enter"&&canContinueFromName&&setStep(1)} />
+          <label style={{...labelStyle, marginTop:"0.9rem"}}>{t("create.playerName")}</label>
+          <input style={inputStyle} value={realPlayerName} onChange={e=>setRealPlayerName(e.target.value)} placeholder={t("create.playerNamePlaceholder")} maxLength={60} onKeyDown={e=>e.key==="Enter"&&canContinueFromName&&setStep(1)} />
           <p style={{ color:"#94a3b8", fontSize:"0.76rem", margin:"8px 0 0", lineHeight:1.5 }}>
-            Serve solo al Master per riconoscere e organizzare tavoli, party e ricompense. Gli altri giocatori vedranno solo il nome dell'eroe.
+            {t("create.playerNameHelp")}
           </p>
-          <div style={{ marginTop:"1rem" }}><BigBtn onClick={()=>canContinueFromName&&setStep(1)} gold disabled={!canContinueFromName}>Avanti →</BigBtn></div>
+          <div style={{ marginTop:"1rem" }}><BigBtn onClick={()=>canContinueFromName&&setStep(1)} gold disabled={!canContinueFromName}>{t("common.next")} →</BigBtn></div>
         </Card>
       )}
       {step===1 && (
-        <Card title="⚔️ Scegli la tua Classe">
+        <Card title={`⚔️ ${t("create.classTitle")}`}>
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))", gap:8 }}>
             {Object.entries(CLASSES).filter(([,v]) => !v._zodar && (!v._secret || secretUnlocked)).map(([k,v])=>(
               <button key={k} onClick={()=>setCls(k)} style={{ padding:"0.8rem 0.5rem", background:cls===k?`${v.color}30`:"rgba(255,255,255,0.03)", border:`2px solid ${cls===k?v.color:v._secret?"#4b0082":"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:4, position:"relative" }}>
-                {v._secret && <span style={{ position:"absolute", top:4, right:4, fontSize:"0.5rem", color:"#a78bfa", fontFamily:"'Cinzel',serif", letterSpacing:"0.05em" }}>✦ SEGRETO</span>}
+                {v._secret && <span style={{ position:"absolute", top:4, right:4, fontSize:"0.5rem", color:"#a78bfa", fontFamily:"'Cinzel',serif", letterSpacing:"0.05em" }}>✦ {t("create.secret")}</span>}
                 <span style={{ fontSize:"1.8rem", filter:v._secret?"drop-shadow(0 0 6px #a78bfa)":"none" }}>{v.emoji}</span>
-                <strong style={{ fontFamily:"'Cinzel',serif", color:cls===k?v.color:v._secret?"#c4b5fd":"#d1d5db", fontSize:"0.82rem" }}>{v.name}</strong>
+                <strong style={{ fontFamily:"'Cinzel',serif", color:cls===k?v.color:v._secret?"#c4b5fd":"#d1d5db", fontSize:"0.82rem" }}>{className(k, v.name)}</strong>
                 {cls===k && <div style={{ fontSize:"0.62rem", color:"#9ca3af", textAlign:"center" }}>❤️{v.hp} ⚔️{v.atk} 🛡️{v.def} ✨{v.mag}</div>}
               </button>
             ))}
           </div>
           {!secretUnlocked && (
             <div style={{ marginTop:"1rem", padding:"0.8rem", background:"rgba(109,40,217,0.08)", border:"1px solid #3b1f6e", borderRadius:8 }}>
-              <div style={{ color:"#7c3aed", fontSize:"0.72rem", fontFamily:"'Cinzel',serif", marginBottom:6 }}>🔒 Classi e Razze Segrete</div>
+              <div style={{ color:"#7c3aed", fontSize:"0.72rem", fontFamily:"'Cinzel',serif", marginBottom:6 }}>🔒 {t("create.secretClasses")}</div>
               <div style={{ display:"flex", gap:6 }}>
                 <input
                   value={secretInput}
                   onChange={e=>setSecretInput(e.target.value)}
                   onKeyDown={e=>e.key==="Enter"&&tryUnlock()}
-                  placeholder="Inserisci la parola d'ordine..."
+                  placeholder={t("create.secretPlaceholder")}
                   style={{ flex:1, padding:"0.4rem 0.6rem", background:"rgba(0,0,0,0.4)", border:`1px solid ${secretError?"#ef4444":"#3b1f6e"}`, borderRadius:6, color:"#e2d9c5", fontSize:"0.78rem", outline:"none" }}
                 />
                 <button onClick={tryUnlock} style={{ padding:"0.4rem 0.8rem", background:"rgba(109,40,217,0.25)", border:"1px solid #7c3aed", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontSize:"0.78rem" }}>
-                  Sblocca
+                  {t("create.unlock")}
                 </button>
               </div>
-              {secretError && <div style={{ color:"#ef4444", fontSize:"0.7rem", marginTop:4 }}>Parola d'ordine errata.</div>}
+              {secretError && <div style={{ color:"#ef4444", fontSize:"0.7rem", marginTop:4 }}>{t("create.secretWrong")}</div>}
             </div>
           )}
           {secretUnlocked && (
-            <div style={{ marginTop:"0.5rem", color:"#a78bfa", fontSize:"0.7rem", fontFamily:"'Cinzel',serif" }}>✦ Classi e razze segrete sbloccate</div>
+            <div style={{ marginTop:"0.5rem", color:"#a78bfa", fontSize:"0.7rem", fontFamily:"'Cinzel',serif" }}>✦ {t("create.secretUnlocked")}</div>
           )}
           <div style={{ display:"flex", gap:8, marginTop:"1rem" }}>
-            <SmallBtn onClick={()=>setStep(0)}>← Indietro</SmallBtn>
-            <BigBtn onClick={()=>setStep(2)} gold>Avanti →</BigBtn>
+            <SmallBtn onClick={()=>setStep(0)}>← {t("common.back")}</SmallBtn>
+            <BigBtn onClick={()=>setStep(2)} gold>{t("common.next")} →</BigBtn>
           </div>
         </Card>
       )}
       {step===2 && (
-        <Card title="🌍 Scegli Razza e Genere">
+        <Card title={`🌍 ${t("create.raceTitle")}`}>
           {RACES[race]?._femaleOnly ? (
             <div style={{ padding:"0.6rem 0.8rem", background:"rgba(236,72,153,0.12)", border:"1px solid #f472b6", borderRadius:8, marginBottom:"1rem", color:"#fbcfe8", fontSize:"0.78rem", fontFamily:"'Cinzel',serif" }}>
-              😈 La razza <strong>{RACES[race].name}</strong> è esclusivamente femminile.
+              😈 {t("create.femaleOnly", { race: raceName(race, RACES[race].name) })}
             </div>
           ) : (
             <div style={{ display:"flex", gap:"1rem", marginBottom:"1rem" }}>
-              <button onClick={()=>setGender("male")} style={{ flex:1, padding:"0.8rem", background:gender==="male"?"rgba(59,130,246,0.3)":"rgba(255,255,255,0.03)", border:`2px solid ${gender==="male"?"#60a5fa":"#1f2937"}`, borderRadius:6, cursor:"pointer", color:gender==="male"?"#bfdbfe":"#9ca3af", fontFamily:"'Cinzel',serif" }}>♂️ Maschile</button>
-              <button onClick={()=>setGender("female")} style={{ flex:1, padding:"0.8rem", background:gender==="female"?"rgba(236,72,153,0.3)":"rgba(255,255,255,0.03)", border:`2px solid ${gender==="female"?"#f472b6":"#1f2937"}`, borderRadius:6, cursor:"pointer", color:gender==="female"?"#fbcfe8":"#9ca3af", fontFamily:"'Cinzel',serif" }}>♀️ Femminile</button>
+              <button onClick={()=>setGender("male")} style={{ flex:1, padding:"0.8rem", background:gender==="male"?"rgba(59,130,246,0.3)":"rgba(255,255,255,0.03)", border:`2px solid ${gender==="male"?"#60a5fa":"#1f2937"}`, borderRadius:6, cursor:"pointer", color:gender==="male"?"#bfdbfe":"#9ca3af", fontFamily:"'Cinzel',serif" }}>♂️ {t("create.male")}</button>
+              <button onClick={()=>setGender("female")} style={{ flex:1, padding:"0.8rem", background:gender==="female"?"rgba(236,72,153,0.3)":"rgba(255,255,255,0.03)", border:`2px solid ${gender==="female"?"#f472b6":"#1f2937"}`, borderRadius:6, cursor:"pointer", color:gender==="female"?"#fbcfe8":"#9ca3af", fontFamily:"'Cinzel',serif" }}>♀️ {t("create.female")}</button>
             </div>
           )}
           <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))", gap:8 }}>
@@ -3937,21 +3945,21 @@ function CreateChar({ setScreen, goGame, authUser }) {
                 {v._secret && <span style={{ position:"absolute", top:3, right:3, fontSize:"0.45rem", color:"#a78bfa", fontFamily:"'Cinzel',serif" }}>✦</span>}
                 {v._femaleOnly && <span style={{ position:"absolute", top:3, left:3, fontSize:"0.45rem", color:"#f472b6" }}>♀</span>}
                 <span style={{ fontSize:"1.5rem", filter:v._secret?"drop-shadow(0 0 5px #a78bfa)":"none" }}>{v.emoji}</span>
-                <strong style={{ fontFamily:"'Cinzel',serif", color:v._secret?"#c4b5fd":"#d1d5db", fontSize:"0.78rem" }}>{v.name}</strong>
+                <strong style={{ fontFamily:"'Cinzel',serif", color:v._secret?"#c4b5fd":"#d1d5db", fontSize:"0.78rem" }}>{raceName(k, v.name)}</strong>
                 {race===k && <small style={{ fontSize:"0.6rem", color:"#a78bfa", textAlign:"center", lineHeight:1.3 }}>
-                  {[v.hpB&&`+${v.hpB}HP`,v.atkB&&`+${v.atkB}ATK`,v.defB&&`+${v.defB}DEF`,v.magB&&`+${v.magB}MAG`].filter(Boolean).join(" ")||"Versatile"}
+                  {[v.hpB&&`+${v.hpB}HP`,v.atkB&&`+${v.atkB}ATK`,v.defB&&`+${v.defB}DEF`,v.magB&&`+${v.magB}MAG`].filter(Boolean).join(" ")||t("create.versatile")}
                 </small>}
               </button>
             ))}
           </div>
           <div style={{ display:"flex", gap:8, marginTop:"1rem" }}>
-            <SmallBtn onClick={()=>setStep(1)}>🔙 Indietro</SmallBtn>
-            <BigBtn onClick={()=>setStep(3)} gold>Avanti ⏩</BigBtn>
+            <SmallBtn onClick={()=>setStep(1)}>🔙 {t("common.back")}</SmallBtn>
+            <BigBtn onClick={()=>setStep(3)} gold>{t("common.next")} ⏩</BigBtn>
           </div>
         </Card>
       )}
       {step===3 && (
-        <Card title="🎨 Personalizza il tuo Aspetto">
+        <Card title={`🎨 ${t("create.appearanceTitle")}`}>
           {/* Anteprima ritratto */}
           <div style={{ display:"flex", justifyContent:"center", marginBottom:"1rem" }}>
             <CharacterPortrait
@@ -3968,11 +3976,11 @@ function CreateChar({ setScreen, goGame, authUser }) {
 
           {/* Viso */}
           <div style={{ marginBottom:"1rem" }}>
-            <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>👤 Viso</div>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>👤 {t("create.face")}</div>
             <div style={{ display:"flex", gap:8 }}>
               {[1,2,3,4,5].map(i => (
                 <button key={i} onClick={()=>setFaceVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${faceVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0 }}>
-                  <img src={`/assets/portraits/${race}_${gender}_face_${i}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ width:"100%", height:"100%", objectFit:"cover" }} alt={`Viso ${i}`} />
+                  <img src={`/assets/portraits/${race}_${gender}_face_${i}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ width:"100%", height:"100%", objectFit:"cover" }} alt={`${t("create.face")} ${i}`} />
                 </button>
               ))}
             </div>
@@ -3980,7 +3988,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
 
           {/* Occhi */}
           <div style={{ marginBottom:"1rem" }}>
-            <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>👁️ Occhi</div>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>👁️ {t("create.eyes")}</div>
             <div style={{ display:"flex", gap:8 }}>
               {[1,2,3].map(i => (
                 <button key={i} onClick={()=>setEyesVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${eyesVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0 }}>
@@ -3992,11 +4000,11 @@ function CreateChar({ setScreen, goGame, authUser }) {
 
           {/* Cicatrice */}
           <div style={{ marginBottom:"1rem" }}>
-            <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>⚔️ Cicatrice</div>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>⚔️ {t("create.scar")}</div>
             <div style={{ display:"flex", gap:8 }}>
               {[0,1,2].map(i => (
                 <button key={i} onClick={()=>setScarVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${scarVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                  {i===0 ? <span style={{ color:"#475569", fontSize:"0.65rem", fontFamily:"'Cinzel',serif" }}>Nessuna</span> :
+                  {i===0 ? <span style={{ color:"#475569", fontSize:"0.65rem", fontFamily:"'Cinzel',serif" }}>{t("create.none")}</span> :
                     <CharacterPortrait race={race} gender={gender} face={faceVariant} eyes={eyesVariant} scar={i} size="100%" radius={0} />}
                 </button>
               ))}
@@ -4004,13 +4012,13 @@ function CreateChar({ setScreen, goGame, authUser }) {
           </div>
 
           <div style={{ display:"flex", gap:8, marginTop:"1rem" }}>
-            <SmallBtn onClick={()=>setStep(2)}>🔙 Indietro</SmallBtn>
-            <BigBtn onClick={()=>setStep(4)} gold>Avanti ⏩</BigBtn>
+            <SmallBtn onClick={()=>setStep(2)}>🔙 {t("common.back")}</SmallBtn>
+            <BigBtn onClick={()=>setStep(4)} gold>{t("common.next")} ⏩</BigBtn>
           </div>
         </Card>
       )}
       {step===4 && (
-        <Card title="👥 Conferma Eroe & Party">
+        <Card title={`👥 ${t("create.confirmTitle")}`}>
           <div style={{ background:"rgba(10,14,23,0.8)", border:"1px solid #374151", borderRadius:6, padding:"1.2rem", marginBottom:"1rem", display:"flex", flexDirection:"column", alignItems:"center", gap:15 }}>
             <CharacterPortrait
               race={race}
@@ -4023,17 +4031,17 @@ function CreateChar({ setScreen, goGame, authUser }) {
               style={{ border:'3px solid #fbbf24', boxShadow:'0 0 20px rgba(251,191,36,0.3)' }}
             />
             <div style={{ textAlign: 'center' }}>
-              <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize: "1.4rem", fontWeight:700 }}>{name||"Senza Nome"}</div>
-              <div style={{ color:"#cbd5e1", fontSize:"0.9rem", margin: '4px 0' }}>{RACES[race].emoji} {RACES[race].name} • {c.emoji} {c.name}</div>
+              <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize: "1.4rem", fontWeight:700 }}>{name||t("create.unnamed")}</div>
+              <div style={{ color:"#cbd5e1", fontSize:"0.9rem", margin: '4px 0' }}>{RACES[race].emoji} {raceName(race, RACES[race].name)} • {c.emoji} {className(cls, c.name)}</div>
               <div style={{ color:"#94a3b8", fontSize:"0.8rem" }}>❤️{c.hp+r.hpB} ⚔️{c.atk+r.atkB} 🛡️{c.def+r.defB} ✨{c.mag+r.magB}</div>
             </div>
           </div>
-          <label style={labelStyle}>Codice Stanza Multiplayer</label>
-          <input style={inputStyle} value={code} onChange={e=>setCode(e.target.value.toUpperCase())} placeholder="Es: DRAGON8" maxLength={8} />
-          <p style={{ color:"#64748b", fontSize:"0.75rem", margin:"6px 0 0", lineHeight:1.5 }}>Se giochi da solo, lascia vuoto. Se giochi con amici, inserite tutti lo stesso codice.</p>
+          <label style={labelStyle}>{t("create.partyCode")}</label>
+          <input style={inputStyle} value={code} onChange={e=>setCode(e.target.value.toUpperCase())} placeholder={t("create.partyCodePlaceholder")} maxLength={8} />
+          <p style={{ color:"#64748b", fontSize:"0.75rem", margin:"6px 0 0", lineHeight:1.5 }}>{t("create.partyHelp")}</p>
           <div style={{ display:"flex", gap:8, marginTop:"1.5rem" }}>
-            <SmallBtn onClick={()=>setStep(3)}>🔙 Indietro</SmallBtn>
-            <BigBtn onClick={create} gold icon="⭐" disabled={loading}>{loading?"Creazione in corso...":"Conferma ed Entra"}</BigBtn>
+            <SmallBtn onClick={()=>setStep(3)}>🔙 {t("common.back")}</SmallBtn>
+            <BigBtn onClick={create} gold icon="⭐" disabled={loading}>{loading?t("create.creating"):t("create.confirmEnter")}</BigBtn>
           </div>
         </Card>
       )}
@@ -9110,6 +9118,7 @@ function GlobalLeaderboardView({ myId, partyCode }) {
    GAME SCREEN
 ---------------------------------------------- */
 function GameScreen({ myId, setScreen, authUser }) {
+  const { t } = useI18n();
   const [me, setMeRaw] = useState(null);
   const latestMeRef = useRef(null);
   const [isAfk, setIsAfkState] = useState(() => myId ? localStorage.getItem(`afk_${myId}`) === '1' : false);
@@ -12720,7 +12729,7 @@ ${stepText(step)}`, "quest","Master");
             boxShadow:"0 10px 24px rgba(0,0,0,0.24)",
           }}
         >
-          ← Esci al Menu
+          ← {t("nav.exitMenu")}
         </button>
       </aside>
 
@@ -12731,7 +12740,7 @@ ${stepText(step)}`, "quest","Master");
           {isMobile && (
             <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
           )}
-          {[["quest","📜 Missioni"],["story","📖 Storia"],["storylibrary","📚 Storie"],["inventory","🎒 Inventario"],["equipment","🎽 Equip"],["level","⭐ Livello"],["diary","📖 Diario"],["shop","🛒 Negozio"],["forge","⚒️ Forgia"],["chat","💬 Chat"],["spells","✨ Magie"],["dungeon","🗺️ Dungeon"],["map","🗺️ Mappa"],["lore","⚖️ Zodar"],...(me?.class==="custode_equilibrio"?[["osservatorio","🔭 Osservatorio"]]: []),["guild","🏛️ Gilda"],["worldevent","🌋 Evento"],["leaderboard","🏆 Classifiche"],["trade","🏦 Mercato"],["combat","⚔️ Battaglia"]].map(([k,l])=>{
+          {[["quest",`📜 ${t("nav.quests")}`],["story",`📖 ${t("nav.story")}`],["storylibrary",`📚 ${t("nav.stories")}`],["inventory",`🎒 ${t("nav.inventory")}`],["equipment",`🎽 ${t("nav.equipment")}`],["level",`⭐ ${t("nav.level")}`],["diary",`📖 ${t("nav.diary")}`],["shop",`🛒 ${t("nav.shop")}`],["forge",`⚒️ ${t("nav.forge")}`],["chat",`💬 ${t("nav.chat")}`],["spells",`✨ ${t("nav.spells")}`],["dungeon",`🗺️ ${t("nav.dungeon")}`],["map",`🗺️ ${t("nav.map")}`],["lore",`⚖️ ${t("nav.zodar")}`],...(me?.class==="custode_equilibrio"?[["osservatorio",`🔭 ${t("nav.observatory")}`]]: []),["guild",`🏛️ ${t("nav.guild")}`],["worldevent",`🌋 ${t("nav.event")}`],["leaderboard",`🏆 ${t("nav.leaderboard")}`],["trade",`🏦 ${t("nav.market")}`],["combat",`⚔️ ${t("nav.battle")}`]].map(([k,l])=>{
             const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
             const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
             const locked = combatLocked || isResting;
@@ -12757,7 +12766,7 @@ ${stepText(step)}`, "quest","Master");
             onMouseEnter={e=>{ e.currentTarget.style.background="rgba(251,191,36,0.22)"; e.currentTarget.style.color="#fde68a"; }}
             onMouseLeave={e=>{ e.currentTarget.style.background="linear-gradient(135deg,rgba(251,191,36,0.12),rgba(180,83,9,0.18))"; e.currentTarget.style.color="#fbbf24"; }}
           >
-            ❤️{!isMobile && " Dona"}
+            ❤️{!isMobile && ` ${t("nav.donate")}`}
           </button>
         </div>
 
@@ -14963,3 +14972,11 @@ const inputStyle = { width:"100%", padding:"0.55rem 0.75rem", background:"rgba(2
 const labelStyle = { display:"block", color:"#64748b", fontSize:"0.63rem", letterSpacing:"0.1em", textTransform:"uppercase", marginBottom:4, fontFamily:"'Cinzel',serif" };
 const backBtnStyle = { padding:"0.35rem 0.8rem", background:"transparent", border:"1px solid #1f2937", borderRadius:4, color:"#94a3b8", cursor:"pointer", fontFamily:"inherit", fontSize:"0.8rem" };
 const iconBtnStyle = { padding:"2px 6px", background:"rgba(255,255,255,0.04)", border:"1px solid #1f2937", borderRadius:3, color:"#94a3b8", cursor:"pointer", fontSize:"0.8rem" };
+
+export default function App() {
+  return (
+    <I18nProvider>
+      <AppContent />
+    </I18nProvider>
+  );
+}
