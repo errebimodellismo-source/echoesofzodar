@@ -5401,6 +5401,7 @@ function MasterGuildsView() {
 }
 
 function PlayersView({ authUser }) {
+  const { itemName } = useI18n();
   const [players, setPlayers] = useState([]);
   const [partyStates, setPartyStates] = useState({});
   const [playerMeta, setPlayerMeta] = useState({});
@@ -5461,7 +5462,7 @@ function PlayersView({ authUser }) {
     const newState = { ...currentState, masterBuffs: { ...currentBuffs, [p.id]: { ...playerBuffs, legendaryItem } } };
     await dbSavePartyState(code, newState);
     setPartyStates(prev=>({...prev,[code]:newState}));
-    if(turns > 0) window.alert(`✅ ${item.emoji} ${item.name} donato a ${p.name} per ${turns} turni.`);
+    if(turns > 0) window.alert(`✅ ${item.emoji} ${itemName(item)} donato a ${p.name} per ${turns} turni.`);
     else window.alert(`✅ Oggetto leggendario rimosso da ${p.name}`);
   }
   async function masterSetBuff(p, buffKey, turns) {
@@ -5617,7 +5618,7 @@ function PlayersView({ authUser }) {
                 <div style={{ color:"#a78bfa", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:6 }}>🏆 Dono Leggendario</div>
                 {pBuffs.legendaryItem && (
                   <div style={{ display:"flex", alignItems:"center", gap:6, marginBottom:6, background:"rgba(76,29,149,0.25)", border:"1px solid #7c3aed", borderRadius:4, padding:"4px 8px" }}>
-                    <span style={{ fontSize:"0.8rem" }}>{pBuffs.legendaryItem.emoji} <strong style={{ color:"#c4b5fd" }}>{pBuffs.legendaryItem.name}</strong> — {pBuffs.legendaryItem.turnsLeft} turni rimasti</span>
+                    <span style={{ fontSize:"0.8rem" }}>{pBuffs.legendaryItem.emoji} <strong style={{ color:"#c4b5fd" }}>{itemName(pBuffs.legendaryItem)}</strong> — {pBuffs.legendaryItem.turnsLeft} turni rimasti</span>
                     <SmallBtn disabled={isBusy} onClick={()=>masterGrantLegendary(p, pBuffs.legendaryItem.id, 0)} style={{ marginLeft:"auto", fontSize:"0.6rem", padding:"1px 6px" }}>✕</SmallBtn>
                   </div>
                 )}
@@ -5636,7 +5637,7 @@ function PlayersView({ authUser }) {
                     ].map(group=>(
                       <optgroup key={group.label} label={group.label}>
                         {group.items.map(item=>(
-                          <option key={item.id} value={item.id}>{item.emoji} {item.name}</option>
+                          <option key={item.id} value={item.id}>{item.emoji} {itemName(item)}</option>
                         ))}
                       </optgroup>
                     ))}
@@ -6285,6 +6286,7 @@ const RARITY_COLOR_MAP = { common:"#9ca3af", uncommon:"#34d399", rare:"#60a5fa",
 const TYPE_GROUPS = { weapon:"⚔️ Armi", armor:"🛡️ Armature", accessory:"💍 Accessori" };
 
 function MarketView() {
+  const { itemName, itemDescription } = useI18n();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saved, setSaved] = useState(false);
@@ -6337,7 +6339,7 @@ function MarketView() {
     try {
       await dbAddPlayerItem(playerId, donateItemId, Math.max(1, donateQty));
       const item = items.find(i=>i.id===donateItemId);
-      setDonateStatus(`✅ "${item?.name}" donato!`);
+      setDonateStatus(`✅ "${item ? itemName(item) : donateItemId}" donato!`);
       setTimeout(()=>{ setDonateStatus(""); setDonateItemId(""); setDonateQty(1); setDonateItemSearch(""); }, 2500);
     } catch(e) {
       setDonateStatus("❌ " + (e?.message || e));
@@ -6354,7 +6356,7 @@ function MarketView() {
 
   // ── Items tab ─────────────────────────────────────────────────────────
   const filteredItems = items.filter(it =>
-    (it.name||"").toLowerCase().includes(itemSearch.toLowerCase()) ||
+    itemName(it).toLowerCase().includes(itemSearch.toLowerCase()) ||
     (it.type||"").toLowerCase().includes(itemSearch.toLowerCase()) ||
     (it.rarity||"").toLowerCase().includes(itemSearch.toLowerCase())
   );
@@ -6368,7 +6370,7 @@ function MarketView() {
     (p.party_code||"").toLowerCase().includes(playerSearch.toLowerCase())
   );
   const donateFilteredItems = items.filter(it =>
-    (it.name||"").toLowerCase().includes(donateItemSearch.toLowerCase())
+    itemName(it).toLowerCase().includes(donateItemSearch.toLowerCase())
   );
 
   return (
@@ -6414,7 +6416,7 @@ function MarketView() {
                       {/* Row */}
                       <div style={{...rowBase, background:"transparent"}} onClick={()=>{ setExpandedItem(isOpen ? null : it.id); setEditingItem(null); }}>
                         <span style={{ fontSize:"1.1rem", minWidth:22 }}>{it.emoji||"⭐"}</span>
-                        <span style={{ flex:1, fontSize:"0.85rem", color:"#e2d9c5", fontWeight:600 }}>{it.name}</span>
+                        <span style={{ flex:1, fontSize:"0.85rem", color:"#e2d9c5", fontWeight:600 }}>{itemName(it)}</span>
                         <span style={{ fontSize:"0.68rem", color:rc, minWidth:60 }}>{it.rarity||"—"}</span>
                         {it.weapon_die && <span style={{ fontSize:"0.68rem", color:"#94a3b8", minWidth:32 }}>{it.weapon_die}</span>}
                         <span style={{ fontSize:"0.68rem", color:"#c4b5fd" }}>💰{it.price}</span>
@@ -6427,7 +6429,7 @@ function MarketView() {
                             <ItemEditForm item={editingItem} onSave={saveItem} onCancel={()=>setEditingItem(null)} />
                           ) : (
                             <>
-                              <div style={{ fontSize:"0.75rem", color:"#94a3b8", marginBottom:6 }}>{it.description}</div>
+                              <div style={{ fontSize:"0.75rem", color:"#94a3b8", marginBottom:6 }}>{itemDescription(it)}</div>
                               <div style={{ display:"flex", gap:10, fontSize:"0.72rem", color:"#64748b", marginBottom:8 }}>
                                 {it.bonus_atk!==0 && <span>⚔️+{it.bonus_atk}</span>}
                                 {it.bonus_def!==0 && <span>🛡️+{it.bonus_def}</span>}
@@ -6487,7 +6489,7 @@ function MarketView() {
                         <select style={{...inputStyle, flex:1, cursor:"pointer", marginBottom:0}} value={donateItemId} onChange={e=>setDonateItemId(e.target.value)}>
                           <option value="">— Scegli oggetto —</option>
                           {donateFilteredItems.map(it=>(
-                            <option key={it.id} value={it.id}>{it.emoji||"⭐"} {it.name} ({it.rarity||"comune"})</option>
+                            <option key={it.id} value={it.id}>{it.emoji||"⭐"} {itemName(it)} ({it.rarity||"comune"})</option>
                           ))}
                         </select>
                         <input style={{...inputStyle, width:60, marginBottom:0}} type="number" min="1" max="99" value={donateQty} onChange={e=>setDonateQty(Math.max(1,+e.target.value))} />
@@ -6548,6 +6550,7 @@ function generateShopInventory(items, seed = 0) {
 }
 
 function ShopView({ me, items, loading, error, inventoryCounts, onBuy, restSeed = 0 }) {
+  const { itemName, itemDescription } = useI18n();
   const [shopItems] = useState(() => items.length ? generateShopInventory(items, restSeed) : []);
 
   const RARITY_COLOR = { common:"#9ca3af", uncommon:"#34d399", rare:"#60a5fa", epic:"#a78bfa", legendary:"#fbbf24" };
@@ -6571,9 +6574,9 @@ function ShopView({ me, items, loading, error, inventoryCounts, onBuy, restSeed 
           return (
             <div key={it.id} style={{ background:"rgba(15,23,42,0.7)", border:`1px solid ${rarityColor}44`, borderRadius:12, padding:"1.2rem", display:"flex", flexDirection:"column", gap:"0.8rem", boxShadow:"0 4px 16px rgba(0,0,0,0.3)" }}>
               <div style={{ display:"flex", gap:14, alignItems:"center" }}>
-                <ArtThumb src={getItemImage(it)} alt={it.name} size={72} />
+                <ArtThumb src={getItemImage(it)} alt={itemName(it)} size={72} />
                 <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, fontSize:"1rem", lineHeight:1.3 }}>{it.name}</div>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, fontSize:"1rem", lineHeight:1.3 }}>{itemName(it)}</div>
                   <div style={{ fontSize:"0.78rem", color:"#94a3b8", marginTop:2 }}>{itemTypeLabel(it.type)}</div>
                   <div style={{ fontSize:"0.74rem", color:rarityColor, fontWeight:600, marginTop:2, textTransform:"capitalize" }}>{itemRarityLabel(it.rarity)}</div>
                 </div>
@@ -6582,7 +6585,7 @@ function ShopView({ me, items, loading, error, inventoryCounts, onBuy, restSeed 
                   {owned > 0 && <div style={{ fontSize:"0.7rem", color:"#6ee7b7", marginTop:4 }}>Hai: {owned}</div>}
                 </div>
               </div>
-              <div style={{ fontSize:"0.85rem", color:"#94a3b8", lineHeight:1.55 }}>{it.description}</div>
+              <div style={{ fontSize:"0.85rem", color:"#94a3b8", lineHeight:1.55 }}>{itemDescription(it)}</div>
               {itemStatSummary(it).length > 0 && (
                 <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
                   {itemStatSummary(it).map(stat => (
@@ -6626,12 +6629,12 @@ function ShopView({ me, items, loading, error, inventoryCounts, onBuy, restSeed 
                           <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                             <span style={{ fontSize:"1.5rem" }}>{mat.emoji}</span>
                             <div style={{ flex:1, minWidth:0 }}>
-                              <div style={{ fontSize:"0.82rem", color:"#e2d9c5", fontWeight:600, lineHeight:1.2 }}>{mat.name}</div>
+                              <div style={{ fontSize:"0.82rem", color:"#e2d9c5", fontWeight:600, lineHeight:1.2 }}>{itemName(mat)}</div>
                               {owned > 0 && <div style={{ fontSize:"0.68rem", color:"#6ee7b7" }}>Hai: {owned}</div>}
                             </div>
                             <div style={{ fontSize:"0.85rem", color:"#fbbf24", fontWeight:700, flexShrink:0 }}>💰{mat.price}</div>
                           </div>
-                          <div style={{ fontSize:"0.72rem", color:"#64748b", lineHeight:1.4 }}>{mat.description}</div>
+                          <div style={{ fontSize:"0.72rem", color:"#64748b", lineHeight:1.4 }}>{itemDescription(mat)}</div>
                           <button onClick={()=>onBuy(mat)} disabled={!canAfford} style={{ padding:"0.4rem", background:canAfford?"rgba(120,53,15,0.5)":"rgba(255,255,255,0.03)", border:`1px solid ${canAfford?"#d97706":"#1f2937"}`, borderRadius:6, color:canAfford?"#fef3c7":"#374151", cursor:canAfford?"pointer":"not-allowed", fontSize:"0.78rem", fontFamily:"'Cinzel',serif" }}>
                             {canAfford ? "Acquista" : "Non abbastanza oro"}
                           </button>
@@ -6872,6 +6875,7 @@ function DungeonView({ dungeon, me, onRoomAction, loading }) {
 }
 
 function ForgeView({ me, inventory, inventoryCounts, catalogItems, onForge, loading }) {
+  const { itemName } = useI18n();
   const RARITY_COLOR = { common:"#9ca3af", uncommon:"#34d399", rare:"#60a5fa", epic:"#a78bfa", legendary:"#fbbf24" };
   const weaponEntries = inventory.filter(e => {
     const die = e.item?.weapon_die;
@@ -6928,7 +6932,7 @@ function ForgeView({ me, inventory, inventoryCounts, catalogItems, onForge, load
               <div style={{ display:"flex", gap:12, alignItems:"center" }}>
                 <span style={{ fontSize:"2.2rem", flexShrink:0 }}>{group.item.emoji}</span>
                 <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, fontSize:"0.95rem", lineHeight:1.3 }}>{group.item.name}</div>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, fontSize:"0.95rem", lineHeight:1.3 }}>{itemName(group.item)}</div>
                   <div style={{ fontSize:"0.72rem", color:rarityColor, textTransform:"capitalize", fontWeight:600, marginTop:2 }}>{group.item.rarity}</div>
                 </div>
                 <div style={{ textAlign:"right", flexShrink:0 }}>
@@ -6947,7 +6951,7 @@ function ForgeView({ me, inventory, inventoryCounts, catalogItems, onForge, load
               <div style={{ display:"flex", alignItems:"center", gap:8, padding:"0.5rem 0.8rem", background:hasMat?"rgba(34,197,94,0.08)":"rgba(239,68,68,0.08)", border:`1px solid ${hasMat?"#16a34a44":"#dc262644"}`, borderRadius:8 }}>
                 <span style={{ fontSize:"1.2rem" }}>{mat?.emoji || "🔮"}</span>
                 <div style={{ flex:1, minWidth:0 }}>
-                  <div style={{ fontSize:"0.82rem", color:"#e2d9c5" }}>{mat?.name || matId}</div>
+                  <div style={{ fontSize:"0.82rem", color:"#e2d9c5" }}>{mat ? itemName(mat) : matId}</div>
                   <div style={{ fontSize:"0.7rem", color:"#64748b" }}>Materiale richiesto × 1</div>
                 </div>
                 <div style={{ fontSize:"0.82rem", color:hasMat?"#6ee7b7":"#fca5a5", fontWeight:700, flexShrink:0 }}>Hai: {inventoryCounts[matId]||0}</div>
@@ -6957,7 +6961,7 @@ function ForgeView({ me, inventory, inventoryCounts, catalogItems, onForge, load
                 onClick={()=>canForge && onForge(group)}
                 disabled={!canForge}
                 style={{ width:"100%", padding:"0.75rem", background:canForge?"linear-gradient(135deg,#713f12,#d97706)":"rgba(255,255,255,0.04)", border:`1px solid ${canForge?"#f59e0b":"#1f2937"}`, borderRadius:8, color:canForge?"#fef3c7":"#4b5563", fontFamily:"'Cinzel',serif", fontSize:"0.9rem", cursor:canForge?"pointer":"not-allowed", letterSpacing:"0.06em", fontWeight:700 }}>
-                {canForge ? "⚒️ Forgia" : hasMat ? "⏳ Caricamento…" : `Manca: ${mat?.name||matId}`}
+                {canForge ? "⚒️ Forgia" : hasMat ? "⏳ Caricamento…" : `Manca: ${mat ? itemName(mat) : matId}`}
               </button>
             </div>
           );
@@ -6990,6 +6994,7 @@ const RARITY_ORDER = { common:0, uncommon:1, rare:2, epic:3, legendary:4 };
 const RARITY_COLOR_INV = { common:"#9ca3af", uncommon:"#34d399", rare:"#60a5fa", epic:"#a78bfa", legendary:"#fbbf24" };
 
 function InventoryView({ loading, groups, equipment, onEquip, onSell, onUse, canUseConsumables }) {
+  const { itemName, itemDescription } = useI18n();
   const [expandedId, setExpandedId] = React.useState(null);
   const [collapsedCats, setCollapsedCats] = React.useState({});
   const [sortBy, setSortBy] = React.useState("cat"); // cat | name | price | rarity
@@ -7002,7 +7007,7 @@ function InventoryView({ loading, groups, equipment, onEquip, onSell, onUse, can
   const toggleCat = key => setCollapsedCats(p => ({ ...p, [key]: !p[key] }));
 
   const sortedItems = sortBy === "cat" ? null : [...groups].sort((a,b) => {
-    if(sortBy === "name")   return a.item.name.localeCompare(b.item.name);
+    if(sortBy === "name")   return itemName(a.item).localeCompare(itemName(b.item));
     if(sortBy === "price")  return (b.item.price||0) - (a.item.price||0);
     if(sortBy === "rarity") return (RARITY_ORDER[b.item.rarity]||0) - (RARITY_ORDER[a.item.rarity]||0);
     return 0;
@@ -7025,7 +7030,7 @@ function InventoryView({ loading, groups, equipment, onEquip, onSell, onUse, can
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.82rem", color:"#e2d9c5", fontWeight:700,
               overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-              {group.item.name}
+              {itemName(group.item)}
               {equipped && <span style={{ marginLeft:6, fontSize:"0.62rem", color:"#fbbf24", fontFamily:"sans-serif" }}>★ equip</span>}
             </div>
             <div style={{ fontSize:"0.68rem", color:rc }}>{itemRarityLabel(group.item.rarity)}</div>
@@ -7041,9 +7046,9 @@ function InventoryView({ loading, groups, equipment, onEquip, onSell, onUse, can
         {open && (
           <div style={{ padding:"0.75rem 1rem 1rem 1rem", background:"rgba(15,23,42,0.6)", borderTop:"1px solid rgba(99,102,241,0.15)" }}>
             <div style={{ display:"flex", gap:12, marginBottom:10 }}>
-              <ArtThumb src={getItemImage(group.item)} alt={group.item.name} size={72} radius={8} />
+              <ArtThumb src={getItemImage(group.item)} alt={itemName(group.item)} size={72} radius={8} />
               <div style={{ flex:1 }}>
-                <div style={{ color:"#cbd5e1", fontSize:"0.84rem", lineHeight:1.6, marginBottom:6 }}>{group.item.description}</div>
+                <div style={{ color:"#cbd5e1", fontSize:"0.84rem", lineHeight:1.6, marginBottom:6 }}>{itemDescription(group.item)}</div>
                 <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
                   {itemStatSummary(group.item).map(stat => (
                     <span key={stat} style={{ fontSize:"0.7rem", color:"#d1d5db", background:"rgba(255,255,255,0.05)", border:"1px solid #1f2937", borderRadius:999, padding:"2px 8px" }}>{stat}</span>
@@ -7121,6 +7126,7 @@ function InventoryView({ loading, groups, equipment, onEquip, onSell, onUse, can
 }
 
 function PartyTradeView({ me, players, groups, loading, equipment, onTrade }) {
+  const { itemName, itemDescription } = useI18n();
   const partyMates = (players || []).filter(p => p.id !== me?.id && !p.dead);
   const [itemId, setItemId] = useState("");
   const [targetId, setTargetId] = useState("");
@@ -7154,7 +7160,7 @@ function PartyTradeView({ me, players, groups, loading, equipment, onTrade }) {
                   <label style={labelStyle}>Oggetto</label>
                   <select style={{...inputStyle,cursor:"pointer"}} value={itemId} onChange={e=>setItemId(e.target.value)}>
                     {groups.map(group => (
-                      <option key={group.itemId} value={group.itemId}>{group.item.name} x{group.quantity}</option>
+                      <option key={group.itemId} value={group.itemId}>{itemName(group.item)} x{group.quantity}</option>
                     ))}
                   </select>
                 </div>
@@ -7173,10 +7179,10 @@ function PartyTradeView({ me, players, groups, loading, equipment, onTrade }) {
               </div>
               {selectedGroup && (
                 <div style={{ marginTop:"1rem", background:"rgba(15,23,42,0.78)", border:"1px solid #334155", borderRadius:6, padding:"0.85rem", display:"flex", gap:10, alignItems:"center", flexWrap:"wrap" }}>
-                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={selectedGroup.item.name} size={58} />
+                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={itemName(selectedGroup.item)} size={58} />
                   <div style={{ flex:1, minWidth:220 }}>
-                    <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700 }}>{selectedGroup.item.name}</div>
-                    <div style={{ color:"#94a3b8", fontSize:"0.78rem" }}>{itemStatSummary(selectedGroup.item).join(" • ") || selectedGroup.item.description}</div>
+                    <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700 }}>{itemName(selectedGroup.item)}</div>
+                    <div style={{ color:"#94a3b8", fontSize:"0.78rem" }}>{itemStatSummary(selectedGroup.item).join(" • ") || itemDescription(selectedGroup.item)}</div>
                   </div>
                   <div style={{ color:tradePrice > 0 ? "#fbbf24" : "#86efac", fontFamily:"'Cinzel',serif", fontWeight:700 }}>
                     {tradePrice > 0 ? `${tradePrice} oro` : "Regalo"}
@@ -7202,6 +7208,7 @@ function PartyTradeView({ me, players, groups, loading, equipment, onTrade }) {
 }
 
 function AuctionHouseView({ me, groups, auctions, loading, busy, onRefresh, onCreateAuction, onBid, onCancel, onSettle }) {
+  const { itemName, itemDescription } = useI18n();
   const [mode, setMode] = useState("browse");
   const [itemId, setItemId] = useState("");
   const [startingBid, setStartingBid] = useState(10);
@@ -7236,15 +7243,15 @@ function AuctionHouseView({ me, groups, auctions, loading, busy, onRefresh, onCr
     const bidValue = bidValues[a.id] ?? minBid;
     return (
       <div key={a.id} style={{ background:"rgba(15,23,42,0.72)", border:`1px solid ${expired?"#92400e":"#334155"}`, borderRadius:8, padding:"0.85rem", display:"flex", gap:12, alignItems:"flex-start", flexWrap:"wrap" }}>
-        <ArtThumb src={getItemImage(item)} alt={item.name} size={64} radius={8} />
+        <ArtThumb src={getItemImage(item)} alt={itemName(item)} size={64} radius={8} />
         <div style={{ flex:1, minWidth:240 }}>
           <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap", marginBottom:4 }}>
-            <span style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{item.name}</span>
+            <span style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{itemName(item)}</span>
             <span style={{ color:RARITY_COLOR_INV[item.rarity] || "#94a3b8", fontSize:"0.68rem", border:"1px solid rgba(148,163,184,0.18)", borderRadius:999, padding:"1px 7px" }}>{itemRarityLabel(item.rarity)}</span>
             {isSeller && <span style={{ color:"#fbbf24", fontSize:"0.65rem" }}>tua asta</span>}
             {isWinner && !isSeller && <span style={{ color:"#86efac", fontSize:"0.65rem" }}>miglior offerta</span>}
           </div>
-          <div style={{ color:"#94a3b8", fontSize:"0.76rem", lineHeight:1.45, marginBottom:8 }}>{item.description}</div>
+          <div style={{ color:"#94a3b8", fontSize:"0.76rem", lineHeight:1.45, marginBottom:8 }}>{itemDescription(item)}</div>
           <div style={{ display:"flex", gap:8, flexWrap:"wrap", fontSize:"0.72rem", color:"#cbd5e1" }}>
             <span>Venditore: {a.sellerName}</span>
             <span>Offerta: {a.currentBid ? `${a.currentBid} oro` : "nessuna"}</span>
@@ -7291,7 +7298,7 @@ function AuctionHouseView({ me, groups, auctions, loading, busy, onRefresh, onCr
                 <div>
                   <label style={labelStyle}>Oggetto</label>
                   <select style={{...inputStyle,cursor:"pointer"}} value={itemId} onChange={e=>setItemId(e.target.value)}>
-                    {groups.map(g => <option key={g.itemId} value={g.itemId}>{g.item.name} x{g.quantity}</option>)}
+                    {groups.map(g => <option key={g.itemId} value={g.itemId}>{itemName(g.item)} x{g.quantity}</option>)}
                   </select>
                 </div>
                 <div><label style={labelStyle}>Base d'asta</label><input style={inputStyle} type="number" min="1" value={startingBid} onChange={e=>setStartingBid(e.target.value)} /></div>
@@ -7305,10 +7312,10 @@ function AuctionHouseView({ me, groups, auctions, loading, busy, onRefresh, onCr
               </div>
               {selectedGroup && (
                 <div style={{ marginTop:"1rem", display:"flex", gap:10, alignItems:"center", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:8, padding:"0.75rem" }}>
-                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={selectedGroup.item.name} size={58} radius={8} />
+                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={itemName(selectedGroup.item)} size={58} radius={8} />
                   <div style={{ flex:1 }}>
-                    <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700 }}>{selectedGroup.item.name}</div>
-                    <div style={{ color:"#94a3b8", fontSize:"0.76rem" }}>{itemStatSummary(selectedGroup.item).join(" · ") || selectedGroup.item.description}</div>
+                    <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700 }}>{itemName(selectedGroup.item)}</div>
+                    <div style={{ color:"#94a3b8", fontSize:"0.76rem" }}>{itemStatSummary(selectedGroup.item).join(" · ") || itemDescription(selectedGroup.item)}</div>
                   </div>
                 </div>
               )}
@@ -7353,6 +7360,7 @@ const SLOT_CONFIG = [
 ];
 
 function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick }) {
+  const { itemName } = useI18n();
   const isEmpty = !item;
   const rarityColors = { common:"#94a3b8", uncommon:"#22c55e", rare:"#3b82f6", epic:"#a855f7", legendary:"#f59e0b" };
   const borderColor = isEmpty ? "rgba(255,255,255,0.1)" : (rarityColors[item?.rarity] || "#94a3b8");
@@ -7379,8 +7387,8 @@ function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick }
         </>
       ) : (
         <>
-          <ArtThumb src={getItemImage(item)} alt={item.name} size={68} radius={6} />
-          <span style={{ fontSize:"0.44rem", color: rarityColors[item.rarity] || "#94a3b8", marginTop:1, fontFamily:"'Cinzel',serif", maxWidth:84, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{item.name}</span>
+          <ArtThumb src={getItemImage(item)} alt={itemName(item)} size={68} radius={6} />
+          <span style={{ fontSize:"0.44rem", color: rarityColors[item.rarity] || "#94a3b8", marginTop:1, fontFamily:"'Cinzel',serif", maxWidth:84, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{itemName(item)}</span>
           <span style={{ fontSize:"0.5rem", color:"#475569", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>{slotCfg.label}</span>
         </>
       )}
@@ -7389,6 +7397,7 @@ function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick }
 }
 
 function CharacterViewer({ me, equippedItems, size, fillContainer }) {
+  const { itemName } = useI18n();
   const race = me?.race || "human";
   const gender = me?.gender || "male";
   const baseSprite = `/assets/equip/base_${race}_${gender}.png`;
@@ -7413,7 +7422,7 @@ function CharacterViewer({ me, equippedItems, size, fillContainer }) {
           <img
             key={slot}
             src={`/assets/equip/${item.equipSprite}.png`}
-            alt={item.name}
+            alt={itemName(item)}
             onError={e => { e.currentTarget.style.display="none"; }}
             style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none", pointerEvents:"none", zIndex:slot === "head" ? 5 : 3 }}
           />
@@ -7424,6 +7433,7 @@ function CharacterViewer({ me, equippedItems, size, fillContainer }) {
 }
 
 function DonateView({ me, players, groups, loading, onTrade }) {
+  const { itemName, itemDescription } = useI18n();
   const partyMates = (players || []).filter(p => p.id !== me?.id && !p.dead);
   const [itemId, setItemId] = useState("");
   const [targetId, setTargetId] = useState("");
@@ -7454,7 +7464,7 @@ function DonateView({ me, players, groups, loading, onTrade }) {
                 <div>
                   <label style={labelStyle}>Oggetto</label>
                   <select style={{...inputStyle,cursor:"pointer"}} value={itemId} onChange={e=>setItemId(e.target.value)}>
-                    {groups.map(g => <option key={g.itemId} value={g.itemId}>{g.item.name} x{g.quantity}</option>)}
+                    {groups.map(g => <option key={g.itemId} value={g.itemId}>{itemName(g.item)} x{g.quantity}</option>)}
                   </select>
                 </div>
                 <div>
@@ -7466,10 +7476,10 @@ function DonateView({ me, players, groups, loading, onTrade }) {
               </div>
               {selectedGroup && (
                 <div style={{ marginTop:"1rem", background:"rgba(15,23,42,0.78)", border:"1px solid #334155", borderRadius:6, padding:"0.85rem", display:"flex", gap:10, alignItems:"center" }}>
-                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={selectedGroup.item.name} size={58} />
+                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={itemName(selectedGroup.item)} size={58} />
                   <div style={{ flex:1 }}>
-                    <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700 }}>{selectedGroup.item.name}</div>
-                    <div style={{ color:"#94a3b8", fontSize:"0.78rem" }}>{itemStatSummary(selectedGroup.item).join(" • ") || selectedGroup.item.description}</div>
+                    <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700 }}>{itemName(selectedGroup.item)}</div>
+                    <div style={{ color:"#94a3b8", fontSize:"0.78rem" }}>{itemStatSummary(selectedGroup.item).join(" • ") || itemDescription(selectedGroup.item)}</div>
                   </div>
                   <div style={{ color:"#86efac", fontFamily:"'Cinzel',serif", fontWeight:700 }}>Gratis</div>
                 </div>
@@ -8410,6 +8420,7 @@ function MapView({ me, onNavigate }) {
 }
 
 function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, inventoryGroups, onSell, onUse, canUseConsumables, isMobile }) {
+  const { itemName, itemDescription } = useI18n();
   const [activeSlot, setActiveSlot] = useState(null);
   const [hoveredItem, setHoveredItem] = useState(null);
   const [sortBy, setSortBy] = useState("type"); // type | rarity | price | name
@@ -8425,10 +8436,10 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
     : inventoryGroups || [];
 
   const filteredGroups = [...baseGroups].sort((a, b) => {
-    if(sortBy === "type")   return (a.item.type||"").localeCompare(b.item.type||"") || a.item.name.localeCompare(b.item.name);
+    if(sortBy === "type")   return (a.item.type||"").localeCompare(b.item.type||"") || itemName(a.item).localeCompare(itemName(b.item));
     if(sortBy === "rarity") return (RARITY_ORDER_INV[b.item.rarity]||0) - (RARITY_ORDER_INV[a.item.rarity]||0);
     if(sortBy === "price")  return (b.item.price||0) - (a.item.price||0);
-    if(sortBy === "name")   return a.item.name.localeCompare(b.item.name);
+    if(sortBy === "name")   return itemName(a.item).localeCompare(itemName(b.item));
     return 0;
   });
 
@@ -8498,11 +8509,11 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
         {/* Item detail panel — fixed height, always visible */}
         <div style={{ height:120, flexShrink:0, display:"flex", gap:12, padding:"0.75rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.07)", background:"rgba(15,23,42,0.9)", alignItems:"flex-start", overflow:"hidden" }}>
           {hoveredItem ? (<>
-            <ArtThumb src={getItemImage(hoveredItem.item)} alt={hoveredItem.item.name} size={80} radius={8} />
+            <ArtThumb src={getItemImage(hoveredItem.item)} alt={itemName(hoveredItem.item)} size={80} radius={8} />
             <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.88rem", color: rarityColors[hoveredItem.item.rarity]||"#e2d9c5", fontWeight:700 }}>{hoveredItem.item.name}</div>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.88rem", color: rarityColors[hoveredItem.item.rarity]||"#e2d9c5", fontWeight:700 }}>{itemName(hoveredItem.item)}</div>
               <div style={{ fontSize:"0.68rem", color:"#64748b", marginBottom:4 }}>{itemRarityLabel(hoveredItem.item.rarity)} · {itemTypeLabel(hoveredItem.item.type)}</div>
-              <div style={{ fontSize:"0.72rem", color:"#94a3b8", lineHeight:1.5, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{hoveredItem.item.description}</div>
+              <div style={{ fontSize:"0.72rem", color:"#94a3b8", lineHeight:1.5, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{itemDescription(hoveredItem.item)}</div>
               <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:4 }}>
                 {itemStatSummary(hoveredItem.item).map(s=>(
                   <span key={s} style={{ fontSize:"0.68rem", background:"rgba(255,255,255,0.05)", border:"1px solid #1f2937", borderRadius:999, padding:"1px 7px", color:"#d1d5db" }}>{s}</span>
@@ -8565,8 +8576,8 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
                   }}>
                   {isEquipped && <div style={{ position:"absolute", top:3, right:4, fontSize:"0.5rem", color:"#fbbf24" }}>★</div>}
                   {g.quantity > 1 && <div style={{ position:"absolute", top:3, left:4, fontSize:"0.55rem", color:"#c4b5fd", fontWeight:700 }}>×{g.quantity}</div>}
-                  <ArtThumb src={getItemImage(item)} alt={item.name} size={64} radius={6} />
-                  <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.56rem", color:rc, marginTop:3, lineHeight:1.2, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", width:"100%" }}>{item.name}</div>
+                  <ArtThumb src={getItemImage(item)} alt={itemName(item)} size={64} radius={6} />
+                  <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.56rem", color:rc, marginTop:3, lineHeight:1.2, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", width:"100%" }}>{itemName(item)}</div>
                 </div>
               );
             })}
@@ -9118,7 +9129,7 @@ function GlobalLeaderboardView({ myId, partyCode }) {
    GAME SCREEN
 ---------------------------------------------- */
 function GameScreen({ myId, setScreen, authUser }) {
-  const { t } = useI18n();
+  const { t, itemName } = useI18n();
   const [me, setMeRaw] = useState(null);
   const latestMeRef = useRef(null);
   const [isAfk, setIsAfkState] = useState(() => myId ? localStorage.getItem(`afk_${myId}`) === '1' : false);
@@ -10288,14 +10299,14 @@ function GameScreen({ myId, setScreen, authUser }) {
   async function buyItem(item) {
     if(!me) return;
     if(me.gold < (item.price||0)) { window.alert("Non hai abbastanza oro."); return; }
-    if(!window.confirm(`Acquistare ${item.name} per ${item.price} oro?`)) return;
+    if(!window.confirm(`Acquistare ${itemName(item)} per ${item.price} oro?`)) return;
     await dbAddPlayerItem(me.id, item.id);
     const updatedPlayer = { ...me, gold: me.gold - (item.price || 0) };
     const synced = applyEquipmentToPlayer(updatedPlayer, equipment, itemMap);
     await dbSavePlayer(synced);
     setMeRaw(synced);
     await refreshInventory(synced);
-    await addMsg(`🎒 **${me.name}** acquista **${item.name}** per ${item.price} oro.`, "info", "Sistema");
+    await addMsg(`🎒 **${me.name}** acquista **${itemName(item)}** per ${item.price} oro.`, "info", "Sistema");
   }
 
   async function handleForge(group) {
@@ -10307,11 +10318,12 @@ function GameScreen({ myId, setScreen, authUser }) {
     const matId = FORGE_MATERIAL_REQ[targetDieIdx - 1];
     const matEntries = inventory.filter(e => e.itemId === matId);
     if(!matEntries.length) { window.alert(`Manca il materiale richiesto.`); return; }
-    const matName = catalogItems.find(i => i.id === matId)?.name || matId;
+    const mat = catalogItems.find(i => i.id === matId);
+    const matName = mat ? itemName(mat) : matId;
     const nextItemId = getNextForgeItemId(group.itemId);
     const nextItem = catalogItems.find(i => i.id === nextItemId);
-    const nextName = nextItem?.name || `${group.item.name} +${getForgeLevel(group.itemId)+1}`;
-    if(!window.confirm(`⚒️ Forgiare:\n2× ${group.item.name}\n+ 1× ${matName}\n→ ${nextName} (${FORGE_DIE_PROGRESSION[currentDieIdx]} → ${FORGE_DIE_PROGRESSION[targetDieIdx]})?`)) return;
+    const nextName = nextItem ? itemName(nextItem) : `${itemName(group.item)} +${getForgeLevel(group.itemId)+1}`;
+    if(!window.confirm(`⚒️ Forgiare:\n2× ${itemName(group.item)}\n+ 1× ${matName}\n→ ${nextName} (${FORGE_DIE_PROGRESSION[currentDieIdx]} → ${FORGE_DIE_PROGRESSION[targetDieIdx]})?`)) return;
     const [rowId1, rowId2] = group.rowIds;
     const matRowId = matEntries[0].rowId;
     setInventoryLoading(true);
@@ -10522,7 +10534,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     const nextEquipment = { ...equipment, [slot]: entry.itemId };
     const synced = await persistPlayerWithEquipment(me, nextEquipment);
     await refreshInventory(synced);
-    await addMsg(`🎽 **${me.name}** equipaggia **${entry.item.name}**.`, "info", "Sistema");
+    await addMsg(`🎽 **${me.name}** equipaggia **${itemName(entry.item)}**.`, "info", "Sistema");
   }
 
   async function unequipItem(slot) {
@@ -10546,7 +10558,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   async function handleInventorySell(group) {
     if(!group?.item || !group?.entries?.length || !me) return;
     const sellPrice = Math.max(1, Math.floor((group.item.price || 0) / 2));
-    if(!window.confirm(`Vendere ${group.item.name} per ${sellPrice} oro?`)) return;
+    if(!window.confirm(`Vendere ${itemName(group.item)} per ${sellPrice} oro?`)) return;
 
     const entryToSell = group.entries[0];
     const slot = itemSlot(group.item);
@@ -10567,7 +10579,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     }
 
     await refreshInventory(syncedPlayer);
-    await addMsg(`💰 **${me.name}** vende **${group.item.name}** per ${sellPrice} oro.`, "info", "Sistema");
+    await addMsg(`💰 **${me.name}** vende **${itemName(group.item)}** per ${sellPrice} oro.`, "info", "Sistema");
   }
 
   // ── STORY FUNCTIONS ─────────────────────────────────────────
@@ -10796,7 +10808,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       return;
     }
     const label = tradePrice > 0 ? `${tradePrice} oro` : "gratis";
-    if(!window.confirm(`Passare ${group.item.name} a ${target.name} per ${label}?`)) return;
+    if(!window.confirm(`Passare ${itemName(group.item)} a ${target.name} per ${label}?`)) return;
 
     const entryToTrade = group.entries[0];
     const slot = itemSlot(group.item);
@@ -10820,8 +10832,8 @@ function GameScreen({ myId, setScreen, authUser }) {
     await refreshAll(code);
     await addMsg(
       tradePrice > 0
-        ? `🤝 **${me.name}** passa **${group.item.name}** a **${target.name}** per **${tradePrice} oro**.`
-        : `🤝 **${me.name}** regala **${group.item.name}** a **${target.name}**.`,
+        ? `🤝 **${me.name}** passa **${itemName(group.item)}** a **${target.name}** per **${tradePrice} oro**.`
+        : `🤝 **${me.name}** regala **${itemName(group.item)}** a **${target.name}**.`,
       "info",
       "Sistema"
       );
@@ -10840,7 +10852,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       window.alert("Il compra subito deve essere maggiore della base d'asta.");
       return;
     }
-    if(!window.confirm(`Mettere all'asta ${group.item.name} con base ${startingBid} oro?`)) return;
+    if(!window.confirm(`Mettere all'asta ${itemName(group.item)} con base ${startingBid} oro?`)) return;
     setAuctionBusy(true);
     try {
       const latest = await dbGetAuctionHouse();
@@ -10877,7 +10889,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       await dbSaveAuctionHouse({ auctions: auctionsNext });
       setAuctions(auctionsNext);
       await refreshInventory(updatedSeller);
-      await addMsg(`🏦 **${me.name}** mette all'asta **${group.item.name}**. Base: **${startingBid} oro**${buyout?` · Compra subito: **${buyout} oro**`:""}.`, "info", "Mercato");
+      await addMsg(`🏦 **${me.name}** mette all'asta **${itemName(group.item)}**. Base: **${startingBid} oro**${buyout?` · Compra subito: **${buyout} oro**`:""}.`, "info", "Mercato");
     } catch(e) {
       console.error("Creazione asta fallita:", e);
       window.alert(`Asta fallita: ${e?.message || "errore sconosciuto"}`);
@@ -10918,7 +10930,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       await dbSaveAuctionHouse({ auctions: auctionsNext });
       setAuctions(auctionsNext);
       await refreshAll(code);
-      await addMsg(`🏦 **${me.name}** offre **${bid} oro** per **${current.item.name}**.`, "info", "Mercato");
+      await addMsg(`🏦 **${me.name}** offre **${bid} oro** per **${itemName(current.item)}**.`, "info", "Mercato");
     } catch(e) {
       window.alert(`Offerta fallita: ${e?.message || "errore sconosciuto"}`);
     } finally {
@@ -10942,7 +10954,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       await dbSaveAuctionHouse({ auctions: auctionsNext });
       setAuctions(auctionsNext);
       await refreshInventory(me);
-      await addMsg(`🏦 **${me.name}** ritira l'asta di **${current.item.name}**.`, "info", "Mercato");
+      await addMsg(`🏦 **${me.name}** ritira l'asta di **${itemName(current.item)}**.`, "info", "Mercato");
     } catch(e) {
       window.alert(`Ritiro fallito: ${e?.message || "errore sconosciuto"}`);
     } finally {
@@ -10976,8 +10988,8 @@ function GameScreen({ myId, setScreen, authUser }) {
       await refreshAll(code);
       await refreshInventory(latestMeRef.current);
       await addMsg(current.currentBid
-        ? `🏦 Asta conclusa: **${current.item.name}** a **${current.bidderName}** per **${current.currentBid} oro**.`
-        : `🏦 Asta conclusa senza offerte: **${current.item.name}** torna a **${current.sellerName}**.`,
+        ? `🏦 Asta conclusa: **${itemName(current.item)}** a **${current.bidderName}** per **${current.currentBid} oro**.`
+        : `🏦 Asta conclusa senza offerte: **${itemName(current.item)}** torna a **${current.sellerName}**.`,
         "info", "Mercato");
     } catch(e) {
       window.alert(`Chiusura asta fallita: ${e?.message || "errore sconosciuto"}`);
@@ -11022,7 +11034,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     }
     await refreshInventory(me);
     const giver = targetPlayer.id === myId ? "" : ` (da **${me.name}**)`;
-    await addMsg(`🧪 **${targetPlayer.name}** usa **${entry.item.name}**${giver} e recupera **${delta} HP**.`, "info", "Sistema");
+    await addMsg(`🧪 **${targetPlayer.name}** usa **${itemName(entry.item)}**${giver} e recupera **${delta} HP**.`, "info", "Sistema");
   }
 
   async function handleLevelUp() {
@@ -11975,7 +11987,7 @@ ${stepText(step)}`, "quest","Master");
         await dbAddPlayerItem(p.id, droppedMat.id);
       }
       const rarityLabel = matRarity === "legendary" ? "🟣 Leggendario" : matRarity === "epic" ? "🔴 Epico" : matRarity === "rare" ? "🔵 Raro" : matRarity === "uncommon" ? "🟢 Non comune" : "⚪ Comune";
-      await addMsg(`⚔️ **MISSIONE COMPLETATA: ${q.title}!**\n\n⭐ +${xpE} XP a testa · 💰 +${goldE} oro a testa${bonusNote}\n\n🎁 **Bottino materiale trovato:** ${droppedMat.emoji} **${droppedMat.name}** [${rarityLabel}] — ricevuto da tutti!\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, "victory","Master");
+      await addMsg(`⚔️ **MISSIONE COMPLETATA: ${q.title}!**\n\n⭐ +${xpE} XP a testa · 💰 +${goldE} oro a testa${bonusNote}\n\n🎁 **Bottino materiale trovato:** ${droppedMat.emoji} **${itemName(droppedMat)}** [${rarityLabel}] — ricevuto da tutti!\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, "victory","Master");
     } else {
       await addMsg(`⚔️ **MISSIONE COMPLETATA: ${q.title}!**\n\n⭐ +${xpE} XP a testa · 💰 +${goldE} oro a testa${bonusNote}\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, "victory","Master");
     }
@@ -12133,7 +12145,7 @@ ${stepText(step)}`, "quest","Master");
     const itemFound = pickRandom(items);
     let lootMsg = `💰 **Bottino trovato!**`;
     if(goldFound>0) lootMsg += `\n🪙 +${goldFound} oro a testa`;
-    if(itemFound) lootMsg += `\n🎁 Hai trovato: **${itemFound.name}**! È finito nel tuo inventario.`;
+    if(itemFound) lootMsg += `\n🎁 Hai trovato: **${itemName(itemFound)}**! È finito nel tuo inventario.`;
     lootMsg += `\n\nCliccate **Avanti →** per proseguire.`;
     for(const p of partyPlayers) {
       let up={...p, gold:p.gold+goldFound};
@@ -13614,7 +13626,7 @@ ${stepText(step)}`, "quest","Master");
                             <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
                               {inventory.filter(e=>e&&e.item).map(e=>(
                                 <button key={e.rowId} onClick={()=>depositItem(e)} style={{ padding:"0.35rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", cursor:"pointer", fontSize:"0.75rem" }}>
-                                  {e.item.emoji||"📦"} {e.item.name}
+                                  {e.item.emoji||"📦"} {itemName(e.item)}
                                 </button>
                               ))}
                               {!inventory.filter(e=>e&&e.item).length&&<span style={{color:"#4b5563",fontSize:"0.75rem"}}>Inventario vuoto.</span>}
@@ -14657,7 +14669,7 @@ ${stepText(step)}`, "quest","Master");
         <div style={{ position:"fixed", inset:0, background:"rgba(0,0,0,0.75)", zIndex:10100, display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
           <div style={{ background:"linear-gradient(180deg,#0d1b0d,#0a1628)", border:"2px solid #22c55e", borderRadius:16, padding:"1.5rem 1.8rem", maxWidth:380, width:"100%", boxShadow:"0 0 40px rgba(34,197,94,0.2)" }}>
             <div style={{ fontSize:"1rem", fontWeight:700, color:"#4ade80", marginBottom:"0.5rem", fontFamily:"Cinzel" }}>
-              🧪 {pendingHealItem.item?.name}
+              🧪 {pendingHealItem.item ? itemName(pendingHealItem.item) : ""}
             </div>
             <div style={{ fontSize:"0.8rem", color:"#94a3b8", marginBottom:"1rem" }}>
               Cura <strong style={{ color:"#4ade80" }}>+{pendingHealItem.item?.heal_amount || 0} HP</strong> — scegli il bersaglio:

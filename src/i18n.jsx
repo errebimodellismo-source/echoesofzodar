@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useMemo, useState } from "react";
+import { ITEM_TRANSLATIONS } from "./data/itemTranslations";
 
 const LANG_KEY = "eoz_language";
 
@@ -271,6 +272,16 @@ export function I18nProvider({ children }) {
     },
     className: (key, fallback) => CLASS_NAMES[lang]?.[key] || fallback,
     raceName: (key, fallback) => RACE_NAMES[lang]?.[key] || fallback,
+    itemName: (itemOrId, fallback = "") => {
+      const id = typeof itemOrId === "string" ? itemOrId : itemOrId?.id;
+      const source = typeof itemOrId === "string" ? fallback : itemOrId?.name;
+      return ITEM_TRANSLATIONS[lang]?.[id]?.name || source || fallback || "";
+    },
+    itemDescription: (itemOrId, fallback = "") => {
+      const id = typeof itemOrId === "string" ? itemOrId : itemOrId?.id;
+      const source = typeof itemOrId === "string" ? fallback : itemOrId?.description;
+      return ITEM_TRANSLATIONS[lang]?.[id]?.description || source || fallback || "";
+    },
   }), [lang]);
 
   return <I18nContext.Provider value={value}>{children}</I18nContext.Provider>;
