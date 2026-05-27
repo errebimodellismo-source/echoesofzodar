@@ -306,6 +306,18 @@ function getGuildHallStage(level) {
   for(const s of GUILD_HALL_STAGES) { if((level||1)>=s.minLevel) stage=s; }
   return stage;
 }
+const GUILD_HALL_STAGE_EN = {
+  "Catapecchia di Legno": { name:"Wooden Shack", desc:"Four planks and a roof full of holes." },
+  "Fortezza": { name:"Fortress", desc:"Stone walls that stand against the wind." },
+  "Castello": { name:"Castle", desc:"High towers, banners in the wind." },
+  "Cittadella Sospesa": { name:"Sky Citadel", desc:"Floating among the clouds, defying gravity." },
+  "Roccaforte Draconica": { name:"Draconic Stronghold", desc:"Forged from the bones of ancient dragons." },
+  "Bastione di Zodar": { name:"Bastion of Zodar", desc:"The seat of the chosen. No one dares attack it." },
+};
+function guildHallStageText(stage, lang = "it") {
+  if(lang !== "en") return stage;
+  return { ...stage, ...(GUILD_HALL_STAGE_EN[stage?.name] || {}) };
+}
 const GUILD_ROLES = {
   "Maestro di Gilda":        { icon:"👑", color:"#fbbf24", perms:["invite","kick","war","bank","events","bulletin","promote","roles"] },
   "Custode delle Rune":      { icon:"🔮", color:"#a78bfa", perms:["invite","bank","events","bulletin"] },
@@ -316,6 +328,33 @@ const GUILD_ROLES = {
   "Inquisitore":             { icon:"⚖️", color:"#f87171", perms:["invite","kick"] },
 };
 const DEFAULT_ROLE = "Cacciatore";
+const GUILD_ROLE_EN = {
+  "Maestro di Gilda": "Guild Master",
+  "Custode delle Rune": "Rune Keeper",
+  "Tesoriere": "Treasurer",
+  "Araldo": "Herald",
+  "Cacciatore": "Hunter",
+  "Archivista": "Archivist",
+  "Inquisitore": "Inquisitor",
+};
+const GUILD_PERM_LABELS = {
+  it: { invite:"Invita", kick:"Espelli", war:"Guerra", bank:"Magazzino", events:"Eventi", bulletin:"Bacheca", promote:"Promuovi", roles:"Ruoli" },
+  en: { invite:"Invite", kick:"Kick", war:"War", bank:"Warehouse", events:"Events", bulletin:"Bulletin", promote:"Promote", roles:"Roles" },
+};
+function guildRoleName(role, lang = "it") {
+  return lang === "en" ? (GUILD_ROLE_EN[role] || role) : role;
+}
+function guildPermLabel(perm, lang = "it") {
+  return GUILD_PERM_LABELS[lang]?.[perm] || perm;
+}
+function guildFeatureLabel(feature, lang = "it") {
+  if(!feature || lang !== "en") return feature?.label || "";
+  return ({
+    "Guerra tra Gilde": "Guild Wars",
+    "Missioni Epiche": "Epic Missions",
+    "Magazzino": "Warehouse",
+  })[feature.label] || feature.label;
+}
 function hasPerm(member, perm) {
   if(!member) return false;
   if(member.role==="leader") return true;
@@ -1806,41 +1845,51 @@ function resolveWeaponAttack(attacker, target, weaponDie) {
   const damage = hit ? damageRoll + (isCrit ? damageRoll : 0) : 0;
   return { hitRoll, isCrit, attackBonus, attackTotal, targetCa, hit, damageRoll, damage, weaponDie: weaponDie || "1d6" };
 }
-function formatWeaponAttackLog(attacker, target, resolved, weaponName, targetHpAfter, targetMaxHp, { resisted = false, statusApplied = null } = {}) {
-  const header = `${attacker?.emoji || "⭐"} **${attacker?.name}** attacca ${target?.emoji || "⭐"} **${target?.name}**`;
-  const hitLine = `🎯 Tiro per colpire: **d20 ${resolved.hitRoll} + bonus ${resolved.attackBonus} = ${resolved.attackTotal}** contro CA **${resolved.targetCa}**`;
-  if(!resolved.hit) return `${header}\n${hitLine}\n❌ **Mancato**`;
-  const critNote = resolved.isCrit ? " — **CRITICO!**" : "";
+function formatWeaponAttackLog(attacker, target, resolved, weaponName, targetHpAfter, targetMaxHp, { resisted = false, statusApplied = null, lang = "it" } = {}) {
+  const isEn = lang === "en";
+  const header = isEn
+    ? `${attacker?.emoji || "⭐"} **${attacker?.name}** attacks ${target?.emoji || "⭐"} **${target?.name}**`
+    : `${attacker?.emoji || "⭐"} **${attacker?.name}** attacca ${target?.emoji || "⭐"} **${target?.name}**`;
+  const hitLine = isEn
+    ? `🎯 Attack roll: **d20 ${resolved.hitRoll} + bonus ${resolved.attackBonus} = ${resolved.attackTotal}** vs AC **${resolved.targetCa}**`
+    : `🎯 Tiro per colpire: **d20 ${resolved.hitRoll} + bonus ${resolved.attackBonus} = ${resolved.attackTotal}** contro CA **${resolved.targetCa}**`;
+  if(!resolved.hit) return `${header}\n${hitLine}\n❌ **${isEn ? "Miss" : "Mancato"}**`;
+  const critNote = resolved.isCrit ? ` — **${isEn ? "CRITICAL!" : "CRITICO!"}**` : "";
   const modStr = resolved.damageMod != null && resolved.damageMod !== 0 && resolved.damageAbility
     ? ` ${signedModifier(resolved.damageMod)} (${resolved.damageAbility.toUpperCase()})`
     : "";
   const dmgLine = resolved.isCrit
-    ? `💥 Tiro danno: **${resolved.weaponDie} = ${resolved.damageRoll}**${modStr}, critico => **${resolved.damage}** con **${weaponName}**`
-    : `💥 Tiro danno: **${resolved.weaponDie} = ${resolved.damageRoll}**${modStr} => **${resolved.damage}** con **${weaponName}**`;
+    ? isEn
+      ? `💥 Damage roll: **${resolved.weaponDie} = ${resolved.damageRoll}**${modStr}, critical => **${resolved.damage}** with **${weaponName}**`
+      : `💥 Tiro danno: **${resolved.weaponDie} = ${resolved.damageRoll}**${modStr}, critico => **${resolved.damage}** con **${weaponName}**`
+    : isEn
+      ? `💥 Damage roll: **${resolved.weaponDie} = ${resolved.damageRoll}**${modStr} => **${resolved.damage}** with **${weaponName}**`
+      : `💥 Tiro danno: **${resolved.weaponDie} = ${resolved.damageRoll}**${modStr} => **${resolved.damage}** con **${weaponName}**`;
   const hpLine = `❤️ ${target?.name}: ${targetHpAfter}/${targetMaxHp} HP`;
-  const resistLine = resisted ? `\n🛡️ **Resistenza!** Danno ridotto a **${resolved.damage}**` : "";
-  const statusLine = statusApplied ? `\n${STATUS_EFFECTS[statusApplied]?.emoji || "✨"} **${target?.name}** è ora **${STATUS_EFFECTS[statusApplied]?.label || statusApplied}**!` : "";
-  return `${header}\n${hitLine}\n✅ **Colpisce**${critNote}\n${dmgLine}\n${hpLine}${resistLine}${statusLine}`;
+  const resistLine = resisted ? `\n🛡️ **${isEn ? "Resistance!" : "Resistenza!"}** ${isEn ? "Damage reduced to" : "Danno ridotto a"} **${resolved.damage}**` : "";
+  const statusLine = statusApplied ? `\n${STATUS_EFFECTS[statusApplied]?.emoji || "✨"} **${target?.name}** ${isEn ? "is now" : "è ora"} **${STATUS_EFFECTS[statusApplied]?.label || statusApplied}**!` : "";
+  return `${header}\n${hitLine}\n✅ **${isEn ? "Hit" : "Colpisce"}**${critNote}\n${dmgLine}\n${hpLine}${resistLine}${statusLine}`;
 }
-function combatLogCue(log) {
+function combatLogCue(log, lang = "it") {
+  const isEn = lang === "en";
   const text = String(log || "");
   if(!text) return null;
-  const damageMatches = [...text.matchAll(/(?:Danno finale:|=>|danno.*?a|Danno ridotto a)\s*\**(\d+)\**/gi)].map(m => Number(m[1])).filter(Boolean);
-  const hpMatch = text.match(/recupera\s+\**(\d+)\**\s*HP/i);
-  const isCrit = /CRITICO|critico/i.test(text);
-  const isMiss = /Mancato|manca|fallisce/i.test(text);
-  const isHeal = /recupera|guarisce|cura/i.test(text);
-  const isResist = /Resistenza|ridotto/i.test(text);
-  const isSummon = /evocato|evoca/i.test(text);
-  const isDeath = /morte|muore|Eliminato|sconfitto/i.test(text);
-  if(isHeal) return { type:"heal", icon:"💚", title:"Cura", value:hpMatch ? `+${hpMatch[1]} HP` : "", color:"#22c55e", bg:"rgba(20,83,45,0.42)" };
-  if(isCrit) return { type:"crit", icon:"💥", title:"Colpo Critico", value:damageMatches.length ? `${Math.max(...damageMatches)} danni` : "", color:"#fbbf24", bg:"rgba(120,53,15,0.46)" };
-  if(isMiss) return { type:"miss", icon:"💨", title:"Mancato", value:"nessun danno", color:"#94a3b8", bg:"rgba(51,65,85,0.42)" };
-  if(isResist) return { type:"resist", icon:"🛡️", title:"Resistenza", value:damageMatches.length ? `${damageMatches.at(-1)} danni` : "danno ridotto", color:"#60a5fa", bg:"rgba(30,64,175,0.35)" };
-  if(isSummon) return { type:"summon", icon:"🔮", title:"Evocazione", value:"alleato in campo", color:"#a78bfa", bg:"rgba(76,29,149,0.38)" };
-  if(isDeath) return { type:"death", icon:"🕯️", title:"Momento Critico", value:"vita appesa a un filo", color:"#f87171", bg:"rgba(127,29,29,0.42)" };
-  if(damageMatches.length) return { type:"hit", icon:"⚔️", title:"Colpo a Segno", value:`${Math.max(...damageMatches)} danni`, color:"#f87171", bg:"rgba(127,29,29,0.38)" };
-  return { type:"event", icon:"✨", title:"Evento", value:"", color:"#cbd5e1", bg:"rgba(30,41,59,0.42)" };
+  const damageMatches = [...text.matchAll(/(?:Danno finale:|Damage roll:|=>|danno.*?a|damage.*?to|Danno ridotto a|Damage reduced to)\s*\**(\d+)\**/gi)].map(m => Number(m[1])).filter(Boolean);
+  const hpMatch = text.match(/(?:recupera|restores|heals)\s+\**(\d+)\**\s*HP/i);
+  const isCrit = /CRITICO|critico|CRITICAL|critical/i.test(text);
+  const isMiss = /Mancato|manca|fallisce|Miss|miss|fails/i.test(text);
+  const isHeal = /recupera|guarisce|cura|restores|heals|healing/i.test(text);
+  const isResist = /Resistenza|ridotto|Resistance|reduced/i.test(text);
+  const isSummon = /evocato|evoca|summoned|summons/i.test(text);
+  const isDeath = /morte|muore|Eliminato|sconfitto|death|dies|defeated|knocked out/i.test(text);
+  if(isHeal) return { type:"heal", icon:"💚", title:isEn ? "Healing" : "Cura", value:hpMatch ? `+${hpMatch[1]} HP` : "", color:"#22c55e", bg:"rgba(20,83,45,0.42)" };
+  if(isCrit) return { type:"crit", icon:"💥", title:isEn ? "Critical Hit" : "Colpo Critico", value:damageMatches.length ? `${Math.max(...damageMatches)} ${isEn ? "damage" : "danni"}` : "", color:"#fbbf24", bg:"rgba(120,53,15,0.46)" };
+  if(isMiss) return { type:"miss", icon:"💨", title:isEn ? "Miss" : "Mancato", value:isEn ? "no damage" : "nessun danno", color:"#94a3b8", bg:"rgba(51,65,85,0.42)" };
+  if(isResist) return { type:"resist", icon:"🛡️", title:isEn ? "Resistance" : "Resistenza", value:damageMatches.length ? `${damageMatches.at(-1)} ${isEn ? "damage" : "danni"}` : (isEn ? "damage reduced" : "danno ridotto"), color:"#60a5fa", bg:"rgba(30,64,175,0.35)" };
+  if(isSummon) return { type:"summon", icon:"🔮", title:isEn ? "Summon" : "Evocazione", value:isEn ? "ally on the field" : "alleato in campo", color:"#a78bfa", bg:"rgba(76,29,149,0.38)" };
+  if(isDeath) return { type:"death", icon:"🕯️", title:isEn ? "Critical Moment" : "Momento Critico", value:isEn ? "life hangs by a thread" : "vita appesa a un filo", color:"#f87171", bg:"rgba(127,29,29,0.42)" };
+  if(damageMatches.length) return { type:"hit", icon:"⚔️", title:isEn ? "Hit" : "Colpo a Segno", value:`${Math.max(...damageMatches)} ${isEn ? "damage" : "danni"}`, color:"#f87171", bg:"rgba(127,29,29,0.38)" };
+  return { type:"event", icon:"✨", title:isEn ? "Event" : "Evento", value:"", color:"#cbd5e1", bg:"rgba(30,41,59,0.42)" };
 }
 function isDyingCombatant(combatant) {
   return !!combatant?.isPlayer && !!combatant?.dying && !combatant?.dead;
@@ -1889,14 +1938,17 @@ function reviveCombatantState(combatant, hp) {
     deathFailures: 0,
   };
 }
-function resolveDeathSave(combatant, forcedRoll) {
+function resolveDeathSave(combatant, forcedRoll, lang = "it") {
+  const isEn = lang === "en";
   const rollValue = forcedRoll ?? roll(20);
   if(rollValue === 20) {
     return {
       rollValue,
       result: "nat20",
       nextCombatant: reviveCombatantState(combatant, 1),
-      log: `🕯️ **${combatant.name}** tira un **20 naturale** sulla salvezza contro la morte e ritorna a **1 HP**!`,
+      log: isEn
+        ? `🕯️ **${combatant.name}** rolls a **natural 20** on the death save and returns to **1 HP**!`
+        : `🕯️ **${combatant.name}** tira un **20 naturale** sulla salvezza contro la morte e ritorna a **1 HP**!`,
     };
   }
   const successGain = rollValue >= 10 ? 1 : 0;
@@ -1908,7 +1960,9 @@ function resolveDeathSave(combatant, forcedRoll) {
       rollValue,
       result: "dead",
       nextCombatant: { ...combatant, hp: 0, dying: false, stable: false, dead: true, deathSuccesses: successes, deathFailures: failures },
-      log: `☠️ **${combatant.name}** fallisce la salvezza contro la morte (${successes}/3 successi, ${failures}/3 fallimenti) e **muore**.`,
+      log: isEn
+        ? `☠️ **${combatant.name}** fails the death save (${successes}/3 successes, ${failures}/3 failures) and **dies**.`
+        : `☠️ **${combatant.name}** fallisce la salvezza contro la morte (${successes}/3 successi, ${failures}/3 fallimenti) e **muore**.`,
     };
   }
   if(successes >= 3) {
@@ -1917,14 +1971,18 @@ function resolveDeathSave(combatant, forcedRoll) {
       rollValue,
       result: "revived",
       nextCombatant: reviveCombatantState(combatant, revivedHp),
-      log: `🕯️ **${combatant.name}** ottiene la terza salvezza (${successes}/3) e torna in piedi con **${revivedHp} HP**!`,
+      log: isEn
+        ? `🕯️ **${combatant.name}** succeeds on the third death save (${successes}/3) and rises with **${revivedHp} HP**!`
+        : `🕯️ **${combatant.name}** ottiene la terza salvezza (${successes}/3) e torna in piedi con **${revivedHp} HP**!`,
     };
   }
   return {
     rollValue,
     result: successGain ? "success" : "failure",
     nextCombatant: { ...combatant, hp: 0, dying: true, stable: false, dead: false, deathSuccesses: successes, deathFailures: failures },
-    log: `🕯️ **${combatant.name}** tira una salvezza contro la morte: **d20 ${rollValue}** — ${successGain ? "successo" : "fallimento"} (${successes}/3 successi, ${failures}/3 fallimenti).`,
+    log: isEn
+      ? `🕯️ **${combatant.name}** rolls a death save: **d20 ${rollValue}** - ${successGain ? "success" : "failure"} (${successes}/3 successes, ${failures}/3 failures).`
+      : `🕯️ **${combatant.name}** tira una salvezza contro la morte: **d20 ${rollValue}** — ${successGain ? "successo" : "fallimento"} (${successes}/3 successi, ${failures}/3 fallimenti).`,
   };
 }
 function itemStatSummary(item) {
@@ -9992,7 +10050,7 @@ function GameScreen({ myId, setScreen, authUser }) {
         if (playerCombatantIdx >= 0) latestCombatants.splice(playerCombatantIdx, 1);
         await dbSavePlayer({ ...pt, hp: 1, dead: false });
         if (pt.id === myId) setMeRaw({ ...pt, hp: 1, dead: false });
-        let koLog = formatWeaponAttackLog(enragedActor, pt, { ...resolved, damage: edmg }, enraged ? "Attacco (Furia)" : "Attacco naturale", 0, pt.maxHp, { resisted: playerResisted });
+        let koLog = formatWeaponAttackLog(enragedActor, pt, { ...resolved, damage: edmg }, lang === "en" ? (enraged ? "Attack (Fury)" : "Natural attack") : (enraged ? "Attacco (Furia)" : "Attacco naturale"), 0, pt.maxHp, { resisted: playerResisted, lang });
         koLog += `\n💀 **${pt.name}** è stato eliminato dall'arena! Tornerà a 1 HP e potrà rientrare tra 90 secondi.`;
         if (enraged && !latestCombat.bossEnraged) koLog += `\n🔴 **${actor.name}** è in **FURIA**!`;
         if (monsterStatusLog) koLog = monsterStatusLog + '\n---\n' + koLog;
@@ -10021,7 +10079,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       if (updPt.id === myId) setMeRaw(updPt);
       const immortalNote = immortalTriggered ? `\n🛡️ **${pt.name}** è protetto dall'Immortalità! (${ptBuffs.immortal - 1} turni rimasti)` : "";
       let enrageNote = (enraged && !latestCombat.bossEnraged) ? `\n🔴 **${actor.name}** è in **FURIA**! I suoi attacchi sono ora devastanti!` : "";
-      let log = formatWeaponAttackLog(enragedActor, pt, { ...resolved, damage: edmg }, enraged ? "Attacco (Furia)" : "Attacco naturale", updPt.hp, pt.maxHp, { resisted: playerResisted, statusApplied: monsterAttackStatusEffect?.type }) + immortalNote + enrageNote;
+      let log = formatWeaponAttackLog(enragedActor, pt, { ...resolved, damage: edmg }, lang === "en" ? (enraged ? "Attack (Fury)" : "Natural attack") : (enraged ? "Attacco (Furia)" : "Attacco naturale"), updPt.hp, pt.maxHp, { resisted: playerResisted, statusApplied: monsterAttackStatusEffect?.type, lang }) + immortalNote + enrageNote;
       if (monsterStatusLog) log = monsterStatusLog + '\n---\n' + log;
       const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
       const allDead = latestCombatants.filter(c => !c.isPlayer).every(c => c.hp <= 0);
@@ -10160,36 +10218,36 @@ function GameScreen({ myId, setScreen, authUser }) {
   }
 
   async function createGuild() {
-    if(!me||me.gold<10000){window.alert("Servono 10000 oro per fondare una gilda.");return;}
-    if(!guildForm.name.trim()){window.alert("Scegli un nome.");return;}
-    if(getPlayerGuild(guilds,myId)){window.alert("Sei già in una gilda.");return;}
+    if(!me||me.gold<10000){window.alert(lang === "en" ? "You need 10000 gold to found a guild." : "Servono 10000 oro per fondare una gilda.");return;}
+    if(!guildForm.name.trim()){window.alert(lang === "en" ? "Choose a name." : "Scegli un nome.");return;}
+    if(getPlayerGuild(guilds,myId)){window.alert(lang === "en" ? "You are already in a guild." : "Sei già in una gilda.");return;}
     const gId=`g_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
     const newGuild={ id:gId, name:guildForm.name.trim(), emoji:guildForm.emoji||"⚔️", description:guildForm.desc.trim(), emblem:guildForm.emblem||DEFAULT_EMBLEM, leaderId:myId, leaderName:me.name, level:1, xp:0, hallLevel:1, members:[{id:myId,name:me.name,role:"leader",joinedAt:new Date().toISOString()}], missions:[], createdAt:new Date().toISOString() };
     const newGuilds={...guilds,[gId]:newGuild};
     await dbSaveAllGuilds(newGuilds);
     const upd={...me,gold:me.gold-10000}; await dbSavePlayer(upd); setMeRaw(upd);
     setGuilds(newGuilds); setGuildForm({name:"",emoji:"⚔️",desc:"",emblem:{...DEFAULT_EMBLEM}});
-    await addMsg(`🏛️ **${me.name}** ha fondato la gilda **${newGuild.emoji} ${newGuild.name}**!`,"info","Sistema");
+    await addMsg(lang === "en" ? `🏛️ **${me.name}** founded the guild **${newGuild.emoji} ${newGuild.name}**!` : `🏛️ **${me.name}** ha fondato la gilda **${newGuild.emoji} ${newGuild.name}**!`,"info",lang === "en" ? "System" : "Sistema");
   }
 
   async function joinGuild(gId) {
-    if(getPlayerGuild(guilds,myId)){window.alert("Sei già in una gilda.");return;}
+    if(getPlayerGuild(guilds,myId)){window.alert(lang === "en" ? "You are already in a guild." : "Sei già in una gilda.");return;}
     const guild=guilds[gId]; if(!guild) return;
     const newG={...guild,members:[...(guild.members||[]),{id:myId,name:me.name,role:"member",joinedAt:new Date().toISOString()}]};
     const newGuilds={...guilds,[gId]:newG};
     await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
-    await addMsg(`🏛️ **${me.name}** è entrato nella gilda **${guild.emoji} ${guild.name}**!`,"info","Sistema");
+    await addMsg(lang === "en" ? `🏛️ **${me.name}** joined the guild **${guild.emoji} ${guild.name}**!` : `🏛️ **${me.name}** è entrato nella gilda **${guild.emoji} ${guild.name}**!`,"info",lang === "en" ? "System" : "Sistema");
   }
 
   async function requestJoinGuild(gId) {
-    if(getPlayerGuild(guilds,myId)){window.alert("Sei già in una gilda.");return;}
+    if(getPlayerGuild(guilds,myId)){window.alert(lang === "en" ? "You are already in a guild." : "Sei già in una gilda.");return;}
     const guild=guilds[gId]; if(!guild) return;
     const already=(guild.joinRequests||[]).find(r=>r.id===myId);
-    if(already){window.alert("Hai già inviato una richiesta a questa gilda.");return;}
+    if(already){window.alert(lang === "en" ? "You have already sent a request to this guild." : "Hai già inviato una richiesta a questa gilda.");return;}
     const newG={...guild,joinRequests:[...(guild.joinRequests||[]),{id:myId,name:me.name,requestedAt:new Date().toISOString()}]};
     const newGuilds={...guilds,[gId]:newG};
     await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
-    window.alert(`✅ Richiesta inviata a ${guild.name}! Attendi l'approvazione del capo gilda.`);
+    window.alert(lang === "en" ? `✅ Request sent to ${guild.name}! Wait for the guild leader's approval.` : `✅ Richiesta inviata a ${guild.name}! Attendi l'approvazione del capo gilda.`);
   }
 
   async function approveJoinRequest(gId, requesterId, requesterName) {
@@ -10200,7 +10258,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     };
     const newGuilds={...guilds,[gId]:newG};
     await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
-    await addMsg(`🏛️ **${requesterName}** è stato accettato nella gilda **${guild.emoji} ${guild.name}**!`,"info","Sistema");
+    await addMsg(lang === "en" ? `🏛️ **${requesterName}** was accepted into the guild **${guild.emoji} ${guild.name}**!` : `🏛️ **${requesterName}** è stato accettato nella gilda **${guild.emoji} ${guild.name}**!`,"info",lang === "en" ? "System" : "Sistema");
   }
 
   async function rejectJoinRequest(gId, requesterId) {
@@ -10212,8 +10270,8 @@ function GameScreen({ myId, setScreen, authUser }) {
 
   async function leaveGuild() {
     const myGuild=getPlayerGuild(guilds,myId); if(!myGuild) return;
-    if(myGuild.leaderId===myId&&myGuild.members.length>1){window.alert("Sei il capo: trasferisci il ruolo prima di uscire.");return;}
-    if(!window.confirm(`Uscire dalla gilda ${myGuild.name}?`)) return;
+    if(myGuild.leaderId===myId&&myGuild.members.length>1){window.alert(lang === "en" ? "You are the leader: transfer leadership before leaving." : "Sei il capo: trasferisci il ruolo prima di uscire.");return;}
+    if(!window.confirm(lang === "en" ? `Leave guild ${myGuild.name}?` : `Uscire dalla gilda ${myGuild.name}?`)) return;
     const newMem=myGuild.members.filter(m=>m.id!==myId);
     const newGuilds={...guilds};
     if(newMem.length===0) delete newGuilds[myGuild.id];
@@ -10224,7 +10282,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   async function donateToGuild() {
     const myGuild=getPlayerGuild(guilds,myId); if(!myGuild||!me) return;
     const amount=Math.max(10,Math.floor(Number(guildDonate)||100));
-    if(me.gold<amount){window.alert("Oro insufficiente.");return;}
+    if(me.gold<amount){window.alert(lang === "en" ? "Not enough gold." : "Oro insufficiente.");return;}
     const xpGain=Math.floor(amount/10);
     const newXp=(myGuild.xp||0)+xpGain;
     const newG={...myGuild,xp:newXp,level:getGuildLevel(newXp)};
@@ -10232,7 +10290,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     await dbSaveAllGuilds(newGuilds);
     const upd={...me,gold:me.gold-amount}; await dbSavePlayer(upd); setMeRaw(upd);
     setGuilds(newGuilds);
-    await addMsg(`💰 **${me.name}** dona **${amount} oro** alla gilda → **+${xpGain} XP gilda**!`,"info","Sistema");
+    await addMsg(lang === "en" ? `💰 **${me.name}** donates **${amount} gold** to the guild -> **+${xpGain} guild XP**!` : `💰 **${me.name}** dona **${amount} oro** alla gilda → **+${xpGain} XP gilda**!`,"info",lang === "en" ? "System" : "Sistema");
   }
 
   async function depositItem(entry) {
@@ -10264,7 +10322,7 @@ function GameScreen({ myId, setScreen, authUser }) {
 
   async function createGuildMission() {
     const myGuild=getPlayerGuild(guilds,myId); if(!myGuild) return;
-    if(!guildMissionForm.title.trim()){window.alert("Inserisci un titolo.");return;}
+    if(!guildMissionForm.title.trim()){window.alert(lang === "en" ? "Enter a title." : "Inserisci un titolo.");return;}
     const mission = { id:`gm_${Date.now()}`, title:guildMissionForm.title.trim(), desc:guildMissionForm.desc.trim(), goal:Math.max(1,guildMissionForm.goal), progress:0, rewardGold:Math.max(0,guildMissionForm.rewardGold), rewardXp:Math.max(0,guildMissionForm.rewardXp), completed:false, assignedBy:me.name, createdAt:new Date().toISOString() };
     const newMissions=[...(myGuild.missions||[]),mission];
     const newG={...myGuild,missions:newMissions};
@@ -10291,7 +10349,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       if((justCompleted.rewardGold||0)>0) {
         const upd={...me,gold:(me.gold||0)+justCompleted.rewardGold}; await dbSavePlayer(upd); setMeRaw(upd);
       }
-      await addMsg(`🎯 **Missione di gilda completata!** "${justCompleted.title}" — +${justCompleted.rewardXp} XP gilda${justCompleted.rewardGold>0?` +${justCompleted.rewardGold}🪙`:""}!`,"info","Gilda");
+      await addMsg(lang === "en" ? `🎯 **Guild mission completed!** "${justCompleted.title}" - +${justCompleted.rewardXp} guild XP${justCompleted.rewardGold>0?` +${justCompleted.rewardGold}🪙`:""}!` : `🎯 **Missione di gilda completata!** "${justCompleted.title}" — +${justCompleted.rewardXp} XP gilda${justCompleted.rewardGold>0?` +${justCompleted.rewardGold}🪙`:""}!`,"info",lang === "en" ? "Guild" : "Gilda");
     }
   }
 
@@ -10305,14 +10363,14 @@ function GameScreen({ myId, setScreen, authUser }) {
 
   async function kickMember(memberId) {
     const myGuild=getPlayerGuild(guilds,myId); if(!myGuild) return;
-    if(memberId===myId){window.alert("Non puoi espellere te stesso.");return;}
+    if(memberId===myId){window.alert(lang === "en" ? "You cannot kick yourself." : "Non puoi espellere te stesso.");return;}
     const target=myGuild.members.find(m=>m.id===memberId); if(!target) return;
-    if(!window.confirm(`Espellere ${target.name} dalla gilda?`)) return;
+    if(!window.confirm(lang === "en" ? `Kick ${target.name} from the guild?` : `Espellere ${target.name} dalla gilda?`)) return;
     const newMem=myGuild.members.filter(m=>m.id!==memberId);
     const newG={...myGuild,members:newMem};
     const newGuilds={...guilds,[myGuild.id]:newG};
     await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
-    await addMsg(`⚖️ **${target.name}** è stato espulso dalla gilda!`,"info","Sistema");
+    await addMsg(lang === "en" ? `⚖️ **${target.name}** was kicked from the guild!` : `⚖️ **${target.name}** è stato espulso dalla gilda!`,"info",lang === "en" ? "System" : "Sistema");
   }
 
   async function postBulletin() {
@@ -10337,18 +10395,18 @@ function GameScreen({ myId, setScreen, authUser }) {
   async function inviteByCode() {
     const myGuild=getPlayerGuild(guilds,myId); if(!myGuild) return;
     const raw=guildInviteCode.trim();
-    if(!raw){window.alert("Inserisci un codice o seleziona dalla lista.");return;}
+    if(!raw){window.alert(lang === "en" ? "Enter a code or select from the list." : "Inserisci un codice o seleziona dalla lista.");return;}
     const codeLower=raw.toLowerCase(); const codeUpper=raw.toUpperCase();
     const target=worldPlayers.find(p=>p.partyCode===codeUpper||p.id===codeLower||p.id===raw);
-    if(!target){window.alert("Nessun giocatore trovato con questo codice.");return;}
-    if(myGuild.members.find(m=>m.id===target.id)){window.alert(`${target.name} è già nella gilda.`);return;}
-    if(getPlayerGuild(guilds,target.id)){window.alert(`${target.name} è già in un'altra gilda.`);return;}
+    if(!target){window.alert(lang === "en" ? "No player found with this code." : "Nessun giocatore trovato con questo codice.");return;}
+    if(myGuild.members.find(m=>m.id===target.id)){window.alert(lang === "en" ? `${target.name} is already in the guild.` : `${target.name} è già nella gilda.`);return;}
+    if(getPlayerGuild(guilds,target.id)){window.alert(lang === "en" ? `${target.name} is already in another guild.` : `${target.name} è già in un'altra gilda.`);return;}
     const newMem=[...(myGuild.members||[]),{id:target.id,name:target.name,role:"member",joinedAt:new Date().toISOString()}];
     const newG={...myGuild,members:newMem};
     const newGuilds={...guilds,[myGuild.id]:newG};
     await dbSaveAllGuilds(newGuilds); setGuilds(newGuilds);
     setGuildInviteCode(""); setShowGuildInvite(false);
-    await addMsg(`🏛️ **${target.name}** è entrato nella gilda **${myGuild.emoji} ${myGuild.name}**!`,"info","Sistema");
+    await addMsg(lang === "en" ? `🏛️ **${target.name}** joined the guild **${myGuild.emoji} ${myGuild.name}**!` : `🏛️ **${target.name}** è entrato nella gilda **${myGuild.emoji} ${myGuild.name}**!`,"info",lang === "en" ? "System" : "Sistema");
   }
 
   async function saveQState(newQs) {
@@ -11246,13 +11304,13 @@ function GameScreen({ myId, setScreen, authUser }) {
         return;
       }
       const { nextTurn, nextRound } = getNextCombatTurn(combatants, latestCombat.turn, latestCombat.round);
-      const skippedName = actor?.name || "il turno";
+      const skippedName = actor?.name || (lang === "en" ? "the turn" : "il turno");
       const newCombat = {
         ...latestCombat,
         combatants,
         turn:nextTurn,
         round:nextRound,
-        pendingLog:`⏭️ **Turno saltato:** ${skippedName}.`,
+        pendingLog: lang === "en" ? `⏭️ **Skipped turn:** ${skippedName}.` : `⏭️ **Turno saltato:** ${skippedName}.`,
       };
       await dbSavePartyState(code, { ...latestQs, combat:newCombat });
       setQs(prev => ({ ...prev, combat:newCombat }));
@@ -11417,13 +11475,15 @@ function GameScreen({ myId, setScreen, authUser }) {
             combatants,
             turn: nextTurn,
             round: nextRound,
-            pendingLog:`🛡️ **${attacker.name}** viene salvato dall'**Immortalità** e torna a **1 HP**! (${deathSaveMyBuffs.immortal - 1} turni rimasti)`,
+            pendingLog: lang === "en"
+              ? `🛡️ **${attacker.name}** is saved by **Immortality** and returns to **1 HP**! (${deathSaveMyBuffs.immortal - 1} turns left)`
+              : `🛡️ **${attacker.name}** viene salvato dall'**Immortalità** e torna a **1 HP**! (${deathSaveMyBuffs.immortal - 1} turni rimasti)`,
           },
         });
         return;
       }
-      const deathSaveRoll = await showDiceVisual({ sides:20, notation:"1d20", label:"Salvezza contro la morte", themeColor:"#fbbf24" });
-      const deathSave = resolveDeathSave(attacker, deathSaveRoll);
+      const deathSaveRoll = await showDiceVisual({ sides:20, notation:"1d20", label:lang === "en" ? "Death save" : "Salvezza contro la morte", themeColor:"#fbbf24" });
+      const deathSave = resolveDeathSave(attacker, deathSaveRoll, lang);
       const idx = combatants.findIndex(c => c.id === attacker.id);
       combatants[idx] = deathSave.nextCombatant;
       const survived = deathSave.result === "nat20" || deathSave.result === "revived";
@@ -11498,7 +11558,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       }
     }
     combatants[tidx] = targetAfterDmg;
-    let log = formatWeaponAttackLog(attacker, target, effectiveResolved2, weapon.name, combatants[tidx].hp, target.maxHp, { resisted, statusApplied: attackStatusEffect?.type });
+    let log = formatWeaponAttackLog(attacker, target, effectiveResolved2, weapon.name, combatants[tidx].hp, target.maxHp, { resisted, statusApplied: attackStatusEffect?.type, lang });
     if (statusPrefixLog) log = statusPrefixLog + '\n---\n' + log;
     if(myPreBuff) {
       const newTurnsAfter = (myBuffs.legendaryItem?.turnsLeft || 0) - 1;
@@ -12819,28 +12879,28 @@ ${stepText(step)}`, "quest","Master");
               <span style={{ fontSize:"0.6rem", color:"#94a3b8", flexShrink:0 }}>Lv.{p?.level||1}</span>
             </div>
           ))}
-          {partyPlayers.length<=1&&<div style={{ color:"#1f2937", fontSize:"0.68rem" }}>Solo per ora</div>}
+          {partyPlayers.length<=1&&<div style={{ color:"#1f2937", fontSize:"0.68rem" }}>{lang === "en" ? "Solo for now" : "Solo per ora"}</div>}
           <JoinPartyWidget myId={myId} currentCode={code} />
         </div>
 
         {currentQ && (
           <div style={{ background:"rgba(180,83,9,0.08)", border:"1px solid #78350f", borderRadius:4, padding:"0.5rem" }}>
-            <div style={{ fontSize:"0.58rem", color:"#78350f", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:3 }}>📜 Missione</div>
+            <div style={{ fontSize:"0.58rem", color:"#78350f", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:3 }}>📜 {lang === "en" ? "Quest" : "Missione"}</div>
             <div style={{ color:"#fbbf24", fontSize:"0.75rem", fontWeight:700, marginBottom:3 }}>{currentQ.title}</div>
             <div style={{ height:3, background:"#0f172a", borderRadius:2, overflow:"hidden" }}>
               <div style={{ height:"100%", background:"linear-gradient(90deg,#b45309,#fbbf24)", width:`${qs.step/currentQ.steps.length*100}%` }} />
             </div>
-            <div style={{ fontSize:"0.6rem", color:"#78350f", marginTop:2 }}>Scena {qs.step}/{currentQ.steps.length}</div>
+            <div style={{ fontSize:"0.6rem", color:"#78350f", marginTop:2 }}>{lang === "en" ? "Scene" : "Scena"} {qs.step}/{currentQ.steps.length}</div>
           </div>
         )}
 
         {combat?.active && (
           <div style={{ background:myTurn?"rgba(239,68,68,0.15)":"rgba(239,68,68,0.06)", border:`1px solid ${myTurn?"#ef4444":"#7f1d1d"}`, borderRadius:4, padding:"0.5rem" }}>
             <div style={{ fontSize:"0.62rem", color:myTurn?"#ef4444":"#7f1d1d", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:3 }}>⚔️ Round {combat.round}</div>
-            <div style={{ color:myTurn?"#fca5a5":"#6b7280", fontSize:"0.75rem", fontWeight:700 }}>{myDeathTurn?"🕯️ SALVEZZA CONTRO LA MORTE":myTurn?"⚔️ TUO TURNO!":"Attendi..."}</div>
+            <div style={{ color:myTurn?"#fca5a5":"#6b7280", fontSize:"0.75rem", fontWeight:700 }}>{myDeathTurn ? (lang === "en" ? "🕯️ DEATH SAVE" : "🕯️ SALVEZZA CONTRO LA MORTE") : myTurn ? (lang === "en" ? "⚔️ YOUR TURN!" : "⚔️ TUO TURNO!") : (lang === "en" ? "Waiting..." : "Attendi...")}</div>
             {myCombatant?.dying && (
               <div style={{ marginTop:4, fontSize:"0.65rem", color:"#fecaca" }}>
-                Successi {myCombatant.deathSuccesses || 0}/3 • Fallimenti {myCombatant.deathFailures || 0}/3
+                {lang === "en" ? "Successes" : "Successi"} {myCombatant.deathSuccesses || 0}/3 • {lang === "en" ? "Failures" : "Fallimenti"} {myCombatant.deathFailures || 0}/3
               </div>
             )}
           </div>
@@ -12850,10 +12910,10 @@ ${stepText(step)}`, "quest","Master");
           if(!myLeg || myLeg.turnsLeft <= 0) return null;
           return (
             <div style={{ background:"rgba(76,29,149,0.3)", border:"1px solid #7c3aed", borderRadius:4, padding:"0.4rem 0.5rem" }}>
-              <div style={{ fontSize:"0.58rem", color:"#a78bfa", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:2 }}>🏆 Oggetto Leggendario</div>
+              <div style={{ fontSize:"0.58rem", color:"#a78bfa", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:2 }}>🏆 {lang === "en" ? "Legendary Item" : "Oggetto Leggendario"}</div>
               <div style={{ fontSize:"0.72rem", color:"#c4b5fd", fontWeight:700 }}>{myLeg.emoji} {myLeg.name}</div>
-              <div style={{ fontSize:"0.6rem", color:"#a78bfa", marginTop:1 }}>✅ Si applica automaticamente</div>
-              <div style={{ fontSize:"0.6rem", color:"#7c3aed", marginTop:1 }}>{myLeg.turnsLeft} turni rimasti</div>
+              <div style={{ fontSize:"0.6rem", color:"#a78bfa", marginTop:1 }}>✅ {lang === "en" ? "Applies automatically" : "Si applica automaticamente"}</div>
+              <div style={{ fontSize:"0.6rem", color:"#7c3aed", marginTop:1 }}>{myLeg.turnsLeft} {lang === "en" ? "turns left" : "turni rimasti"}</div>
             </div>
           );
         })()}
@@ -13670,6 +13730,7 @@ ${stepText(step)}`, "quest","Master");
           const myGuild = getPlayerGuild(guilds, myId);
           const myMember = myGuild?.members?.find(m=>m.id===myId);
           const hallStage = myGuild ? getGuildHallStage(myGuild.level||1) : null;
+          const hallText = hallStage ? guildHallStageText(hallStage, lang) : null;
           const guildLvl = myGuild?.level || 1;
           const nextLvlXp = GUILD_XP_TABLE[Math.min(guildLvl+1,20)] || GUILD_XP_TABLE[20];
           const curXp = myGuild?.xp || 0;
@@ -13677,12 +13738,12 @@ ${stepText(step)}`, "quest","Master");
           const nowMs = Date.now();
           return (
             <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.5)" }}>
-              <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🏛️ Gilda</h3>
+              <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"1rem" }}>🏛️ {lang === "en" ? "Guild" : "Gilda"}</h3>
 
               {/* Online/Offline World Players */}
               <div style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:10, padding:"0.85rem", marginBottom:"1rem" }}>
-                <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.75rem", color:"#94a3b8", letterSpacing:"0.08em", marginBottom:8 }}>🌍 AVVENTURIERI NEL MONDO</div>
-                {guildLoading && <div style={{ color:"#4b5563", fontSize:"0.78rem" }}>Caricamento...</div>}
+                <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.75rem", color:"#94a3b8", letterSpacing:"0.08em", marginBottom:8 }}>🌍 {lang === "en" ? "ADVENTURERS IN THE WORLD" : "AVVENTURIERI NEL MONDO"}</div>
+                {guildLoading && <div style={{ color:"#4b5563", fontSize:"0.78rem" }}>{lang === "en" ? "Loading..." : "Caricamento..."}</div>}
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(160px,1fr))", gap:6 }}>
                   {worldPlayers.map(p=>{
                     const online = isPartyPlayerOnline(p, worldMeta, nowMs);
@@ -13697,7 +13758,7 @@ ${stepText(step)}`, "quest","Master");
                       </div>
                     );
                   })}
-                  {!guildLoading && !worldPlayers.length && <div style={{ color:"#4b5563", fontSize:"0.78rem" }}>Nessun avventuriero trovato.</div>}
+                  {!guildLoading && !worldPlayers.length && <div style={{ color:"#4b5563", fontSize:"0.78rem" }}>{lang === "en" ? "No adventurers found." : "Nessun avventuriero trovato."}</div>}
                 </div>
               </div>
 
@@ -13707,18 +13768,18 @@ ${stepText(step)}`, "quest","Master");
                   {/* Hall visual */}
                   <div style={{ background:`linear-gradient(135deg,rgba(30,10,60,0.85),rgba(10,22,40,0.9))`, border:"2px solid #7c3aed", borderRadius:14, padding:"1.2rem", marginBottom:"1rem", position:"relative", overflow:"hidden" }}>
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:16, marginBottom:8 }}>
-                      <div style={{ fontSize:"3rem" }}>{hallStage.emoji}</div>
+                      <div style={{ fontSize:"3rem" }}>{hallText.emoji}</div>
                       <GuildEmblemSVG emblem={myGuild.emblem} size={80}/>
                     </div>
                     <div style={{ textAlign:"center" }}>
                       <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.1rem" }}>{myGuild.emoji} {myGuild.name}</div>
-                      <div style={{ color:"#a78bfa", fontSize:"0.8rem", marginTop:2 }}>{hallStage.name}</div>
-                      <div style={{ color:"#94a3b8", fontSize:"0.72rem", marginTop:2, fontStyle:"italic" }}>{hallStage.desc}</div>
+                      <div style={{ color:"#a78bfa", fontSize:"0.8rem", marginTop:2 }}>{hallText.name}</div>
+                      <div style={{ color:"#94a3b8", fontSize:"0.72rem", marginTop:2, fontStyle:"italic" }}>{hallText.desc}</div>
                     </div>
                     <div style={{ marginTop:"0.85rem" }}>
                       <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.72rem", color:"#94a3b8", marginBottom:4 }}>
                         <span>Lv.{myGuild.level||1} — {curXp} / {nextLvlXp} XP</span>
-                        <span>+{getGuildGoldBonus(guildLvl)}% oro</span>
+                        <span>+{getGuildGoldBonus(guildLvl)}% {lang === "en" ? "gold" : "oro"}</span>
                       </div>
                       <div style={{ height:6, background:"rgba(30,41,59,0.6)", borderRadius:3 }}>
                         <div style={{ height:"100%", width:`${xpPct}%`, background:"linear-gradient(90deg,#7c3aed,#a78bfa)", borderRadius:3, transition:"width .4s" }} />
@@ -13726,14 +13787,14 @@ ${stepText(step)}`, "quest","Master");
                     </div>
                     {getGuildFeature(guildLvl) && (
                       <div style={{ marginTop:8, textAlign:"center", fontSize:"0.72rem", color:"#4ade80" }}>
-                        {getGuildFeature(guildLvl).icon} {getGuildFeature(guildLvl).label} sbloccato!
+                        {getGuildFeature(guildLvl).icon} {guildFeatureLabel(getGuildFeature(guildLvl), lang)} {lang === "en" ? "unlocked!" : "sbloccato!"}
                       </div>
                     )}
                   </div>
 
                   {/* Donate XP */}
                   <div style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:10, padding:"0.85rem", marginBottom:"1rem" }}>
-                    <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8", marginBottom:8 }}>💰 CONTRIBUISCI ALLA GILDA (10 oro = 1 XP)</div>
+                    <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8", marginBottom:8 }}>💰 {lang === "en" ? "CONTRIBUTE TO THE GUILD (10 gold = 1 XP)" : "CONTRIBUISCI ALLA GILDA (10 oro = 1 XP)"}</div>
                     <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                       {[100,500,1000].map(amt=>(
                         <button key={amt} onClick={()=>setGuildDonate(amt)} style={{ padding:"0.4rem 0.8rem", background:guildDonate===amt?"rgba(109,40,217,0.35)":"rgba(15,23,42,0.5)", border:`1px solid ${guildDonate===amt?"#7c3aed":"#334155"}`, borderRadius:6, color:guildDonate===amt?"#c4b5fd":"#94a3b8", cursor:"pointer", fontSize:"0.78rem" }}>{amt}🪙</button>
@@ -13742,7 +13803,7 @@ ${stepText(step)}`, "quest","Master");
                     <div style={{ display:"flex", gap:8, marginTop:8 }}>
                       <input type="number" value={guildDonate} min={10} onChange={e=>setGuildDonate(Number(e.target.value))}
                         style={{ flex:1, padding:"0.4rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.8rem" }} />
-                      <BigBtn onClick={donateToGuild} gold icon="💰">Dona ({Math.floor(guildDonate/10)} XP)</BigBtn>
+                      <BigBtn onClick={donateToGuild} gold icon="💰">{lang === "en" ? "Donate" : "Dona"} ({Math.floor(guildDonate/10)} XP)</BigBtn>
                     </div>
                   </div>
 
@@ -13750,39 +13811,39 @@ ${stepText(step)}`, "quest","Master");
                   {(myGuild.level||1)>=5 && (
                     <div style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:10, padding:"0.85rem", marginBottom:"1rem" }}>
                       <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
-                        <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8" }}>📦 MAGAZZINO GILDA</div>
-                        <SmallBtn onClick={()=>{ setWarehouseOpen(v=>!v); if(!warehouseOpen) refreshWarehouse(myGuild.id); }}>{warehouseOpen?"▲ chiudi":"▼ apri"}</SmallBtn>
+                        <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8" }}>📦 {lang === "en" ? "GUILD WAREHOUSE" : "MAGAZZINO GILDA"}</div>
+                        <SmallBtn onClick={()=>{ setWarehouseOpen(v=>!v); if(!warehouseOpen) refreshWarehouse(myGuild.id); }}>{warehouseOpen ? (lang === "en" ? "▲ close" : "▲ chiudi") : (lang === "en" ? "▼ open" : "▼ apri")}</SmallBtn>
                       </div>
                       {warehouseOpen && (
                         <div>
-                          <div style={{ fontSize:"0.72rem", color:"#64748b", marginBottom:8 }}>Clicca un oggetto del tuo inventario per depositarlo, clicca un oggetto del magazzino per ritirarlo.</div>
+                          <div style={{ fontSize:"0.72rem", color:"#64748b", marginBottom:8 }}>{lang === "en" ? "Click an item in your inventory to deposit it, or an item in the warehouse to withdraw it." : "Clicca un oggetto del tuo inventario per depositarlo, clicca un oggetto del magazzino per ritirarlo."}</div>
                           {hasPerm(myMember,"bank") ? (
                             <>
                           <div style={{ marginBottom:8 }}>
-                            <div style={{ fontSize:"0.7rem", color:"#a78bfa", marginBottom:4 }}>📤 Il tuo inventario (deposita)</div>
+                            <div style={{ fontSize:"0.7rem", color:"#a78bfa", marginBottom:4 }}>📤 {lang === "en" ? "Your inventory (deposit)" : "Il tuo inventario (deposita)"}</div>
                             <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
                               {inventory.filter(e=>e&&e.item).map(e=>(
                                 <button key={e.rowId} onClick={()=>depositItem(e)} style={{ padding:"0.35rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", cursor:"pointer", fontSize:"0.75rem" }}>
                                   {e.item.emoji||"📦"} {itemName(e.item)}
                                 </button>
                               ))}
-                              {!inventory.filter(e=>e&&e.item).length&&<span style={{color:"#4b5563",fontSize:"0.75rem"}}>Inventario vuoto.</span>}
+                              {!inventory.filter(e=>e&&e.item).length&&<span style={{color:"#4b5563",fontSize:"0.75rem"}}>{lang === "en" ? "Inventory empty." : "Inventario vuoto."}</span>}
                             </div>
                           </div>
                           <div>
-                            <div style={{ fontSize:"0.7rem", color:"#4ade80", marginBottom:4 }}>📥 Magazzino (ritira)</div>
+                            <div style={{ fontSize:"0.7rem", color:"#4ade80", marginBottom:4 }}>📥 {lang === "en" ? "Warehouse (withdraw)" : "Magazzino (ritira)"}</div>
                             <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
                               {warehouseItems.map(e=>(
                                 <button key={e.rowId} onClick={()=>withdrawItem(e)} style={{ padding:"0.35rem 0.6rem", background:"rgba(20,83,45,0.2)", border:"1px solid #166534", borderRadius:6, color:"#86efac", cursor:"pointer", fontSize:"0.75rem" }}>
-                                  {e.item?.emoji||"📦"} {e.item?.name}
+                                  {e.item?.emoji||"📦"} {e.item ? itemName(e.item) : ""}
                                 </button>
                               ))}
-                              {!warehouseItems.length&&<span style={{color:"#4b5563",fontSize:"0.75rem"}}>Magazzino vuoto.</span>}
+                              {!warehouseItems.length&&<span style={{color:"#4b5563",fontSize:"0.75rem"}}>{lang === "en" ? "Warehouse empty." : "Magazzino vuoto."}</span>}
                             </div>
                           </div>
                             </>
                           ) : (
-                            <div style={{ fontSize:"0.75rem", color:"#64748b", textAlign:"center", padding:"0.5rem" }}>🔒 Solo il Tesoriere e i ruoli con permesso <em>bank</em> possono accedere al magazzino.</div>
+                            <div style={{ fontSize:"0.75rem", color:"#64748b", textAlign:"center", padding:"0.5rem" }}>{lang === "en" ? "🔒 Only the Treasurer and roles with the bank permission can access the warehouse." : <>🔒 Solo il Tesoriere e i ruoli con permesso <em>bank</em> possono accedere al magazzino.</>}</div>
                           )}
                         </div>
                       )}
@@ -13792,10 +13853,10 @@ ${stepText(step)}`, "quest","Master");
                   {/* Members */}
                   <div style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:10, padding:"0.85rem", marginBottom:"1rem" }}>
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
-                      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8" }}>👥 MEMBRI ({myGuild.members?.length||0})</div>
+                      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8" }}>👥 {lang === "en" ? "MEMBERS" : "MEMBRI"} ({myGuild.members?.length||0})</div>
                       <div style={{ display:"flex", gap:6 }}>
-                        {hasPerm(myMember,"invite") && <SmallBtn onClick={()=>setShowGuildInvite(v=>!v)}>📨 Invita</SmallBtn>}
-                        <SmallBtn onClick={()=>setShowGuildRoles(v=>!v)}>📋 Ruoli</SmallBtn>
+                        {hasPerm(myMember,"invite") && <SmallBtn onClick={()=>setShowGuildInvite(v=>!v)}>📨 {lang === "en" ? "Invite" : "Invita"}</SmallBtn>}
+                        <SmallBtn onClick={()=>setShowGuildRoles(v=>!v)}>📋 {lang === "en" ? "Roles" : "Ruoli"}</SmallBtn>
                       </div>
                     </div>
 
@@ -13806,7 +13867,7 @@ ${stepText(step)}`, "quest","Master");
                         <div style={{ background:"rgba(15,23,42,0.6)", border:"1px solid #334155", borderRadius:8, padding:"0.65rem", marginBottom:8 }}>
                           {invitablePlayers.length > 0 && (
                             <div style={{ marginBottom:8 }}>
-                              <div style={{ fontSize:"0.65rem", color:"#64748b", marginBottom:5 }}>Seleziona dalla lista:</div>
+                              <div style={{ fontSize:"0.65rem", color:"#64748b", marginBottom:5 }}>{lang === "en" ? "Select from the list:" : "Seleziona dalla lista:"}</div>
                               <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
                                 {invitablePlayers.map(p=>(
                                   <button key={p.id} onClick={()=>setGuildInviteCode(p.id)}
@@ -13818,9 +13879,9 @@ ${stepText(step)}`, "quest","Master");
                             </div>
                           )}
                           <div style={{ display:"flex", gap:6 }}>
-                            <input value={guildInviteCode} onChange={e=>setGuildInviteCode(e.target.value)} placeholder="…oppure ID / party code manuale"
+                            <input value={guildInviteCode} onChange={e=>setGuildInviteCode(e.target.value)} placeholder={lang === "en" ? "...or manual ID / party code" : "…oppure ID / party code manuale"}
                               style={{ flex:1, padding:"0.35rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.8rem" }}/>
-                            <SmallBtn onClick={inviteByCode} disabled={!guildInviteCode.trim()}>✓ Invita</SmallBtn>
+                            <SmallBtn onClick={inviteByCode} disabled={!guildInviteCode.trim()}>✓ {lang === "en" ? "Invite" : "Invita"}</SmallBtn>
                           </div>
                         </div>
                       );
@@ -13829,12 +13890,12 @@ ${stepText(step)}`, "quest","Master");
                     {/* Join Requests panel — visible to leaders with invite perm */}
                     {hasPerm(myMember,"invite") && (myGuild.joinRequests||[]).length > 0 && (
                       <div style={{ background:"rgba(15,23,42,0.6)", border:"1px solid #7c3aed", borderRadius:8, padding:"0.65rem", marginBottom:8 }}>
-                        <div style={{ fontSize:"0.68rem", color:"#c4b5fd", fontFamily:"'Cinzel',serif", marginBottom:6 }}>📨 RICHIESTE DI ACCESSO ({(myGuild.joinRequests||[]).length})</div>
+                        <div style={{ fontSize:"0.68rem", color:"#c4b5fd", fontFamily:"'Cinzel',serif", marginBottom:6 }}>📨 {lang === "en" ? "JOIN REQUESTS" : "RICHIESTE DI ACCESSO"} ({(myGuild.joinRequests||[]).length})</div>
                         {(myGuild.joinRequests||[]).map(req=>(
                           <div key={req.id} style={{ display:"flex", alignItems:"center", gap:8, padding:"0.4rem 0.5rem", background:"rgba(109,40,217,0.1)", border:"1px solid rgba(109,40,217,0.3)", borderRadius:6, marginBottom:5 }}>
                             <span style={{ fontSize:"0.82rem", flex:1, color:"#e2e8f0" }}>⚔️ <strong>{req.name}</strong></span>
                             <button onClick={()=>approveJoinRequest(myGuild.id, req.id, req.name)}
-                              style={{ padding:"2px 10px", background:"rgba(20,83,45,0.5)", border:"1px solid #166534", borderRadius:5, color:"#4ade80", cursor:"pointer", fontSize:"0.72rem", fontWeight:600 }}>✓ Accetta</button>
+                              style={{ padding:"2px 10px", background:"rgba(20,83,45,0.5)", border:"1px solid #166534", borderRadius:5, color:"#4ade80", cursor:"pointer", fontSize:"0.72rem", fontWeight:600 }}>✓ {lang === "en" ? "Accept" : "Accetta"}</button>
                             <button onClick={()=>rejectJoinRequest(myGuild.id, req.id)}
                               style={{ padding:"2px 8px", background:"rgba(127,29,29,0.4)", border:"1px solid #7f1d1d", borderRadius:5, color:"#f87171", cursor:"pointer", fontSize:"0.72rem" }}>✕</button>
                           </div>
@@ -13845,17 +13906,17 @@ ${stepText(step)}`, "quest","Master");
                     {/* Roles reference */}
                     {showGuildRoles && (
                       <div style={{ background:"rgba(15,23,42,0.6)", border:"1px solid #334155", borderRadius:8, padding:"0.65rem", marginBottom:8 }}>
-                        <div style={{ fontSize:"0.68rem", color:"#94a3b8", fontFamily:"'Cinzel',serif", marginBottom:6 }}>RUOLI E PERMESSI</div>
+                        <div style={{ fontSize:"0.68rem", color:"#94a3b8", fontFamily:"'Cinzel',serif", marginBottom:6 }}>{lang === "en" ? "ROLES AND PERMISSIONS" : "RUOLI E PERMESSI"}</div>
                         {Object.entries(GUILD_ROLES).map(([rName,rd])=>(
                           <div key={rName} style={{ display:"flex", alignItems:"center", gap:6, marginBottom:4 }}>
                             <span style={{ fontSize:"0.85rem" }}>{rd.icon}</span>
-                            <span style={{ fontSize:"0.72rem", color:rd.color||"#94a3b8", fontWeight:600, minWidth:120 }}>{rName}</span>
+                            <span style={{ fontSize:"0.72rem", color:rd.color||"#94a3b8", fontWeight:600, minWidth:120 }}>{guildRoleName(rName, lang)}</span>
                             <div style={{ display:"flex", flexWrap:"wrap", gap:3 }}>
                               {rd.perms.length===0
-                                ? <span style={{ fontSize:"0.6rem", color:"#4b5563" }}>solo combattente</span>
+                                ? <span style={{ fontSize:"0.6rem", color:"#4b5563" }}>{lang === "en" ? "fighter only" : "solo combattente"}</span>
                                 : rd.perms.map(p=>(
                                     <span key={p} style={{ fontSize:"0.58rem", padding:"1px 5px", background:"rgba(109,40,217,0.2)", border:"1px solid #4c1d95", borderRadius:4, color:"#c4b5fd" }}>
-                                      {{"invite":"Invita","kick":"Espelli","war":"Guerra","bank":"Magazzino","events":"Eventi","bulletin":"Bacheca","promote":"Promuovi","roles":"Ruoli"}[p]||p}
+                                      {guildPermLabel(p, lang)}
                                     </span>
                                   ))
                               }
@@ -13876,7 +13937,7 @@ ${stepText(step)}`, "quest","Master");
                           <span style={{ fontSize:"0.9rem" }}>{rd.icon}</span>
                           <div style={{ flex:1 }}>
                             <div style={{ fontSize:"0.82rem", color:"#e2e8f0", fontWeight:600 }}>{m.name}</div>
-                            <div style={{ fontSize:"0.65rem", color:rd.color||"#94a3b8" }}>{role}</div>
+                            <div style={{ fontSize:"0.65rem", color:rd.color||"#94a3b8" }}>{guildRoleName(role, lang)}</div>
                           </div>
                           {myMember?.role==="leader" && m.id!==myId && (
                             <select defaultValue={m.customRole||DEFAULT_ROLE}
@@ -13888,40 +13949,40 @@ ${stepText(step)}`, "quest","Master");
                               }}
                               style={{ fontSize:"0.65rem", background:"rgba(15,23,42,0.8)", border:"1px solid #334155", borderRadius:4, color:"#94a3b8", padding:"2px 4px" }}>
                               {Object.keys(GUILD_ROLES).filter(r=>r!=="Maestro di Gilda").map(r=>(
-                                <option key={r} value={r}>{GUILD_ROLES[r].icon} {r}</option>
+                                <option key={r} value={r}>{GUILD_ROLES[r].icon} {guildRoleName(r, lang)}</option>
                               ))}
                             </select>
                           )}
                           {hasPerm(myMember,"kick") && m.id!==myId && m.role!=="leader" && (
-                            <button onClick={()=>kickMember(m.id)} title="Espelli" style={{ background:"none", border:"1px solid #7f1d1d", borderRadius:4, color:"#f87171", cursor:"pointer", fontSize:"0.65rem", padding:"2px 6px" }}>✕</button>
+                            <button onClick={()=>kickMember(m.id)} title={lang === "en" ? "Kick" : "Espelli"} style={{ background:"none", border:"1px solid #7f1d1d", borderRadius:4, color:"#f87171", cursor:"pointer", fontSize:"0.65rem", padding:"2px 6px" }}>✕</button>
                           )}
                         </div>
                       );
                     })}
                   </div>
 
-                  <SmallBtn red onClick={leaveGuild}>🚪 Lascia la gilda</SmallBtn>
+                  <SmallBtn red onClick={leaveGuild}>🚪 {lang === "en" ? "Leave guild" : "Lascia la gilda"}</SmallBtn>
 
                   {/* Bulletin board */}
                   <div style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:10, padding:"0.85rem", marginBottom:"1rem", marginTop:"1rem" }}>
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
-                      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8" }}>📌 BACHECA GILDA</div>
-                      {hasPerm(myMember,"bulletin") && <SmallBtn onClick={()=>setShowBulletinForm(v=>!v)}>{showBulletinForm?"✕":"+ Annuncio"}</SmallBtn>}
+                      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8" }}>📌 {lang === "en" ? "GUILD BULLETIN" : "BACHECA GILDA"}</div>
+                      {hasPerm(myMember,"bulletin") && <SmallBtn onClick={()=>setShowBulletinForm(v=>!v)}>{showBulletinForm?"✕":(lang === "en" ? "+ Post" : "+ Annuncio")}</SmallBtn>}
                     </div>
                     {showBulletinForm && hasPerm(myMember,"bulletin") && (
                       <div style={{ display:"flex", gap:6, marginBottom:8 }}>
-                        <input value={bulletinInput} onChange={e=>setBulletinInput(e.target.value)} placeholder="Scrivi un annuncio..."
+                        <input value={bulletinInput} onChange={e=>setBulletinInput(e.target.value)} placeholder={lang === "en" ? "Write a post..." : "Scrivi un annuncio..."}
                           style={{ flex:1, padding:"0.4rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.8rem" }}
                           onKeyDown={e=>{ if(e.key==="Enter") postBulletin(); }}/>
-                        <SmallBtn onClick={postBulletin}>Pubblica</SmallBtn>
+                        <SmallBtn onClick={postBulletin}>{lang === "en" ? "Post" : "Pubblica"}</SmallBtn>
                       </div>
                     )}
-                    {!(myGuild.bulletin||[]).length && <div style={{ fontSize:"0.75rem", color:"#4b5563" }}>Nessun annuncio.</div>}
+                    {!(myGuild.bulletin||[]).length && <div style={{ fontSize:"0.75rem", color:"#4b5563" }}>{lang === "en" ? "No posts." : "Nessun annuncio."}</div>}
                     {(myGuild.bulletin||[]).map(b=>(
                       <div key={b.id} style={{ background:"rgba(251,191,36,0.06)", border:"1px solid rgba(251,191,36,0.18)", borderRadius:7, padding:"0.5rem 0.7rem", marginBottom:5, display:"flex", gap:8, alignItems:"flex-start" }}>
                         <div style={{ flex:1 }}>
                           <div style={{ fontSize:"0.78rem", color:"#fde68a" }}>{b.text}</div>
-                          <div style={{ fontSize:"0.62rem", color:"#64748b", marginTop:2 }}>— {b.author} · {new Date(b.createdAt).toLocaleDateString("it-IT")}</div>
+                          <div style={{ fontSize:"0.62rem", color:"#64748b", marginTop:2 }}>— {b.author} · {new Date(b.createdAt).toLocaleDateString(lang === "en" ? "en-US" : "it-IT")}</div>
                         </div>
                         {hasPerm(myMember,"bulletin") && (
                           <button onClick={()=>deleteBulletin(b.id)} style={{ background:"none", border:"none", color:"#374151", fontSize:"0.7rem", cursor:"pointer", padding:"0 4px" }}>✕</button>
@@ -13933,43 +13994,43 @@ ${stepText(step)}`, "quest","Master");
                   {/* Guild Missions */}
                   <div style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:10, padding:"0.85rem", marginBottom:"1rem", marginTop:"1rem" }}>
                     <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:8 }}>
-                      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8" }}>🎯 MISSIONI DI GILDA</div>
-                      {hasPerm(myMember,"events") && <SmallBtn onClick={()=>setShowMissionForm(v=>!v)}>{showMissionForm?"✕":"+ Nuova"}</SmallBtn>}
+                      <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8" }}>🎯 {lang === "en" ? "GUILD MISSIONS" : "MISSIONI DI GILDA"}</div>
+                      {hasPerm(myMember,"events") && <SmallBtn onClick={()=>setShowMissionForm(v=>!v)}>{showMissionForm?"✕":(lang === "en" ? "+ New" : "+ Nuova")}</SmallBtn>}
                     </div>
                     {showMissionForm && hasPerm(myMember,"events") && (
                       <div style={{ background:"rgba(15,23,42,0.6)", border:"1px solid #334155", borderRadius:8, padding:"0.75rem", marginBottom:8 }}>
-                        <input value={guildMissionForm.title} onChange={e=>setGuildMissionForm(f=>({...f,title:e.target.value}))} placeholder="Titolo missione..."
+                        <input value={guildMissionForm.title} onChange={e=>setGuildMissionForm(f=>({...f,title:e.target.value}))} placeholder={lang === "en" ? "Mission title..." : "Titolo missione..."}
                           style={{ width:"100%", marginBottom:6, padding:"0.4rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.82rem" }}/>
-                        <textarea value={guildMissionForm.desc} onChange={e=>setGuildMissionForm(f=>({...f,desc:e.target.value}))} placeholder="Descrizione..." rows={2}
+                        <textarea value={guildMissionForm.desc} onChange={e=>setGuildMissionForm(f=>({...f,desc:e.target.value}))} placeholder={lang === "en" ? "Description..." : "Descrizione..."} rows={2}
                           style={{ width:"100%", marginBottom:6, padding:"0.4rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.78rem", resize:"none" }}/>
                         <div style={{ display:"flex", gap:6, marginBottom:6 }}>
                           <div style={{ flex:1 }}>
-                            <div style={{ fontSize:"0.65rem", color:"#64748b", marginBottom:3 }}>Obiettivo (contributi)</div>
+                            <div style={{ fontSize:"0.65rem", color:"#64748b", marginBottom:3 }}>{lang === "en" ? "Goal (contributions)" : "Obiettivo (contributi)"}</div>
                             <input type="number" value={guildMissionForm.goal} min={1} onChange={e=>setGuildMissionForm(f=>({...f,goal:Number(e.target.value)}))}
                               style={{ width:"100%", padding:"0.35rem 0.5rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.8rem" }}/>
                           </div>
                           <div style={{ flex:1 }}>
-                            <div style={{ fontSize:"0.65rem", color:"#64748b", marginBottom:3 }}>Ricompensa oro</div>
+                            <div style={{ fontSize:"0.65rem", color:"#64748b", marginBottom:3 }}>{lang === "en" ? "Gold reward" : "Ricompensa oro"}</div>
                             <input type="number" value={guildMissionForm.rewardGold} min={0} onChange={e=>setGuildMissionForm(f=>({...f,rewardGold:Number(e.target.value)}))}
                               style={{ width:"100%", padding:"0.35rem 0.5rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.8rem" }}/>
                           </div>
                           <div style={{ flex:1 }}>
-                            <div style={{ fontSize:"0.65rem", color:"#64748b", marginBottom:3 }}>XP gilda</div>
+                            <div style={{ fontSize:"0.65rem", color:"#64748b", marginBottom:3 }}>{lang === "en" ? "Guild XP" : "XP gilda"}</div>
                             <input type="number" value={guildMissionForm.rewardXp} min={0} onChange={e=>setGuildMissionForm(f=>({...f,rewardXp:Number(e.target.value)}))}
                               style={{ width:"100%", padding:"0.35rem 0.5rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:5, color:"#e2e8f0", fontSize:"0.8rem" }}/>
                           </div>
                         </div>
-                        <SmallBtn onClick={createGuildMission}>✓ Crea missione</SmallBtn>
+                        <SmallBtn onClick={createGuildMission}>✓ {lang === "en" ? "Create mission" : "Crea missione"}</SmallBtn>
                       </div>
                     )}
-                    {(myGuild.missions||[]).length===0 && <div style={{ fontSize:"0.75rem", color:"#4b5563" }}>Nessuna missione attiva.</div>}
+                    {(myGuild.missions||[]).length===0 && <div style={{ fontSize:"0.75rem", color:"#4b5563" }}>{lang === "en" ? "No active missions." : "Nessuna missione attiva."}</div>}
                     {(myGuild.missions||[]).map(m=>(
                       <div key={m.id} style={{ background:"rgba(15,23,42,0.5)", border:`1px solid ${m.completed?"#166534":"#334155"}`, borderRadius:8, padding:"0.6rem 0.75rem", marginBottom:6 }}>
                         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start" }}>
                           <div style={{ flex:1 }}>
                             <div style={{ fontSize:"0.82rem", color:m.completed?"#4ade80":"#e2e8f0", fontWeight:600 }}>{m.completed?"✅ ":""}{m.title}</div>
                             {m.desc&&<div style={{ fontSize:"0.7rem", color:"#64748b", marginTop:2 }}>{m.desc}</div>}
-                            <div style={{ fontSize:"0.68rem", color:"#94a3b8", marginTop:4 }}>da {m.assignedBy} · +{m.rewardXp} XP gilda{m.rewardGold>0?` +${m.rewardGold}🪙`:""}</div>
+                            <div style={{ fontSize:"0.68rem", color:"#94a3b8", marginTop:4 }}>{lang === "en" ? "by" : "da"} {m.assignedBy} · +{m.rewardXp} {lang === "en" ? "guild XP" : "XP gilda"}{m.rewardGold>0?` +${m.rewardGold}🪙`:""}</div>
                           </div>
                           {hasPerm(myMember,"events") && <button onClick={()=>deleteGuildMission(m.id)} style={{ background:"none", border:"none", color:"#374151", fontSize:"0.7rem", cursor:"pointer", padding:"0 4px" }}>✕</button>}
                         </div>
@@ -13981,7 +14042,7 @@ ${stepText(step)}`, "quest","Master");
                               </div>
                               <span style={{ fontSize:"0.68rem", color:"#94a3b8", whiteSpace:"nowrap" }}>{m.progress}/{m.goal}</span>
                             </div>
-                            <SmallBtn onClick={()=>contributeGuildMission(m.id)}>🎯 Contribuisci</SmallBtn>
+                            <SmallBtn onClick={()=>contributeGuildMission(m.id)}>🎯 {lang === "en" ? "Contribute" : "Contribuisci"}</SmallBtn>
                           </div>
                         )}
                       </div>
@@ -13990,9 +14051,9 @@ ${stepText(step)}`, "quest","Master");
 
                   {/* Guild Chat */}
                   <div style={{ background:PANEL_BG, border:`1px solid ${PANEL_BORDER}`, borderRadius:10, padding:"0.85rem", marginBottom:"1rem" }}>
-                    <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8", marginBottom:8 }}>💬 CHAT DI GILDA</div>
+                    <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.74rem", color:"#94a3b8", marginBottom:8 }}>💬 {lang === "en" ? "GUILD CHAT" : "CHAT DI GILDA"}</div>
                     <div style={{ height:200, overflowY:"auto", marginBottom:8, display:"flex", flexDirection:"column", gap:4 }}>
-                      {guildChatMessages.length===0 && <div style={{ color:"#4b5563", fontSize:"0.75rem" }}>Nessun messaggio.</div>}
+                      {guildChatMessages.length===0 && <div style={{ color:"#4b5563", fontSize:"0.75rem" }}>{lang === "en" ? "No messages." : "Nessun messaggio."}</div>}
                       {guildChatMessages.map((msg,i)=>(
                         <div key={msg.id||i} style={{ fontSize:"0.78rem", color:"#cbd5e1", lineHeight:1.4 }}>
                           <span style={{ color:"#a78bfa", fontWeight:600 }}>{msg.author}: </span>{msg.content}
@@ -14003,9 +14064,9 @@ ${stepText(step)}`, "quest","Master");
                     <div style={{ display:"flex", gap:6 }}>
                       <input value={guildChatInput} onChange={e=>setGuildChatInput(e.target.value)}
                         onKeyDown={e=>{ if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();sendGuildChat();} }}
-                        placeholder="Scrivi alla gilda..."
+                        placeholder={lang === "en" ? "Write to the guild..." : "Scrivi alla gilda..."}
                         style={{ flex:1, padding:"0.4rem 0.6rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.8rem" }}/>
-                      <SmallBtn onClick={sendGuildChat}>Invia</SmallBtn>
+                      <SmallBtn onClick={sendGuildChat}>{lang === "en" ? "Send" : "Invia"}</SmallBtn>
                     </div>
                   </div>
                 </div>
@@ -14019,10 +14080,10 @@ ${stepText(step)}`, "quest","Master");
                     return (
                       <div style={{ marginBottom:"1.2rem" }}>
                         <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.78rem", color:"#fbbf24", letterSpacing:"0.08em", marginBottom:10, display:"flex", alignItems:"center", gap:8 }}>
-                          🏆 CLASSIFICA GILDE
+                          🏆 {lang === "en" ? "GUILD LEADERBOARD" : "CLASSIFICA GILDE"}
                         </div>
                         {ranked.map((g, idx) => {
-                          const hall = getGuildHallStage(g.level||1);
+                          const hall = guildHallStageText(getGuildHallStage(g.level||1), lang);
                           const isPending = myPendingGuildId === g.id;
                           const rank = idx + 1;
                           const isTop3 = rank <= 3;
@@ -14039,18 +14100,18 @@ ${stepText(step)}`, "quest","Master");
                                   {g.emoji} {g.name} <span style={{fontSize:"0.65rem",color:"#94a3b8"}}>{hall.emoji}</span>
                                 </div>
                                 <div style={{ fontSize:"0.68rem", color:"#94a3b8", marginTop:2 }}>
-                                  Lv.{g.level||1} · {g.members?.length||0} membri · ⭐ {g.xp||0} XP
+                                  Lv.{g.level||1} · {g.members?.length||0} {lang === "en" ? "members" : "membri"} · ⭐ {g.xp||0} XP
                                 </div>
                                 {g.description && <div style={{ fontSize:"0.66rem", color:"#4b5563", fontStyle:"italic", marginTop:2, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{g.description}</div>}
                               </div>
                               <div style={{ flexShrink:0 }}>
                                 {isPending
-                                  ? <div style={{ padding:"0.4rem 0.75rem", background:"rgba(109,40,217,0.15)", border:"1px solid #7c3aed", borderRadius:7, color:"#a78bfa", fontSize:"0.72rem", fontWeight:600 }}>⏳ In attesa</div>
+                                  ? <div style={{ padding:"0.4rem 0.75rem", background:"rgba(109,40,217,0.15)", border:"1px solid #7c3aed", borderRadius:7, color:"#a78bfa", fontSize:"0.72rem", fontWeight:600 }}>⏳ {lang === "en" ? "Pending" : "In attesa"}</div>
                                   : <button onClick={()=>requestJoinGuild(g.id)}
                                       style={{ padding:"0.4rem 0.75rem", background:"rgba(109,40,217,0.25)", border:"1px solid #7c3aed", borderRadius:7, color:"#c4b5fd", cursor:"pointer", fontSize:"0.75rem", fontWeight:600, transition:"background 0.2s" }}
                                       onMouseEnter={e=>e.currentTarget.style.background="rgba(109,40,217,0.45)"}
                                       onMouseLeave={e=>e.currentTarget.style.background="rgba(109,40,217,0.25)"}>
-                                      📨 Richiesta
+                                      📨 {lang === "en" ? "Request" : "Richiesta"}
                                     </button>
                                 }
                               </div>
@@ -14065,7 +14126,7 @@ ${stepText(step)}`, "quest","Master");
                   <div>
                     <button onClick={()=>setShowGuildCreator(v=>!v)}
                       style={{ width:"100%", padding:"0.7rem 1rem", background: showGuildCreator?"rgba(109,40,217,0.25)":"rgba(15,23,42,0.6)", border:"1px solid #7c3aed", borderRadius:10, color:"#c4b5fd", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.84rem", fontWeight:600, display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom: showGuildCreator?8:0 }}>
-                      <span>🏛️ Fonda una Nuova Gilda</span>
+                      <span>🏛️ {lang === "en" ? "Found a New Guild" : "Fonda una Nuova Gilda"}</span>
                       <span style={{ fontSize:"0.7rem", color:"#94a3b8" }}>{showGuildCreator?"▲":"▼"} 10.000 🪙</span>
                     </button>
                     {showGuildCreator && (
@@ -14075,15 +14136,15 @@ ${stepText(step)}`, "quest","Master");
                             <button key={e} onClick={()=>setGuildForm(f=>({...f,emoji:e}))} style={{ fontSize:"1.1rem", width:36, height:36, background:guildForm.emoji===e?"rgba(109,40,217,0.4)":"rgba(15,23,42,0.5)", border:`1px solid ${guildForm.emoji===e?"#7c3aed":"#334155"}`, borderRadius:6, cursor:"pointer" }}>{e}</button>
                           ))}
                         </div>
-                        <input value={guildForm.name} onChange={e=>setGuildForm(f=>({...f,name:e.target.value}))} placeholder="Nome della gilda..."
+                        <input value={guildForm.name} onChange={e=>setGuildForm(f=>({...f,name:e.target.value}))} placeholder={lang === "en" ? "Guild name..." : "Nome della gilda..."}
                           style={{ width:"100%", marginBottom:8, padding:"0.5rem 0.7rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.85rem" }} />
-                        <textarea value={guildForm.desc} onChange={e=>setGuildForm(f=>({...f,desc:e.target.value}))} placeholder="Descrizione (opzionale)..." rows={2}
+                        <textarea value={guildForm.desc} onChange={e=>setGuildForm(f=>({...f,desc:e.target.value}))} placeholder={lang === "en" ? "Description (optional)..." : "Descrizione (opzionale)..."} rows={2}
                           style={{ width:"100%", marginBottom:10, padding:"0.5rem 0.7rem", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.82rem", resize:"none" }} />
                         <div style={{ marginBottom:10 }}>
-                          <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginBottom:6, fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>🛡️ Stemma araldico</div>
+                          <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginBottom:6, fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>🛡️ {lang === "en" ? "Heraldic emblem" : "Stemma araldico"}</div>
                           <GuildEmblemEditor emblem={guildForm.emblem} onChange={emb=>setGuildForm(f=>({...f,emblem:emb}))}/>
                         </div>
-                        <BigBtn onClick={()=>{createGuild();setShowGuildCreator(false);}} gold icon="🏛️" disabled={(me?.gold||0)<10000}>Fonda ({me?.gold||0}/10.000 🪙)</BigBtn>
+                        <BigBtn onClick={()=>{createGuild();setShowGuildCreator(false);}} gold icon="🏛️" disabled={(me?.gold||0)<10000}>{lang === "en" ? "Found" : "Fonda"} ({me?.gold||0}/10.000 🪙)</BigBtn>
                       </div>
                     )}
                   </div>
@@ -14179,19 +14240,19 @@ ${stepText(step)}`, "quest","Master");
             {!combat?.active ? (
               <div style={{ textAlign:"center", padding:"3rem", color:"#64748b" }}>
                 <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>🔒</div>
-                <p>Nessuna battaglia in corso.</p>
-                <p style={{ fontSize:"0.8rem" }}>Accetta una missione e usa il tab Missioni per iniziare il combattimento.</p>
+                <p>{lang === "en" ? "No battle in progress." : "Nessuna battaglia in corso."}</p>
+                <p style={{ fontSize:"0.8rem" }}>{lang === "en" ? "Accept a quest and use the Missions tab to start combat." : "Accetta una missione e usa il tab Missioni per iniziare il combattimento."}</p>
               </div>
             ) : (
               <div style={{ maxWidth:1460, margin:"0 auto" }}>
                 <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:12, marginBottom:"1rem", padding:"1rem 1.1rem", background:"linear-gradient(135deg, rgba(40,12,12,0.92), rgba(12,16,28,0.94))", border:"1px solid rgba(239,68,68,0.3)", borderRadius:12, boxShadow:"0 18px 40px rgba(0,0,0,0.24)" }}>
                   <div>
-                    <h3 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fca5a5", margin:"0 0 0.35rem", fontSize:"1.5rem", letterSpacing:"0.04em" }}>⚔️ Battaglia</h3>
-                    <div style={{ color:"#cbd5e1", fontSize:"0.9rem" }}>Round {combat.round} • {combat.combatants.length} partecipanti • il destino si decide ora</div>
+                    <h3 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fca5a5", margin:"0 0 0.35rem", fontSize:"1.5rem", letterSpacing:"0.04em" }}>⚔️ {lang === "en" ? "Battle" : "Battaglia"}</h3>
+                    <div style={{ color:"#cbd5e1", fontSize:"0.9rem" }}>Round {combat.round} • {combat.combatants.length} {lang === "en" ? "combatants" : "partecipanti"} • {lang === "en" ? "fate is decided now" : "il destino si decide ora"}</div>
                     <div style={{ display:"flex", gap:6, marginTop:6, flexWrap:"wrap" }}>
                       {"Notification" in window && Notification.permission !== "granted" && (
                         <button onClick={()=>Notification.requestPermission()} style={{ padding:"0.25rem 0.7rem", background:"rgba(109,40,217,0.2)", border:"1px solid #7c3aed", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontSize:"0.68rem" }}>
-                          🔔 Notifiche
+                          🔔 {lang === "en" ? "Notifications" : "Notifiche"}
                         </button>
                       )}
                     </div>
@@ -14203,7 +14264,7 @@ ${stepText(step)}`, "quest","Master");
                           {turnTimeLeft<=5&&"⚠️ "}{turnTimeLeft}s
                         </span>
                       )}
-                      <span style={{ padding:"0.45rem 0.95rem", background:"rgba(239,68,68,0.24)", border:"1px solid #ef4444", borderRadius:999, color:"#fee2e2", fontSize:"0.84rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>{myDeathTurn?"🕯️ SALVEZZA":"⚔️ TUO TURNO"}</span>
+                      <span style={{ padding:"0.45rem 0.95rem", background:"rgba(239,68,68,0.24)", border:"1px solid #ef4444", borderRadius:999, color:"#fee2e2", fontSize:"0.84rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.06em" }}>{myDeathTurn ? (lang === "en" ? "🕯️ SAVE" : "🕯️ SALVEZZA") : (lang === "en" ? "⚔️ YOUR TURN" : "⚔️ TUO TURNO")}</span>
                     </div>
                   )}
                 </div>
@@ -14212,7 +14273,7 @@ ${stepText(step)}`, "quest","Master");
                   <div>
                     <div style={{ marginBottom:"1rem", padding:"1rem", background:"rgba(10,15,30,0.7)", border:"1px solid rgba(127,29,29,0.3)", borderRadius:14 }}>
                       {combat.pendingLog && (() => {
-                        const cue = combatLogCue(combat.pendingLog);
+                        const cue = combatLogCue(combat.pendingLog, lang);
                         if(!cue) return null;
                         return (
                           <div style={{ marginBottom:"0.8rem", padding:"0.75rem 0.9rem", background:cue.bg, border:`1px solid ${cue.color}`, borderRadius:10, display:"flex", alignItems:"center", gap:10, animation:"combatCueIn .28s ease both" }}>
@@ -14227,11 +14288,11 @@ ${stepText(step)}`, "quest","Master");
                       {/* Battle name + difficulty header */}
                       <div style={{ display:"flex", alignItems:"center", gap:"0.6rem", marginBottom:"0.75rem", paddingBottom:"0.6rem", borderBottom:"1px solid rgba(127,29,29,0.25)" }}>
                         <span style={{ fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:"0.95rem", color:"#fde68a", flex:1, letterSpacing:"0.04em" }}>
-                          ⚔️ {currentQ?.title || combat?.name || "Battaglia"}
+                          ⚔️ {currentQ?.title || combat?.name || (lang === "en" ? "Battle" : "Battaglia")}
                         </span>
                         {(currentQ?.difficulty || combat?.difficulty) && (
                           <span style={{ fontSize:"0.78rem", fontWeight:700, padding:"0.2rem 0.65rem", borderRadius:999, background:"rgba(0,0,0,0.4)", border:`1px solid ${DIFF_COLOR[normalizeMissionDifficulty(currentQ?.difficulty||combat?.difficulty)]||"#94a3b8"}`, color:DIFF_COLOR[normalizeMissionDifficulty(currentQ?.difficulty||combat?.difficulty)]||"#94a3b8", letterSpacing:"0.06em", textTransform:"capitalize" }}>
-                            {{ facile:"Facile", medio:"Medio", difficile:"Difficile", epica:"Epica" }[normalizeMissionDifficulty(currentQ?.difficulty||combat?.difficulty)] || (currentQ?.difficulty||combat?.difficulty)}
+                            {(lang === "en" ? { facile:"Easy", medio:"Medium", difficile:"Hard", epica:"Epic" } : { facile:"Facile", medio:"Medio", difficile:"Difficile", epica:"Epica" })[normalizeMissionDifficulty(currentQ?.difficulty||combat?.difficulty)] || (currentQ?.difficulty||combat?.difficulty)}
                           </span>
                         )}
                       </div>
@@ -14243,7 +14304,7 @@ ${stepText(step)}`, "quest","Master");
                           c.id,
                           c.isSummon ? getMonsterImage(c) : c.isPlayer ? getPlayerPortrait(c) : getMonsterImage(c)
                         ]))}
-                        cue={combatLogCue(combat.pendingLog)}
+                        cue={combatLogCue(combat.pendingLog, lang)}
                       />
                     </div>
                   </div>
@@ -14251,7 +14312,7 @@ ${stepText(step)}`, "quest","Master");
                   <div style={{ display:"grid", gap:"1rem", position: isMobile ? "relative" : "sticky", top:0, order: isMobile ? -1 : 0 }}>
                     {combat.pendingLog && (
                       (() => {
-                        const cue = combatLogCue(combat.pendingLog);
+                        const cue = combatLogCue(combat.pendingLog, lang);
                         return (
                           <div style={{ padding:"1.1rem 1.2rem", background:"linear-gradient(180deg,rgba(10,20,10,0.97),rgba(15,23,42,0.97))", border:`1px solid ${cue?.color || "rgba(34,197,94,0.35)"}`, borderRadius:12, boxShadow:"0 8px 24px rgba(0,0,0,0.4)", animation:"combatCueIn .24s ease both" }}>
                             {cue && (
@@ -14276,7 +14337,7 @@ ${stepText(step)}`, "quest","Master");
                         <div style={{ textAlign:"center" }}>
                           <div style={{ fontSize:"1.5rem", marginBottom:"0.4rem" }}>{activeCombatant?.emoji} </div>
                           <p style={{ color:"#fca5a5", fontFamily:"'Cinzel Decorative',serif", marginBottom:"0.8rem", fontSize:"0.95rem" }}>
-                            Turno di <strong>{activeCombatant?.name}</strong> — scegli il bersaglio!
+                            {lang === "en" ? <>Turn of <strong>{activeCombatant?.name}</strong> - choose a target!</> : <>Turno di <strong>{activeCombatant?.name}</strong> — scegli il bersaglio!</>}
                           </p>
                           <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
                             {(combat.combatants||[]).filter(c => !c.isPlayer && c.hp > 0).map(enemy => (
@@ -14287,29 +14348,29 @@ ${stepText(step)}`, "quest","Master");
                               </button>
                             ))}
                           </div>
-                          <div style={{ marginTop:8, fontSize:"0.65rem", color:"#475569" }}>Auto-attacco tra 15s se non scegli</div>
+                          <div style={{ marginTop:8, fontSize:"0.65rem", color:"#475569" }}>{lang === "en" ? "Auto-attack in 15s if you do not choose" : "Auto-attacco tra 15s se non scegli"}</div>
                         </div>
                       ) : myTurn ? (
                         <>
-                          <p style={{ color:"#fecaca", fontFamily:"'Cinzel Decorative',serif", marginBottom:"1rem", fontSize:"1.08rem", letterSpacing:"0.04em" }}>{myDeathTurn ? "🕯️ Sei a terra: tira la tua salvezza contro la morte." : "⚔️ Il campo si apre davanti a te."}</p>
+                          <p style={{ color:"#fecaca", fontFamily:"'Cinzel Decorative',serif", marginBottom:"1rem", fontSize:"1.08rem", letterSpacing:"0.04em" }}>{myDeathTurn ? (lang === "en" ? "🕯️ You are down: roll your death save." : "🕯️ Sei a terra: tira la tua salvezza contro la morte.") : (lang === "en" ? "⚔️ The battlefield opens before you." : "⚔️ Il campo si apre davanti a te.")}</p>
                           {myDeathTurn ? (
                             <div style={{ display:"grid", gap:10, justifyItems:"center" }}>
-                              <div style={{ color:"#fecaca", fontSize:"0.95rem" }}>Successi: {activeCombatant?.deathSuccesses || 0}/3 • Fallimenti: {activeCombatant?.deathFailures || 0}/3</div>
+                              <div style={{ color:"#fecaca", fontSize:"0.95rem" }}>{lang === "en" ? "Successes" : "Successi"}: {activeCombatant?.deathSuccesses || 0}/3 • {lang === "en" ? "Failures" : "Fallimenti"}: {activeCombatant?.deathFailures || 0}/3</div>
                               <button onClick={doAttack} style={{ width:"100%", maxWidth:340, padding:"1rem 1.4rem", background:"linear-gradient(135deg,#7f1d1d,#b91c1c)", border:"2px solid #ef4444", borderRadius:10, color:"#fee2e2", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.06rem", cursor:"pointer", letterSpacing:"0.08em", boxShadow:"0 14px 28px rgba(127,29,29,0.24)" }}>
                                 <span className={diceAnim?"dice-spin":""} style={{ display:"inline-block", marginRight:8 }}>🎲</span>
-                                TIRO SALVEZZA
+                                {lang === "en" ? "DEATH SAVE" : "TIRO SALVEZZA"}
                               </button>
                             </div>
                           ) : spellMenu ? (
                             <div style={{ display:"grid", gap:8, justifyItems:"center" }}>
-                              <div style={{ fontSize:"0.92rem", color:"#fbbf24", fontWeight:700 }}>Scegli un incantesimo</div>
+                              <div style={{ fontSize:"0.92rem", color:"#fbbf24", fontWeight:700 }}>{lang === "en" ? "Choose a spell" : "Scegli un incantesimo"}</div>
                               {/* Bersaglio nemico (per magie danno) */}
                               {(() => {
                                 const liveEnemies = combat.combatants.filter(c=>!c.isPlayer&&c.hp>0);
                                 if(liveEnemies.length <= 1) return null;
                                 return (
                                   <div style={{ width:"100%", marginBottom:4 }}>
-                                    <div style={{ fontSize:"0.7rem", color:"#fca5a5", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>🎯 Bersaglio nemico</div>
+                                    <div style={{ fontSize:"0.7rem", color:"#fca5a5", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>🎯 {lang === "en" ? "Enemy target" : "Bersaglio nemico"}</div>
                                     <div style={{ display:"grid", gap:5 }}>
                                       {liveEnemies.map(e=>{
                                         const isSel = selectedTarget===e.id;
@@ -14337,7 +14398,7 @@ ${stepText(step)}`, "quest","Master");
                                 if(!hasHealSpell || !hasOtherAlly) return null;
                                 return (
                                   <div style={{ width:"100%", marginBottom:4 }}>
-                                    <div style={{ fontSize:"0.7rem", color:"#4ade80", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>💚 Bersaglio cura</div>
+                                    <div style={{ fontSize:"0.7rem", color:"#4ade80", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>💚 {lang === "en" ? "Healing target" : "Bersaglio cura"}</div>
                                     <div style={{ display:"grid", gap:5 }}>
                                       {healTargets.map(a=>{
                                         const isSel = selectedAllyTarget===a.id;
@@ -14348,7 +14409,7 @@ ${stepText(step)}`, "quest","Master");
                                             style={{ display:"flex", alignItems:"center", gap:7, padding:"0.45rem 0.6rem", background:isSel?"rgba(34,197,94,0.2)":"rgba(20,83,45,0.18)", border:`2px solid ${isSel?"#22c55e":"#166534"}`, borderRadius:7, cursor:"pointer", textAlign:"left", opacity: isFullHp?0.6:1 }}>
                                             <span style={{ fontSize:"0.9rem" }}>{CLASSES[a.class||"warrior"]?.emoji||"⚔️"}</span>
                                             <div style={{ flex:1, minWidth:0 }}>
-                                              <div style={{ fontSize:"0.78rem", color:isSel?"#bbf7d0":"#86efac", fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{a.name}{isSelf?" (tu)":""}</div>
+                                              <div style={{ fontSize:"0.78rem", color:isSel?"#bbf7d0":"#86efac", fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{a.name}{isSelf ? (lang === "en" ? " (you)" : " (tu)") : ""}</div>
                                               <div style={{ fontSize:"0.65rem", color: isFullHp?"#4ade80":"#94a3b8" }}>{a.hp}/{a.maxHp} HP{isFullHp?" ✓":""}</div>
                                             </div>
                                             {isSel && <span style={{ fontSize:"0.68rem", color:"#22c55e" }}>✓</span>}
@@ -14365,14 +14426,14 @@ ${stepText(step)}`, "quest","Master");
                                 return (
                                   <div key={lvl} style={{ width:"100%" }}>
                                     <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", margin:"0.7rem 0 0.35rem", fontSize:"0.88rem", color:"#c4b5fd", fontWeight:600 }}>
-                                      <span>{lvl===0 ? "Trucchetti" : `Livello ${lvl}`}</span>
-                                      <span style={{ fontSize:"0.78rem", color:"#cbd5e1" }}>{lvl===0 ? "gratis" : `${spellSlots[lvl]} slot`}</span>
+                                      <span>{lvl===0 ? (lang === "en" ? "Cantrips" : "Trucchetti") : `${lang === "en" ? "Level" : "Livello"} ${lvl}`}</span>
+                                      <span style={{ fontSize:"0.78rem", color:"#cbd5e1" }}>{lvl===0 ? (lang === "en" ? "free" : "gratis") : `${spellSlots[lvl]} slot`}</span>
                                     </div>
                                     {spells.map(spell=> (
                                       <button key={spell.id} onClick={()=>{ castSpell(spell, spell.type==="heal"?selectedAllyTarget:null); }} style={{ width:"100%", padding:"0.95rem 1rem", background:"rgba(99,102,241,0.15)", border:`1px solid ${spell.type==="heal"?"#16a34a":"#4338ca"}`, borderRadius:10, color:"#e0d7ff", cursor:"pointer", fontFamily:"inherit", textAlign:"left", marginBottom:8 }}>
                                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
                                           <span style={{ fontWeight:700, fontSize:"0.9rem" }}>{spell.emoji||"✨"} {spell.name}</span>
-                                          <span style={{ fontSize:"0.74rem", color:"#cbd5e1" }}>{spell.slots===0 ? "Gratis" : `Slot ${spell.slots||0}`}</span>
+                                          <span style={{ fontSize:"0.74rem", color:"#cbd5e1" }}>{spell.slots===0 ? (lang === "en" ? "Free" : "Gratis") : `Slot ${spell.slots||0}`}</span>
                                         </div>
                                         <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:5 }}>
                                           {spellEffectSummary(spell).map(detail => (
@@ -14382,7 +14443,7 @@ ${stepText(step)}`, "quest","Master");
                                           ))}
                                           {spell.type==="heal" && selectedAllyTarget && selectedAllyTarget !== myId && (
                                             <span style={{ fontSize:"0.7rem", color:"#4ade80", background:"rgba(20,83,45,0.3)", border:"1px solid #16a34a", borderRadius:999, padding:"2px 7px" }}>
-                                              → {combat.combatants.find(c=>c.id===selectedAllyTarget)?.name || "Alleato"}
+                                              → {combat.combatants.find(c=>c.id===selectedAllyTarget)?.name || (lang === "en" ? "Ally" : "Alleato")}
                                             </span>
                                           )}
                                         </div>
@@ -14392,7 +14453,7 @@ ${stepText(step)}`, "quest","Master");
                                   </div>
                                 );
                               })}
-                              <SmallBtn onClick={()=>{ setSpellMenu(false); setSelectedAllyTarget(null); }}>← Indietro</SmallBtn>
+                              <SmallBtn onClick={()=>{ setSpellMenu(false); setSelectedAllyTarget(null); }}>← {lang === "en" ? "Back" : "Indietro"}</SmallBtn>
                             </div>
                           ) : (
                             <>
@@ -14517,11 +14578,11 @@ ${stepText(step)}`, "quest","Master");
                   return (
                     <div style={{ marginTop:"1rem", background:"rgba(8,14,28,0.88)", border:"1px solid rgba(148,163,184,0.18)", borderRadius:12, overflow:"hidden" }}>
                       <div style={{ padding:"0.55rem 1rem", borderBottom:"1px solid rgba(148,163,184,0.1)", fontSize:"0.72rem", color:"#64748b", fontFamily:"'Cinzel',serif", letterSpacing:"0.1em" }}>
-                        💬 CHAT DI BATTAGLIA
+                        💬 {lang === "en" ? "BATTLE CHAT" : "CHAT DI BATTAGLIA"}
                       </div>
                       <div style={{ maxHeight:160, overflowY:"auto", padding:"0.5rem 0.85rem", display:"flex", flexDirection:"column", gap:4 }}>
                         {chatMessages.length === 0
-                          ? <div style={{ color:"#334155", fontSize:"0.72rem", textAlign:"center", padding:"0.5rem" }}>Nessun messaggio ancora…</div>
+                          ? <div style={{ color:"#334155", fontSize:"0.72rem", textAlign:"center", padding:"0.5rem" }}>{lang === "en" ? "No messages yet..." : "Nessun messaggio ancora…"}</div>
                           : chatMessages.map(m => (
                               <div key={m.id} style={{ fontSize:"0.78rem", lineHeight:1.4 }}>
                                 <span style={{ color: CLASS_COLORS[m.class] || "#94a3b8", fontWeight:700, marginRight:4 }}>{m.author}:</span>
@@ -14535,14 +14596,14 @@ ${stepText(step)}`, "quest","Master");
                           value={battleChatInput}
                           onChange={e => setBattleChatInput(e.target.value)}
                           onKeyDown={e => { if(e.key==="Enter" && battleChatInput.trim()) { sendBattleChat(battleChatInput); e.preventDefault(); } }}
-                          placeholder="Scrivi agli alleati…"
+                          placeholder={lang === "en" ? "Write to your allies..." : "Scrivi agli alleati…"}
                           maxLength={120}
                           style={{ flex:1, background:"rgba(15,23,42,0.7)", border:"1px solid #1e293b", borderRadius:7, padding:"0.4rem 0.65rem", color:"#e2e8f0", fontSize:"0.8rem", fontFamily:"inherit", outline:"none" }}
                         />
                         <button
                           onClick={() => { if(battleChatInput.trim()) sendBattleChat(battleChatInput); }}
                           style={{ padding:"0.4rem 0.75rem", background:"rgba(99,102,241,0.25)", border:"1px solid #4338ca", borderRadius:7, color:"#a5b4fc", fontSize:"0.8rem", cursor:"pointer", flexShrink:0 }}>
-                          Invia
+                          {lang === "en" ? "Send" : "Invia"}
                         </button>
                       </div>
                     </div>
@@ -14871,29 +14932,29 @@ ${stepText(step)}`, "quest","Master");
               style={{ background:"linear-gradient(180deg,#0d1b0d,#0a1628)", border:"2px solid #fbbf24", borderRadius:18, padding:"1.6rem 1.8rem", maxWidth:500, width:"100%", boxShadow:"0 0 60px rgba(251,191,36,0.25), 0 24px 48px rgba(0,0,0,0.6)", textAlign:"center", maxHeight:"90vh", overflowY:"auto", cursor:"default" }}
             >
               {/* Header */}
-              <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(1.5rem,5vw,2.2rem)", background:"linear-gradient(135deg,#fbbf24,#f59e0b,#b45309)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", letterSpacing:"0.08em", marginBottom:"0.2rem" }}>⚔ VITTORIA! ⚔</div>
-              <div style={{ color:"#86efac", fontSize:"0.78rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.15em", marginBottom:"1.2rem" }}>BATTAGLIA VINTA — tocca fuori o clicca Continua</div>
+              <div style={{ fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(1.5rem,5vw,2.2rem)", background:"linear-gradient(135deg,#fbbf24,#f59e0b,#b45309)", WebkitBackgroundClip:"text", WebkitTextFillColor:"transparent", letterSpacing:"0.08em", marginBottom:"0.2rem" }}>⚔ {lang === "en" ? "VICTORY!" : "VITTORIA!"} ⚔</div>
+              <div style={{ color:"#86efac", fontSize:"0.78rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.15em", marginBottom:"1.2rem" }}>{lang === "en" ? "BATTLE WON - tap outside or click Continue" : "BATTAGLIA VINTA — tocca fuori o clicca Continua"}</div>
 
               {/* Slain monsters */}
               {vd.slain?.length > 0 && (
                 <div style={{ background:"rgba(0,0,0,0.35)", border:"1px solid rgba(127,29,29,0.4)", borderRadius:10, padding:"0.75rem 1rem", marginBottom:"1rem", textAlign:"left" }}>
-                  <div style={{ fontFamily:"'Cinzel',serif", color:"#f87171", fontSize:"0.68rem", letterSpacing:"0.12em", marginBottom:"0.5rem" }}>NEMICI SCONFITTI</div>
+                  <div style={{ fontFamily:"'Cinzel',serif", color:"#f87171", fontSize:"0.68rem", letterSpacing:"0.12em", marginBottom:"0.5rem" }}>{lang === "en" ? "DEFEATED ENEMIES" : "NEMICI SCONFITTI"}</div>
                   {vd.slain.map((m, i) => (
                     <div key={i} style={{ display:"flex", justifyContent:"space-between", color:"#fecaca", fontSize:"0.82rem", padding:"2px 0" }}>
                       <span>{m.emoji} {m.name}</span>
-                      <span style={{ color:"#94a3b8", fontSize:"0.75rem" }}>+{m.xp} XP · +{m.gold} oro</span>
+                      <span style={{ color:"#94a3b8", fontSize:"0.75rem" }}>+{m.xp} XP · +{m.gold} {lang === "en" ? "gold" : "oro"}</span>
                     </div>
                   ))}
                   <div style={{ borderTop:"1px solid rgba(127,29,29,0.3)", marginTop:8, paddingTop:8, display:"flex", justifyContent:"space-between", fontSize:"0.8rem" }}>
-                    <span style={{ color:"#f87171", fontWeight:600 }}>Totale bottino</span>
-                    <span style={{ color:"#fbbf24", fontWeight:700 }}>+{vd.totalXp} XP · +{vd.totalGold} oro</span>
+                    <span style={{ color:"#f87171", fontWeight:600 }}>{lang === "en" ? "Total loot" : "Totale bottino"}</span>
+                    <span style={{ color:"#fbbf24", fontWeight:700 }}>+{vd.totalXp} XP · +{vd.totalGold} {lang === "en" ? "gold" : "oro"}</span>
                   </div>
                 </div>
               )}
 
               {/* Reward per combatant — big and clear */}
               <div style={{ background:"rgba(20,83,45,0.2)", border:"1px solid rgba(34,197,94,0.3)", borderRadius:10, padding:"0.85rem 1rem", marginBottom:"1rem", textAlign:"left" }}>
-                <div style={{ fontFamily:"'Cinzel',serif", color:"#86efac", fontSize:"0.68rem", letterSpacing:"0.12em", marginBottom:"0.7rem" }}>RICOMPENSE A TESTA</div>
+                <div style={{ fontFamily:"'Cinzel',serif", color:"#86efac", fontSize:"0.68rem", letterSpacing:"0.12em", marginBottom:"0.7rem" }}>{lang === "en" ? "REWARDS EACH" : "RICOMPENSE A TESTA"}</div>
                 <div style={{ display:"flex", gap:16, justifyContent:"center", marginBottom:playerRows.length > 1 ? 12 : 0 }}>
                   <div style={{ textAlign:"center" }}>
                     <div style={{ fontSize:"1.8rem" }}>⭐</div>
@@ -14901,23 +14962,23 @@ ${stepText(step)}`, "quest","Master");
                     <div style={{ color:"#e9d5ff", fontSize:"1.5rem", fontWeight:700, fontFamily:"'Cinzel Decorative',serif" }}>+{vd.xpEach}</div>
                   </div>
                   <div style={{ width:1, background:"rgba(255,255,255,0.08)" }} />
-                  <div style={{ textAlign:"center" }}>m
+                  <div style={{ textAlign:"center" }}>
                     <div style={{ fontSize:"1.8rem" }}>💰</div>
-                    <div style={{ color:"#fcd34d", fontSize:"0.68rem", fontFamily:"'Cinzel',serif" }}>ORO</div>
+                    <div style={{ color:"#fcd34d", fontSize:"0.68rem", fontFamily:"'Cinzel',serif" }}>{lang === "en" ? "GOLD" : "ORO"}</div>
                     <div style={{ color:"#fde68a", fontSize:"1.5rem", fontWeight:700, fontFamily:"'Cinzel Decorative',serif" }}>+{vd.goldEach}</div>
                   </div>
                 </div>
                 {/* Per-player rows with damage */}
                 {playerRows.length > 0 && (
                   <div style={{ borderTop:"1px solid rgba(34,197,94,0.2)", paddingTop:10 }}>
-                    <div style={{ fontSize:"0.65rem", color:"#64748b", letterSpacing:"0.07em", marginBottom:6 }}>DANNI INFLITTI IN BATTAGLIA</div>
+                    <div style={{ fontSize:"0.65rem", color:"#64748b", letterSpacing:"0.07em", marginBottom:6 }}>{lang === "en" ? "DAMAGE DEALT IN BATTLE" : "DANNI INFLITTI IN BATTAGLIA"}</div>
                     {playerRows.map((r, ri) => (
                       <div key={r.id} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:6, padding:"4px 6px", background: r.isMe ? "rgba(251,191,36,0.08)" : "transparent", borderRadius:6, border: r.isMe ? "1px solid rgba(251,191,36,0.2)" : "1px solid transparent" }}>
                         <span style={{ fontSize:"0.88rem", minWidth:20, textAlign:"center" }}>{ri===0?"🥇":ri===1?"🥈":ri===2?"🥉":"•"}</span>
                         <span style={{ flex:1, fontSize:"0.8rem", color: r.isMe ? "#fbbf24" : "#e2e8f0", fontWeight: r.isMe ? 700 : 400, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-                          {r.name}{r.isMe ? " (tu)" : ""}
+                          {r.name}{r.isMe ? (lang === "en" ? " (you)" : " (tu)") : ""}
                         </span>
-                        <span style={{ fontSize:"0.78rem", color:"#ef4444", fontWeight:700, minWidth:52, textAlign:"right" }}>{r.dmg > 0 ? `${r.dmg} dmg` : "—"}</span>
+                        <span style={{ fontSize:"0.78rem", color:"#ef4444", fontWeight:700, minWidth:52, textAlign:"right" }}>{r.dmg > 0 ? `${r.dmg} ${lang === "en" ? "dmg" : "danni"}` : "—"}</span>
                         <div style={{ width:48, height:5, background:"rgba(30,41,59,0.8)", borderRadius:3, overflow:"hidden", flexShrink:0 }}>
                           <div style={{ height:"100%", background:"linear-gradient(90deg,#ef4444,#f97316)", width: r.dmg > 0 ? `${Math.round(r.dmg/maxDmg*100)}%` : "0%", transition:"width 0.5s" }} />
                         </div>
@@ -14931,7 +14992,7 @@ ${stepText(step)}`, "quest","Master");
               {myResult && (
                 <div style={{ background:"rgba(0,0,0,0.3)", border:"1px solid rgba(148,163,184,0.15)", borderRadius:10, padding:"0.85rem 1rem", marginBottom:"1rem", textAlign:"left" }}>
                   <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.75rem", color:"#cbd5e1", marginBottom:5 }}>
-                    <span style={{ fontFamily:"'Cinzel',serif", color:"#94a3b8", fontSize:"0.68rem", letterSpacing:"0.1em" }}>IL TUO AVANZAMENTO</span>
+                    <span style={{ fontFamily:"'Cinzel',serif", color:"#94a3b8", fontSize:"0.68rem", letterSpacing:"0.1em" }}>{lang === "en" ? "YOUR PROGRESS" : "IL TUO AVANZAMENTO"}</span>
                     <span style={{ color:"#fbbf24" }}>Lv.{lvBefore} → Lv.{lvAfter}</span>
                   </div>
                   <div style={{ fontSize:"0.72rem", color:"#94a3b8", marginBottom:6, textAlign:"right" }}>{xpBefore} → {xpAfter} / {xpForLevel(lvAfter)} XP</div>
@@ -14941,14 +15002,14 @@ ${stepText(step)}`, "quest","Master");
                   </div>
                   {leveledUp && (
                     <div style={{ marginTop:"0.6rem", padding:"0.45rem 0.75rem", background:"linear-gradient(135deg,rgba(251,191,36,0.2),rgba(245,158,11,0.1))", border:"1px solid #fbbf24", borderRadius:8, color:"#fde68a", fontFamily:"'Cinzel Decorative',serif", fontSize:"0.88rem", textAlign:"center" }}>
-                      ⬆️ LIVELLO {lvAfter}! Sei più forte.
+                      ⬆️ {lang === "en" ? `LEVEL ${lvAfter}! You are stronger.` : `LIVELLO ${lvAfter}! Sei più forte.`}
                     </div>
                   )}
                 </div>
               )}
 
               <button onClick={dismiss} style={{ width:"100%", padding:"0.9rem 1.4rem", background:"linear-gradient(135deg,#14532d,#16a34a)", border:"2px solid #22c55e", borderRadius:12, color:"#dcfce7", fontFamily:"'Cinzel Decorative',serif", fontSize:"1rem", cursor:"pointer", letterSpacing:"0.08em", boxShadow:"0 8px 20px rgba(34,197,94,0.2)" }}>
-                Continua →
+                {lang === "en" ? "Continue" : "Continua"} →
               </button>
             </div>
           </div>
