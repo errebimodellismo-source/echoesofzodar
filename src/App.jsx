@@ -8292,6 +8292,7 @@ const MAP_ZONES = [
   { id:"abyss",     name:"Abisso di Zodar",     icon:"💀", desc:"Isola maledetta. Il male primordiale dimora qui. Solo i più forti sopravvivono.", levels:"Liv. 35-40 ⚠️", bgm:"combat",
     x:42, y:72, w:14, h:16, color:"#a855f7", isDangerous:true },
 ];
+const MAP_ASPECT_RATIO = 1774 / 887;
 
 // ── OsservatorioView — Zodar only ────────────────────────────────────────────
 function OsservatorioView({ me, myId, code, supabase, onJoinParty, onJoinCombat }) {
@@ -8509,7 +8510,43 @@ function LoreView() {
 function MapView({ me, onNavigate }) {
   const [hovered, setHovered] = useState(null);
   const [warning, setWarning] = useState(null);
+  const mapFrameRef = useRef(null);
+  const [mapRect, setMapRect] = useState({ left:0, top:0, width:0, height:0 });
   const myLevel = me?.level || 1;
+
+  useEffect(() => {
+    const frame = mapFrameRef.current;
+    if(!frame) return;
+
+    const updateMapRect = () => {
+      const { width: frameWidth, height: frameHeight } = frame.getBoundingClientRect();
+      if(!frameWidth || !frameHeight) return;
+
+      let width = frameWidth;
+      let height = frameWidth / MAP_ASPECT_RATIO;
+      let left = 0;
+      let top = (frameHeight - height) / 2;
+
+      if(height > frameHeight) {
+        height = frameHeight;
+        width = frameHeight * MAP_ASPECT_RATIO;
+        left = (frameWidth - width) / 2;
+        top = 0;
+      }
+
+      setMapRect({ left, top, width, height });
+    };
+
+    updateMapRect();
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(updateMapRect) : null;
+    observer?.observe(frame);
+    window.addEventListener("resize", updateMapRect);
+
+    return () => {
+      observer?.disconnect();
+      window.removeEventListener("resize", updateMapRect);
+    };
+  }, []);
 
   function handleZoneClick(zone) {
     if(zone.isCity) { onNavigate(zone); return; }
@@ -8545,38 +8582,46 @@ function MapView({ me, onNavigate }) {
       )}
 
       {/* Mappa */}
-      <div style={{ flex:1, position:"relative", overflow:"hidden" }}>
-        <img src="/assets/map.png" alt="Mappa di Zodar" style={{ width:"100%", height:"100%", objectFit:"contain" }} />
+      <div ref={mapFrameRef} style={{ flex:1, position:"relative", overflow:"hidden" }}>
+        <img src="/assets/map.png" alt="Mappa di Zodar" style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain" }} />
 
         {/* Zone overlay */}
-        {MAP_ZONES.map(zone => (
-          <div
-            key={zone.id}
-            onMouseEnter={()=>setHovered(zone)}
-            onMouseLeave={()=>setHovered(null)}
-            onClick={()=>handleZoneClick(zone)}
-            style={{
-              position:"absolute",
-              left:`${zone.x}%`, top:`${zone.y}%`,
-              width:`${zone.w}%`, height:`${zone.h}%`,
-              cursor:"pointer",
-              borderRadius:8,
-              border:`2px solid ${hovered?.id===zone.id ? zone.color : "transparent"}`,
-              background: hovered?.id===zone.id ? `${zone.color}22` : "transparent",
-              transition:"all 0.2s",
-              display:"flex", alignItems:"flex-start", justifyContent:"flex-start",
-            }}
-          >
-            {/* Pin visibile sempre */}
-            <div style={{
-              position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)",
-              fontSize: hovered?.id===zone.id ? "2rem" : "1.4rem",
-              filter:`drop-shadow(0 0 8px ${zone.color})`,
-              transition:"font-size 0.2s",
-              pointerEvents:"none",
-            }}>{zone.icon}</div>
-          </div>
-        ))}
+        <div style={{
+          position:"absolute",
+          left:mapRect.left, top:mapRect.top,
+          width:mapRect.width, height:mapRect.height,
+          pointerEvents:"none",
+        }}>
+          {MAP_ZONES.map(zone => (
+            <div
+              key={zone.id}
+              onMouseEnter={()=>setHovered(zone)}
+              onMouseLeave={()=>setHovered(null)}
+              onClick={()=>handleZoneClick(zone)}
+              style={{
+                position:"absolute",
+                left:`${zone.x}%`, top:`${zone.y}%`,
+                width:`${zone.w}%`, height:`${zone.h}%`,
+                cursor:"pointer",
+                borderRadius:8,
+                border:`2px solid ${hovered?.id===zone.id ? zone.color : "transparent"}`,
+                background: hovered?.id===zone.id ? `${zone.color}22` : "transparent",
+                transition:"all 0.2s",
+                display:"flex", alignItems:"flex-start", justifyContent:"flex-start",
+                pointerEvents:"auto",
+              }}
+            >
+              {/* Pin visibile sempre */}
+              <div style={{
+                position:"absolute", top:"50%", left:"50%", transform:"translate(-50%,-50%)",
+                fontSize: hovered?.id===zone.id ? "2rem" : "1.4rem",
+                filter:`drop-shadow(0 0 8px ${zone.color})`,
+                transition:"font-size 0.2s",
+                pointerEvents:"none",
+              }}>{zone.icon}</div>
+            </div>
+          ))}
+        </div>
 
         {/* Tooltip zona */}
         {hovered && (
