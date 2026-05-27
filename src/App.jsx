@@ -3230,6 +3230,7 @@ function AppContent() {
 
   // Master can bypass maintenance to access the panel
   const isMasterUser = canAccessMasterPanel(authUser);
+  const showLanguageToggle = !authUser || screen === "landing";
   if(appMaintenance && !isMasterUser) return (
     <div style={{ minHeight:"100vh", width:"100vw", position:"relative", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"1.5rem", padding:"2rem", textAlign:"center" }}>
       <AnimatedBackground screen={screen} />
@@ -3250,7 +3251,7 @@ function AppContent() {
   return (
     <div style={{ minHeight:"100vh", width:"100vw", fontFamily:"'Crimson Pro',Georgia,serif", color:"#e2d9c5", position:"relative" }}>
       <AnimatedBackground screen={screen} />
-      <LanguageToggle />
+      {showLanguageToggle && <LanguageToggle />}
       <style>{`
         *, *::before, *::after { box-sizing: border-box; }
         body { overflow-x: hidden; }
