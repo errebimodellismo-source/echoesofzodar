@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useMemo, useState } from "react";
 import { ITEM_TRANSLATIONS } from "./data/itemTranslations";
 import { QUEST_TRANSLATIONS } from "./data/questTranslations";
+import { STORY_TRANSLATIONS } from "./data/storyTranslations";
 
 const LANG_KEY = "eoz_language";
 
@@ -312,6 +313,49 @@ export function I18nProvider({ children }) {
         enemies: (quest.enemies || []).map((enemy, eidx) => ({
           ...enemy,
           name: tx.enemies?.[eidx]?.name || tx.enemies?.[String(eidx)]?.name || enemy.name,
+        })),
+      };
+    },
+    localizeStory: (story) => {
+      if (!story) return story;
+      const tx = STORY_TRANSLATIONS[lang]?.[story.id];
+      if (!tx) return story;
+      return {
+        ...story,
+        title: tx.title || story.title,
+        description: tx.description || story.description,
+        difficulty: tx.difficulty || story.difficulty,
+        chapters: (story.chapters || []).map((chapter) => ({
+          ...chapter,
+          title: tx.chapters?.[chapter.id]?.title || chapter.title,
+        })),
+        scenes: Object.fromEntries(Object.entries(story.scenes || {}).map(([sceneId, scene]) => {
+          const stx = tx.scenes?.[sceneId] || {};
+          return [sceneId, {
+            ...scene,
+            title: stx.title || scene.title,
+            text: stx.text || scene.text,
+            choices: (scene.choices || []).map((choice, idx) => ({
+              ...choice,
+              text: stx.choices?.[idx]?.text || stx.choices?.[String(idx)]?.text || choice.text,
+            })),
+            skillCheck: scene.skillCheck ? {
+              ...scene.skillCheck,
+              successText: stx.skillCheck?.successText || scene.skillCheck.successText,
+              failureText: stx.skillCheck?.failureText || scene.skillCheck.failureText,
+            } : scene.skillCheck,
+            gameOver: scene.gameOver ? {
+              ...scene.gameOver,
+              text: stx.gameOver?.text || scene.gameOver.text,
+            } : scene.gameOver,
+            combat: scene.combat ? {
+              ...scene.combat,
+              monsters: (scene.combat.monsters || []).map((monster, idx) => ({
+                ...monster,
+                name: stx.combat?.monsters?.[idx]?.name || stx.combat?.monsters?.[String(idx)]?.name || monster.name,
+              })),
+            } : scene.combat,
+          }];
         })),
       };
     },

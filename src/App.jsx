@@ -7781,18 +7781,19 @@ function StoryDiagram({ story }) {
 }
 
 function PlayerStoryLibrary({ stories, storyState, myId, onStartSolo, onStartParty, setTab }) {
+  const { lang } = useI18n();
   const [expanded, setExpanded] = useState(null);
   const abandonedId = myId ? localStorage.getItem(`eoz_story_abandoned_${myId}`) : null;
   const hasAbandoned = abandonedId && abandonedId === storyState?.storyId;
   const isActive = storyState?.active && !hasAbandoned;
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
-      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"0.3rem" }}>📚 Libreria Storie</h3>
-      <p style={{ color:"#64748b", fontSize:"0.8rem", marginBottom:"1rem" }}>Scegli una storia e come vuoi giocarla.</p>
+      <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", marginBottom:"0.3rem" }}>📚 {lang === "en" ? "Story Library" : "Libreria Storie"}</h3>
+      <p style={{ color:"#64748b", fontSize:"0.8rem", marginBottom:"1rem" }}>{lang === "en" ? "Choose a story and how you want to play it." : "Scegli una storia e come vuoi giocarla."}</p>
       {isActive && (
         <div style={{ background:"rgba(99,102,241,0.1)", border:"1px solid #6366f1", borderRadius:8, padding:"0.7rem 1rem", marginBottom:"1rem", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-          <span style={{ color:"#a5b4fc", fontSize:"0.85rem" }}>📖 Storia in corso — <strong>{storyState.mode==="solo"?"Solitaria":"Party"}</strong></span>
-          <button style={{ padding:"0.3rem 0.9rem", background:"#6366f1", border:"none", borderRadius:6, color:"#fff", cursor:"pointer", fontSize:"0.8rem" }} onClick={()=>setTab("story")}>▶ Vai alla storia</button>
+          <span style={{ color:"#a5b4fc", fontSize:"0.85rem" }}>📖 {lang === "en" ? "Story in progress" : "Storia in corso"} — <strong>{storyState.mode==="solo" ? (lang === "en" ? "Solo" : "Solitaria") : "Party"}</strong></span>
+          <button style={{ padding:"0.3rem 0.9rem", background:"#6366f1", border:"none", borderRadius:6, color:"#fff", cursor:"pointer", fontSize:"0.8rem" }} onClick={()=>setTab("story")}>▶ {lang === "en" ? "Go to story" : "Vai alla storia"}</button>
         </div>
       )}
       <div style={{ display:"grid", gap:"0.7rem" }}>
@@ -7802,43 +7803,44 @@ function PlayerStoryLibrary({ stories, storyState, myId, onStartSolo, onStartPar
               <span style={{ fontSize:"1.6rem" }}>{s.emoji}</span>
               <div style={{ flex:1 }}>
                 <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:"0.95rem" }}>{s.title}</div>
-                <div style={{ color:"#64748b", fontSize:"0.73rem" }}>{s.difficulty} · {s.chapters?.length||0} capitoli · {Object.keys(s.scenes||{}).length} scene</div>
+                <div style={{ color:"#64748b", fontSize:"0.73rem" }}>{s.difficulty} · {s.chapters?.length||0} {lang === "en" ? "chapters" : "capitoli"} · {Object.keys(s.scenes||{}).length} {lang === "en" ? "scenes" : "scene"}</div>
               </div>
               <span style={{ color:"#475569" }}>{expanded===s.id?"▲":"▼"}</span>
             </div>
             {expanded===s.id && (
               <div style={{ padding:"0 1rem 1rem", borderTop:"1px solid #1e293b" }}>
-                <p style={{ color:"#94a3b8", fontSize:"0.84rem", margin:"0.6rem 0 1rem" }}>{s.description || "Nessuna descrizione."}</p>
+                <p style={{ color:"#94a3b8", fontSize:"0.84rem", margin:"0.6rem 0 1rem" }}>{s.description || (lang === "en" ? "No description." : "Nessuna descrizione.")}</p>
                 <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                   <button
                     style={{ padding:"0.5rem 1.2rem", background:"linear-gradient(135deg,#6366f1,#4f46e5)", border:"none", borderRadius:8, color:"#fff", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.82rem", fontWeight:700 }}
                     onClick={()=>{ onStartSolo(s.id); setTab("story"); }}
                     disabled={isActive}
-                  >🧍 Gioca in Solitaria</button>
+                  >🧍 {lang === "en" ? "Play Solo" : "Gioca in Solitaria"}</button>
                   <button
                     style={{ padding:"0.5rem 1.2rem", background:"linear-gradient(135deg,#f59e0b,#d97706)", border:"none", borderRadius:8, color:"#fff", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.82rem", fontWeight:700 }}
                     onClick={()=>{ onStartParty(s.id); setTab("story"); }}
                     disabled={isActive}
-                  >👥 Gioca in Party</button>
+                  >👥 {lang === "en" ? "Play as Party" : "Gioca in Party"}</button>
                 </div>
-                {isActive && <div style={{ color:"#64748b", fontSize:"0.75rem", marginTop:6 }}>Termina la storia in corso prima di iniziarne una nuova.</div>}
+                {isActive && <div style={{ color:"#64748b", fontSize:"0.75rem", marginTop:6 }}>{lang === "en" ? "Finish the current story before starting a new one." : "Termina la storia in corso prima di iniziarne una nuova."}</div>}
               </div>
             )}
           </div>
         ))}
-        {stories.length === 0 && <div style={{ color:"#475569", textAlign:"center", padding:"2rem" }}>Nessuna storia disponibile.</div>}
+        {stories.length === 0 && <div style={{ color:"#475569", textAlign:"center", padding:"2rem" }}>{lang === "en" ? "No stories available." : "Nessuna storia disponibile."}</div>}
       </div>
     </div>
   );
 }
 
 function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers, onAdvance, onChoice, onVote, onFight, onSkillCheck, onLeave }) {
+  const { lang } = useI18n();
   if(!story || !scene) return (
     <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"2rem", textAlign:"center" }}>
       <div>
         <div style={{ fontSize:"3rem", marginBottom:"1rem" }}>📖</div>
-        <div style={{ color:"#475569", fontFamily:"'Cinzel',serif" }}>Nessuna storia in corso.</div>
-        <div style={{ color:"#334155", fontSize:"0.82rem", marginTop:"0.5rem" }}>Il Master deve avviare una storia dal suo pannello.</div>
+        <div style={{ color:"#475569", fontFamily:"'Cinzel',serif" }}>{lang === "en" ? "No story in progress." : "Nessuna storia in corso."}</div>
+        <div style={{ color:"#334155", fontSize:"0.82rem", marginTop:"0.5rem" }}>{lang === "en" ? "The Master must start a story from the panel." : "Il Master deve avviare una storia dal suo pannello."}</div>
       </div>
     </div>
   );
@@ -7890,7 +7892,7 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
           <span style={{ fontSize:"1.4rem" }}>{story.emoji}</span>
           <div>
             <div style={{ color:"#94a3b8", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>
-              Storia in corso · {storyState?.mode === "solo" ? "🧍 Solitaria" : "👥 Party"}
+              {lang === "en" ? "Story in progress" : "Storia in corso"} · {storyState?.mode === "solo" ? (lang === "en" ? "🧍 Solo" : "🧍 Solitaria") : "👥 Party"}
             </div>
             <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontSize:"0.9rem", fontWeight:700 }}>{story.title}</div>
           </div>
@@ -7903,13 +7905,13 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
           <button
             onClick={()=>{
               if(isLeader) {
-                if(window.confirm("Sei il leader — abbandonare termina la storia per tutto il party. Confermi?")) onAdvance(null);
+                if(window.confirm(lang === "en" ? "You are the leader. Leaving ends the story for the whole party. Confirm?" : "Sei il leader — abbandonare termina la storia per tutto il party. Confermi?")) onAdvance(null);
               } else {
-                if(window.confirm("Vuoi uscire dalla storia? Gli altri continueranno senza di te.")) onLeave();
+                if(window.confirm(lang === "en" ? "Leave the story? The others will continue without you." : "Vuoi uscire dalla storia? Gli altri continueranno senza di te.")) onLeave();
               }
             }}
             style={{ marginLeft: currentChapter ? "0.5rem" : "auto", padding:"0.25rem 0.7rem", background:"transparent", border:"1px solid #475569", borderRadius:6, color:"#64748b", cursor:"pointer", fontSize:"0.72rem", whiteSpace:"nowrap" }}
-          >✕ Abbandona</button>
+          >✕ {lang === "en" ? "Leave" : "Abbandona"}</button>
         </div>
 
         {/* Scene card */}
@@ -7924,7 +7926,7 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
           {/* Skill check info */}
           {scene.type === "skillCheck" && scene.skillCheck && (
             <div style={{ margin:"0 1.1rem 1rem", padding:"0.7rem", background:"rgba(88,28,135,0.2)", border:"1px solid #7e22ce", borderRadius:8 }}>
-              <div style={{ color:"#c084fc", fontSize:"0.82rem", fontWeight:700, marginBottom:4 }}>🎲 Prova di Abilità</div>
+              <div style={{ color:"#c084fc", fontSize:"0.82rem", fontWeight:700, marginBottom:4 }}>🎲 {lang === "en" ? "Skill Check" : "Prova di Abilità"}</div>
               <div style={{ color:"#a78bfa", fontSize:"0.78rem" }}>
                 Stat: <strong>{scene.skillCheck.stat?.toUpperCase()}</strong> · DC: <strong>{scene.skillCheck.dc}</strong>
               </div>
@@ -7952,15 +7954,15 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
           {/* Rewards preview */}
           {(scene.type==="reward"||scene.type==="ending") && scene.rewards && scene.outcomeType !== "partial" && scene.outcomeType !== "defeat" && (
             <div style={{ margin:"0 1.1rem 1rem", display:"flex", flexWrap:"wrap", gap:6 }}>
-              {scene.rewards.xp > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(6,78,59,0.2)", border:"1px solid #065f46", color:"#6ee7b7" }}>⭐ +{scene.rewards.xp} XP a testa</span>}
-              {scene.rewards.gold > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(6,78,59,0.2)", border:"1px solid #065f46", color:"#6ee7b7" }}>💰 +{scene.rewards.gold} oro a testa</span>}
+              {scene.rewards.xp > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(6,78,59,0.2)", border:"1px solid #065f46", color:"#6ee7b7" }}>⭐ +{scene.rewards.xp} XP {lang === "en" ? "each" : "a testa"}</span>}
+              {scene.rewards.gold > 0 && <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(6,78,59,0.2)", border:"1px solid #065f46", color:"#6ee7b7" }}>💰 +{scene.rewards.gold} {lang === "en" ? "gold each" : "oro a testa"}</span>}
             </div>
           )}
           {/* Partial failure rewards preview */}
           {scene.type==="ending" && scene.outcomeType==="partial" && scene.rewards?.xp > 0 && (
             <div style={{ margin:"0 1.1rem 1rem", display:"flex", flexWrap:"wrap", gap:6 }}>
-              <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(120,53,15,0.2)", border:"1px solid #92400e", color:"#fcd34d" }}>⭐ +{Math.floor(scene.rewards.xp * 0.3)} XP a testa (30%)</span>
-              <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(71,85,105,0.2)", border:"1px solid #475569", color:"#94a3b8" }}>💰 0 oro</span>
+              <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(120,53,15,0.2)", border:"1px solid #92400e", color:"#fcd34d" }}>⭐ +{Math.floor(scene.rewards.xp * 0.3)} XP {lang === "en" ? "each" : "a testa"} (30%)</span>
+              <span style={{ fontSize:"0.78rem", padding:"4px 10px", borderRadius:999, background:"rgba(71,85,105,0.2)", border:"1px solid #475569", color:"#94a3b8" }}>💰 0 {lang === "en" ? "gold" : "oro"}</span>
             </div>
           )}
 
@@ -7968,10 +7970,10 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
           <div style={{ padding:"0 1.1rem 1.1rem", display:"flex", gap:8, justifyContent:"flex-end", flexWrap:"wrap" }}>
             {/* story / returnPoint / reward */}
             {(scene.type==="story"||scene.type==="narration"||scene.type==="returnPoint"||scene.type==="rest") && isLeader && scene.nextScene && (
-              <BigBtn onClick={()=>onAdvance(scene.nextScene)} gold>📜 Continua</BigBtn>
+              <BigBtn onClick={()=>onAdvance(scene.nextScene)} gold>📜 {lang === "en" ? "Continue" : "Continua"}</BigBtn>
             )}
             {(scene.type==="story"||scene.type==="narration"||scene.type==="returnPoint"||scene.type==="rest") && !isLeader && (
-              <span style={{ color:"#475569", fontSize:"0.78rem", alignSelf:"center" }}>In attesa del capo-party…</span>
+              <span style={{ color:"#475569", fontSize:"0.78rem", alignSelf:"center" }}>{lang === "en" ? "Waiting for the party leader..." : "In attesa del capo-party…"}</span>
             )}
 
             {/* choice */}
@@ -7985,8 +7987,8 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
                 <div style={{ width:"100%", display:"flex", flexDirection:"column", gap:8 }}>
                   {isPartyMode && (
                     <div style={{ fontSize:"0.75rem", color:"#64748b", marginBottom:2 }}>
-                      🗳️ Votazione — {Object.keys(votes).length}/{totalPlayers} hanno votato
-                      {allVoted && <span style={{ color:"#22c55e", marginLeft:6 }}>✓ Risoluzione in corso…</span>}
+                      🗳️ {lang === "en" ? "Vote" : "Votazione"} — {Object.keys(votes).length}/{totalPlayers} {lang === "en" ? "voted" : "hanno votato"}
+                      {allVoted && <span style={{ color:"#22c55e", marginLeft:6 }}>✓ {lang === "en" ? "Resolving..." : "Risoluzione in corso…"}</span>}
                     </div>
                   )}
                   {scene.choices?.map((c, i) => {
@@ -7999,14 +8001,14 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
                       <button key={i} disabled={locked}
                         onClick={()=> isPartyMode ? onVote(i) : (isLeader ? onChoice(i) : null)}
                         style={{ textAlign:"left", padding:"0.7rem 1rem", borderRadius:8, cursor:(locked||(!isPartyMode&&!isLeader))?"not-allowed":"pointer", opacity:locked?0.4:1, background:bg, border:`1px solid ${border}`, color:locked?"#475569":"#e2d9c5", fontSize:"0.9rem", transition:"background 0.15s", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
-                        <span>{c.text}{locked && <span style={{ marginLeft:8, fontSize:"0.72rem", color:"#475569" }}>(richiede condizioni)</span>}</span>
+                        <span>{c.text}{locked && <span style={{ marginLeft:8, fontSize:"0.72rem", color:"#475569" }}>({lang === "en" ? "requirements not met" : "richiede condizioni"})</span>}</span>
                         {isPartyMode && voteCount > 0 && <span style={{ background:"rgba(99,102,241,0.4)", borderRadius:6, padding:"1px 8px", fontSize:"0.75rem", color:"#a5b4fc", flexShrink:0 }}>{voteCount} 🗳️</span>}
-                        {iMyVote && <span style={{ fontSize:"0.72rem", color:"#818cf8", marginLeft:4 }}>✓ tuo voto</span>}
+                        {iMyVote && <span style={{ fontSize:"0.72rem", color:"#818cf8", marginLeft:4 }}>✓ {lang === "en" ? "your vote" : "tuo voto"}</span>}
                       </button>
                     );
                   })}
                   {!isPartyMode && !isLeader && (
-                    <span style={{ color:"#64748b", fontSize:"0.78rem", alignSelf:"center" }}>In attesa del capo-party…</span>
+                    <span style={{ color:"#64748b", fontSize:"0.78rem", alignSelf:"center" }}>{lang === "en" ? "Waiting for the party leader..." : "In attesa del capo-party…"}</span>
                   )}
                 </div>
               );
@@ -8014,36 +8016,38 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
 
             {/* skillCheck */}
             {scene.type==="skillCheck" && isLeader && (
-              <BigBtn onClick={()=>onSkillCheck(scene)} gold>🎲 Effettua la prova</BigBtn>
+              <BigBtn onClick={()=>onSkillCheck(scene)} gold>🎲 {lang === "en" ? "Roll Check" : "Effettua la prova"}</BigBtn>
             )}
             {scene.type==="skillCheck" && !isLeader && (
-              <span style={{ color:"#475569", fontSize:"0.78rem", alignSelf:"center" }}>Il capo-party effettua la prova…</span>
+              <span style={{ color:"#475569", fontSize:"0.78rem", alignSelf:"center" }}>{lang === "en" ? "The party leader rolls the check..." : "Il capo-party effettua la prova…"}</span>
             )}
 
             {/* combat */}
             {scene.type==="combat" && isLeader && (
-              <BigBtn onClick={()=>onFight(scene)} gold>⚔️ Affronta il nemico</BigBtn>
+              <BigBtn onClick={()=>onFight(scene)} gold>⚔️ {lang === "en" ? "Face the Enemy" : "Affronta il nemico"}</BigBtn>
             )}
             {scene.type==="combat" && !isLeader && (
-              <span style={{ color:"#f87171", fontSize:"0.82rem", alignSelf:"center" }}>Il capo-party deve avviare il combattimento.</span>
+              <span style={{ color:"#f87171", fontSize:"0.82rem", alignSelf:"center" }}>{lang === "en" ? "The party leader must start combat." : "Il capo-party deve avviare il combattimento."}</span>
             )}
 
             {/* ending — successo pieno o fallimento narrativo */}
             {scene.type==="ending" && (() => {
               const isPartial = scene.outcomeType === "partial";
               const icon = isPartial ? "📖" : (ENDING_ICONS[scene.endingType] || "🏆");
-              const label = isPartial ? "Fallimento Narrativo" : (scene.endingType==="good" ? "Fine Gloriosa" : scene.endingType==="fail" ? "Fine Amara" : "Fine della Storia");
+              const label = lang === "en"
+                ? (isPartial ? "Narrative Setback" : (scene.endingType==="good" ? "Glorious Ending" : scene.endingType==="fail" ? "Bitter Ending" : "End of the Story"))
+                : (isPartial ? "Fallimento Narrativo" : (scene.endingType==="good" ? "Fine Gloriosa" : scene.endingType==="fail" ? "Fine Amara" : "Fine della Storia"));
               const labelColor = isPartial ? "#fbbf24" : col.accent;
               const rewardNote = isPartial
-                ? "Il party sopravvive e porta a casa alcune informazioni. XP parziale, nessun oro."
-                : "La missione è completata con successo!";
+                ? (lang === "en" ? "The party survives and brings home some information. Partial XP, no gold." : "Il party sopravvive e porta a casa alcune informazioni. XP parziale, nessun oro.")
+                : (lang === "en" ? "The story is completed successfully!" : "La missione è completata con successo!");
               return (
                 <div style={{ width:"100%", textAlign:"center", padding:"0.5rem 0" }}>
                   <div style={{ fontSize:"2.5rem", marginBottom:"0.4rem" }}>{icon}</div>
                   <div style={{ fontFamily:"'Cinzel',serif", color:labelColor, fontSize:"1rem", fontWeight:700, marginBottom:"0.2rem" }}>{label}</div>
                   <div style={{ color:"#94a3b8", fontSize:"0.8rem", marginBottom:"0.6rem" }}>{rewardNote}</div>
-                  {scene.nextScene && isLeader && <BigBtn onClick={()=>onAdvance(scene.nextScene)} gold>📖 Prossimo capitolo</BigBtn>}
-                  {!scene.nextScene && isLeader && <BigBtn onClick={()=>onAdvance(null)} gold>✅ Concludi la storia</BigBtn>}
+                  {scene.nextScene && isLeader && <BigBtn onClick={()=>onAdvance(scene.nextScene)} gold>📖 {lang === "en" ? "Next Chapter" : "Prossimo capitolo"}</BigBtn>}
+                  {!scene.nextScene && isLeader && <BigBtn onClick={()=>onAdvance(null)} gold>✅ {lang === "en" ? "Conclude Story" : "Concludi la storia"}</BigBtn>}
                 </div>
               );
             })()}
@@ -8052,13 +8056,13 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
             {scene.type==="gameOver" && (
               <div style={{ width:"100%", textAlign:"center", padding:"0.5rem 0" }}>
                 <div style={{ fontSize:"2.5rem", marginBottom:"0.4rem" }}>💀</div>
-                <div style={{ fontFamily:"'Cinzel',serif", color:"#ef4444", fontSize:"1rem", fontWeight:700, marginBottom:"0.2rem" }}>Missione Fallita</div>
-                <div style={{ color:"#94a3b8", fontSize:"0.8rem", marginBottom:"0.6rem" }}>Il party è stato sconfitto. I personaggi sopravvivono ma tornano a mani vuote. Nessuna ricompensa.</div>
+                <div style={{ fontFamily:"'Cinzel',serif", color:"#ef4444", fontSize:"1rem", fontWeight:700, marginBottom:"0.2rem" }}>{lang === "en" ? "Mission Failed" : "Missione Fallita"}</div>
+                <div style={{ color:"#94a3b8", fontSize:"0.8rem", marginBottom:"0.6rem" }}>{lang === "en" ? "The party was defeated. The characters survive, but return empty-handed. No reward." : "Il party è stato sconfitto. I personaggi sopravvivono ma tornano a mani vuote. Nessuna ricompensa."}</div>
                 {scene.gameOver?.retryScene && isLeader && (
-                  <BigBtn onClick={()=>onAdvance(scene.gameOver.retryScene)} gold>🔄 Riprova dall'ultimo punto</BigBtn>
+                  <BigBtn onClick={()=>onAdvance(scene.gameOver.retryScene)} gold>🔄 {lang === "en" ? "Retry from Last Point" : "Riprova dall'ultimo punto"}</BigBtn>
                 )}
                 {!scene.gameOver?.retryScene && isLeader && (
-                  <BigBtn onClick={()=>onAdvance(null)}>💀 Chiudi la missione</BigBtn>
+                  <BigBtn onClick={()=>onAdvance(null)}>💀 {lang === "en" ? "Close Mission" : "Chiudi la missione"}</BigBtn>
                 )}
               </div>
             )}
@@ -8068,7 +8072,7 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
         {/* Flags attivi */}
         {Object.keys(storyFlags).length > 0 && (
           <div style={{ background:"rgba(15,23,42,0.5)", border:"1px solid #1e293b", borderRadius:8, padding:"0.7rem" }}>
-            <div style={{ color:"#475569", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:"0.4rem" }}>🚩 Flag storia</div>
+            <div style={{ color:"#475569", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:"0.4rem" }}>🚩 {lang === "en" ? "Story Flags" : "Flag storia"}</div>
             <div style={{ display:"flex", flexWrap:"wrap", gap:5 }}>
               {Object.entries(storyFlags).map(([k,v])=>(
                 <span key={k} style={{ fontSize:"0.7rem", padding:"2px 8px", borderRadius:4, background:"rgba(99,102,241,0.15)", border:"1px solid #312e81", color:"#a5b4fc" }}>{k}: {String(v)}</span>
@@ -8080,7 +8084,7 @@ function StoryView({ story, scene, storyState, isLeader, me, myId, partyPlayers,
         {/* Choice log */}
         {storyState?.choiceLog?.length > 0 && (
           <div style={{ background:"rgba(15,23,42,0.5)", border:"1px solid #1e293b", borderRadius:8, padding:"0.8rem" }}>
-            <div style={{ color:"#475569", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:"0.5rem" }}>📋 Scelte precedenti</div>
+            <div style={{ color:"#475569", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em", marginBottom:"0.5rem" }}>📋 {lang === "en" ? "Previous Choices" : "Scelte precedenti"}</div>
             {storyState.choiceLog.slice(-5).map((log, i) => (
               <div key={i} style={{ fontSize:"0.76rem", color:"#64748b", padding:"2px 0" }}>
                 → <span style={{ color:"#94a3b8" }}>{log.sceneTitle}</span>: <em style={{ color:"#fbbf24" }}>{log.choiceText}</em>
@@ -9139,7 +9143,7 @@ function GlobalLeaderboardView({ myId, partyCode }) {
    GAME SCREEN
 ---------------------------------------------- */
 function GameScreen({ myId, setScreen, authUser }) {
-  const { t, lang, itemName, localizeQuest } = useI18n();
+  const { t, lang, itemName, localizeQuest, localizeStory } = useI18n();
   const [me, setMeRaw] = useState(null);
   const latestMeRef = useRef(null);
   const [isAfk, setIsAfkState] = useState(() => myId ? localStorage.getItem(`afk_${myId}`) === '1' : false);
@@ -10604,7 +10608,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     return STORIES.find(s => s.id === id) || customStories.find(s => s.id === id) || null;
   }
   const storyState = qs?.story || null;
-  const activeStory = storyState?.active ? getStory(storyState.storyId) : null;
+  const activeStory = storyState?.active ? localizeStory(getStory(storyState.storyId)) : null;
   const activeStoryScene = activeStory ? activeStory.scenes?.[storyState.currentSceneId] : null;
   const isStoryLeader = storyState?.mode === "solo"
     ? storyState?.soloPlayerId === myId
@@ -10631,15 +10635,16 @@ function GameScreen({ myId, setScreen, authUser }) {
     };
     const latestQs = await dbGetPartyState(code);
     await dbSavePartyState(code, { ...latestQs, story: newStory });
-    const firstScene = story.scenes?.[firstSceneId];
-    await addMsg(`📖 **La storia inizia**: ${story.emoji} *${story.title}*\n*${firstScene?.title||""}*`, "narration", "Master");
+    const displayStory = localizeStory(story);
+    const firstScene = displayStory.scenes?.[firstSceneId];
+    await addMsg(lang === "en" ? `📖 **The story begins**: ${displayStory.emoji} *${displayStory.title}*\n*${firstScene?.title||""}*` : `📖 **La storia inizia**: ${displayStory.emoji} *${displayStory.title}*\n*${firstScene?.title||""}*`, "narration", "Master");
   }
 
   async function stopStory() {
     if(!code) return;
     const latestQs = await dbGetPartyState(code);
     await dbSavePartyState(code, { ...latestQs, story: { active:false } });
-    await addMsg(`📖 Storia interrotta dal Master.`, "info", "Sistema");
+    await addMsg(lang === "en" ? `📖 Story interrupted by the Master.` : `📖 Storia interrotta dal Master.`, "info", lang === "en" ? "System" : "Sistema");
   }
 
   // outcomeType: "success" | "partial" | "defeat"
@@ -10656,7 +10661,7 @@ function GameScreen({ myId, setScreen, authUser }) {
         await dbSavePlayer(up);
         if(p.id === myId) setMeRaw(up);
       }
-      await addMsg(`💰 ${xpEach>0?`+${xpEach} XP`:''} ${goldEach>0?`+${goldEach} oro`:''} a testa.`, "victory", "Sistema");
+      await addMsg(lang === "en" ? `💰 ${xpEach>0?`+${xpEach} XP`:''} ${goldEach>0?`+${goldEach} gold`:''} each.` : `💰 ${xpEach>0?`+${xpEach} XP`:''} ${goldEach>0?`+${goldEach} oro`:''} a testa.`, "victory", lang === "en" ? "System" : "Sistema");
     }
   }
 
@@ -10672,15 +10677,15 @@ function GameScreen({ myId, setScreen, authUser }) {
         : (scene?.outcomeType || "success");
 
       if(sceneType === "gameOver") {
-        await addMsg(`💀 **Missione fallita**: *${activeStory.title}*\nIl party è stato sconfitto. I personaggi sopravvivono ma tornano a mani vuote.`, "danger", "Sistema");
+        await addMsg(lang === "en" ? `💀 **Mission failed**: *${activeStory.title}*\nThe party was defeated. The characters survive, but return empty-handed.` : `💀 **Missione fallita**: *${activeStory.title}*\nIl party è stato sconfitto. I personaggi sopravvivono ma tornano a mani vuote.`, "danger", lang === "en" ? "System" : "Sistema");
       } else if(outcomeType === "partial") {
         const freshPlayers = await dbGetPlayers(code);
         await _applySceneRewards(scene, freshPlayers, "partial");
-        await addMsg(`📖 **Storia conclusa** (esito parziale): *${activeStory.title}*\nIl party porta a casa qualcosa, ma non tutto è andato come sperato.`, "info", "Sistema");
+        await addMsg(lang === "en" ? `📖 **Story concluded** (partial outcome): *${activeStory.title}*\nThe party brings something home, but not everything went as hoped.` : `📖 **Storia conclusa** (esito parziale): *${activeStory.title}*\nIl party porta a casa qualcosa, ma non tutto è andato come sperato.`, "info", lang === "en" ? "System" : "Sistema");
       } else {
         const freshPlayers = await dbGetPlayers(code);
         await _applySceneRewards(scene, freshPlayers, "success");
-        await addMsg(`🏆 **Storia conclusa**: *${activeStory.title}*`, "victory", "Sistema");
+        await addMsg(lang === "en" ? `🏆 **Story concluded**: *${activeStory.title}*` : `🏆 **Storia conclusa**: *${activeStory.title}*`, "victory", lang === "en" ? "System" : "Sistema");
       }
 
       await dbSavePartyState(code, { ...latestQs, story: { active:false, lastCompleted: storyState.storyId, lastOutcome: outcomeType } });
@@ -10736,7 +10741,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       choiceIdx, choiceText, at: Date.now()
     }];
     await dbSavePartyState(code, { ...latestQs, story: { ...latestQs.story, choiceLog: newLog } });
-    await addMsg(`🔀 **${me?.name}** sceglie: *${choiceText}*`, "info", "Sistema");
+    await addMsg(lang === "en" ? `🔀 **${me?.name}** chooses: *${choiceText}*` : `🔀 **${me?.name}** sceglie: *${choiceText}*`, "info", lang === "en" ? "System" : "Sistema");
     await advanceStoryScene(choice.nextScene, choice.setFlags||{});
   }
 
@@ -10762,7 +10767,7 @@ function GameScreen({ myId, setScreen, authUser }) {
         choiceIdx: winnerIdx, choiceText: choice.text, at: Date.now()
       }];
       await dbSavePartyState(code, { ...freshQs, story: { ...freshQs.story, choiceLog: newLog, votes: {} } });
-      await addMsg(`🗳️ **Voto maggioranza**: *${choice.text}* (${votes})`, "info", "Sistema");
+      await addMsg(lang === "en" ? `🗳️ **Majority vote**: *${choice.text}* (${votes})` : `🗳️ **Voto maggioranza**: *${choice.text}* (${votes})`, "info", lang === "en" ? "System" : "Sistema");
       await advanceStoryScene(choice.nextScene, choice.setFlags||{});
     }
   }
@@ -10775,9 +10780,9 @@ function GameScreen({ myId, setScreen, authUser }) {
     const total = roll + statVal;
     const success = total >= dc;
     const resultText = success
-      ? `🎲 Prova di ${stat.toUpperCase()} — tiro ${roll}+${statVal}=${total} vs DC${dc}: **SUCCESSO!** ${successText||""}`
-      : `🎲 Prova di ${stat.toUpperCase()} — tiro ${roll}+${statVal}=${total} vs DC${dc}: *Fallimento.* ${failureText||""}`;
-    await addMsg(resultText, "info", "Sistema");
+      ? (lang === "en" ? `🎲 ${stat.toUpperCase()} check — roll ${roll}+${statVal}=${total} vs DC${dc}: **SUCCESS!** ${successText||""}` : `🎲 Prova di ${stat.toUpperCase()} — tiro ${roll}+${statVal}=${total} vs DC${dc}: **SUCCESSO!** ${successText||""}`)
+      : (lang === "en" ? `🎲 ${stat.toUpperCase()} check — roll ${roll}+${statVal}=${total} vs DC${dc}: *Failure.* ${failureText||""}` : `🎲 Prova di ${stat.toUpperCase()} — tiro ${roll}+${statVal}=${total} vs DC${dc}: *Fallimento.* ${failureText||""}`);
+    await addMsg(resultText, "info", lang === "en" ? "System" : "Sistema");
     await advanceStoryScene(success ? successScene : failureScene);
   }
 
@@ -10804,7 +10809,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     const newCombat = { active:true, combatants:allCombatants, turn:0, round:1, spellSlots:{}, startedAt:Date.now(), questDmgLog:{} };
     const newStory = { ...latestQs.story, battlePending:true, battleNext:scene.combat.successScene, battleNextFail:scene.combat.failureScene||null };
     await dbSavePartyState(code, { ...latestQs, combat:newCombat, story:newStory });
-    await addMsg(`⚔️ **${scene.title}** — Inizia il combattimento!`, "combat", "Sistema");
+    await addMsg(lang === "en" ? `⚔️ **${scene.title}** — Combat begins!` : `⚔️ **${scene.title}** — Inizia il combattimento!`, "combat", lang === "en" ? "System" : "Sistema");
     setTab("combat");
   }
 
@@ -12933,7 +12938,7 @@ ${stepText(step)}`, "quest","Master");
         })()}
         {tab==="storylibrary" && (
           <PlayerStoryLibrary
-            stories={[...STORIES, ...customStories]}
+            stories={[...STORIES.map(localizeStory), ...customStories]}
             storyState={storyState}
             myId={myId}
             onStartSolo={storyId => startStory(storyId, "solo")}
