@@ -142,6 +142,8 @@ function questRiskProfile(q, partyPlayers = [], lang = "it") {
 }
 const GAME_VERSION = "v1.4.0";
 const BACKGROUND_URL = "/assets/Zodarsfondo.png";
+const ZODAR_PORTRAIT_URL = "/assets/zodar/zodar-portrait.png";
+const ZODAR_FULL_URL = "/assets/zodar/zodar-full.png";
 const MAINTENANCE_CODE = "__maintenance__";
 const AUCTION_HOUSE_CODE = "__world_auctions__";
 const MASTER_PASSWORD = "ByBy101112!";
@@ -2200,8 +2202,17 @@ function makeRaceClassPortrait(cls, race, gender) {
     <rect x="10" y="10" width="300" height="300" rx="30" fill="url(#glow)" opacity="0.18" clip-path="url(#cl)"/>
   </svg>`);
 }
+function isZodarEntity(player) {
+  if(!player) return false;
+  return player.class === "custode_equilibrio"
+    || player.race === "entita_primordiale"
+    || player.id?.startsWith?.("zodar_")
+    || player.name === "Zodar";
+}
+
 function getPlayerPortrait(player) {
   if(!player) return "";
+  if(isZodarEntity(player)) return ZODAR_PORTRAIT_URL;
   if(player.portrait) return player.portrait;
   if(player.image) return player.image;
   const cls  = (player.class  || "warrior").toLowerCase();
@@ -3836,6 +3847,7 @@ function CreateZodar({ setScreen, goGame, authUser }) {
         accountId: authUser?.id || null,
         hp:9999, maxHp:9999, atk:99, def:99, mag:99, init:99,
         xp:0, level:1, gold:0, dead:false,
+        portrait:ZODAR_PORTRAIT_URL, image:ZODAR_PORTRAIT_URL,
         portrait_hair:0, portrait_eyes:0, portrait_scar:0, portrait_beard:0,
       };
       const { error, data: saved } = await dbSavePlayer(player);
@@ -3860,7 +3872,7 @@ function CreateZodar({ setScreen, goGame, authUser }) {
       <div style={{ width:"min(520px,100%)", position:"relative", zIndex:1 }}>
         {phase === 0 && (
           <div style={{ textAlign:"center" }}>
-            <img src="/assets/zodar/zodar-full.png" alt="Zodar" style={{ width:"100%", maxHeight:280, objectFit:"cover", objectPosition:"top center", borderRadius:14, marginBottom:"1rem", boxShadow:"0 0 50px rgba(109,40,217,0.4)", border:"1px solid rgba(168,85,247,0.3)" }} onError={e=>{e.currentTarget.replaceWith(Object.assign(document.createElement('div'),{style:"font-size:4rem;animation:zodar-float 3s ease-in-out infinite;margin-bottom:1rem",textContent:"⚖️"}))}} />
+            <img src={ZODAR_FULL_URL} alt="Zodar" style={{ width:"100%", maxHeight:280, objectFit:"cover", objectPosition:"top center", borderRadius:14, marginBottom:"1rem", boxShadow:"0 0 50px rgba(109,40,217,0.4)", border:"1px solid rgba(168,85,247,0.3)" }} onError={e=>{e.currentTarget.replaceWith(Object.assign(document.createElement('div'),{style:"font-size:4rem;animation:zodar-float 3s ease-in-out infinite;margin-bottom:1rem",textContent:"⚖️"}))}} />
             <h1 style={{ fontFamily:"'Cinzel',serif", color:"#e9d5ff", fontSize:"2rem", letterSpacing:"0.1em", marginBottom:"0.3rem" }}>Zodar</h1>
             <div style={{ fontFamily:"'Cinzel',serif", color:"#6d28d9", fontSize:"0.8rem", letterSpacing:"0.2em", marginBottom:"2rem" }}>CUSTODE DELL'EQUILIBRIO</div>
             <div style={{ background:"rgba(10,0,30,0.8)", border:"1px solid rgba(168,85,247,0.3)", borderRadius:14, padding:"2rem", marginBottom:"2rem", textAlign:"left" }}>
@@ -9325,6 +9337,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [guildLoading, setGuildLoading] = useState(false);
   const [worldPlayers, setWorldPlayers] = useState([]);
   const [worldMeta, setWorldMeta] = useState({});
+  const [partyPresenceMeta, setPartyPresenceMeta] = useState({});
   const [guildForm, setGuildForm] = useState({ name:"", emoji:"⚔️", desc:"", emblem:{...DEFAULT_EMBLEM} });
   const [guildDonate, setGuildDonate] = useState(100);
   const [warehouseItems, setWarehouseItems] = useState([]);
@@ -9485,6 +9498,24 @@ function GameScreen({ myId, setScreen, authUser }) {
       return;
     }
     setUnlockedSpecialQuestIds(lsGet(`eoz_special_unlocked_${code}`, []));
+  }, [code]);
+
+  useEffect(() => {
+    if(!code) {
+      setPartyPresenceMeta({});
+      return;
+    }
+    let alive = true;
+    async function refreshPartyPresence() {
+      const meta = await dbGetUserMasterMeta().catch(() => ({}));
+      if(alive) setPartyPresenceMeta(meta);
+    }
+    refreshPartyPresence();
+    const timer = setInterval(refreshPartyPresence, USER_HEARTBEAT_MS);
+    return () => {
+      alive = false;
+      clearInterval(timer);
+    };
   }, [code]);
 
   function unlockSpecialQuest() {
@@ -12475,6 +12506,32 @@ ${stepText(step)}`, "quest","Master");
   const nextLevelXp = xpForLevel(me?.level || 1);
   const canLevelUp = (me?.xp || 0) >= nextLevelXp;
   const nextLevelPreview = me ? applyLevelUpToPlayer(me).player : null;
+  const navRows = [
+    [
+      ["quest",`📜 ${t("nav.quests")}`],
+      ["story",`📖 ${t("nav.story")}`],
+      ["storylibrary",`📚 ${t("nav.stories")}`],
+      ["inventory",`🎒 ${t("nav.inventory")}`],
+      ["equipment",`🎽 ${t("nav.equipment")}`],
+      ["level",`⭐ ${t("nav.level")}`],
+      ["diary",`📖 ${t("nav.diary")}`],
+      ["combat",`⚔️ ${t("nav.battle")}`],
+    ],
+    [
+      ["shop",`🛒 ${t("nav.shop")}`],
+      ["forge",`⚒️ ${t("nav.forge")}`],
+      ["chat",`💬 ${t("nav.chat")}`],
+      ["spells",`✨ ${t("nav.spells")}`],
+      ["dungeon",`🗺️ ${t("nav.dungeon")}`],
+      ["map",`🗺️ ${t("nav.map")}`],
+      ["lore",`⚖️ ${t("nav.zodar")}`],
+      ...(me?.class==="custode_equilibrio"?[["osservatorio",`🔭 ${t("nav.observatory")}`]]: []),
+      ["guild",`🏛️ ${t("nav.guild")}`],
+      ["worldevent",`🌋 ${t("nav.event")}`],
+      ["leaderboard",`🏆 ${t("nav.leaderboard")}`],
+      ["trade",`🏦 ${t("nav.market")}`],
+    ],
+  ];
 
   function togglePreparedSpell(spellId) {
     if(!myId) return;
@@ -12867,18 +12924,31 @@ ${stepText(step)}`, "quest","Master");
 
         <div style={{ background:PANEL_BG_SOFT, border:`1px solid ${PANEL_BORDER}`, borderRadius:4, padding:"0.5rem" }}>
           <div style={{ fontSize:"0.58rem", color:"#64748b", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>👥 Party — {code}</div>
-          {partyPlayers.filter(p=>p.id!==myId).map(p=>(
+          {partyPlayers.filter(p=>p.id!==myId).map(p=>{
+            const online = isPartyPlayerOnline(p, partyPresenceMeta, Date.now());
+            return (
             <div key={p?.id} style={{ display:"flex", gap:5, alignItems:"center", marginBottom:3 }}>
-              <span style={{ fontSize:"0.9rem" }}>{CLASSES[p?.class||'warrior']?.emoji}</span>
+              <span
+                title={online ? (lang === "en" ? "Online" : "Online") : (lang === "en" ? "Offline" : "Offline")}
+                style={{
+                  width:8,
+                  height:8,
+                  borderRadius:"50%",
+                  background:online ? "#22c55e" : "#ef4444",
+                  boxShadow:online ? "0 0 7px rgba(34,197,94,0.85)" : "0 0 6px rgba(239,68,68,0.65)",
+                  flexShrink:0,
+                }}
+              />
+              <span style={{ fontSize:"0.9rem", opacity:online ? 1 : 0.55 }}>{CLASSES[p?.class||'warrior']?.emoji}</span>
               <div style={{ flex:1, minWidth:0 }}>
-                <div style={{ fontSize:"0.72rem", color:"#d1d5db", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p?.name}</div>
+                <div style={{ fontSize:"0.72rem", color:online ? "#d1d5db" : "#64748b", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p?.name}</div>
                 <div style={{ height:2, background:"#0f172a", borderRadius:1, overflow:"hidden", marginTop:1 }}>
-                  <div style={{ height:"100%", background:(p?.hp||0)/(p?.maxHp||1)>0.5?"#22c55e":(p?.hp||0)/(p?.maxHp||1)>0.25?"#f59e0b":"#ef4444", width:`${Math.min(100,(p?.hp||0)/(p?.maxHp||1)*100)}%` }} />
+                  <div style={{ height:"100%", background:(p?.hp||0)/(p?.maxHp||1)>0.5?"#22c55e":(p?.hp||0)/(p?.maxHp||1)>0.25?"#f59e0b":"#ef4444", width:`${Math.min(100,(p?.hp||0)/(p?.maxHp||1)*100)}%`, opacity:online ? 1 : 0.45 }} />
                 </div>
               </div>
               <span style={{ fontSize:"0.6rem", color:"#94a3b8", flexShrink:0 }}>Lv.{p?.level||1}</span>
             </div>
-          ))}
+          )})}
           {partyPlayers.length<=1&&<div style={{ color:"#1f2937", fontSize:"0.68rem" }}>{lang === "en" ? "Solo for now" : "Solo per ora"}</div>}
           <JoinPartyWidget myId={myId} currentCode={code} />
         </div>
@@ -12942,39 +13012,44 @@ ${stepText(step)}`, "quest","Master");
 
       {/* MAIN */}
       <main style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden", background:combatMode?"rgba(2,6,23,0.52)":"rgba(2,6,23,0.28)", position:"relative", zIndex:1, backdropFilter:"blur(2px)" }}>
-        <div style={{ display:"flex", gap:0, borderBottom:`1px solid ${PANEL_BORDER}`, background:combatMode?"rgba(8,10,20,0.94)":"rgba(3,7,18,0.88)", flexShrink:0, overflowX:"auto", overflowY:"hidden" }}>
-          {/* Hamburger — mobile only */}
-          {isMobile && (
-            <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
-          )}
-          {[["quest",`📜 ${t("nav.quests")}`],["story",`📖 ${t("nav.story")}`],["storylibrary",`📚 ${t("nav.stories")}`],["inventory",`🎒 ${t("nav.inventory")}`],["equipment",`🎽 ${t("nav.equipment")}`],["level",`⭐ ${t("nav.level")}`],["diary",`📖 ${t("nav.diary")}`],["shop",`🛒 ${t("nav.shop")}`],["forge",`⚒️ ${t("nav.forge")}`],["chat",`💬 ${t("nav.chat")}`],["spells",`✨ ${t("nav.spells")}`],["dungeon",`🗺️ ${t("nav.dungeon")}`],["map",`🗺️ ${t("nav.map")}`],["lore",`⚖️ ${t("nav.zodar")}`],...(me?.class==="custode_equilibrio"?[["osservatorio",`🔭 ${t("nav.observatory")}`]]: []),["guild",`🏛️ ${t("nav.guild")}`],["worldevent",`🌋 ${t("nav.event")}`],["leaderboard",`🏆 ${t("nav.leaderboard")}`],["trade",`🏦 ${t("nav.market")}`],["combat",`⚔️ ${t("nav.battle")}`]].map(([k,l])=>{
-            const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
-            const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
-            const locked = combatLocked || isResting;
-            return (
-            <button key={k} onClick={()=>{ if(!locked){ setTab(k); if(isMobile) setSidebarOpen(false); if(k==="guild") refreshGuilds(); } }} title={isResting?"Riposo in corso…":combatLocked?"Non disponibile durante il combattimento":undefined}
-              style={{ flexShrink:0, padding: isMobile?"0.6rem 0.8rem":"0.6rem 1.2rem", background:tab===k&&!isResting?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k&&!isResting?"2px solid #7c3aed":"2px solid transparent", color:locked?"#2d3748":tab===k?"#c4b5fd":"#94a3b8", cursor:locked?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize: isMobile?"0.7rem":"0.78rem", letterSpacing:"0.05em", opacity:locked?0.35:1, whiteSpace:"nowrap", filter:isResting?"grayscale(1)":"none" }}>
-              {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}{k==="combat"&&combat?.active&&!combat?.pendingLog&&combat?.combatants?.[combat.turn%Math.max(1,combat.combatants.length)]?.id===myId&&tab!=="combat"&&<span style={{ marginLeft:4, display:"inline-block", width:8, height:8, borderRadius:"50%", background:"#ef4444", boxShadow:"0 0 6px #ef4444", animation:"pulse 1s infinite" }} />}{k==="dungeon"&&qs?.dungeon?.active&&!qs?.dungeon?.completedAt&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#701a75", borderRadius:10, fontSize:"0.62rem", color:"#e879f9" }}>LIVE</span>}
-            </button>);
-          })}
-          {/* Donation button in navbar */}
-          <button
-            onClick={() => setShowDonation(true)}
-            title="Supporta il gioco"
-            style={{
-              flexShrink:0, marginLeft:"auto", padding:"0 1rem",
-              background:"linear-gradient(135deg,rgba(251,191,36,0.12),rgba(180,83,9,0.18))",
-              border:"none", borderBottom:"2px solid rgba(251,191,36,0.35)",
-              color:"#fbbf24", cursor:"pointer", fontFamily:"'Cinzel',serif",
-              fontSize: isMobile?"0.68rem":"0.75rem", letterSpacing:"0.06em",
-              whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:5,
-              transition:"background 0.15s, color 0.15s",
-            }}
-            onMouseEnter={e=>{ e.currentTarget.style.background="rgba(251,191,36,0.22)"; e.currentTarget.style.color="#fde68a"; }}
-            onMouseLeave={e=>{ e.currentTarget.style.background="linear-gradient(135deg,rgba(251,191,36,0.12),rgba(180,83,9,0.18))"; e.currentTarget.style.color="#fbbf24"; }}
-          >
-            ❤️{!isMobile && ` ${t("nav.donate")}`}
-          </button>
+        <div style={{ display:"flex", flexDirection:"column", gap:0, borderBottom:`1px solid ${PANEL_BORDER}`, background:combatMode?"rgba(8,10,20,0.94)":"rgba(3,7,18,0.88)", flexShrink:0 }}>
+          {navRows.map((row, rowIdx) => (
+            <div key={rowIdx} style={{ display:"flex", gap:0, minHeight:isMobile?38:42, overflowX:"auto", overflowY:"hidden", borderBottom:rowIdx === 0 ? "1px solid rgba(148,163,184,0.1)" : "none" }}>
+              {/* Hamburger — mobile only */}
+              {isMobile && rowIdx === 0 && (
+                <button onClick={()=>setSidebarOpen(true)} style={{ flexShrink:0, padding:"0 1rem", background:"transparent", border:"none", borderBottom:"2px solid transparent", color:"#94a3b8", cursor:"pointer", fontSize:"1.1rem" }}>☰</button>
+              )}
+              {row.map(([k,l])=>{
+                const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
+                const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
+                const locked = combatLocked || isResting;
+                return (
+                <button key={k} onClick={()=>{ if(!locked){ setTab(k); if(isMobile) setSidebarOpen(false); if(k==="guild") refreshGuilds(); } }} title={isResting?"Riposo in corso…":combatLocked?"Non disponibile durante il combattimento":undefined}
+                  style={{ flexShrink:0, padding: isMobile?"0.55rem 0.72rem":"0.56rem 1.05rem", background:tab===k&&!isResting?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k&&!isResting?"2px solid #7c3aed":"2px solid transparent", color:locked?"#2d3748":tab===k?"#c4b5fd":"#94a3b8", cursor:locked?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize: isMobile?"0.66rem":"0.76rem", letterSpacing:"0.05em", opacity:locked?0.35:1, whiteSpace:"nowrap", filter:isResting?"grayscale(1)":"none" }}>
+                  {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}{k==="combat"&&combat?.active&&!combat?.pendingLog&&combat?.combatants?.[combat.turn%Math.max(1,combat.combatants.length)]?.id===myId&&tab!=="combat"&&<span style={{ marginLeft:4, display:"inline-block", width:8, height:8, borderRadius:"50%", background:"#ef4444", boxShadow:"0 0 6px #ef4444", animation:"pulse 1s infinite" }} />}{k==="dungeon"&&qs?.dungeon?.active&&!qs?.dungeon?.completedAt&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#701a75", borderRadius:10, fontSize:"0.62rem", color:"#e879f9" }}>LIVE</span>}
+                </button>);
+              })}
+              {rowIdx === 1 && (
+                <button
+                  onClick={() => setShowDonation(true)}
+                  title={lang === "en" ? "Support the game" : "Supporta il gioco"}
+                  style={{
+                    flexShrink:0, marginLeft:"auto", padding:"0 1rem",
+                    background:"linear-gradient(135deg,rgba(251,191,36,0.12),rgba(180,83,9,0.18))",
+                    border:"none", borderBottom:"2px solid rgba(251,191,36,0.35)",
+                    color:"#fbbf24", cursor:"pointer", fontFamily:"'Cinzel',serif",
+                    fontSize: isMobile?"0.68rem":"0.75rem", letterSpacing:"0.06em",
+                    whiteSpace:"nowrap", display:"flex", alignItems:"center", gap:5,
+                    transition:"background 0.15s, color 0.15s",
+                  }}
+                  onMouseEnter={e=>{ e.currentTarget.style.background="rgba(251,191,36,0.22)"; e.currentTarget.style.color="#fde68a"; }}
+                  onMouseLeave={e=>{ e.currentTarget.style.background="linear-gradient(135deg,rgba(251,191,36,0.12),rgba(180,83,9,0.18))"; e.currentTarget.style.color="#fbbf24"; }}
+                >
+                  ❤️{!isMobile && ` ${t("nav.donate")}`}
+                </button>
+              )}
+            </div>
+          ))}
         </div>
 
         <div key={tab} style={{ flex:1, display:"contents", animation:"tabFadeIn 0.18s ease" }}>
