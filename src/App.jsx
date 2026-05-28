@@ -59,6 +59,10 @@ import { I18nProvider, LanguageToggle, useI18n } from "./i18n.jsx";
     @keyframes cardPackOpen { 0%{transform:translateY(0) scale(1);filter:brightness(1)} 45%{transform:translateY(-10px) scale(1.05);filter:brightness(1.45)} 100%{transform:translateY(18px) scale(.9);opacity:0;filter:blur(8px) brightness(1.8)} }
     @keyframes cardPackBurst { 0%{opacity:0;transform:translate(-50%,-50%) scale(.35) rotate(0deg)} 38%{opacity:.95} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.45) rotate(55deg)} }
     @keyframes cardRevealGridIn { from{opacity:0;transform:translateY(18px) scale(.96)} to{opacity:1;transform:none} }
+    @keyframes packTearLeft { 0%{opacity:1;transform:translateX(0) rotate(0deg) scale(1)} 38%{filter:brightness(1.45)} 100%{opacity:.92;transform:translateX(-86px) translateY(10px) rotate(-13deg) scale(.98);filter:brightness(1.18)} }
+    @keyframes packTearRight { 0%{opacity:1;transform:translateX(0) rotate(0deg) scale(1)} 38%{filter:brightness(1.45)} 100%{opacity:.92;transform:translateX(86px) translateY(10px) rotate(13deg) scale(.98);filter:brightness(1.18)} }
+    @keyframes packTearFlash { 0%{opacity:0;transform:translate(-50%,-50%) scale(.35)} 34%{opacity:1} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.35)} }
+    @keyframes packCardStream { 0%{opacity:0;transform:translate(-50%,35px) rotate(var(--rot,0deg)) scale(.42)} 24%{opacity:1} 100%{opacity:0;transform:translate(calc(-50% + var(--dx,0px)),calc(-72px + var(--dy,0px))) rotate(var(--rot,0deg)) scale(.82)} }
     @keyframes dice-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
     .dice-spin { animation:dice-spin .55s linear infinite; }
     @keyframes restOverlayIn { from{opacity:0} to{opacity:1} }
@@ -10476,6 +10480,51 @@ function ZodarPackArtwork({ pack, large=false, opening=false }) {
   );
 }
 
+function ZodarPackTearAnimation({ pack }) {
+  const accent = pack?.accent || "#a78bfa";
+  const cardOffsets = [
+    { dx:-170, dy:10, rot:-12 },
+    { dx:-84, dy:-18, rot:-5 },
+    { dx:0, dy:-28, rot:2 },
+    { dx:84, dy:-16, rot:7 },
+    { dx:170, dy:8, rot:13 },
+  ];
+  return (
+    <div style={{ position:"relative", width:"min(520px,92vw)", height:430, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
+      <div style={{ position:"absolute", left:"50%", top:"50%", width:390, aspectRatio:"1", borderRadius:"50%", transform:"translate(-50%,-50%)", background:`radial-gradient(circle,${accent}55,transparent 66%)`, filter:"blur(12px)", opacity:0.95 }} />
+      <div style={{ position:"absolute", left:"50%", top:"46%", width:360, aspectRatio:"1", borderRadius:"50%", background:`conic-gradient(from 0deg,transparent,${accent},transparent,#fef3c7,transparent,${accent},transparent)`, animation:"packTearFlash 1.05s ease-out forwards" }} />
+      {cardOffsets.map((card, idx) => (
+        <div key={idx} style={{
+          position:"absolute",
+          left:"50%",
+          top:"53%",
+          width:84,
+          aspectRatio:"2.5 / 3.5",
+          borderRadius:7,
+          background:`linear-gradient(135deg,${accent},rgba(15,23,42,0.98) 35%,rgba(2,6,23,1) 70%,${accent})`,
+          border:`3px solid ${accent}`,
+          boxShadow:`0 0 24px ${accent}66, inset 0 0 0 2px rgba(255,255,255,0.16)`,
+          "--dx":`${card.dx}px`,
+          "--dy":`${card.dy}px`,
+          "--rot":`${card.rot}deg`,
+          animation:`packCardStream 1.05s ease-out ${idx * 0.05}s forwards`,
+        }} />
+      ))}
+      {pack?.art ? (
+        <>
+          <img src={pack.art} alt="" style={{ position:"absolute", width:270, height:365, objectFit:"contain", clipPath:"polygon(0 0,52% 0,46% 100%,0 100%)", transformOrigin:"50% 50%", filter:`drop-shadow(0 0 30px ${accent}66)`, animation:"packTearLeft 1.05s cubic-bezier(.2,.8,.2,1) forwards" }} />
+          <img src={pack.art} alt="" style={{ position:"absolute", width:270, height:365, objectFit:"contain", clipPath:"polygon(48% 0,100% 0,100% 100%,54% 100%)", transformOrigin:"50% 50%", filter:`drop-shadow(0 0 30px ${accent}66)`, animation:"packTearRight 1.05s cubic-bezier(.2,.8,.2,1) forwards" }} />
+        </>
+      ) : (
+        <div style={{ animation:"cardPackOpen 1.05s ease forwards" }}>
+          <ZodarPackArtwork pack={pack} large />
+        </div>
+      )}
+      <div style={{ position:"absolute", bottom:20, color:"#cbd5e1", fontSize:"0.82rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em", textTransform:"uppercase", textShadow:`0 0 18px ${accent}` }}>Il sigillo si spezza</div>
+    </div>
+  );
+}
+
 function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWithPremium, onBuyPremiumCurrency, onGrantDevPack }) {
   const [opening, setOpening] = useState(null); // { pack, rewards, revealed, phase }
   const [busy, setBusy] = useState(false);
@@ -10494,7 +10543,7 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
     setOpening(prev => prev ? { ...prev, phase:"opening" } : prev);
     window.setTimeout(() => {
       setOpening(prev => prev ? { ...prev, phase:"cards" } : prev);
-    }, 780);
+    }, 1120);
   }
   const allRevealed = opening?.revealed?.every(Boolean);
   const summary = opening?.rewards?.reduce((acc, card) => {
@@ -10617,8 +10666,10 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
             <div style={{ fontFamily:"'Cinzel Decorative',serif", color:opening.pack.accent, fontSize:"1.35rem", marginBottom:"0.3rem" }}>{opening.pack.name}</div>
             {opening.phase !== "cards" ? (
               <div style={{ minHeight:430, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:18 }}>
-                <ZodarPackArtwork pack={opening.pack} large opening={opening.phase === "opening"} />
-                <div style={{ color:"#94a3b8", fontSize:"0.82rem" }}>{opening.phase === "opening" ? "Il sigillo si spezza..." : "Pacchetto sigillato"}</div>
+                {opening.phase === "opening"
+                  ? <ZodarPackTearAnimation pack={opening.pack} />
+                  : <ZodarPackArtwork pack={opening.pack} large />}
+                {opening.phase === "sealed" && <div style={{ color:"#94a3b8", fontSize:"0.82rem" }}>Pacchetto sigillato</div>}
                 {opening.phase === "sealed" && <BigBtn onClick={startPackReveal} gold>Apri pacchetto</BigBtn>}
               </div>
             ) : (
