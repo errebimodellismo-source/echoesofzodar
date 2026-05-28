@@ -1765,6 +1765,10 @@ const PREMIUM_PRODUCTS = [
   { id:"seals_320", amount:300, bonus:20, mockPrice:"4,99 EUR", steamSku:"zodar_seals_320", googleProductId:"zodar_seals_320" },
   { id:"seals_720", amount:650, bonus:70, mockPrice:"9,99 EUR", steamSku:"zodar_seals_720", googleProductId:"zodar_seals_720" },
   { id:"seals_1600", amount:1400, bonus:200, mockPrice:"19,99 EUR", steamSku:"zodar_seals_1600", googleProductId:"zodar_seals_1600" },
+  { id:"seals_2600", amount:2200, bonus:400, mockPrice:"29,99 EUR", steamSku:"zodar_seals_2600", googleProductId:"zodar_seals_2600" },
+  { id:"seals_4800", amount:3900, bonus:900, mockPrice:"49,99 EUR", steamSku:"zodar_seals_4800", googleProductId:"zodar_seals_4800" },
+  { id:"seals_7800", amount:6100, bonus:1700, mockPrice:"74,99 EUR", steamSku:"zodar_seals_7800", googleProductId:"zodar_seals_7800" },
+  { id:"seals_11000", amount:8200, bonus:2800, mockPrice:"99,99 EUR", steamSku:"zodar_seals_11000", googleProductId:"zodar_seals_11000" },
 ];
 const CARD_PACK_DEFS = [
   {
