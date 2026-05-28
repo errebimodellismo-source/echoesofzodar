@@ -84,6 +84,8 @@ Stile Echoes of Zodar:
 
 - Cornici da reliquia fantasy oscura.
 - Colori guidati dalla rarita.
+- Bordo spesso e immediatamente riconoscibile in base alla rarita.
+- Doppia cornice e glow piu forte sulle rarita alte.
 - Aspetto collezionabile, leggibile e non identico a Magic, Pokemon o altri TCG.
 - Versione compatta per la griglia collezione e versione grande per sbustamento/dettaglio.
 

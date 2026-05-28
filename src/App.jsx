@@ -1735,6 +1735,14 @@ const CARD_RARITY_COLOR = {
   legendary:"#fbbf24",
   mythic:"#fb7185",
 };
+const CARD_RARITY_STYLE = {
+  common:{ main:"#9ca3af", edge:"#e5e7eb", dark:"#374151", glow:"rgba(156,163,175,0.22)", plate:"#e5e7eb", ink:"#111827" },
+  uncommon:{ main:"#34d399", edge:"#bbf7d0", dark:"#065f46", glow:"rgba(52,211,153,0.32)", plate:"#dcfce7", ink:"#052e16" },
+  rare:{ main:"#60a5fa", edge:"#bfdbfe", dark:"#1d4ed8", glow:"rgba(96,165,250,0.38)", plate:"#dbeafe", ink:"#0f172a" },
+  epic:{ main:"#a78bfa", edge:"#ddd6fe", dark:"#6d28d9", glow:"rgba(167,139,250,0.42)", plate:"#ede9fe", ink:"#1e1b4b" },
+  legendary:{ main:"#fbbf24", edge:"#fde68a", dark:"#92400e", glow:"rgba(251,191,36,0.52)", plate:"#fef3c7", ink:"#451a03" },
+  mythic:{ main:"#fb7185", edge:"#fecdd3", dark:"#9f1239", glow:"rgba(251,113,133,0.58)", plate:"#ffe4e6", ink:"#4c0519" },
+};
 const CARD_FRAGMENT_VALUE = { common:5, uncommon:12, rare:35, epic:120, legendary:420, mythic:1200 };
 const CARD_PITY_LIMITS = { legendary:60, mythic:150 };
 const CARD_PACK_DEFS = [
@@ -9907,6 +9915,7 @@ function SecretCardsGate({ onUnlock }) {
 
 function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
   const color = CARD_RARITY_COLOR[card?.rarity] || "#94a3b8";
+  const rarityStyle = CARD_RARITY_STYLE[card?.rarity] || CARD_RARITY_STYLE.common;
   const effectLines = cardEffectLines(card);
   const typeLine = cardTypeLine(card);
   const statBadge = cardStatBadge(card);
@@ -9924,37 +9933,40 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
     }}>
       <div style={{
         aspectRatio:"2.5 / 3.5",
-        borderRadius:8,
-        padding:compact ? "0.42rem" : "0.55rem",
+        borderRadius:12,
+        padding:compact ? "0.42rem" : "0.58rem",
         background: revealed
-          ? `linear-gradient(135deg,${color}55,rgba(15,23,42,0.98) 22%,rgba(2,6,23,0.98) 74%,${color}33), linear-gradient(160deg,rgba(15,23,42,0.98),rgba(5,8,18,0.98))`
+          ? `linear-gradient(135deg,${rarityStyle.edge},${rarityStyle.main} 18%,${rarityStyle.dark} 46%,rgba(2,6,23,0.98) 72%,${rarityStyle.main}), repeating-linear-gradient(45deg,rgba(255,255,255,0.08) 0 2px,transparent 2px 7px)`
           : "linear-gradient(160deg,rgba(25,18,45,0.98),rgba(5,8,18,0.98))",
-        border:`2px solid ${revealed ? color : "#4c1d95"}`,
-        boxShadow:revealed ? `0 18px 36px rgba(0,0,0,0.34), 0 0 24px ${color}28` : "0 18px 36px rgba(0,0,0,0.34)",
+        border:`${compact ? 4 : 7}px solid ${revealed ? rarityStyle.main : "#4c1d95"}`,
+        outline:revealed ? `2px solid ${rarityStyle.edge}` : "1px solid rgba(196,181,253,0.22)",
+        outlineOffset:-3,
+        boxShadow:revealed ? `0 18px 36px rgba(0,0,0,0.42), 0 0 0 1px ${rarityStyle.edge}, 0 0 ${compact ? 18 : 34}px ${rarityStyle.glow}` : "0 18px 36px rgba(0,0,0,0.34)",
         display:"flex",
         flexDirection:"column",
         gap:compact ? 5 : 7,
         overflow:"hidden",
+        position:"relative",
       }}>
         {!revealed ? (
           <div style={{ flex:1, borderRadius:6, border:"1px solid rgba(196,181,253,0.22)", background:"radial-gradient(circle at 50% 38%,rgba(124,58,237,0.36),rgba(2,6,23,0.92) 62%)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cinzel Decorative',serif", color:"#c4b5fd", fontSize:"2rem" }}>Z</div>
         ) : (
           <>
-            <div style={{ minHeight:compact ? 26 : 32, borderRadius:6, background:`linear-gradient(180deg,rgba(248,250,252,0.9),rgba(203,213,225,0.78))`, border:`1px solid ${color}`, display:"grid", gridTemplateColumns:"minmax(0,1fr) auto", alignItems:"center", gap:6, padding:compact ? "0.18rem 0.34rem" : "0.24rem 0.42rem", boxShadow:"inset 0 0 0 1px rgba(2,6,23,0.24)" }}>
-              <div style={{ color:"#0f172a", fontFamily:"'Cinzel',serif", fontSize:compact ? "0.66rem" : "0.84rem", fontWeight:900, lineHeight:1.05, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{card.name}</div>
-              <div style={{ width:compact ? 20 : 24, height:compact ? 20 : 24, borderRadius:"50%", background:`linear-gradient(135deg,${color},#f8fafc)`, border:"1px solid rgba(15,23,42,0.55)", color:"#0f172a", display:"flex", alignItems:"center", justifyContent:"center", fontSize:compact ? "0.58rem" : "0.66rem", fontWeight:900 }}>{rarityInitial}</div>
+            <div style={{ minHeight:compact ? 27 : 35, borderRadius:7, background:`linear-gradient(180deg,${rarityStyle.plate},rgba(248,250,252,0.82))`, border:`2px solid ${rarityStyle.dark}`, display:"grid", gridTemplateColumns:"minmax(0,1fr) auto", alignItems:"center", gap:6, padding:compact ? "0.18rem 0.34rem" : "0.26rem 0.45rem", boxShadow:`inset 0 0 0 1px ${rarityStyle.edge}, 0 2px 0 rgba(2,6,23,0.35)` }}>
+              <div style={{ color:rarityStyle.ink, fontFamily:"'Cinzel',serif", fontSize:compact ? "0.66rem" : "0.88rem", fontWeight:900, lineHeight:1.05, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{card.name}</div>
+              <div style={{ width:compact ? 22 : 28, height:compact ? 22 : 28, borderRadius:"50%", background:`radial-gradient(circle at 35% 28%,#fff,${rarityStyle.edge} 30%,${rarityStyle.main} 62%,${rarityStyle.dark})`, border:`2px solid ${rarityStyle.dark}`, color:rarityStyle.ink, display:"flex", alignItems:"center", justifyContent:"center", fontSize:compact ? "0.58rem" : "0.72rem", fontWeight:900, boxShadow:`0 0 12px ${rarityStyle.glow}` }}>{rarityInitial}</div>
             </div>
-            <div style={{ height:compact ? 70 : 114, borderRadius:6, background:"rgba(2,6,23,0.72)", border:`2px solid ${color}`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
+            <div style={{ height:compact ? 70 : 118, borderRadius:7, background:"rgba(2,6,23,0.72)", border:`3px solid ${rarityStyle.dark}`, boxShadow:`0 0 0 2px ${rarityStyle.edge}`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
               {card.image ? <img src={card.image} alt={card.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} /> : <span style={{ fontSize:compact ? "1.7rem" : "2.2rem" }}>{card.type === "title" ? "🏷️" : card.type === "aura" ? "✨" : card.type === "frame" ? "▣" : "✦"}</span>}
             </div>
-            <div style={{ minHeight:compact ? 22 : 28, borderRadius:6, background:`linear-gradient(180deg,rgba(248,250,252,0.88),rgba(203,213,225,0.74))`, border:`1px solid ${color}`, color:"#0f172a", fontFamily:"'Cinzel',serif", fontSize:compact ? "0.58rem" : "0.72rem", fontWeight:800, lineHeight:1.08, padding:compact ? "0.22rem 0.34rem" : "0.32rem 0.45rem", overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"space-between", gap:6 }}>
+            <div style={{ minHeight:compact ? 22 : 29, borderRadius:7, background:`linear-gradient(180deg,${rarityStyle.plate},rgba(226,232,240,0.82))`, border:`2px solid ${rarityStyle.dark}`, color:rarityStyle.ink, fontFamily:"'Cinzel',serif", fontSize:compact ? "0.58rem" : "0.72rem", fontWeight:900, lineHeight:1.08, padding:compact ? "0.22rem 0.34rem" : "0.32rem 0.45rem", overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"space-between", gap:6 }}>
               <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{typeLine}</span>
-              <span style={{ color, textShadow:"0 1px 0 rgba(15,23,42,0.45)", flexShrink:0 }}>{cardRarityLabel(card.rarity)}</span>
+              <span style={{ color:rarityStyle.dark, flexShrink:0 }}>{cardRarityLabel(card.rarity)}</span>
             </div>
             {!compact && (
-              <div style={{ flex:1, minHeight:0, borderRadius:6, background:"linear-gradient(180deg,rgba(241,245,249,0.92),rgba(203,213,225,0.84))", border:`1px solid ${color}`, color:"#0f172a", padding:"0.5rem 0.55rem", display:"flex", flexDirection:"column", gap:5, overflow:"hidden" }}>
+              <div style={{ flex:1, minHeight:0, borderRadius:7, background:`linear-gradient(180deg,${rarityStyle.plate},rgba(241,245,249,0.9))`, border:`2px solid ${rarityStyle.dark}`, color:rarityStyle.ink, padding:"0.5rem 0.55rem", display:"flex", flexDirection:"column", gap:5, overflow:"hidden" }}>
                 {effectLines.slice(0,4).map((line, idx) => (
-                  <div key={idx} style={{ color:"#111827", fontSize:"0.68rem", lineHeight:1.18, fontWeight:idx === 0 ? 700 : 500 }}>{line}</div>
+                  <div key={idx} style={{ color:rarityStyle.ink, fontSize:"0.68rem", lineHeight:1.18, fontWeight:idx === 0 ? 800 : 600 }}>{line}</div>
                 ))}
                 <div style={{ color:"#334155", fontSize:"0.64rem", lineHeight:1.2, fontStyle:"italic", marginTop:"auto", overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{card.description || "Carta collezionabile."}</div>
               </div>
@@ -9964,7 +9976,7 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
                 {card.exclusive && <span style={{ color:"#fbbf24", border:"1px solid rgba(251,191,36,0.35)", background:"rgba(2,6,23,0.55)", borderRadius:4, padding:"1px 5px", fontSize:compact ? "0.48rem" : "0.56rem", whiteSpace:"nowrap" }}>SOLO PACK</span>}
                 {card.duplicate && <span style={{ color:"#c4b5fd", border:"1px solid rgba(196,181,253,0.32)", background:"rgba(2,6,23,0.55)", borderRadius:4, padding:"1px 5px", fontSize:compact ? "0.48rem" : "0.56rem", whiteSpace:"nowrap" }}>+{card.convertedFragments || 0}</span>}
               </div>
-              {statBadge && <div style={{ marginLeft:"auto", minWidth:compact ? 34 : 46, minHeight:compact ? 18 : 24, borderRadius:5, background:"rgba(248,250,252,0.9)", border:`1px solid ${color}`, color:"#0f172a", display:"flex", alignItems:"center", justifyContent:"center", padding:"0 0.35rem", fontFamily:"'Cinzel',serif", fontWeight:900, fontSize:compact ? "0.58rem" : "0.74rem", whiteSpace:"nowrap" }}>{statBadge}</div>}
+              {statBadge && <div style={{ marginLeft:"auto", minWidth:compact ? 34 : 48, minHeight:compact ? 18 : 25, borderRadius:6, background:rarityStyle.plate, border:`2px solid ${rarityStyle.dark}`, color:rarityStyle.ink, display:"flex", alignItems:"center", justifyContent:"center", padding:"0 0.35rem", fontFamily:"'Cinzel',serif", fontWeight:900, fontSize:compact ? "0.58rem" : "0.74rem", whiteSpace:"nowrap", boxShadow:`0 0 12px ${rarityStyle.glow}` }}>{statBadge}</div>}
             </div>
           </>
         )}
