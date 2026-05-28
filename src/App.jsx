@@ -1735,6 +1735,8 @@ const CARD_RARITY_COLOR = {
   legendary:"#fbbf24",
   mythic:"#fb7185",
 };
+const CARD_FRAGMENT_VALUE = { common:5, uncommon:12, rare:35, epic:120, legendary:420, mythic:1200 };
+const CARD_PITY_LIMITS = { legendary:60, mythic:150 };
 const CARD_PACK_DEFS = [
   {
     id:"pack_zodar",
@@ -1853,9 +1855,33 @@ function pickPackReward(packDef, catalogItems, slotIndex) {
   const item = (itemPool.length ? itemPool : fallbackPool)[Math.floor(Math.random() * Math.max(1, (itemPool.length ? itemPool : fallbackPool).length))];
   return item ? itemToLootCard(item, rarity) : cosmeticToLootCard(CARD_COSMETICS[0]);
 }
+function pickCardRewardOfRarity(rarity, catalogItems) {
+  const cosmeticPool = CARD_COSMETICS.filter(c => c.rarity === rarity);
+  if(cosmeticPool.length && (rarity === "legendary" || rarity === "mythic" || Math.random() < 0.5)) {
+    return cosmeticToLootCard(cosmeticPool[Math.floor(Math.random() * cosmeticPool.length)]);
+  }
+  const itemPool = (catalogItems || DEFAULT_ITEMS).filter(item => item.rarity === rarity && item.type !== "material");
+  if(itemPool.length) return itemToLootCard(itemPool[Math.floor(Math.random() * itemPool.length)], rarity);
+  return cosmeticToLootCard((cosmeticPool[0] || CARD_COSMETICS[0]));
+}
 function openCardPack(packDef, catalogItems) {
   return Array.from({ length:packDef.slots || 5 }, (_, idx) => pickPackReward(packDef, catalogItems, idx))
     .sort((a,b) => (CARD_RARITY_ORDER[a.rarity] || 0) - (CARD_RARITY_ORDER[b.rarity] || 0));
+}
+function applyPackPity(rewards, vault, catalogItems) {
+  const nextMythicPity = (vault?.pity?.mythic || 0) + 1;
+  const nextLegendaryPity = (vault?.pity?.legendary || 0) + 1;
+  const hasMythic = rewards.some(card => card.rarity === "mythic");
+  const hasHigh = rewards.some(card => card.rarity === "legendary" || card.rarity === "mythic");
+  let nextRewards = rewards;
+  if(nextMythicPity >= CARD_PITY_LIMITS.mythic && !hasMythic) {
+    const forced = pickCardRewardOfRarity("mythic", catalogItems);
+    nextRewards = [forced, ...rewards.slice(1)];
+  } else if(nextLegendaryPity >= CARD_PITY_LIMITS.legendary && !hasHigh) {
+    const forced = pickCardRewardOfRarity("legendary", catalogItems);
+    nextRewards = [forced, ...rewards.slice(1)];
+  }
+  return nextRewards.sort((a,b) => (CARD_RARITY_ORDER[a.rarity] || 0) - (CARD_RARITY_ORDER[b.rarity] || 0));
 }
 
 function normalizeLegendaryInventoryItem(item) {
@@ -9846,6 +9872,7 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
             </div>
             {!compact && <div style={{ color:"#64748b", fontSize:"0.66rem", lineHeight:1.3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical" }}>{card.description || "Carta collezionabile."}</div>}
             {card.exclusive && <div style={{ marginTop:"auto", alignSelf:"flex-start", color:"#fbbf24", border:"1px solid rgba(251,191,36,0.28)", borderRadius:999, padding:"1px 7px", fontSize:"0.58rem" }}>SOLO PACCHETTI</div>}
+            {card.duplicate && <div style={{ alignSelf:"flex-start", color:"#c4b5fd", border:"1px solid rgba(196,181,253,0.28)", borderRadius:999, padding:"1px 7px", fontSize:"0.58rem" }}>DOPPIONE +{card.convertedFragments || 0}</div>}
           </>
         )}
       </div>
@@ -9871,6 +9898,7 @@ function PacksView({ vault, catalogItems, onOpenPack, onGrantDevPack }) {
     <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.55)" }}>
       <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", marginBottom:"1rem" }}>
         <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, flex:1 }}>Pacchetti</h3>
+        <span style={{ color:"#c4b5fd", border:"1px solid rgba(168,85,247,0.28)", borderRadius:999, padding:"3px 10px", fontSize:"0.72rem", fontWeight:700 }}>Frammenti: {vault?.fragments || 0}</span>
         <SmallBtn onClick={onGrantDevPack}>+ Pacchetto test</SmallBtn>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:12 }}>
@@ -9890,6 +9918,26 @@ function PacksView({ vault, catalogItems, onOpenPack, onGrantDevPack }) {
                 {Object.entries(pack.rates).map(([rarity, pct]) => (
                   <span key={rarity} style={{ color:CARD_RARITY_COLOR[rarity], border:`1px solid ${CARD_RARITY_COLOR[rarity]}44`, borderRadius:999, padding:"1px 7px", fontSize:"0.62rem" }}>{cardRarityLabel(rarity)} {pct}%</span>
                 ))}
+              </div>
+              <div style={{ display:"grid", gap:5, marginBottom:"0.8rem" }}>
+                {[
+                  ["legendary", "Risonanza Leggendaria"],
+                  ["mythic", "Risonanza Mitica"],
+                ].map(([rarity, label]) => {
+                  const value = vault?.pity?.[rarity] || 0;
+                  const limit = CARD_PITY_LIMITS[rarity];
+                  return (
+                    <div key={rarity}>
+                      <div style={{ display:"flex", justifyContent:"space-between", color:"#64748b", fontSize:"0.62rem", marginBottom:2 }}>
+                        <span>{label}</span>
+                        <span>{value}/{limit}</span>
+                      </div>
+                      <div style={{ height:4, background:"rgba(15,23,42,0.9)", borderRadius:999, overflow:"hidden" }}>
+                        <div style={{ height:"100%", width:`${Math.min(100, (value / limit) * 100)}%`, background:CARD_RARITY_COLOR[rarity], transition:"width 0.25s" }} />
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
               <div style={{ display:"flex", alignItems:"center", gap:8 }}>
                 <span style={{ color:"#fbbf24", fontWeight:700, fontSize:"0.86rem", flex:1 }}>Posseduti: {qty}</span>
@@ -9939,6 +9987,7 @@ function CardsCollectionView({ vault, inventoryGroups, equipment, onEquip, onUse
       <div style={{ overflowY:"auto", padding:"1rem" }}>
         <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:"1rem" }}>
           <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, flex:1 }}>Carte</h3>
+          <span style={{ color:"#c4b5fd", border:"1px solid rgba(168,85,247,0.28)", borderRadius:999, padding:"3px 10px", fontSize:"0.72rem", fontWeight:700 }}>Frammenti: {vault?.fragments || 0}</span>
           {["all","item","cosmetic","title","epic","legendary","mythic"].map(k => (
             <button key={k} onClick={()=>setFilter(k)} style={{ padding:"0.34rem 0.7rem", borderRadius:6, border:`1px solid ${filter===k?"#7c3aed":"#334155"}`, background:filter===k?"rgba(109,40,217,0.28)":"rgba(15,23,42,0.72)", color:filter===k?"#c4b5fd":"#94a3b8", fontSize:"0.7rem", cursor:"pointer" }}>
               {k === "all" ? "Tutte" : k === "item" ? "Oggetti" : k === "cosmetic" ? "Sceniche" : cardRarityLabel(k)}
@@ -10191,15 +10240,24 @@ function GameScreen({ myId, setScreen, authUser }) {
     const pack = CARD_PACK_DEFS.find(entry => entry.id === packId);
     const owned = cardVault.packs?.[packId] || 0;
     if(!pack || owned <= 0 || !me?.id) return [];
-    const rewards = openCardPack(pack, catalogItems);
+    const rewards = applyPackPity(openCardPack(pack, catalogItems), cardVault, catalogItems);
     const itemRewards = rewards.filter(card => card.itemId);
     for(const card of itemRewards) {
       await dbAddPlayerItem(me.id, card.itemId);
     }
+    const ownedCosmetics = new Set((cardVault.cards || []).filter(card => card.kind === "cosmetic").map(card => card.cardId));
+    const duplicateCosmetics = rewards.filter(card => card.kind === "cosmetic" && ownedCosmetics.has(card.cardId));
+    const newCards = rewards.map(card => (
+      card.kind === "cosmetic" && ownedCosmetics.has(card.cardId)
+        ? { ...card, duplicate:true, convertedFragments:CARD_FRAGMENT_VALUE[card.rarity] || 10 }
+        : card
+    ));
+    const gainedFragments = duplicateCosmetics.reduce((sum, card) => sum + (CARD_FRAGMENT_VALUE[card.rarity] || 10), 0);
     const nextVault = {
       ...cardVault,
       packs:{ ...(cardVault.packs || {}), [packId]:owned - 1 },
-      cards:[...(cardVault.cards || []), ...rewards],
+      cards:[...(cardVault.cards || []), ...newCards],
+      fragments:(cardVault.fragments || 0) + gainedFragments,
       pity:{
         legendary:rewards.some(card => card.rarity === "legendary" || card.rarity === "mythic") ? 0 : (cardVault.pity?.legendary || 0) + 1,
         mythic:rewards.some(card => card.rarity === "mythic") ? 0 : (cardVault.pity?.mythic || 0) + 1,
@@ -10211,7 +10269,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     if(best && ["epic","legendary","mythic"].includes(best.rarity)) {
       await addMsg(`📦 **${me.name}** apre **${pack.name}** e trova **${best.name}** (${cardRarityLabel(best.rarity)})!`, "info", "Pacchetti");
     }
-    return rewards;
+    return newCards;
   }
 
   function activateCardTitle(card) {
