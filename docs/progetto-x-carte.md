@@ -87,6 +87,7 @@ Stile Echoes of Zodar:
 - Bordo spesso e immediatamente riconoscibile in base alla rarita.
 - Doppia cornice e glow piu forte sulle rarita alte.
 - Testi sempre leggibili: nomi lunghi e regole non devono essere tagliati nello sbustamento.
+- Immagini oggetto mostrate intere in una finestra quadrata centrata, senza tagli brutali.
 - Aspetto collezionabile, leggibile e non identico a Magic, Pokemon o altri TCG.
 - Versione compatta per la griglia collezione e versione grande per sbustamento/dettaglio.
 

@@ -10150,8 +10150,12 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
               <div style={{ color:rarityStyle.ink, fontFamily:"'Cinzel',serif", fontSize:compact ? "0.66rem" : "0.82rem", fontWeight:900, lineHeight:1.05, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:compact ? 2 : 3, WebkitBoxOrient:"vertical" }}>{card.name}</div>
               <div style={{ width:compact ? 22 : 28, height:compact ? 22 : 28, borderRadius:"50%", background:`radial-gradient(circle at 35% 28%,#fff,${rarityStyle.edge} 30%,${rarityStyle.main} 62%,${rarityStyle.dark})`, border:`2px solid ${rarityStyle.dark}`, color:rarityStyle.ink, display:"flex", alignItems:"center", justifyContent:"center", fontSize:compact ? "0.58rem" : "0.72rem", fontWeight:900, boxShadow:`0 0 12px ${rarityStyle.glow}` }}>{rarityInitial}</div>
             </div>
-            <div style={{ height:compact ? 70 : 116, borderRadius:7, background:"rgba(2,6,23,0.72)", border:`3px solid ${rarityStyle.dark}`, boxShadow:`0 0 0 2px ${rarityStyle.edge}`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
-              {card.image ? <img src={card.image} alt={card.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} /> : <span style={{ fontSize:compact ? "1.7rem" : "2.2rem" }}>{card.type === "title" ? "🏷️" : card.type === "aura" ? "✨" : card.type === "frame" ? "▣" : "✦"}</span>}
+            <div style={{ height:compact ? 70 : 116, borderRadius:7, background:`radial-gradient(circle at 50% 45%,${rarityStyle.glow},rgba(2,6,23,0.88) 62%)`, border:`3px solid ${rarityStyle.dark}`, boxShadow:`0 0 0 2px ${rarityStyle.edge}`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", padding:compact ? 3 : 5 }}>
+              {card.image ? (
+                <div style={{ height:"100%", aspectRatio:"1 / 1", maxWidth:"100%", display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  <img src={card.image} alt={card.name} style={{ width:"100%", height:"100%", objectFit:"contain", filter:"drop-shadow(0 8px 14px rgba(0,0,0,0.42))" }} />
+                </div>
+              ) : <span style={{ fontSize:compact ? "1.7rem" : "2.2rem" }}>{card.type === "title" ? "🏷️" : card.type === "aura" ? "✨" : card.type === "frame" ? "▣" : "✦"}</span>}
             </div>
             <div style={{ minHeight:compact ? 22 : 31, borderRadius:7, background:`linear-gradient(180deg,${rarityStyle.plate},rgba(226,232,240,0.82))`, border:`2px solid ${rarityStyle.dark}`, color:rarityStyle.ink, fontFamily:"'Cinzel',serif", fontSize:compact ? "0.58rem" : "0.7rem", fontWeight:900, lineHeight:1.1, padding:compact ? "0.22rem 0.34rem" : "0.32rem 0.45rem", overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"space-between", gap:6 }}>
               <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", minWidth:0 }}>{typeLine}</span>
