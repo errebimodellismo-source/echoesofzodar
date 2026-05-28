@@ -1750,6 +1750,18 @@ const CARD_RARITY_STYLE = {
 };
 const CARD_FRAGMENT_VALUE = { common:5, uncommon:12, rare:35, epic:120, legendary:420, mythic:1200 };
 const CARD_PITY_LIMITS = { legendary:60, mythic:150 };
+const PREMIUM_CURRENCY = {
+  id:"zodar_seals",
+  name:"Sigilli di Zodar",
+  shortName:"Sigilli",
+  icon:"◆",
+};
+const PREMIUM_PRODUCTS = [
+  { id:"seals_120", amount:120, bonus:0, mockPrice:"1,99 EUR", steamSku:"zodar_seals_120", googleProductId:"zodar_seals_120" },
+  { id:"seals_320", amount:300, bonus:20, mockPrice:"4,99 EUR", steamSku:"zodar_seals_320", googleProductId:"zodar_seals_320" },
+  { id:"seals_720", amount:650, bonus:70, mockPrice:"9,99 EUR", steamSku:"zodar_seals_720", googleProductId:"zodar_seals_720" },
+  { id:"seals_1600", amount:1400, bonus:200, mockPrice:"19,99 EUR", steamSku:"zodar_seals_1600", googleProductId:"zodar_seals_1600" },
+];
 const CARD_PACK_DEFS = [
   {
     id:"pack_zodar",
@@ -1758,6 +1770,7 @@ const CARD_PACK_DEFS = [
     accent:"#a78bfa",
     art:"/assets/cards/packs/pack-zodar.png",
     price:350,
+    sealPrice:80,
     slots:5,
     guaranteed:"rare",
     rates:{ common:52, uncommon:27, rare:14, epic:5.5, legendary:1.3, mythic:0.2 },
@@ -1768,6 +1781,7 @@ const CARD_PACK_DEFS = [
     subtitle:"5 carte - alte rarita piu vive",
     accent:"#fbbf24",
     price:950,
+    sealPrice:190,
     slots:5,
     guaranteed:"epic",
     rates:{ common:36, uncommon:29, rare:22, epic:9.5, legendary:3, mythic:0.5 },
@@ -1813,6 +1827,8 @@ function defaultCardVault() {
     cards:[],
     activeTitle:null,
     fragments:0,
+    premiumBalance:0,
+    premiumLedger:[],
     pity:{ legendary:0, mythic:0 },
   };
 }
@@ -1825,10 +1841,22 @@ function getStoredCardVault(playerId) {
     packs:{ ...defaultCardVault().packs, ...(stored?.packs || {}) },
     pity:{ ...defaultCardVault().pity, ...(stored?.pity || {}) },
     cards:Array.isArray(stored?.cards) ? stored.cards : [],
+    premiumBalance:Math.max(0, Number(stored?.premiumBalance) || 0),
+    premiumLedger:Array.isArray(stored?.premiumLedger) ? stored.premiumLedger.slice(-80) : [],
   };
 }
 function saveStoredCardVault(playerId, vault) {
   if(playerId) lsSet(cardVaultKey(playerId), vault);
+}
+function makePremiumLedgerEntry(type, amount, label, meta={}) {
+  return {
+    id:`pl_${Date.now()}_${Math.random().toString(16).slice(2,8)}`,
+    type,
+    amount,
+    label,
+    meta,
+    createdAt:new Date().toISOString(),
+  };
 }
 function cardRarityLabel(rarity) {
   if(String(rarity).toLowerCase() === "mythic") return "Mitica";
@@ -10251,7 +10279,7 @@ function ZodarPackArtwork({ pack, large=false, opening=false }) {
   );
 }
 
-function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onGrantDevPack }) {
+function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWithPremium, onBuyPremiumCurrency, onGrantDevPack }) {
   const [opening, setOpening] = useState(null); // { pack, rewards, revealed, phase }
   const [busy, setBusy] = useState(false);
   const [spotlight, setSpotlight] = useState(null);
@@ -10295,14 +10323,48 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onGrantDevP
       <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", marginBottom:"1rem" }}>
         <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, flex:1 }}>Pacchetti</h3>
         <span style={{ color:"#fbbf24", border:"1px solid rgba(251,191,36,0.32)", borderRadius:999, padding:"3px 10px", fontSize:"0.72rem", fontWeight:800 }}>Oro: {me?.gold || 0}</span>
+        <span style={{ color:"#67e8f9", border:"1px solid rgba(103,232,249,0.32)", borderRadius:999, padding:"3px 10px", fontSize:"0.72rem", fontWeight:800 }}>{PREMIUM_CURRENCY.icon} {PREMIUM_CURRENCY.shortName}: {vault?.premiumBalance || 0}</span>
         <span style={{ color:"#c4b5fd", border:"1px solid rgba(168,85,247,0.28)", borderRadius:999, padding:"3px 10px", fontSize:"0.72rem", fontWeight:700 }}>Frammenti: {vault?.fragments || 0}</span>
         <SmallBtn onClick={onGrantDevPack}>+ Pacchetto test</SmallBtn>
+      </div>
+      <div style={{ marginBottom:"1rem", background:"linear-gradient(135deg,rgba(8,47,73,0.72),rgba(30,27,75,0.72))", border:"1px solid rgba(103,232,249,0.24)", borderRadius:8, padding:"0.9rem", boxShadow:"0 14px 34px rgba(0,0,0,0.22)" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", marginBottom:"0.75rem" }}>
+          <div style={{ flex:1, minWidth:180 }}>
+            <div style={{ color:"#e0f2fe", fontFamily:"'Cinzel',serif", fontWeight:800 }}>{PREMIUM_CURRENCY.icon} Shop {PREMIUM_CURRENCY.name}</div>
+            <div style={{ color:"#94a3b8", fontSize:"0.72rem", marginTop:2 }}>Modalita test: simula acquisti reali senza usare denaro.</div>
+          </div>
+          <span style={{ color:"#67e8f9", fontWeight:900, fontSize:"1rem" }}>{vault?.premiumBalance || 0} {PREMIUM_CURRENCY.shortName}</span>
+        </div>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(150px,1fr))", gap:8 }}>
+          {PREMIUM_PRODUCTS.map(product => {
+            const total = product.amount + (product.bonus || 0);
+            return (
+              <button key={product.id} onClick={()=>onBuyPremiumCurrency?.(product)} disabled={busy} style={{ textAlign:"left", border:"1px solid rgba(103,232,249,0.26)", borderRadius:8, background:"rgba(2,6,23,0.55)", color:"#e0f2fe", padding:"0.75rem", cursor:busy ? "not-allowed" : "pointer" }}>
+                <div style={{ fontFamily:"'Cinzel',serif", fontWeight:900, color:"#67e8f9" }}>{PREMIUM_CURRENCY.icon} {total}</div>
+                {product.bonus > 0 && <div style={{ color:"#fbbf24", fontSize:"0.66rem", fontWeight:800 }}>Bonus +{product.bonus}</div>}
+                <div style={{ color:"#94a3b8", fontSize:"0.68rem", marginTop:4 }}>{product.mockPrice} · test</div>
+              </button>
+            );
+          })}
+        </div>
+        {!!vault?.premiumLedger?.length && (
+          <div style={{ marginTop:"0.75rem", borderTop:"1px solid rgba(103,232,249,0.14)", paddingTop:"0.65rem", display:"grid", gap:4 }}>
+            {(vault.premiumLedger || []).slice(-3).reverse().map(entry => (
+              <div key={entry.id} style={{ display:"flex", justifyContent:"space-between", gap:8, color:"#94a3b8", fontSize:"0.68rem" }}>
+                <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{entry.label}</span>
+                <span style={{ color:entry.amount >= 0 ? "#67e8f9" : "#fca5a5", fontWeight:800 }}>{entry.amount >= 0 ? "+" : ""}{entry.amount}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:12 }}>
         {CARD_PACK_DEFS.map(pack => {
           const qty = vault?.packs?.[pack.id] || 0;
           const price = pack.price || 0;
+          const sealPrice = pack.sealPrice || 0;
           const canBuy = !!me?.id && (me?.gold || 0) >= price;
+          const canBuyPremium = (vault?.premiumBalance || 0) >= sealPrice;
           return (
             <div key={pack.id} style={{ background:"rgba(15,23,42,0.78)", border:`1px solid ${pack.accent}55`, borderRadius:8, padding:"1rem", boxShadow:"0 14px 34px rgba(0,0,0,0.25)" }}>
               <div style={{ minHeight:196, borderRadius:8, background:`radial-gradient(circle at 50% 18%, ${pack.accent}33, transparent 58%), linear-gradient(160deg,rgba(15,23,42,0.78),rgba(5,8,18,0.98))`, border:`1px solid ${pack.accent}55`, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"0.8rem", overflow:"hidden" }}>
@@ -10338,6 +10400,7 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onGrantDevP
               <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
                 <span style={{ color:"#fbbf24", fontWeight:700, fontSize:"0.86rem", flex:"1 1 110px" }}>Posseduti: {qty}</span>
                 <SmallBtn onClick={()=>onBuyPack(pack)} disabled={!canBuy || busy}>{canBuy ? `Compra ${price}` : `💰 ${price}`}</SmallBtn>
+                <SmallBtn onClick={()=>onBuyPackWithPremium?.(pack)} disabled={!sealPrice || !canBuyPremium || busy}>{sealPrice ? `${PREMIUM_CURRENCY.icon} ${sealPrice}` : "N/D"}</SmallBtn>
                 <BigBtn onClick={()=>openPack(pack)} gold disabled={!qty || busy}>Apri</BigBtn>
               </div>
             </div>
@@ -10718,6 +10781,52 @@ function GameScreen({ myId, setScreen, authUser }) {
     };
     persistCardVault(nextVault);
     await addMsg(`📦 **${me.name}** acquista **${pack.name}** per ${price} oro.`, "info", "Pacchetti");
+  }
+
+  async function handleBuyCardPackWithPremium(pack) {
+    if(!pack || !me?.id) return;
+    const price = pack.sealPrice || 0;
+    if(price <= 0) return;
+    if((cardVault.premiumBalance || 0) < price) { window.alert(`Non hai abbastanza ${PREMIUM_CURRENCY.shortName}.`); return; }
+    if(!window.confirm(`Acquistare ${pack.name} per ${price} ${PREMIUM_CURRENCY.shortName}?`)) return;
+    const nextVault = {
+      ...cardVault,
+      premiumBalance:Math.max(0, (cardVault.premiumBalance || 0) - price),
+      premiumLedger:[
+        ...(cardVault.premiumLedger || []),
+        makePremiumLedgerEntry("spend_pack", -price, `Acquisto ${pack.name}`, { packId:pack.id, provider:"internal_test" }),
+      ].slice(-80),
+      packs:{
+        ...(cardVault.packs || {}),
+        [pack.id]:(cardVault.packs?.[pack.id] || 0) + 1,
+      },
+    };
+    persistCardVault(nextVault);
+    await addMsg(`📦 **${me.name}** acquista **${pack.name}** con ${price} ${PREMIUM_CURRENCY.shortName}.`, "info", "Pacchetti");
+  }
+
+  async function handleBuyPremiumCurrency(product) {
+    if(!product || !me?.id) return;
+    const amount = (product.amount || 0) + (product.bonus || 0);
+    if(amount <= 0) return;
+    if(!window.confirm(`SIMULAZIONE: acquistare ${amount} ${PREMIUM_CURRENCY.name} (${product.mockPrice})?`)) return;
+    const orderId = `test_order_${Date.now()}_${product.id}`;
+    const nextVault = {
+      ...cardVault,
+      premiumBalance:(cardVault.premiumBalance || 0) + amount,
+      premiumLedger:[
+        ...(cardVault.premiumLedger || []),
+        makePremiumLedgerEntry("purchase_test", amount, `Acquisto test ${product.mockPrice}`, {
+          orderId,
+          productId:product.id,
+          provider:"internal_test",
+          steamSku:product.steamSku,
+          googleProductId:product.googleProductId,
+        }),
+      ].slice(-80),
+    };
+    persistCardVault(nextVault);
+    await addMsg(`◆ **${me.name}** riceve **${amount} ${PREMIUM_CURRENCY.name}** tramite acquisto test.`, "info", "Shop");
   }
 
   async function handleOpenCardPack(packId) {
@@ -14812,6 +14921,8 @@ ${stepText(step)}`, "quest","Master");
             me={me}
             onOpenPack={handleOpenCardPack}
             onBuyPack={handleBuyCardPack}
+            onBuyPackWithPremium={handleBuyCardPackWithPremium}
+            onBuyPremiumCurrency={handleBuyPremiumCurrency}
             onGrantDevPack={grantDevCardPack}
           />
         )}

@@ -26,6 +26,19 @@ Il sistema carte deve essere un extra collezionabile e godibile, non un muro pay
 - Un giocatore free-to-play deve poter arrivare al top senza spendere una lira.
 - Chi non spende puo metterci anche molto di piu, ma non deve sentirsi escluso dal contenuto migliore.
 
+## Valuta Premium
+
+Nome scelto per il prototipo: Sigilli di Zodar.
+
+Regole:
+
+- I Sigilli di Zodar sono la valuta premium finta del prototipo.
+- Nel prototipo si acquistano tramite shop test, senza denaro reale.
+- In futuro lo stesso sistema dovra collegarsi a Steam Wallet su Steam e Google Play Billing su Play Store.
+- Il frontend non deve mai accreditare valuta reale da solo: in produzione accredita solo il backend dopo conferma della piattaforma.
+- I prezzi reali non devono essere scolpiti nel codice di gioco: Steam e Google dovranno gestire prezzo, valuta locale e prodotti.
+- I Sigilli possono comprare pacchetti e cosmetici, ma non devono creare pay-to-win pesante.
+
 ## Ricompense
 
 Le carte possono contenere:
@@ -107,6 +120,9 @@ Gia implementato:
 - Tab Pacchetti e Carte protette.
 - Pacchetti test.
 - Acquisto pacchetti con gold dalla tab Pacchetti.
+- Shop test dei Sigilli di Zodar con pacchetti valuta finti.
+- Acquisto pacchetti con Sigilli di Zodar.
+- Ledger locale delle transazioni premium test.
 - Tab Master "Pacchetti" per regalare pacchetti ai player selezionati.
 - Sbustamento con reveal.
 - Grafica base dei pacchetti con busta fantasy, sigillo e animazione di apertura.
@@ -126,5 +142,7 @@ Da fare:
 - Identita visiva diversa per rarita.
 - Animazioni avanzate di sbustamento, con effetti speciali dedicati a epiche, leggendarie e mitiche.
 - Shop/pacchetti collegati a gold, dungeon, eventi e valuta speciale.
+- Collegamento reale a Steam Wallet e Google Play Billing.
+- Backend definitivo per ordini, verifica acquisti, accrediti e rimborsi.
 - Drop pacchetti da dungeon, eventi e ricompense mensili.
 - Bilanciamento finale delle probabilita.
