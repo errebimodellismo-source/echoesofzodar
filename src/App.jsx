@@ -1823,6 +1823,9 @@ function itemToLootCard(item, rarityOverride=null) {
     name:item.name,
     rarity,
     description:item.description || "",
+    effectLines:itemEffectLines(item),
+    stats:itemStatSummary(item),
+    slot:itemSlot(item),
     image:getItemImage(item),
     acquiredAt:new Date().toISOString(),
   };
@@ -1836,6 +1839,7 @@ function cosmeticToLootCard(cosmetic) {
     name:cosmetic.name,
     rarity:cosmetic.rarity,
     description:cosmetic.description,
+    effectLines:cosmeticEffectLines(cosmetic),
     exclusive:!!cosmetic.exclusive,
     acquiredAt:new Date().toISOString(),
   };
@@ -2413,6 +2417,50 @@ function itemStatSummary(item) {
   if(item.bonus_init) stats.push(`🦶 ${item.bonus_init>=0?"+":""}${item.bonus_init}`);
   if(item.heal_amount) stats.push(`🧪 Cura ${item.heal_amount}`);
   return stats;
+}
+function equipSlotLabel(slot) {
+  return ({
+    weapon:"Mano principale",
+    offhand:"Mano secondaria",
+    head:"Testa",
+    chest:"Petto",
+    legs:"Gambe",
+    boots:"Stivali",
+    gloves:"Guanti",
+    ring1:"Anello",
+    ring2:"Anello",
+    amulet:"Amuleto",
+    cloak:"Mantello",
+  })[slot] || slot || "Inventario";
+}
+function itemEffectLines(item) {
+  if(!item) return [];
+  const lines = [];
+  if(item.weapon_die) lines.push(`Danno arma: ${item.weapon_die}`);
+  if(item.bonus_atk) lines.push(`Attacco +${item.bonus_atk}`);
+  if(item.bonus_def) lines.push(`Difesa +${item.bonus_def}`);
+  if(item.bonus_mag) lines.push(`Magia +${item.bonus_mag}`);
+  if(item.bonus_hp) lines.push(`Punti vita massimi +${item.bonus_hp}`);
+  if(item.bonus_init) lines.push(`Iniziativa ${item.bonus_init >= 0 ? "+" : ""}${item.bonus_init}`);
+  if(item.heal_amount) lines.push(`Usa: cura ${item.heal_amount} HP`);
+  const slot = itemSlot(item);
+  if(slot) lines.push(`Equipaggia in: ${equipSlotLabel(slot)}`);
+  if(!lines.length) lines.push("Oggetto collezionabile: nessun bonus di combattimento.");
+  return lines;
+}
+function cosmeticEffectLines(card) {
+  if(!card) return [];
+  if(card.type === "title") return ["Titolo scenico attivabile sul personaggio.", "Solo estetica: non aumenta le statistiche."];
+  if(card.type === "aura") return ["Effetto scenico per distinguersi in game.", "Solo estetica: non aumenta le statistiche."];
+  if(card.type === "frame" || card.type === "cardback") return ["Personalizzazione estetica della collezione.", "Solo estetica: non aumenta le statistiche."];
+  return ["Ricompensa scenica da collezione.", "Solo estetica: non aumenta le statistiche."];
+}
+function cardEffectLines(card, item=null) {
+  if(item) return itemEffectLines(item);
+  if(Array.isArray(card?.effectLines) && card.effectLines.length) return card.effectLines;
+  if(Array.isArray(card?.stats) && card.stats.length) return card.stats;
+  if(card?.kind === "cosmetic") return cosmeticEffectLines(card);
+  return [];
 }
 function itemTypeLabel(type) {
   return ({
@@ -9837,6 +9885,7 @@ function SecretCardsGate({ onUnlock }) {
 
 function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
   const color = CARD_RARITY_COLOR[card?.rarity] || "#94a3b8";
+  const effectLines = cardEffectLines(card);
   return (
     <button onClick={onClick} style={{
       border:"none",
@@ -9872,6 +9921,14 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
               <div style={{ color, fontSize:"0.64rem", textTransform:"uppercase", letterSpacing:"0.08em", marginTop:3 }}>{cardRarityLabel(card.rarity)}</div>
             </div>
             {!compact && <div style={{ color:"#64748b", fontSize:"0.66rem", lineHeight:1.3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical" }}>{card.description || "Carta collezionabile."}</div>}
+            {!compact && !!effectLines.length && (
+              <div style={{ border:`1px solid ${color}44`, background:`linear-gradient(180deg,${color}16,rgba(15,23,42,0.5))`, borderRadius:6, padding:"0.45rem 0.5rem", display:"grid", gap:3 }}>
+                <div style={{ color, fontSize:"0.56rem", fontWeight:800, textTransform:"uppercase", letterSpacing:"0.09em" }}>Effetto</div>
+                {effectLines.slice(0,4).map((line, idx) => (
+                  <div key={idx} style={{ color:"#dbeafe", fontSize:"0.62rem", lineHeight:1.22 }}>{line}</div>
+                ))}
+              </div>
+            )}
             {card.exclusive && <div style={{ marginTop:"auto", alignSelf:"flex-start", color:"#fbbf24", border:"1px solid rgba(251,191,36,0.28)", borderRadius:999, padding:"1px 7px", fontSize:"0.58rem" }}>SOLO PACCHETTI</div>}
             {card.duplicate && <div style={{ alignSelf:"flex-start", color:"#c4b5fd", border:"1px solid rgba(196,181,253,0.28)", borderRadius:999, padding:"1px 7px", fontSize:"0.58rem" }}>DOPPIONE +{card.convertedFragments || 0}</div>}
           </>
@@ -10035,6 +10092,7 @@ function CardsCollectionView({ vault, inventoryGroups, equipment, onEquip, onUse
   const selected = cards.find(card => card.uid === selectedUid) || filtered[0] || null;
   const selectedGroup = selected?.itemId ? inventoryGroups.find(group => group.item.id === selected.itemId) : null;
   const selectedEquipped = selectedGroup && itemSlot(selectedGroup.item) && equipment?.[itemSlot(selectedGroup.item)] === selectedGroup.item.id;
+  const selectedEffectLines = cardEffectLines(selected, selectedGroup?.item);
   return (
     <div style={{ flex:1, minHeight:0, display:"grid", gridTemplateColumns:isMobile ? "1fr" : "minmax(0,1fr) minmax(280px,360px)", gridTemplateRows:isMobile ? "minmax(0,1fr) auto" : "auto", gap:0, background:"rgba(3,7,18,0.55)", overflow:"hidden" }}>
       <div style={{ overflowY:"auto", padding:"1rem" }}>
@@ -10060,6 +10118,14 @@ function CardsCollectionView({ vault, inventoryGroups, equipment, onEquip, onUse
               <div style={{ fontFamily:"'Cinzel',serif", color:"#e2e8f0", fontWeight:700, fontSize:"1.05rem" }}>{selected.name}</div>
               <div style={{ color:CARD_RARITY_COLOR[selected.rarity], fontSize:"0.75rem", textTransform:"uppercase", letterSpacing:"0.08em", marginTop:3 }}>{cardRarityLabel(selected.rarity)} · {selected.kind === "item" ? "Oggetto" : "Scenica"}</div>
               <p style={{ color:"#94a3b8", fontSize:"0.84rem", lineHeight:1.55 }}>{selected.description || "Carta collezionabile."}</p>
+              {!!selectedEffectLines.length && (
+                <div style={{ border:`1px solid ${CARD_RARITY_COLOR[selected.rarity]}44`, background:"rgba(15,23,42,0.72)", borderRadius:8, padding:"0.75rem", margin:"0 0 0.9rem", display:"grid", gap:6 }}>
+                  <div style={{ color:CARD_RARITY_COLOR[selected.rarity], fontSize:"0.68rem", fontWeight:800, textTransform:"uppercase", letterSpacing:"0.1em" }}>Cosa fa</div>
+                  {selectedEffectLines.map((line, idx) => (
+                    <div key={idx} style={{ color:"#dbeafe", fontSize:"0.82rem", lineHeight:1.35 }}>{line}</div>
+                  ))}
+                </div>
+              )}
               <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                 {selectedGroup && isEquippableItem(selectedGroup.item) && <BigBtn onClick={()=>onEquip(selectedGroup.entries[0])} gold disabled={selectedEquipped}>{selectedEquipped ? "Equipaggiata" : "Equipaggia"}</BigBtn>}
                 {selectedGroup?.item?.type === "potion" && <BigBtn onClick={()=>onUse(selectedGroup.entries[0])} gold>Usa</BigBtn>}
