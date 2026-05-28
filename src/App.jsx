@@ -2494,9 +2494,9 @@ function cardEffectLines(card, item=null) {
 function cardTypeLine(card) {
   if(!card) return "Carta";
   if(card.kind === "cosmetic") {
-    return `Scenica - ${card.type === "title" ? "Titolo" : card.type === "aura" ? "Aura" : card.type === "frame" ? "Cornice" : card.type === "cardback" ? "Retro carta" : "Collezione"}`;
+    return card.type === "title" ? "Titolo scenico" : card.type === "aura" ? "Aura scenica" : card.type === "frame" ? "Cornice" : card.type === "cardback" ? "Retro carta" : "Scenica";
   }
-  return `Oggetto - ${itemTypeLabel(card.type)}`;
+  return itemTypeLabel(card.type);
 }
 function cardStatBadge(card) {
   if(!card) return "";
@@ -10115,14 +10115,14 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
       padding:0,
       cursor:onClick ? "pointer" : "default",
       textAlign:"left",
-      minWidth:compact ? 132 : 158,
+      minWidth:compact ? 132 : 190,
       width:"100%",
-      maxWidth:compact ? "none" : 260,
+      maxWidth:compact ? "none" : 300,
     }}>
       <div style={{
         aspectRatio:"2.5 / 3.5",
         borderRadius:12,
-        padding:compact ? "0.42rem" : "0.58rem",
+        padding:compact ? "0.42rem" : "0.64rem",
         background: revealed
           ? `linear-gradient(135deg,${rarityStyle.edge},${rarityStyle.main} 18%,${rarityStyle.dark} 46%,rgba(2,6,23,0.98) 72%,${rarityStyle.main}), repeating-linear-gradient(45deg,rgba(255,255,255,0.08) 0 2px,transparent 2px 7px)`
           : "linear-gradient(160deg,rgba(25,18,45,0.98),rgba(5,8,18,0.98))",
@@ -10140,23 +10140,23 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
           <div style={{ flex:1, borderRadius:6, border:"1px solid rgba(196,181,253,0.22)", background:"radial-gradient(circle at 50% 38%,rgba(124,58,237,0.36),rgba(2,6,23,0.92) 62%)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cinzel Decorative',serif", color:"#c4b5fd", fontSize:"2rem" }}>Z</div>
         ) : (
           <>
-            <div style={{ minHeight:compact ? 27 : 35, borderRadius:7, background:`linear-gradient(180deg,${rarityStyle.plate},rgba(248,250,252,0.82))`, border:`2px solid ${rarityStyle.dark}`, display:"grid", gridTemplateColumns:"minmax(0,1fr) auto", alignItems:"center", gap:6, padding:compact ? "0.18rem 0.34rem" : "0.26rem 0.45rem", boxShadow:`inset 0 0 0 1px ${rarityStyle.edge}, 0 2px 0 rgba(2,6,23,0.35)` }}>
-              <div style={{ color:rarityStyle.ink, fontFamily:"'Cinzel',serif", fontSize:compact ? "0.66rem" : "0.88rem", fontWeight:900, lineHeight:1.05, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{card.name}</div>
+            <div style={{ minHeight:compact ? 27 : 42, borderRadius:7, background:`linear-gradient(180deg,${rarityStyle.plate},rgba(248,250,252,0.82))`, border:`2px solid ${rarityStyle.dark}`, display:"grid", gridTemplateColumns:"minmax(0,1fr) auto", alignItems:"center", gap:6, padding:compact ? "0.18rem 0.34rem" : "0.32rem 0.48rem", boxShadow:`inset 0 0 0 1px ${rarityStyle.edge}, 0 2px 0 rgba(2,6,23,0.35)` }}>
+              <div style={{ color:rarityStyle.ink, fontFamily:"'Cinzel',serif", fontSize:compact ? "0.66rem" : "0.82rem", fontWeight:900, lineHeight:1.05, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:compact ? 2 : 3, WebkitBoxOrient:"vertical" }}>{card.name}</div>
               <div style={{ width:compact ? 22 : 28, height:compact ? 22 : 28, borderRadius:"50%", background:`radial-gradient(circle at 35% 28%,#fff,${rarityStyle.edge} 30%,${rarityStyle.main} 62%,${rarityStyle.dark})`, border:`2px solid ${rarityStyle.dark}`, color:rarityStyle.ink, display:"flex", alignItems:"center", justifyContent:"center", fontSize:compact ? "0.58rem" : "0.72rem", fontWeight:900, boxShadow:`0 0 12px ${rarityStyle.glow}` }}>{rarityInitial}</div>
             </div>
-            <div style={{ height:compact ? 70 : 118, borderRadius:7, background:"rgba(2,6,23,0.72)", border:`3px solid ${rarityStyle.dark}`, boxShadow:`0 0 0 2px ${rarityStyle.edge}`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
+            <div style={{ height:compact ? 70 : 116, borderRadius:7, background:"rgba(2,6,23,0.72)", border:`3px solid ${rarityStyle.dark}`, boxShadow:`0 0 0 2px ${rarityStyle.edge}`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
               {card.image ? <img src={card.image} alt={card.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} /> : <span style={{ fontSize:compact ? "1.7rem" : "2.2rem" }}>{card.type === "title" ? "🏷️" : card.type === "aura" ? "✨" : card.type === "frame" ? "▣" : "✦"}</span>}
             </div>
-            <div style={{ minHeight:compact ? 22 : 29, borderRadius:7, background:`linear-gradient(180deg,${rarityStyle.plate},rgba(226,232,240,0.82))`, border:`2px solid ${rarityStyle.dark}`, color:rarityStyle.ink, fontFamily:"'Cinzel',serif", fontSize:compact ? "0.58rem" : "0.72rem", fontWeight:900, lineHeight:1.08, padding:compact ? "0.22rem 0.34rem" : "0.32rem 0.45rem", overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"space-between", gap:6 }}>
-              <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{typeLine}</span>
+            <div style={{ minHeight:compact ? 22 : 31, borderRadius:7, background:`linear-gradient(180deg,${rarityStyle.plate},rgba(226,232,240,0.82))`, border:`2px solid ${rarityStyle.dark}`, color:rarityStyle.ink, fontFamily:"'Cinzel',serif", fontSize:compact ? "0.58rem" : "0.7rem", fontWeight:900, lineHeight:1.1, padding:compact ? "0.22rem 0.34rem" : "0.32rem 0.45rem", overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"space-between", gap:6 }}>
+              <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", minWidth:0 }}>{typeLine}</span>
               <span style={{ color:rarityStyle.dark, flexShrink:0 }}>{cardRarityLabel(card.rarity)}</span>
             </div>
             {!compact && (
-              <div style={{ flex:1, minHeight:0, borderRadius:7, background:`linear-gradient(180deg,${rarityStyle.plate},rgba(241,245,249,0.9))`, border:`2px solid ${rarityStyle.dark}`, color:rarityStyle.ink, padding:"0.5rem 0.55rem", display:"flex", flexDirection:"column", gap:5, overflow:"hidden" }}>
-                {effectLines.slice(0,4).map((line, idx) => (
-                  <div key={idx} style={{ color:rarityStyle.ink, fontSize:"0.68rem", lineHeight:1.18, fontWeight:idx === 0 ? 800 : 600 }}>{line}</div>
+              <div style={{ flex:"1 1 auto", minHeight:76, borderRadius:7, background:`linear-gradient(180deg,${rarityStyle.plate},rgba(241,245,249,0.9))`, border:`2px solid ${rarityStyle.dark}`, color:rarityStyle.ink, padding:"0.48rem 0.55rem", display:"flex", flexDirection:"column", gap:4, overflow:"hidden" }}>
+                {effectLines.slice(0,3).map((line, idx) => (
+                  <div key={idx} style={{ color:rarityStyle.ink, fontSize:"0.66rem", lineHeight:1.16, fontWeight:idx === 0 ? 800 : 600, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:idx === 0 ? 2 : 1, WebkitBoxOrient:"vertical" }}>{line}</div>
                 ))}
-                <div style={{ color:"#334155", fontSize:"0.64rem", lineHeight:1.2, fontStyle:"italic", marginTop:"auto", overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{card.description || "Carta collezionabile."}</div>
+                <div style={{ color:"#334155", fontSize:"0.6rem", lineHeight:1.16, fontStyle:"italic", marginTop:"auto", overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{card.description || "Carta collezionabile."}</div>
               </div>
             )}
             <div style={{ minHeight:compact ? 18 : 24, display:"flex", alignItems:"center", gap:5, justifyContent:"space-between" }}>
@@ -10265,10 +10265,10 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onGrantDevP
       </div>
       {opening && (
         <div style={{ position:"fixed", inset:0, zIndex:99996, background:"rgba(2,6,23,0.92)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
-          <div style={{ width:"min(980px,100%)", textAlign:"center" }}>
+          <div style={{ width:"min(1240px,100%)", textAlign:"center" }}>
             <div style={{ fontFamily:"'Cinzel Decorative',serif", color:opening.pack.accent, fontSize:"1.35rem", marginBottom:"0.3rem" }}>{opening.pack.name}</div>
             <div style={{ color:"#64748b", fontSize:"0.8rem", marginBottom:"1rem" }}>{allRevealed ? "Ricompense ottenute" : "Clicca sulle carte per rivelarle"}</div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(135px,1fr))", gap:12, alignItems:"stretch" }}>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))", gap:14, alignItems:"stretch", justifyItems:"center" }}>
               {opening.rewards.map((card, idx) => (
                 <ZodarLootCard
                   key={card.uid}
