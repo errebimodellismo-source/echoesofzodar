@@ -36,6 +36,11 @@ import { I18nProvider, LanguageToggle, useI18n } from "./i18n.jsx";
     @keyframes hitShake { 0%,100%{transform:translateX(0)} 18%{transform:translateX(-6px)} 36%{transform:translateX(5px)} 54%{transform:translateX(-3px)} 72%{transform:translateX(2px)} }
     @keyframes combatCueIn { 0%{opacity:0;transform:translateY(10px) scale(.96)} 18%{opacity:1;transform:translateY(0) scale(1)} 100%{opacity:1;transform:translateY(0) scale(1)} }
     @keyframes combatPulseRing { 0%,100%{box-shadow:0 0 0 rgba(251,191,36,0)} 50%{box-shadow:0 0 26px rgba(251,191,36,.28)} }
+    @keyframes battleSlashFx { 0%{opacity:0;transform:translate(-58%,-50%) rotate(-18deg) scaleX(.25)} 24%{opacity:1} 100%{opacity:0;transform:translate(-42%,-50%) rotate(-18deg) scaleX(1.18)} }
+    @keyframes battleArrowFx { 0%{opacity:0;transform:translate(-90%,-50%)} 18%{opacity:1} 76%{opacity:1} 100%{opacity:0;transform:translate(76%,-50%)} }
+    @keyframes battleMagicFx { 0%{opacity:0;transform:translate(-50%,-50%) scale(.28);filter:blur(8px)} 35%{opacity:1;filter:blur(0)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.65);filter:blur(4px)} }
+    @keyframes battleDivineTextFx { 0%{opacity:0;transform:translate(-50%,16px) scale(.92);letter-spacing:.32em} 22%{opacity:1;transform:translate(-50%,0) scale(1);letter-spacing:.18em} 78%{opacity:1} 100%{opacity:0;transform:translate(-50%,-24px) scale(1.04);letter-spacing:.26em} }
+    @keyframes battleDivineRayFx { 0%{opacity:0;transform:scaleY(.1)} 28%{opacity:.9;transform:scaleY(1)} 100%{opacity:0;transform:scaleY(1.15)} }
     @keyframes dice-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
     .dice-spin { animation:dice-spin .55s linear infinite; }
     @keyframes restOverlayIn { from{opacity:0} to{opacity:1} }
@@ -1685,12 +1690,16 @@ function getStoredPreparedSpells(playerId, spells=[]) {
 function saveStoredPreparedSpells(playerId, spellIds) {
   lsSet(preparedSpellsKey(playerId), spellIds);
 }
-function spellEffectSummary(spell) {
+function spellEffectSummary(spell, lang = "it") {
+  const isEn = lang === "en";
   if(!spell) return [];
   const details = [];
-  details.push(spell.slots === 0 ? "Gratis" : `Costo: slot ${spell.slots}`);
-  if(spell.dmg && spell.dmg !== "0") details.push(spell.type === "heal" ? `Cura: ${spell.dmg}` : `Danno: ${spell.dmg}`);
-  else details.push(`Tipo: ${spell.type || "speciale"}`);
+  details.push(spell.slots === 0 ? (isEn ? "Free" : "Gratis") : `${isEn ? "Cost" : "Costo"}: slot ${spell.slots}`);
+  if(spell.dmg && spell.dmg !== "0") details.push(spell.type === "heal" ? `${isEn ? "Heal" : "Cura"}: ${spell.dmg}` : `${isEn ? "Damage" : "Danno"}: ${spell.dmg}`);
+  else details.push(`${isEn ? "Type" : "Tipo"}: ${spell.type || (isEn ? "special" : "speciale")}`);
+  if(spell.area) details.push(isEn ? "Area" : "Area");
+  if(spell.type === "summon") details.push(isEn ? "Summon" : "Evocazione");
+  if(spell.type === "control") details.push(isEn ? "Control" : "Controllo");
   return details;
 }
 function getBaseStats(player) {
@@ -1892,6 +1901,57 @@ function combatLogCue(log, lang = "it") {
   if(isDeath) return { type:"death", icon:"🕯️", title:isEn ? "Critical Moment" : "Momento Critico", value:isEn ? "life hangs by a thread" : "vita appesa a un filo", color:"#f87171", bg:"rgba(127,29,29,0.42)" };
   if(damageMatches.length) return { type:"hit", icon:"⚔️", title:isEn ? "Hit" : "Colpo a Segno", value:`${Math.max(...damageMatches)} ${isEn ? "damage" : "danni"}`, color:"#f87171", bg:"rgba(127,29,29,0.38)" };
   return { type:"event", icon:"✨", title:isEn ? "Event" : "Evento", value:"", color:"#cbd5e1", bg:"rgba(30,41,59,0.42)" };
+}
+function battleEffectFromLog(log, lang = "it") {
+  const text = String(log || "");
+  if(!text) return null;
+  const isEn = lang === "en";
+  const divineTitle = text.match(/\*\*([^*]+)\*\*/)?.[1];
+  if(/ZODAR|EQUILIBRIO|CAOS|FLAGELLO|PUNIZIONE DIVINA|RICHIAMO|BILANCIA|ETERNIT|FRATTURA|OSSERVA/i.test(text)) {
+    return { type:"divine", label:divineTitle || (isEn ? "DIVINE WILL" : "VOLONTA' DIVINA"), color:"#fef3c7" };
+  }
+  if(/frecc|arrow|arco|bow|🏹/i.test(text)) return { type:"arrow", label:isEn ? "Arrow" : "Freccia", color:"#fbbf24" };
+  if(/lancia|casts|incantesimo|spell|magia|🔮|💜|💋/i.test(text)) {
+    const heal = /cura|heal|guarisce|restores|💚/i.test(text);
+    return { type:heal ? "healMagic" : "magic", label:divineTitle || (heal ? (isEn ? "Healing" : "Cura") : (isEn ? "Spell" : "Magia")), color:heal ? "#34d399" : "#a78bfa" };
+  }
+  if(/Mancato|Miss|manca/i.test(text)) return { type:"miss", label:isEn ? "Miss" : "Mancato", color:"#94a3b8" };
+  return { type:"slash", label:isEn ? "Strike" : "Colpo", color:"#f87171" };
+}
+function BattleActionEffect({ log, lang }) {
+  const fx = battleEffectFromLog(log, lang);
+  if(!fx) return null;
+  const base = { position:"absolute", inset:0, pointerEvents:"none", zIndex:4, overflow:"hidden", borderRadius:14 };
+  if(fx.type === "divine") return (
+    <div style={base}>
+      <div style={{ position:"absolute", left:"50%", top:0, width:120, height:"100%", transform:"translateX(-50%)", transformOrigin:"top", background:"linear-gradient(180deg,rgba(254,243,199,0),rgba(254,243,199,0.72),rgba(168,85,247,0.18),rgba(254,243,199,0))", filter:"blur(10px)", animation:"battleDivineRayFx 1.35s ease-out forwards" }} />
+      <div style={{ position:"absolute", left:"50%", top:"42%", transform:"translateX(-50%)", color:fx.color, fontFamily:"'Cinzel Decorative',serif", fontSize:"clamp(1.25rem,3vw,2.35rem)", textAlign:"center", textShadow:"0 0 16px rgba(251,191,36,0.95),0 0 44px rgba(168,85,247,0.85)", animation:"battleDivineTextFx 1.55s ease-out forwards", whiteSpace:"nowrap" }}>
+        ⚖ {fx.label} ⚖
+      </div>
+    </div>
+  );
+  if(fx.type === "arrow") return (
+    <div style={base}>
+      <div style={{ position:"absolute", left:"50%", top:"47%", width:"42%", height:4, background:"linear-gradient(90deg,transparent,#fde68a,#f59e0b)", boxShadow:"0 0 16px rgba(251,191,36,0.9)", animation:"battleArrowFx .9s ease-out forwards" }} />
+      <div style={{ position:"absolute", left:"50%", top:"47%", color:"#fde68a", fontSize:"1.8rem", animation:"battleArrowFx .9s ease-out forwards" }}>➤</div>
+    </div>
+  );
+  if(fx.type === "magic" || fx.type === "healMagic") return (
+    <div style={base}>
+      <div style={{ position:"absolute", left:"50%", top:"48%", width:170, height:170, borderRadius:"50%", transform:"translate(-50%,-50%)", background:`radial-gradient(circle,${fx.color}cc 0%,${fx.color}55 32%,transparent 68%)`, boxShadow:`0 0 44px ${fx.color}`, animation:"battleMagicFx 1.1s ease-out forwards" }} />
+      <div style={{ position:"absolute", left:"50%", top:"48%", transform:"translate(-50%,-50%)", color:"#f8fafc", fontFamily:"'Cinzel',serif", fontWeight:800, letterSpacing:"0.14em", textShadow:`0 0 20px ${fx.color}`, animation:"combatCueIn 1.1s ease both" }}>{fx.label}</div>
+    </div>
+  );
+  if(fx.type === "miss") return (
+    <div style={base}>
+      <div style={{ position:"absolute", left:"50%", top:"46%", transform:"translate(-50%,-50%)", color:"#cbd5e1", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.7rem", textShadow:"0 0 18px rgba(148,163,184,0.75)", animation:"battleMagicFx .85s ease-out forwards" }}>{fx.label}</div>
+    </div>
+  );
+  return (
+    <div style={base}>
+      <div style={{ position:"absolute", left:"50%", top:"48%", width:"48%", height:10, borderRadius:999, background:"linear-gradient(90deg,transparent,#fecaca,#ef4444,transparent)", boxShadow:"0 0 22px rgba(239,68,68,0.9)", animation:"battleSlashFx .8s ease-out forwards" }} />
+    </div>
+  );
 }
 function isDyingCombatant(combatant) {
   return !!combatant?.isPlayer && !!combatant?.dying && !combatant?.dead;
@@ -8824,14 +8884,15 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
 }
 
 function SpellbookView({ spellsByLevel, preparedSpellIds, preparedCount, maxPrepared, onTogglePrepared }) {
+  const { lang } = useI18n();
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginBottom:"1rem", flexWrap:"wrap" }}>
-        <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0 }}>✨ Magie</h3>
+        <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0 }}>✨ {lang === "en" ? "Spells" : "Magie"}</h3>
         <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap" }}>
-          <span style={{ color:"#94a3b8", fontSize:"0.8rem" }}>Scegli quali incantesimi preparare per oggi. I trucchetti restano sempre disponibili.</span>
+          <span style={{ color:"#94a3b8", fontSize:"0.8rem" }}>{lang === "en" ? "Choose which spells to prepare today. Cantrips are always available." : "Scegli quali incantesimi preparare per oggi. I trucchetti restano sempre disponibili."}</span>
           <span style={{ fontSize:"0.78rem", color:"#ddd6fe", background:"rgba(124,58,237,0.2)", border:"1px solid #7c3aed", borderRadius:999, padding:"4px 10px" }}>
-            Preparati: {preparedCount}/{maxPrepared}
+            {lang === "en" ? "Prepared" : "Preparati"}: {preparedCount}/{maxPrepared}
           </span>
         </div>
       </div>
@@ -8841,7 +8902,7 @@ function SpellbookView({ spellsByLevel, preparedSpellIds, preparedCount, maxPrep
           const spells = spellsByLevel[level] || [];
           if(!spells.length) return null;
           return (
-            <Card key={level} title={level===0 ? "✨ Trucchetti" : `🔮 Livello ${level}`}>
+            <Card key={level} title={level===0 ? `✨ ${lang === "en" ? "Cantrips" : "Trucchetti"}` : `🔮 ${lang === "en" ? "Level" : "Livello"} ${level}`}>
               <div style={{ display:"grid", gap:10 }}>
                 {spells.map(spell => {
                   const prepared = level === 0 || preparedSpellIds.includes(spell.id);
@@ -8851,7 +8912,7 @@ function SpellbookView({ spellsByLevel, preparedSpellIds, preparedCount, maxPrep
                         <div>
                           <div style={{ color:"#f8fafc", fontWeight:700, fontSize:"0.96rem" }}>{spell.emoji || "✨"} {spell.name}</div>
                           <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:4 }}>
-                            {spellEffectSummary(spell).map(detail => (
+                            {spellEffectSummary(spell, lang).map(detail => (
                               <span key={detail} style={{ fontSize:"0.72rem", color:"#cbd5e1", background:"rgba(255,255,255,0.04)", border:"1px solid #334155", borderRadius:999, padding:"3px 8px" }}>
                                 {detail}
                               </span>
@@ -8859,13 +8920,13 @@ function SpellbookView({ spellsByLevel, preparedSpellIds, preparedCount, maxPrep
                           </div>
                         </div>
                         {level === 0 ? (
-                          <span style={{ fontSize:"0.74rem", color:"#6ee7b7", fontWeight:700 }}>Sempre pronto</span>
+                          <span style={{ fontSize:"0.74rem", color:"#6ee7b7", fontWeight:700 }}>{lang === "en" ? "Always ready" : "Sempre pronto"}</span>
                         ) : (
                           <button
                             onClick={()=>onTogglePrepared(spell.id)}
                             style={{ padding:"0.45rem 0.8rem", background:prepared?"rgba(124,58,237,0.24)":"rgba(255,255,255,0.04)", border:`1px solid ${prepared ? "#7c3aed" : "#334155"}`, borderRadius:8, color:prepared?"#ddd6fe":"#cbd5e1", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.74rem" }}
                           >
-                            {prepared ? "Preparato" : "Prepara"}
+                            {prepared ? (lang === "en" ? "Prepared" : "Preparato") : (lang === "en" ? "Prepare" : "Prepara")}
                           </button>
                         )}
                       </div>
@@ -9452,6 +9513,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const guildChatSubRef = useRef(null);
   const turnTimerRef = useRef(null);
   const pendingLogRef = useRef(false);
+  const lastStoredCombatLogRef = useRef("");
   const prevLegItemRef = useRef(null);
   const itemMapRef = useRef(DEFAULT_ITEM_MAP);
   const startCombatStepRef = useRef(null);
@@ -9501,7 +9563,7 @@ function GameScreen({ myId, setScreen, authUser }) {
 
   async function performAsyncAttack(attacker, target, weaponDie, weapon=null) {
     const themeColor = attacker.isPlayer ? "#3b82f6" : "#ef4444";
-    const hitRoll = await showDiceVisual({ sides:20, notation:"1d20", label:"Tiro per colpire", themeColor });
+    const hitRoll = await showDiceVisual({ sides:20, notation:"1d20", label:lang === "en" ? "Attack roll" : "Tiro per colpire", themeColor });
 
     const attackBonus = getCombatAttackBonus(attacker, weapon);
     const attackTotal = hitRoll + attackBonus;
@@ -9516,7 +9578,7 @@ function GameScreen({ myId, setScreen, authUser }) {
 
     let damageRoll = 0;
     if (hit) {
-      damageRoll = await showDiceVisual({ sides:getPrimaryDieSides(weaponDie,6), notation:weaponDie||"1d6", label:`Danno ${weaponDie||"1d6"}`, themeColor });
+      damageRoll = await showDiceVisual({ sides:getPrimaryDieSides(weaponDie,6), notation:weaponDie||"1d6", label:`${lang === "en" ? "Damage" : "Danno"} ${weaponDie||"1d6"}`, themeColor });
     }
 
     // D&D 5e crit: double the dice only, not the modifier
@@ -9787,6 +9849,19 @@ function GameScreen({ myId, setScreen, authUser }) {
     return () => clearTimeout(t);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [qs?.combat?.pendingLog]);
+
+  // Store action popups in the battle log as regular combat messages.
+  useEffect(() => {
+    if(!qs?.combat?.pendingLog || !code) return;
+    const combatants = qs?.combat?.combatants || [];
+    const isLeader = combatants.find(c => c.isPlayer && !c.isSummon && !c.dead)?.id === myId
+      || !combatants.some(c => c.isPlayer && !c.isSummon && !c.dead);
+    if(!isLeader) return;
+    const logKey = `${qs?.combat?.startedAt || "combat"}:${qs?.combat?.round || 0}:${qs?.combat?.turn || 0}:${qs.combat.pendingLog}`;
+    if(lastStoredCombatLogRef.current === logKey) return;
+    lastStoredCombatLogRef.current = logKey;
+    dbSendMessage({ party_code: code, author:"Sistema", content:qs.combat.pendingLog, type:"combat" }).catch(console.error);
+  }, [qs?.combat?.pendingLog, qs?.combat?.round, qs?.combat?.turn, qs?.combat?.startedAt, code, myId]);
 
   // Notify player when master grants a legendary item
   useEffect(() => {
@@ -11704,12 +11779,12 @@ function GameScreen({ myId, setScreen, authUser }) {
     const spellMyBuffs = spellMasterBuffs[myId] || {};
     let newSpellMasterBuffs = spellMasterBuffs;
 
-    let log = `🔮 **${attacker.name}** lancia **${spell.name}**!\n`;
+    let log = lang === "en" ? `🔮 **${attacker.name}** casts **${spell.name}**!\n` : `🔮 **${attacker.name}** lancia **${spell.name}**!\n`;
     let newCombatants = combatants;
     let spellDmgToLog = 0;
 
     if(spell.type === "damage") {
-      const base = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), notation:spell.dmg, label:`Danno ${spell.dmg}`, themeColor:"#a855f7" });
+      const base = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), notation:spell.dmg, label:`${lang === "en" ? "Damage" : "Danno"} ${spell.dmg}`, themeColor:"#a855f7" });
       const magLegBonus = (spellMyBuffs.legendaryItem?.turnsLeft > 0 && spellMyBuffs.legendaryItem?.bonus_mag) ? spellMyBuffs.legendaryItem.bonus_mag : 0;
       const bonus = Math.floor((attacker.mag||0)/2) + magLegBonus;
       let effectiveBase = base;
@@ -11722,10 +11797,12 @@ function GameScreen({ myId, setScreen, authUser }) {
       const tidx = newCombatants.findIndex(c=>c.id===target.id);
       newCombatants[tidx] = {...target, hp:Math.max(0,target.hp-dmg)};
       const bonusLabel = magLegBonus > 0 ? `+${Math.floor((attacker.mag||0)/2)} +${magLegBonus}(leg)` : `+${bonus}`;
-      log += `💥 Tiro danno: **${spell.dmg} = ${base}**\n✨ Bonus magia: **${bonusLabel}**\n🛡️ Riduzione bersaglio: **-${Math.floor(target.def/2)}**\n🔥 Danno finale: **${dmg}**\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`;
+      log += lang === "en"
+        ? `💥 Damage roll: **${spell.dmg} = ${base}**\n✨ Magic bonus: **${bonusLabel}**\n🛡️ Target reduction: **-${Math.floor(target.def/2)}**\n🔥 Final damage: **${dmg}**\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`
+        : `💥 Tiro danno: **${spell.dmg} = ${base}**\n✨ Bonus magia: **${bonusLabel}**\n🛡️ Riduzione bersaglio: **-${Math.floor(target.def/2)}**\n🔥 Danno finale: **${dmg}**\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`;
     } else if(spell.type === "heal") {
       const magLegHealBonus = (spellMyBuffs.legendaryItem?.turnsLeft > 0 && spellMyBuffs.legendaryItem?.bonus_mag) ? spellMyBuffs.legendaryItem.bonus_mag : 0;
-      const baseHeal = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), notation:spell.dmg, label:`Cura ${spell.dmg}`, themeColor:"#10b981" });
+      const baseHeal = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), notation:spell.dmg, label:`${lang === "en" ? "Heal" : "Cura"} ${spell.dmg}`, themeColor:"#10b981" });
       const heal = Math.max(1, baseHeal + Math.floor((attacker.mag||0)/2) + magLegHealBonus);
       if(spell.area) {
         // Area heal: restore HP to ALL alive player combatants
@@ -14399,7 +14476,7 @@ ${stepText(step)}`, "quest","Master");
 
                 <div style={{ display:"grid", gridTemplateColumns: isMobile ? "1fr" : "minmax(0,1.7fr) minmax(320px,0.95fr)", gap:"1rem", alignItems:"start" }}>
                   <div>
-                    <div style={{ marginBottom:"1rem", padding:"1rem", background:"rgba(10,15,30,0.7)", border:"1px solid rgba(127,29,29,0.3)", borderRadius:14 }}>
+                    <div style={{ marginBottom:"1rem", padding:"1rem", background:"rgba(10,15,30,0.7)", border:"1px solid rgba(127,29,29,0.3)", borderRadius:14, position:"relative", overflow:"hidden" }}>
                       {combat.pendingLog && (() => {
                         const cue = combatLogCue(combat.pendingLog, lang);
                         if(!cue) return null;
@@ -14434,6 +14511,7 @@ ${stepText(step)}`, "quest","Master");
                         ]))}
                         cue={combatLogCue(combat.pendingLog, lang)}
                       />
+                      <BattleActionEffect log={combat.pendingLog} lang={lang} />
                     </div>
                   </div>
 
@@ -14564,7 +14642,7 @@ ${stepText(step)}`, "quest","Master");
                                           <span style={{ fontSize:"0.74rem", color:"#cbd5e1" }}>{spell.slots===0 ? (lang === "en" ? "Free" : "Gratis") : `Slot ${spell.slots||0}`}</span>
                                         </div>
                                         <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:5 }}>
-                                          {spellEffectSummary(spell).map(detail => (
+                                          {spellEffectSummary(spell, lang).map(detail => (
                                             <span key={detail} style={{ fontSize:"0.7rem", color:"#cbd5e1", background:"rgba(255,255,255,0.05)", border:"1px solid #334155", borderRadius:999, padding:"2px 7px" }}>
                                               {detail}
                                             </span>
@@ -14589,7 +14667,7 @@ ${stepText(step)}`, "quest","Master");
                               {turnTimeLeft !== null && (
                                 <div style={{ marginBottom:10 }}>
                                   <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:4 }}>
-                                    <span style={{ fontSize:"0.65rem", color:"#64748b", textTransform:"uppercase", letterSpacing:"0.08em" }}>⏱ Tempo rimasto</span>
+                                    <span style={{ fontSize:"0.65rem", color:"#64748b", textTransform:"uppercase", letterSpacing:"0.08em" }}>⏱ {lang === "en" ? "Time left" : "Tempo rimasto"}</span>
                                     <span style={{ fontSize:"0.95rem", fontWeight:900, color:turnTimeLeft<=5?"#ef4444":turnTimeLeft<=10?"#f97316":"#4ade80", fontVariantNumeric:"tabular-nums", transition:"color 0.3s" }}>
                                       {turnTimeLeft<=5&&"⚠️ "}{turnTimeLeft}s
                                     </span>
@@ -14605,7 +14683,7 @@ ${stepText(step)}`, "quest","Master");
                                 if(liveEnemies.length <= 1) return null;
                                 return (
                                   <div style={{ marginBottom:10 }}>
-                                    <div style={{ fontSize:"0.72rem", color:"#fca5a5", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:6, fontFamily:"'Cinzel',serif" }}>🎯 Scegli bersaglio</div>
+                                    <div style={{ fontSize:"0.72rem", color:"#fca5a5", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:6, fontFamily:"'Cinzel',serif" }}>🎯 {lang === "en" ? "Choose target" : "Scegli bersaglio"}</div>
                                     <div style={{ display:"grid", gap:6 }}>
                                       {liveEnemies.map(e=>{
                                         const isSel = selectedTarget===e.id;
@@ -14622,7 +14700,7 @@ ${stepText(step)}`, "quest","Master");
                                         );
                                       })}
                                     </div>
-                                    {!selectedTarget && <div style={{ fontSize:"0.68rem", color:"#64748b", marginTop:4 }}>Nessun bersaglio — attacchi il primo nemico.</div>}
+                                    {!selectedTarget && <div style={{ fontSize:"0.68rem", color:"#64748b", marginTop:4 }}>{lang === "en" ? "No target selected - you will attack the first enemy." : "Nessun bersaglio — attacchi il primo nemico."}</div>}
                                   </div>
                                 );
                               })()}
@@ -14637,46 +14715,46 @@ ${stepText(step)}`, "quest","Master");
                                     <span style={{ fontSize:"1.2rem", lineHeight:1 }}>{activeLeg.emoji}</span>
                                     <div style={{ flex:1, minWidth:0 }}>
                                       <div style={{ fontSize:"0.7rem", color:"#c4b5fd", fontWeight:700, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{activeLeg.name}</div>
-                                      <div style={{ fontSize:"0.6rem", color:"#a78bfa" }}>{bonusLine} · si applica automaticamente · {activeLeg.turnsLeft}t rimasti</div>
+                                      <div style={{ fontSize:"0.6rem", color:"#a78bfa" }}>{bonusLine} · {lang === "en" ? "applies automatically" : "si applica automaticamente"} · {activeLeg.turnsLeft}t {lang === "en" ? "left" : "rimasti"}</div>
                                     </div>
-                                    <span style={{ fontSize:"0.55rem", color:"#c4b5fd", background:"rgba(109,40,217,0.3)", border:"1px solid #6d28d9", borderRadius:999, padding:"1px 6px", whiteSpace:"nowrap", flexShrink:0 }}>Passivo</span>
+                                    <span style={{ fontSize:"0.55rem", color:"#c4b5fd", background:"rgba(109,40,217,0.3)", border:"1px solid #6d28d9", borderRadius:999, padding:"1px 6px", whiteSpace:"nowrap", flexShrink:0 }}>{lang === "en" ? "Passive" : "Passivo"}</span>
                                   </div>
                                 );
                               })()}
                               <div style={{ display:"grid", gap:10 }}>
                                 <button onClick={doAttack} style={{ width:"100%", padding:"1rem 1.4rem", background:"linear-gradient(135deg,#7f1d1d,#dc2626)", border:"2px solid #ef4444", borderRadius:10, color:"#fee2e2", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.1rem", cursor:"pointer", letterSpacing:"0.08em", boxShadow:"0 14px 28px rgba(127,29,29,0.24)" }}>
                                   <span className={diceAnim?"dice-spin":""} style={{ display:"inline-block", marginRight:8 }}>🎲</span>
-                                  {selectedTarget ? `ATTACCA ${combat.combatants.find(c=>c.id===selectedTarget)?.name||""}` : "ATTACCA"}
+                                  {selectedTarget ? `${lang === "en" ? "ATTACK" : "ATTACCA"} ${combat.combatants.find(c=>c.id===selectedTarget)?.name||""}` : (lang === "en" ? "ATTACK" : "ATTACCA")}
                                 </button>
                                 {isCaster && (
                                   <button onClick={()=>setSpellMenu(true)} disabled={!availableSpells.length} style={{ width:"100%", padding:"1rem 1.4rem", background:availableSpells.length?"linear-gradient(135deg,#551a8b,#7c3aed)":"rgba(75,43,105,0.35)", border:"2px solid #7c3aed", borderRadius:10, color:"#e0d7ff", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.04rem", cursor:availableSpells.length?"pointer":"not-allowed", letterSpacing:"0.08em" }}>
-                                    🔮 Magia {totalSlots(spellSlots)>0?`(${totalSlots(spellSlots)})`:"(solo trucchetti)"}
+                                    🔮 {lang === "en" ? "Spells" : "Magia"} {totalSlots(spellSlots)>0?`(${totalSlots(spellSlots)})`:(lang === "en" ? "(cantrips only)" : "(solo trucchetti)")}
                                   </button>
                                 )}
                               </div>
-                              <p style={{ color:"#cbd5e1", fontSize:"0.8rem", marginTop:"0.85rem", lineHeight:1.55 }}>Prima tiri per colpire. Se l'attacco supera la CA del bersaglio, il sistema mostra e applica il dado danno dell'arma o dell'incantesimo.</p>
+                              <p style={{ color:"#cbd5e1", fontSize:"0.8rem", marginTop:"0.85rem", lineHeight:1.55 }}>{lang === "en" ? "First you roll to hit. If the attack beats the target AC, the system rolls and applies weapon or spell damage." : "Prima tiri per colpire. Se l'attacco supera la CA del bersaglio, il sistema mostra e applica il dado danno dell'arma o dell'incantesimo."}</p>
                             </>
                           )}
                         </>
                       ) : (
                         <div style={{ color:"#94a3b8", fontSize:"0.9rem", lineHeight:1.6, textAlign:"center" }}>
                           {isLeaderForMonsterTurn
-                            ? <span style={{ color:"#fca5a5", fontFamily:"'Cinzel',serif" }}>⚔️ <strong>{activeCombatant?.name}</strong> sta attaccando…</span>
-                            : <>Turno di <strong style={{ color:"#f8fafc" }}>{activeCombatant?.name}</strong>…</>
+                            ? <span style={{ color:"#fca5a5", fontFamily:"'Cinzel',serif" }}>⚔️ <strong>{activeCombatant?.name}</strong> {lang === "en" ? "is attacking..." : "sta attaccando…"}</span>
+                            : <>{lang === "en" ? "Turn of" : "Turno di"} <strong style={{ color:"#f8fafc" }}>{activeCombatant?.name}</strong>…</>
                           }
                         </div>
                       )}
                       {!combat.pendingLog && myTurn && (
                         <button onClick={forceNextCombatTurn} style={{ width:"100%", maxWidth:340, marginTop:"0.75rem", padding:"0.6rem 1rem", background:"rgba(30,41,59,0.6)", border:"1px solid rgba(148,163,184,0.25)", borderRadius:8, color:"#64748b", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", cursor:"pointer", letterSpacing:"0.05em" }}>
-                          ⏭️ Salta il mio turno
+                          ⏭️ {lang === "en" ? "Skip my turn" : "Salta il mio turno"}
                         </button>
                       )}
                     </div>
 
                     <div style={{ background:"rgba(8,14,28,0.9)", border:"1px solid rgba(148,163,184,0.16)", borderRadius:12, overflow:"hidden", boxShadow:"0 16px 34px rgba(0,0,0,0.18)" }}>
                       <button onClick={()=>setShowCombatLog(v=>!v)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0.75rem 1rem", background:"transparent", border:"none", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", color:"#cbd5e1", letterSpacing:"0.08em" }}>
-                        <span>📜 LOG DI BATTAGLIA ({messages.filter(m=>m.type==="combat" && (!combat?.startedAt || new Date(m.created_at).getTime() >= combat.startedAt - 5000)).slice(-50).length})</span>
-                        <span style={{ fontSize:"0.9rem", color:"#94a3b8" }}>{showCombatLog ? "▲ chiudi" : "▼ apri"}</span>
+                        <span>📜 {lang === "en" ? "BATTLE LOG" : "LOG DI BATTAGLIA"} ({messages.filter(m=>m.type==="combat" && (!combat?.startedAt || new Date(m.created_at).getTime() >= combat.startedAt - 5000)).slice(-50).length})</span>
+                        <span style={{ fontSize:"0.9rem", color:"#94a3b8" }}>{showCombatLog ? (lang === "en" ? "▲ close" : "▲ chiudi") : (lang === "en" ? "▼ open" : "▼ apri")}</span>
                       </button>
                       {showCombatLog && (
                         <div style={{ maxHeight:320, overflowY:"auto", padding:"0 0.85rem 0.85rem", borderTop:"1px solid rgba(148,163,184,0.1)" }} onClick={()=>setShowCombatLog(false)}>
@@ -14685,16 +14763,16 @@ ${stepText(step)}`, "quest","Master");
                               dangerouslySetInnerHTML={{ __html:fmt(m.content) }} />
                           ))}
                           <div ref={combatLogEndRef} />
-                          <div style={{ textAlign:"center", fontSize:"0.7rem", color:"#4b5563", marginTop:4 }}>tocca per chiudere</div>
+                          <div style={{ textAlign:"center", fontSize:"0.7rem", color:"#4b5563", marginTop:4 }}>{lang === "en" ? "tap to close" : "tocca per chiudere"}</div>
                         </div>
                       )}
                     </div>
 
                     <div style={{ padding:"0.75rem 1rem", background:"rgba(20,5,5,0.7)", border:"1px solid rgba(127,29,29,0.3)", borderRadius:10, display:"flex", flexDirection:"column", gap:6, alignItems:"center" }}>
                       <button onClick={abandonQuest} style={{ width:"100%", padding:"0.6rem 1rem", background:"rgba(127,29,29,0.18)", border:"1px solid rgba(127,29,29,0.5)", borderRadius:8, color:"#f87171", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", cursor:"pointer", letterSpacing:"0.05em" }}>
-                        🏃 Abbandona Quest
+                        🏃 {lang === "en" ? "Abandon Quest" : "Abbandona Quest"}
                       </button>
-                      <span style={{ fontSize:"0.68rem", color:"#94a3b8" }}>Richiede una 💨 Pozione di Fuga ({inventoryCounts["potion_escape"]||0} in inventario)</span>
+                      <span style={{ fontSize:"0.68rem", color:"#94a3b8" }}>{lang === "en" ? "Requires a" : "Richiede una"} 💨 {lang === "en" ? "Escape Potion" : "Pozione di Fuga"} ({inventoryCounts["potion_escape"]||0} {lang === "en" ? "in inventory" : "in inventario"})</span>
                     </div>
                   </div>
                 </div>
