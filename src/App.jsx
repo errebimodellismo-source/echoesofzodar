@@ -1921,7 +1921,7 @@ function mergeCatalogItems(items=[]) {
       const forgeId = `${weapon.id}__f${forgeLevel}`;
       const newDie = FORGE_DIE_PROGRESSION[targetDieIdx];
       const forgeRarity = targetDieIdx >= 10 ? 'legendary' : targetDieIdx >= 8 ? 'epic' : targetDieIdx >= 6 ? 'rare' : targetDieIdx >= 4 ? 'uncommon' : weapon.rarity;
-      merged.set(forgeId, { ...weapon, id:forgeId, name:`${weapon.name} +${forgeLevel}`, weapon_die:newDie, damageDice:newDie, bonus_atk:(weapon.bonus_atk||0)+forgeLevel, forgeLevel, rarity:forgeRarity, price:Math.round((weapon.price||50)*Math.pow(1.8,forgeLevel)), available:false });
+      merged.set(forgeId, { ...weapon, id:forgeId, baseItemId:weapon.baseItemId || weapon.id, name:`${weapon.name} +${forgeLevel}`, weapon_die:newDie, damageDice:newDie, bonus_atk:(weapon.bonus_atk||0)+forgeLevel, forgeLevel, rarity:forgeRarity, price:Math.round((weapon.price||50)*Math.pow(1.8,forgeLevel)), available:false });
     }
   }
   return Array.from(merged.values()).sort((a,b)=>a.name.localeCompare(b.name, "it"));
@@ -2502,8 +2502,9 @@ function getItemImage(item) {
   if(!item) return "";
   if(item.image) return item.image;
   if(item.image_url) return item.image_url;
-  // Strip enhancement suffix (e.g. "weapon_sword+2" → "weapon_sword") and try PNG
-  const baseId = item.id ? item.id.replace(/[+\-]\d+$/, '') : null;
+  // Strip enhancement suffixes and try the base item PNG.
+  const rawId = item.baseItemId || item.baseId || item.base_id || item.id;
+  const baseId = rawId ? getBaseItemId(String(rawId).replace(/[+\-]\d+$/, '')) : null;
   if(baseId) return `/assets/items/${baseId}.png`;
   const theme = itemImageTheme(item);
   return makeArchetypeImage({ ...theme, title:theme.title || itemTypeLabel(item.type), subtitle:itemRarityLabel(item.rarity) });
