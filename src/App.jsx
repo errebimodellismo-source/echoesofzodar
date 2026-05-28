@@ -14799,6 +14799,7 @@ ${stepText(step)}`, "quest","Master");
                         actionFx={battleEffectFromLog(combat.pendingLog, lang)}
                         effectKey={combat.pendingLog || ""}
                         actionLog={combat.pendingLog || ""}
+                        lang={lang}
                       />
                       <BattleActionEffect log={combat.pendingLog} lang={lang} />
                     </div>

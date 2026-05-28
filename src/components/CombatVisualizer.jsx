@@ -189,7 +189,7 @@ function BattlefieldSprite({ c, isActive, floats, isMobile, imgSrc, cueTarget, a
   const statusEffects = c.statusEffects || [];
   const hasBuff = statusEffects.some(fx => fx.type === 'buff');
   const hasControl = statusEffects.some(fx => /stun|charm|sleep|slow|control/i.test(fx.type));
-  const hasDot = statusEffects.some(fx => /poison|burn|bleed|death|shadow/i.test(fx.type));
+  const hasDot = statusEffects.some(fx => /poison|burn|acid|thorn|bleed|death|shadow/i.test(fx.type));
   const auraColor = hasBuff ? '#fbbf24' : hasDot ? '#4ade80' : hasControl ? '#a78bfa' : isDying ? '#f97316' : null;
   const hpPct = c.maxHp > 0 ? Math.round((Math.max(0, c.hp) / c.maxHp) * 100) : 0;
   const aliveColor = c.isPlayer ? '#a78bfa' : '#f87171';
@@ -369,7 +369,7 @@ function BattlefieldSprite({ c, isActive, floats, isMobile, imgSrc, cueTarget, a
         {statusEffects.length > 0 && (
           <div style={{ display:'flex', justifyContent:'center', gap:4, marginTop:5, flexWrap:'wrap' }}>
             {statusEffects.slice(0, 3).map(fx => (
-              <span key={fx.type} style={{ width:7, height:7, borderRadius:'50%', background:fx.type === 'buff' ? '#fbbf24' : /poison|burn|bleed|death|shadow/i.test(fx.type) ? '#4ade80' : '#a78bfa', boxShadow:'0 0 8px currentColor' }} />
+              <span key={fx.type} title={`${fx.type} ${fx.duration || 1}t`} style={{ width:7, height:7, borderRadius:'50%', background:fx.type === 'buff' ? '#fbbf24' : /burn/i.test(fx.type) ? '#fb923c' : /acid|poison|thorn/i.test(fx.type) ? '#4ade80' : /death|shadow/i.test(fx.type) ? '#a78bfa' : '#a78bfa', boxShadow:'0 0 8px currentColor' }} />
             ))}
           </div>
         )}
@@ -453,6 +453,34 @@ function stagePointForCombatant(c, sideList, isMobile) {
   return {
     x: side === "left" ? 22 + Math.max(-8, Math.min(10, index * 7)) : 78 - Math.max(-8, Math.min(10, index * 7)),
     y: 49 + Math.max(-16, Math.min(16, stagger * 10)),
+  };
+}
+
+function actionCaptionFromLog({ log, fx, activeCombatant, targetCombatants, lang = "it" }) {
+  if(!fx) return null;
+  const isEn = lang === "en";
+  const cleanLines = String(log || "")
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .split(/\n+/)
+    .map(line => line.trim())
+    .filter(Boolean);
+  const targetNames = targetCombatants?.length > 1
+    ? (isEn ? `${targetCombatants.length} targets` : `${targetCombatants.length} bersagli`)
+    : targetCombatants?.[0]?.name;
+  const damageValues = [...String(log || "").matchAll(/(?:=>|Danno finale:|Final damage:|Danno inflitto:|Damage dealt:|Danno:|Damage:)[^\d]*(\d+)/gi)]
+    .map(m => Number(m[1]))
+    .filter(Boolean);
+  const healValues = [...String(log || "").matchAll(/(?:Cura finale:|Healing|Heal|Cura:|recupera|restores|heals)[^\d]*(\d+)/gi)]
+    .map(m => Number(m[1]))
+    .filter(Boolean);
+  const totalDamage = damageValues.reduce((sum, n) => sum + n, 0);
+  const totalHeal = healValues.reduce((sum, n) => sum + n, 0);
+  return {
+    title: fx.label || cleanLines[0] || (isEn ? "Action" : "Azione"),
+    meta: [activeCombatant?.name, targetNames].filter(Boolean).join(" → "),
+    value: totalDamage > 0 ? `-${totalDamage} HP` : totalHeal > 0 ? `+${totalHeal} HP` : "",
+    color: fx.color || "#f87171",
   };
 }
 
@@ -572,7 +600,7 @@ function BattleStageAction({ fx, activeCombatant, isMobile, effectKey, originPoi
   );
 }
 
-function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, isMobile, images, cue, cueTargetId, actionFx, effectKey, actionLog }) {
+function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, isMobile, images, cue, cueTargetId, actionFx, effectKey, actionLog, lang = "it" }) {
   const alivePlayers = players.filter(c => !c.dead && c.hp > 0).length;
   const aliveMonsters = monsters.filter(c => !c.dead && c.hp > 0).length;
   const activeCombatant = combatants[activeIdx];
@@ -600,6 +628,7 @@ function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, is
   const originPoint = stagePointForCombatant(activeCombatant, originList, isMobile);
   const targetPoint = stagePointForCombatant(primaryTarget, targetList, isMobile);
   const areaTargetPoints = targetCombatants.map(t => stagePointForCombatant(t, t.isPlayer ? players : monsters, isMobile));
+  const caption = actionCaptionFromLog({ log: actionLog, fx: actionFx, activeCombatant, targetCombatants, lang });
 
   const renderSide = (list, side) => (
     <div style={{
@@ -647,6 +676,44 @@ function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, is
       animation:cameraAnim,
       transformOrigin: activeCombatant?.isPlayer ? "35% 52%" : "65% 52%",
     }}>
+      {actionFx && primaryTarget && (
+        <svg viewBox="0 0 100 100" preserveAspectRatio="none" style={{ position:'absolute', inset:0, zIndex:1, pointerEvents:'none', opacity:0.9 }}>
+          <defs>
+            <linearGradient id="battleTrajectoryGlow" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stopColor="transparent" />
+              <stop offset="42%" stopColor={actionFx.color || '#f87171'} stopOpacity="0.85" />
+              <stop offset="100%" stopColor="transparent" />
+            </linearGradient>
+          </defs>
+          <line
+            x1={originPoint.x}
+            y1={originPoint.y}
+            x2={targetPoint.x}
+            y2={targetPoint.y}
+            stroke="url(#battleTrajectoryGlow)"
+            strokeWidth={isMobile ? 0.75 : 0.48}
+            strokeDasharray="5 4"
+            style={{ filter:`drop-shadow(0 0 5px ${actionFx.color || '#f87171'})`, animation:'battleTrajectoryDraw 1.15s ease-out both' }}
+          />
+        </svg>
+      )}
+      {actionFx && activeCombatant && (
+        <div style={{ position:'absolute', left:`${originPoint.x}%`, top:`${originPoint.y}%`, width:isMobile ? 118 : 160, height:isMobile ? 118 : 160, transform:'translate(-50%,-50%)', borderRadius:'50%', background:`radial-gradient(circle,${actionFx.color || '#f87171'}24,transparent 68%)`, boxShadow:`0 0 34px ${(actionFx.color || '#f87171')}44`, opacity:0, animation:'battleSpotlightPulse 1.15s ease-out both', pointerEvents:'none', zIndex:2 }} />
+      )}
+      {actionFx && areaTargetPoints.map((pt, idx) => (
+        <div key={`target_lock_${idx}_${pt.x}_${pt.y}`} style={{ position:'absolute', left:`${pt.x}%`, top:`${pt.y}%`, width:isMobile ? 92 : 124, height:isMobile ? 92 : 124, transform:'translate(-50%,-50%)', borderRadius:'50%', border:`1px solid ${actionFx.color || '#f87171'}`, boxShadow:`0 0 22px ${(actionFx.color || '#f87171')}66, inset 0 0 16px ${(actionFx.color || '#f87171')}22`, opacity:0, animation:`battleTargetLock 1.05s ease-out ${0.12 + idx * 0.05}s both`, pointerEvents:'none', zIndex:2 }} />
+      ))}
+      {caption && (
+        <div style={{ position:'absolute', left:'50%', top:isMobile ? 42 : 34, transform:'translateX(-50%)', zIndex:8, minWidth:isMobile ? 210 : 280, maxWidth:'78%', padding:isMobile ? '0.44rem 0.72rem' : '0.52rem 0.9rem', borderRadius:999, border:`1px solid ${caption.color}`, background:'linear-gradient(90deg,rgba(2,6,23,.08),rgba(2,6,23,.9) 18%,rgba(15,23,42,.94) 82%,rgba(2,6,23,.08))', boxShadow:`0 0 24px ${caption.color}44`, textAlign:'center', pointerEvents:'none', opacity:0, animation:'battleActionPlate 1.35s ease-out both' }}>
+          <div style={{ color:caption.color, fontFamily:"'Cinzel Decorative',serif", fontSize:isMobile ? '.7rem' : '.8rem', fontWeight:900, letterSpacing:'.12em', textTransform:'uppercase', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', textShadow:`0 0 14px ${caption.color}` }}>{caption.title}</div>
+          {(caption.meta || caption.value) && (
+            <div style={{ marginTop:2, color:'#cbd5e1', fontSize:isMobile ? '.62rem' : '.68rem', display:'flex', justifyContent:'center', gap:8, minWidth:0 }}>
+              {caption.meta && <span style={{ overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{caption.meta}</span>}
+              {caption.value && <span style={{ color:caption.value.startsWith('+') ? '#4ade80' : '#fca5a5', fontWeight:800, flexShrink:0 }}>{caption.value}</span>}
+            </div>
+          )}
+        </div>
+      )}
       {actionFx && !isMissAction && (
         <div style={{
           position:'absolute',
@@ -721,7 +788,7 @@ function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, is
   );
 }
 
-export default function CombatVisualizer({ combat, myId, isMobile, images = {}, cue = null, actionFx = null, effectKey = "", actionLog = "" }) {
+export default function CombatVisualizer({ combat, myId, isMobile, images = {}, cue = null, actionFx = null, effectKey = "", actionLog = "", lang = "it" }) {
   const { combatants = [], turn = 0, round = 1 } = combat || {};
   const activeIdx = turn % Math.max(1, combatants.length);
 
@@ -808,6 +875,10 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {}, 
         @keyframes battleHealBloom { 0%{opacity:0;transform:translate(-50%,-50%) scale(.5)} 35%{opacity:1;transform:translate(-50%,-50%) scale(1.2)} 100%{opacity:0;transform:translate(-50%,-82%) scale(1.55)} }
         @keyframes battleDivineColumn { 0%{opacity:0;transform:translateX(-50%) scaleY(.35)} 30%{opacity:1;transform:translateX(-50%) scaleY(1)} 100%{opacity:0;transform:translateX(-50%) scaleY(1.18)} }
         @keyframes battleImpactText { 0%{opacity:0;transform:translate(-50%,12px) scale(.8)} 25%{opacity:1;transform:translate(-50%,0) scale(1)} 100%{opacity:0;transform:translate(-50%,-26px) scale(1.08)} }
+        @keyframes battleTrajectoryDraw { 0%{opacity:0;stroke-dashoffset:34} 22%{opacity:.95} 100%{opacity:0;stroke-dashoffset:0} }
+        @keyframes battleSpotlightPulse { 0%{opacity:0;transform:translate(-50%,-50%) scale(.55)} 28%{opacity:.85;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.35)} }
+        @keyframes battleTargetLock { 0%{opacity:0;transform:translate(-50%,-50%) scale(1.35) rotate(0deg)} 28%{opacity:1;transform:translate(-50%,-50%) scale(.92) rotate(18deg)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.15) rotate(62deg)} }
+        @keyframes battleActionPlate { 0%{opacity:0;transform:translate(-50%,-10px) scale(.92);filter:blur(4px)} 18%{opacity:1;transform:translate(-50%,0) scale(1);filter:blur(0)} 76%{opacity:1} 100%{opacity:0;transform:translate(-50%,-8px) scale(1.02);filter:blur(2px)} }
       `}</style>
       <div style={{
         textAlign: 'center', marginBottom: isMobile ? 10 : 14,
@@ -861,6 +932,7 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {}, 
         actionFx={actionFx}
         effectKey={effectKey}
         actionLog={actionLog}
+        lang={lang}
       />
 
       {false && <div style={{
