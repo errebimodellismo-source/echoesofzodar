@@ -41,6 +41,14 @@ import { I18nProvider, LanguageToggle, useI18n } from "./i18n.jsx";
     @keyframes battleMagicFx { 0%{opacity:0;transform:translate(-50%,-50%) scale(.28);filter:blur(8px)} 35%{opacity:1;filter:blur(0)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.65);filter:blur(4px)} }
     @keyframes battleDivineTextFx { 0%{opacity:0;transform:translate(-50%,16px) scale(.92);letter-spacing:.32em} 22%{opacity:1;transform:translate(-50%,0) scale(1);letter-spacing:.18em} 78%{opacity:1} 100%{opacity:0;transform:translate(-50%,-24px) scale(1.04);letter-spacing:.26em} }
     @keyframes battleDivineRayFx { 0%{opacity:0;transform:scaleY(.1)} 28%{opacity:.9;transform:scaleY(1)} 100%{opacity:0;transform:scaleY(1.15)} }
+    @keyframes battleFireFx { 0%{opacity:0;transform:translate(-50%,18%) scale(.45);filter:blur(8px)} 24%{opacity:1;filter:blur(0)} 100%{opacity:0;transform:translate(-50%,-18%) scale(1.35);filter:blur(3px)} }
+    @keyframes battleIceFx { 0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.25)} 30%{opacity:.95;transform:translate(-50%,-50%) rotate(30deg) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) rotate(95deg) scale(1.35)} }
+    @keyframes battleLightningFx { 0%,100%{opacity:0;clip-path:polygon(45% 0,58% 0,49% 40%,64% 40%,38% 100%,45% 54%,31% 54%)} 12%,42%{opacity:1} 24%{transform:translate(-50%,-50%) scaleX(1.15) skewX(-8deg)} 58%{opacity:.55} }
+    @keyframes battlePoisonFx { 0%{opacity:0;transform:translate(-50%,-20%) scale(.55)} 25%{opacity:.9} 100%{opacity:0;transform:translate(-50%,-62%) scale(1.2)} }
+    @keyframes battleShadowFx { 0%{opacity:0;transform:translate(-50%,-50%) scale(.4);filter:blur(6px)} 35%{opacity:.9;filter:blur(0)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.45);filter:blur(8px)} }
+    @keyframes battleNatureFx { 0%{opacity:0;transform:translateY(70px) scaleY(.2)} 32%{opacity:1;transform:translateY(8px) scaleY(1)} 100%{opacity:0;transform:translateY(-42px) scaleY(1.15)} }
+    @keyframes battleSonicFx { 0%{opacity:0;transform:translate(-50%,-50%) scale(.2)} 28%{opacity:.85} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.65)} }
+    @keyframes battleControlFx { 0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.45)} 30%{opacity:.9} 100%{opacity:0;transform:translate(-50%,-50%) rotate(280deg) scale(1.35)} }
     @keyframes victoryCinematicIn { 0%{opacity:0;filter:blur(12px)} 16%{opacity:1;filter:blur(0)} 82%{opacity:1} 100%{opacity:0;filter:blur(10px)} }
     @keyframes victoryTitleBloom { 0%{opacity:0;transform:scale(.72);letter-spacing:.42em;filter:blur(8px)} 24%{opacity:1;transform:scale(1.04);letter-spacing:.18em;filter:blur(0)} 55%{transform:scale(1);letter-spacing:.14em} 100%{opacity:0;transform:scale(1.1);letter-spacing:.24em;filter:blur(5px)} }
     @keyframes victorySunburst { 0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.35)} 28%{opacity:.95;transform:translate(-50%,-50%) rotate(35deg) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) rotate(105deg) scale(1.4)} }
@@ -1916,6 +1924,15 @@ function battleEffectFromLog(log, lang = "it") {
     return { type:"divine", label:divineTitle || (isEn ? "DIVINE WILL" : "VOLONTA' DIVINA"), color:"#fef3c7" };
   }
   if(/frecc|arrow|arco|bow|🏹/i.test(text)) return { type:"arrow", label:isEn ? "Arrow" : "Freccia", color:"#fbbf24" };
+  if(/fuoco|fiamma|bruc|infernal|fire|flame|burn|palla di fuoco|tempesta di fuoco|🔥|☄|🌋/i.test(text)) return { type:"fire", label:divineTitle || (isEn ? "Fire" : "Fuoco"), color:"#fb923c" };
+  if(/gelo|brina|freddo|ghiaccio|grandine|ice|frost|cold|❄|🧊|🌨/i.test(text)) return { type:"ice", label:divineTitle || (isEn ? "Frost" : "Gelo"), color:"#93c5fd" };
+  if(/fulmine|folgor|tuono|tempesta|lightning|thunder|storm|⚡|⛈/i.test(text)) return { type:"lightning", label:divineTitle || (isEn ? "Lightning" : "Fulmine"), color:"#fde047" };
+  if(/veleno|acido|tossic|nube|poison|acid|toxic|☠|💚|🟢/i.test(text) && !/cura|heal|guarisce/i.test(text)) return { type:"poison", label:divineTitle || (isEn ? "Venom" : "Veleno"), color:"#4ade80" };
+  if(/morte|non-morto|necrom|scheletro|ombra|vuoto|oscuro|sangue|death|undead|shadow|void|blood|💀|🌑|🖤/i.test(text)) return { type:"shadow", label:divineTitle || (isEn ? "Shadow" : "Ombra"), color:"#c084fc" };
+  if(/sacra|sacro|divin|radioso|luce|benedizione|paladino|holy|sacred|radiant|light|blessing|✨|☀|🙏/i.test(text)) return { type:"holy", label:divineTitle || (isEn ? "Radiance" : "Luce Sacra"), color:"#fde68a" };
+  if(/natura|spine|radici|piant|vento|bestia|lupo|druid|nature|thorn|root|wind|beast|🌿|🌱|🌪|🐺/i.test(text)) return { type:"nature", label:divineTitle || (isEn ? "Nature" : "Natura"), color:"#86efac" };
+  if(/suono|sonic|tonante|melodia|canto|bardo|song|music|thunderous|🎵|🎶|🔊/i.test(text)) return { type:"sonic", label:divineTitle || (isEn ? "Resonance" : "Risonanza"), color:"#f9a8d4" };
+  if(/ammaliat|stordit|ipnosi|sonno|silenzio|confus|control|charm|stun|sleep|silence|confus|💜|💤|💫/i.test(text)) return { type:"control", label:divineTitle || (isEn ? "Control" : "Controllo"), color:"#a78bfa" };
   if(/lancia|casts|incantesimo|spell|magia|🔮|💜|💋/i.test(text)) {
     const heal = /cura|heal|guarisce|restores|💚/i.test(text);
     return { type:heal ? "healMagic" : "magic", label:divineTitle || (heal ? (isEn ? "Healing" : "Cura") : (isEn ? "Spell" : "Magia")), color:heal ? "#34d399" : "#a78bfa" };
@@ -1939,6 +1956,60 @@ function BattleActionEffect({ log, lang }) {
     <div style={base}>
       <div style={{ position:"absolute", left:"50%", top:"47%", width:"42%", height:4, background:"linear-gradient(90deg,transparent,#fde68a,#f59e0b)", boxShadow:"0 0 16px rgba(251,191,36,0.9)", animation:"battleArrowFx .9s ease-out forwards" }} />
       <div style={{ position:"absolute", left:"50%", top:"47%", color:"#fde68a", fontSize:"1.8rem", animation:"battleArrowFx .9s ease-out forwards" }}>➤</div>
+    </div>
+  );
+  if(fx.type === "fire") return (
+    <div style={base}>
+      <div style={{ position:"absolute", left:"50%", bottom:"10%", width:260, height:260, borderRadius:"44% 56% 48% 52%", transform:"translateX(-50%)", background:"radial-gradient(circle at 50% 65%,#fff7ed 0%,#fbbf24 18%,#f97316 42%,#7f1d1d 68%,transparent 72%)", filter:"blur(2px)", boxShadow:"0 0 54px rgba(249,115,22,0.95)", animation:"battleFireFx 1.15s ease-out forwards" }} />
+      <div style={{ position:"absolute", left:"50%", top:"42%", transform:"translateX(-50%)", color:"#fed7aa", fontFamily:"'Cinzel Decorative',serif", fontWeight:900, textShadow:"0 0 20px #f97316", animation:"combatCueIn 1.05s ease both" }}>{fx.label}</div>
+    </div>
+  );
+  if(fx.type === "ice") return (
+    <div style={base}>
+      <div style={{ position:"absolute", left:"50%", top:"49%", width:220, height:220, transform:"translate(-50%,-50%)", background:"conic-gradient(from 0deg,transparent,#e0f2fe,transparent,#60a5fa,transparent,#bfdbfe,transparent)", clipPath:"polygon(50% 0,61% 35%,98% 35%,68% 56%,79% 91%,50% 70%,21% 91%,32% 56%,2% 35%,39% 35%)", filter:"drop-shadow(0 0 22px #93c5fd)", animation:"battleIceFx 1.2s ease-out forwards" }} />
+      <div style={{ position:"absolute", inset:0, background:"radial-gradient(circle at 50% 50%,rgba(191,219,254,0.22),transparent 52%)", animation:"battleMagicFx 1.1s ease-out forwards" }} />
+    </div>
+  );
+  if(fx.type === "lightning") return (
+    <div style={base}>
+      <div style={{ position:"absolute", left:"50%", top:"48%", width:160, height:300, transform:"translate(-50%,-50%)", background:"linear-gradient(180deg,#fff7ad,#facc15,#38bdf8)", filter:"drop-shadow(0 0 28px #facc15)", animation:"battleLightningFx .95s ease-out forwards" }} />
+      <div style={{ position:"absolute", inset:0, background:"radial-gradient(circle at 50% 42%,rgba(250,204,21,0.28),transparent 42%)", animation:"battleMagicFx .95s ease-out forwards" }} />
+    </div>
+  );
+  if(fx.type === "poison") return (
+    <div style={base}>
+      {[0,1,2,3,4].map(i => <div key={i} style={{ position:"absolute", left:`${35+i*8}%`, top:`${48+(i%2)*8}%`, width:80, height:80, borderRadius:"50%", background:"radial-gradient(circle,#bbf7d0,#22c55e88,transparent 70%)", filter:"blur(5px)", animation:`battlePoisonFx ${1.1+i*.08}s ease-out ${i*.04}s forwards` }} />)}
+      <div style={{ position:"absolute", left:"50%", top:"44%", transform:"translateX(-50%)", color:"#bbf7d0", fontFamily:"'Cinzel Decorative',serif", textShadow:"0 0 18px #22c55e", animation:"combatCueIn 1s ease both" }}>{fx.label}</div>
+    </div>
+  );
+  if(fx.type === "shadow") return (
+    <div style={base}>
+      <div style={{ position:"absolute", left:"50%", top:"49%", width:240, height:240, borderRadius:"50%", transform:"translate(-50%,-50%)", background:"radial-gradient(circle,#0f021f 0%,#581c8780 38%,#020617 62%,transparent 72%)", boxShadow:"0 0 54px rgba(88,28,135,0.85)", animation:"battleShadowFx 1.2s ease-out forwards" }} />
+      <div style={{ position:"absolute", left:"50%", top:"49%", transform:"translate(-50%,-50%)", color:"#e9d5ff", fontSize:"2.1rem", textShadow:"0 0 22px #a855f7", animation:"battleControlFx 1.15s ease-out forwards" }}>☽</div>
+    </div>
+  );
+  if(fx.type === "holy") return (
+    <div style={base}>
+      <div style={{ position:"absolute", left:"50%", top:0, width:140, height:"100%", transform:"translateX(-50%)", background:"linear-gradient(180deg,rgba(254,243,199,0),rgba(254,243,199,0.82),rgba(251,191,36,0.18),rgba(254,243,199,0))", filter:"blur(8px)", animation:"battleDivineRayFx 1.25s ease-out forwards" }} />
+      <div style={{ position:"absolute", left:"50%", top:"45%", transform:"translateX(-50%)", color:"#fff7ed", fontFamily:"'Cinzel Decorative',serif", textShadow:"0 0 24px #fbbf24", animation:"battleDivineTextFx 1.25s ease-out forwards" }}>{fx.label}</div>
+    </div>
+  );
+  if(fx.type === "nature") return (
+    <div style={base}>
+      {[0,1,2,3,4,5].map(i => <div key={i} style={{ position:"absolute", left:`${22+i*10}%`, bottom:"14%", width:10, height:160, borderRadius:999, background:"linear-gradient(180deg,#bbf7d0,#16a34a,#14532d)", transformOrigin:"bottom", boxShadow:"0 0 14px rgba(34,197,94,0.7)", animation:`battleNatureFx ${1+i*.04}s ease-out ${i*.03}s forwards` }} />)}
+      <div style={{ position:"absolute", inset:0, background:"radial-gradient(circle at 50% 56%,rgba(34,197,94,0.18),transparent 48%)", animation:"battleMagicFx 1.05s ease-out forwards" }} />
+    </div>
+  );
+  if(fx.type === "sonic") return (
+    <div style={base}>
+      {[0,1,2].map(i => <div key={i} style={{ position:"absolute", left:"50%", top:"50%", width:110+i*90, height:110+i*90, borderRadius:"50%", border:"2px solid rgba(249,168,212,0.8)", transform:"translate(-50%,-50%)", boxShadow:"0 0 18px rgba(249,168,212,0.55)", animation:`battleSonicFx ${1+i*.16}s ease-out ${i*.08}s forwards` }} />)}
+      <div style={{ position:"absolute", left:"50%", top:"48%", transform:"translate(-50%,-50%)", color:"#fbcfe8", fontFamily:"'Cinzel Decorative',serif", textShadow:"0 0 18px #f472b6", animation:"combatCueIn .9s ease both" }}>{fx.label}</div>
+    </div>
+  );
+  if(fx.type === "control") return (
+    <div style={base}>
+      <div style={{ position:"absolute", left:"50%", top:"50%", width:230, height:230, transform:"translate(-50%,-50%)", borderRadius:"50%", border:"3px dashed rgba(196,181,253,0.9)", boxShadow:"0 0 32px rgba(124,58,237,0.7), inset 0 0 26px rgba(124,58,237,0.28)", animation:"battleControlFx 1.15s ease-out forwards" }} />
+      <div style={{ position:"absolute", left:"50%", top:"50%", transform:"translate(-50%,-50%)", color:"#ddd6fe", fontFamily:"'Cinzel Decorative',serif", textShadow:"0 0 18px #7c3aed", animation:"combatCueIn 1s ease both" }}>{fx.label}</div>
     </div>
   );
   if(fx.type === "magic" || fx.type === "healMagic") return (
