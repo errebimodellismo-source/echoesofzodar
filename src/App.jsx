@@ -1862,33 +1862,84 @@ const ALLY_NAME_PARTS = {
   role:["Guardia","Cacciatrice","Mistico","Lama","Arcanista","Sentinella","Duellante","Custode","Spezzaossa","Oracolo","Predone Redento","Lanciere"],
   emoji:["🗡️","🛡️","🏹","🔮","⚔️","✨","🪓","🌙","🔥","❄️"],
 };
+const CARD_ALLY_RARITY_ORDER = ["common","uncommon","rare","epic","legendary","mythic"];
+const CARD_ALLY_RARITY_SLOTS = CARD_ALLY_RARITY_ORDER.flatMap(rarity =>
+  Array.from({ length:CARD_ALLY_RARITY_CONFIG[rarity].count }, () => rarity)
+).reverse();
+
+function clampCardAllyStat(value, min, max) {
+  return Math.max(min, Math.min(max, Math.round(value)));
+}
+
+function monsterToCardAlly(monster, rarity, index) {
+  const cfg = CARD_ALLY_RARITY_CONFIG[rarity];
+  const hpSource = Number(monster?.maxHp ?? monster?.max_hp ?? monster?.hp) || cfg.hp;
+  const atkSource = Number(monster?.atk) || cfg.atk;
+  const defSource = Number(monster?.def) || cfg.def;
+  const magBonus = monsterThreatTier(monster) === "boss" ? 2 : monsterThreatTier(monster) === "hard" ? 1 : 0;
+  return {
+    id:`ally_monster_${monster.id || index}`,
+    sourceMonsterId:monster.id,
+    name:monster.name,
+    role:monster?.isBoss ? "Entita Vincolata" : "Creatura Vincolata",
+    emoji:monster.emoji || ALLY_NAME_PARTS.emoji[index % ALLY_NAME_PARTS.emoji.length],
+    rarity,
+    hp:clampCardAllyStat(hpSource * 0.55, cfg.hp, cfg.hp + 28),
+    atk:clampCardAllyStat(atkSource * 0.8, cfg.atk, cfg.atk + 8),
+    def:clampCardAllyStat(defSource * 0.85, cfg.def, cfg.def + 5),
+    mag:cfg.mag + magBonus,
+    init:cfg.init + (index % 3),
+    dmgDie:monster.weaponDie || monster.dmgDie || cfg.dmgDie,
+    roleHint:cfg.roleHint,
+    power:cfg.power,
+    description:`${monster.desc || "Essere vincolato a una carta alleato."} Versione evocabile in battaglia: se cade, la carta viene consumata.`,
+  };
+}
+
+function createProceduralCardAlly(rarity, index) {
+  const cfg = CARD_ALLY_RARITY_CONFIG[rarity];
+  const first = ALLY_NAME_PARTS.first[(index + rarity.length) % ALLY_NAME_PARTS.first.length];
+  const title = ALLY_NAME_PARTS.title[(index * 3 + rarity.length) % ALLY_NAME_PARTS.title.length];
+  const role = ALLY_NAME_PARTS.role[(index * 5 + rarity.length) % ALLY_NAME_PARTS.role.length];
+  const emoji = ALLY_NAME_PARTS.emoji[(index * 7 + rarity.length) % ALLY_NAME_PARTS.emoji.length];
+  return {
+    id:`ally_${rarity}_${index + 1}`,
+    name:`${first} ${title}`,
+    role,
+    emoji,
+    rarity,
+    hp:cfg.hp + Math.floor(index % 5) * 2,
+    atk:cfg.atk + Math.floor(index % 4),
+    def:cfg.def + Math.floor(index % 3),
+    mag:cfg.mag,
+    init:cfg.init + (index % 3),
+    dmgDie:cfg.dmgDie,
+    roleHint:cfg.roleHint,
+    power:cfg.power,
+    description:`${role} richiamabile in battaglia tramite carta alleato. ${cfg.power}. Se cade, il legame si spezza.`,
+  };
+}
+
 function buildCardAllies() {
-  const allies = [];
-  for(const [rarity, cfg] of Object.entries(CARD_ALLY_RARITY_CONFIG)) {
-    for(let i=0;i<cfg.count;i++) {
-      const first = ALLY_NAME_PARTS.first[(i + rarity.length) % ALLY_NAME_PARTS.first.length];
-      const title = ALLY_NAME_PARTS.title[(i * 3 + rarity.length) % ALLY_NAME_PARTS.title.length];
-      const role = ALLY_NAME_PARTS.role[(i * 5 + rarity.length) % ALLY_NAME_PARTS.role.length];
-      const emoji = ALLY_NAME_PARTS.emoji[(i * 7 + rarity.length) % ALLY_NAME_PARTS.emoji.length];
-      allies.push({
-        id:`ally_${rarity}_${i+1}`,
-        name:`${first} ${title}`,
-        role,
-        emoji,
-        rarity,
-        hp:cfg.hp + Math.floor(i % 5) * 2,
-        atk:cfg.atk + Math.floor(i % 4),
-        def:cfg.def + Math.floor(i % 3),
-        mag:cfg.mag,
-        init:cfg.init + (i % 3),
-        dmgDie:cfg.dmgDie,
-        roleHint:cfg.roleHint,
-        power:cfg.power,
-        description:`${role} richiamabile in battaglia tramite carta alleato. ${cfg.power}. Se cade, il legame si spezza.`,
-      });
+  const alliesByRarity = CARD_ALLY_RARITY_ORDER.reduce((acc, rarity) => ({ ...acc, [rarity]:[] }), {});
+  const sortedMonsters = [...DEFAULT_MONSTERS]
+    .filter(monster => monster?.name)
+    .sort((a,b) => monsterXpValue(b) - monsterXpValue(a));
+
+  for(const [index, monster] of sortedMonsters.entries()) {
+    const rarity = CARD_ALLY_RARITY_SLOTS[index];
+    if(!rarity) break;
+    alliesByRarity[rarity].push(monsterToCardAlly(monster, rarity, index));
+  }
+
+  for(const rarity of CARD_ALLY_RARITY_ORDER) {
+    const targetCount = CARD_ALLY_RARITY_CONFIG[rarity].count;
+    while(alliesByRarity[rarity].length < targetCount) {
+      alliesByRarity[rarity].push(createProceduralCardAlly(rarity, alliesByRarity[rarity].length));
     }
   }
-  return allies;
+
+  return CARD_ALLY_RARITY_ORDER.flatMap(rarity => alliesByRarity[rarity]);
 }
 const CARD_ALLIES = buildCardAllies();
 
