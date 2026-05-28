@@ -184,6 +184,13 @@ function BattlefieldSprite({ c, isActive, floats, isMobile, imgSrc, cueTarget, a
   const isDying = c.dying && !c.dead;
   const [imgErr, setImgErr] = useState(false);
   const cardFloats = floats.filter(f => f.id === c.id);
+  const tookDamage = cardFloats.some(f => f.kind === 'damage');
+  const gotHeal = cardFloats.some(f => f.kind === 'heal');
+  const statusEffects = c.statusEffects || [];
+  const hasBuff = statusEffects.some(fx => fx.type === 'buff');
+  const hasControl = statusEffects.some(fx => /stun|charm|sleep|slow|control/i.test(fx.type));
+  const hasDot = statusEffects.some(fx => /poison|burn|bleed|death|shadow/i.test(fx.type));
+  const auraColor = hasBuff ? '#fbbf24' : hasDot ? '#4ade80' : hasControl ? '#a78bfa' : isDying ? '#f97316' : null;
   const hpPct = c.maxHp > 0 ? Math.round((Math.max(0, c.hp) / c.maxHp) * 100) : 0;
   const aliveColor = c.isPlayer ? '#a78bfa' : '#f87171';
   const activeColor = c.isPlayer ? '#fbbf24' : '#ef4444';
@@ -197,11 +204,22 @@ function BattlefieldSprite({ c, isActive, floats, isMobile, imgSrc, cueTarget, a
       ? 'battleSpriteReadyLeft 1.9s ease-in-out infinite'
       : 'battleSpriteReadyRight 1.9s ease-in-out infinite'
     : 'none';
-  const attackAnimation = actionSource && !isDead
+  const idleAnimation = side === 'left'
+    ? 'battleSpriteIdleLeft 3.2s ease-in-out infinite'
+    : 'battleSpriteIdleRight 3.2s ease-in-out infinite';
+  const attackAnimation = isDead
+    ? 'battleSpriteFall .9s ease-out both'
+    : tookDamage
+      ? side === 'left'
+        ? 'battleSpriteRecoilLeft .48s ease'
+        : 'battleSpriteRecoilRight .48s ease'
+      : actionSource
     ? side === 'left'
       ? 'battleSpriteStrikeLeft .72s ease-out'
       : 'battleSpriteStrikeRight .72s ease-out'
-    : activeAnimation;
+      : activeAnimation === 'none'
+        ? idleAnimation
+        : activeAnimation;
 
   return (
     <div style={{
@@ -219,6 +237,20 @@ function BattlefieldSprite({ c, isActive, floats, isMobile, imgSrc, cueTarget, a
       {cardFloats.map(f => (
         <FloatNumber key={f.key} value={f.amount} kind={f.kind} onDone={f.onDone} />
       ))}
+      {auraColor && !isDead && (
+        <div style={{
+          position:'absolute',
+          top:isMobile ? -8 : -12,
+          width:isMobile ? 110 : 142,
+          height:isMobile ? 138 : 178,
+          borderRadius:'50%',
+          background:`radial-gradient(ellipse,${auraColor}2e,transparent 62%)`,
+          boxShadow:`0 0 28px ${auraColor}44`,
+          animation:'battleStatusAura 1.7s ease-in-out infinite',
+          pointerEvents:'none',
+          zIndex:0,
+        }} />
+      )}
 
       {isActive && !isDead && (
         <div style={{
@@ -256,7 +288,7 @@ function BattlefieldSprite({ c, isActive, floats, isMobile, imgSrc, cueTarget, a
         alignItems:'center',
         justifyContent:'center',
         filter:isDead ? 'grayscale(1)' : 'none',
-        animation: cardFloats.length ? 'hitShake .45s ease' : attackAnimation,
+        animation: attackAnimation,
       }}>
         <div style={{
           position:'absolute',
@@ -289,6 +321,8 @@ function BattlefieldSprite({ c, isActive, floats, isMobile, imgSrc, cueTarget, a
           </span>
         )}
         {isDying && <div style={{ position:'absolute', inset:0, background:'rgba(249,115,22,0.18)', animation:'battleSpriteWound 1s ease-in-out infinite' }} />}
+        {gotHeal && !isDead && <div style={{ position:'absolute', inset:-6, borderRadius:'inherit', background:'radial-gradient(circle,rgba(74,222,128,.42),transparent 66%)', animation:'battleSpriteHealPulse .62s ease-out forwards' }} />}
+        {auraColor && !isDead && <div style={{ position:'absolute', inset:0, borderRadius:'inherit', border:`1px solid ${auraColor}77`, boxShadow:`inset 0 0 18px ${auraColor}33`, pointerEvents:'none' }} />}
         {isDead && <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg,transparent,rgba(2,6,23,0.75))' }} />}
       </div>
 
@@ -332,6 +366,13 @@ function BattlefieldSprite({ c, isActive, floats, isMobile, imgSrc, cueTarget, a
           <span>{Math.max(0, c.hp)}/{c.maxHp} HP</span>
           <span>{hpPct}%</span>
         </div>
+        {statusEffects.length > 0 && (
+          <div style={{ display:'flex', justifyContent:'center', gap:4, marginTop:5, flexWrap:'wrap' }}>
+            {statusEffects.slice(0, 3).map(fx => (
+              <span key={fx.type} style={{ width:7, height:7, borderRadius:'50%', background:fx.type === 'buff' ? '#fbbf24' : /poison|burn|bleed|death|shadow/i.test(fx.type) ? '#4ade80' : '#a78bfa', boxShadow:'0 0 8px currentColor' }} />
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -655,11 +696,18 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {}, 
       <style>{`
         @keyframes battleStageMist { 0%{transform:translateX(-3%);opacity:.42} 50%{transform:translateX(3%);opacity:.68} 100%{transform:translateX(-3%);opacity:.42} }
         @keyframes battleTurnMarker { 0%,100%{transform:translateX(-50%) scale(.82);opacity:.6} 50%{transform:translateX(-50%) scale(1.12);opacity:1} }
+        @keyframes battleSpriteIdleLeft { 0%,100%{transform:translateY(0) rotate(-.4deg)} 50%{transform:translateY(-4px) rotate(.5deg)} }
+        @keyframes battleSpriteIdleRight { 0%,100%{transform:translateY(0) rotate(.4deg)} 50%{transform:translateY(-4px) rotate(-.5deg)} }
         @keyframes battleSpriteReadyLeft { 0%,100%{transform:translateY(0) translateX(0)} 50%{transform:translateY(-3px) translateX(2px)} }
         @keyframes battleSpriteReadyRight { 0%,100%{transform:translateY(0) translateX(0)} 50%{transform:translateY(-3px) translateX(-2px)} }
         @keyframes battleSpriteStrikeLeft { 0%{transform:translateX(0) scale(1)} 28%{transform:translateX(28px) scale(1.04)} 52%{transform:translateX(-4px) scale(.99)} 100%{transform:translateX(0) scale(1)} }
         @keyframes battleSpriteStrikeRight { 0%{transform:translateX(0) scale(1)} 28%{transform:translateX(-28px) scale(1.04)} 52%{transform:translateX(4px) scale(.99)} 100%{transform:translateX(0) scale(1)} }
+        @keyframes battleSpriteRecoilLeft { 0%{transform:translateX(0) scale(1);filter:brightness(1)} 25%{transform:translateX(-18px) rotate(-2deg) scale(.98);filter:brightness(1.65)} 62%{transform:translateX(6px) rotate(.8deg) scale(1.01);filter:brightness(1.05)} 100%{transform:translateX(0) scale(1);filter:brightness(1)} }
+        @keyframes battleSpriteRecoilRight { 0%{transform:translateX(0) scale(1);filter:brightness(1)} 25%{transform:translateX(18px) rotate(2deg) scale(.98);filter:brightness(1.65)} 62%{transform:translateX(-6px) rotate(-.8deg) scale(1.01);filter:brightness(1.05)} 100%{transform:translateX(0) scale(1);filter:brightness(1)} }
+        @keyframes battleSpriteFall { 0%{transform:translateY(0) rotate(0deg);opacity:1;filter:grayscale(.2)} 58%{transform:translateY(18px) rotate(-5deg);opacity:.7;filter:grayscale(.8)} 100%{transform:translateY(34px) rotate(-8deg);opacity:.46;filter:grayscale(1)} }
         @keyframes battleSpriteWound { 0%,100%{opacity:.1} 50%{opacity:.36} }
+        @keyframes battleSpriteHealPulse { 0%{opacity:0;transform:scale(.72)} 34%{opacity:1;transform:scale(1.02)} 100%{opacity:0;transform:scale(1.28)} }
+        @keyframes battleStatusAura { 0%,100%{opacity:.45;transform:translateY(0) scale(.95)} 50%{opacity:.9;transform:translateY(-3px) scale(1.04)} }
         @keyframes battleCenterPulse { 0%,100%{opacity:.45;transform:translate(-50%,-50%) scale(.92)} 50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)} }
         @keyframes battleActionCharge { 0%{opacity:0;transform:translate(-50%,-50%) scale(.38)} 42%{opacity:1;transform:translate(-50%,-50%) scale(.78)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)} }
         @keyframes battleActionChargeCore { 0%{opacity:0;transform:translate(-50%,-50%) scale(.25);filter:blur(7px)} 46%{opacity:1;transform:translate(-50%,-50%) scale(.9);filter:blur(1px)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.28);filter:blur(5px)} }
