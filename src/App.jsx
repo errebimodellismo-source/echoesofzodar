@@ -3034,7 +3034,8 @@ async function dbGetPartyState(partyCode) {
 }
 
 async function dbGetMaintenanceMode() {
-  const { data } = await supabase.from("party_state").select("quest_active").eq("party_code", MAINTENANCE_CODE).maybeSingle();
+  const { data, error } = await supabase.from("party_state").select("quest_active").eq("party_code", MAINTENANCE_CODE).maybeSingle();
+  if(error) throw error;
   return !!(data?.quest_active);
 }
 async function dbSetMaintenanceMode(active, message = "", patchNotes = "") {
@@ -3043,6 +3044,9 @@ async function dbSetMaintenanceMode(active, message = "", patchNotes = "") {
     party_code: MAINTENANCE_CODE,
     quest_active: active,
     quest_id: message || null,
+    quest_step: 0,
+    quest_completed: [],
+    combat: null,
     updated_at: ts,
   };
   if(patchNotes) payload.state = { patch_notes: patchNotes, patch_ts: ts };
@@ -4441,11 +4445,24 @@ function MasterPanel({ setScreen, authUser }) {
   const [patchNotesInput, setPatchNotesInput] = useState("");
   const [masterParties, setMasterParties] = useState([]);
 
+  async function refreshMaintenanceState() {
+    try {
+      const isActive = await dbGetMaintenanceMode();
+      setMaintenance(isActive);
+      return isActive;
+    } catch(e) {
+      console.error("refreshMaintenanceState error:", e);
+      return maintenance;
+    }
+  }
+
   useEffect(() => {
-    dbGetMaintenanceMode().then(setMaintenance);
+    refreshMaintenanceState();
     supabase.from("party_state").select("party_code").then(({ data }) => {
       setMasterParties((data || []).map(r => r.party_code).filter(c => !["__world_guilds__","__world__","__master__","__maintenance__","__story_library__"].includes(c)));
     });
+    const timer = setInterval(refreshMaintenanceState, 5000);
+    return () => clearInterval(timer);
   }, []);
 
   async function refreshAllQuestSeeds() {
@@ -4699,7 +4716,8 @@ function MasterPanel({ setScreen, authUser }) {
                   setMaintenanceBusy(true);
                   try {
                     await dbSetMaintenanceMode(true, maintenanceInput.trim(), patchNotesInput.trim());
-                    setMaintenance(true);
+                    const confirmed = await refreshMaintenanceState();
+                    if(!confirmed) alert("La manutenzione non risulta attiva dopo il salvataggio. Controlla permessi Supabase/RLS.");
                   } catch(e) { alert("Errore manutenzione: " + (e?.message || e)); }
                   setMaintenanceBusy(false);
                 }}
@@ -4712,7 +4730,8 @@ function MasterPanel({ setScreen, authUser }) {
                   setMaintenanceBusy(true);
                   try {
                     await dbSetMaintenanceMode(false, "", patchNotesInput.trim());
-                    setMaintenance(false);
+                    const confirmed = await refreshMaintenanceState();
+                    if(confirmed) alert("La manutenzione risulta ancora attiva dopo la riapertura. Controlla permessi Supabase/RLS.");
                   } catch(e) { alert("Errore riapertura: " + (e?.message || e)); }
                   setMaintenanceBusy(false);
                 }}
