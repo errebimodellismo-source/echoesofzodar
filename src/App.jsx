@@ -1801,43 +1801,46 @@ const CARD_PACK_DEFS = [
     sealPrice:165,
     slots:5,
     guaranteed:"rare",
-    rates:{ common:24, uncommon:46, rare:25, epic:4.8, legendary:0.2 },
+    rates:{ common:30, uncommon:50, rare:20 },
   },
   {
     id:"pack_epic",
     name:"Mazzo dell'Epopea",
-    subtitle:"5 carte - Epica garantita",
+    subtitle:"5 carte - Epica e Rara garantite",
     accent:"#a78bfa",
     art:"/assets/cards/packs/pack-epic.png",
     rewardOnly:true,
     acquisition:"Ricompensa: dungeon difficili e storie lunghe",
     slots:5,
     guaranteed:"epic",
-    rates:{ uncommon:28, rare:48, epic:21, legendary:2.8, mythic:0.2 },
+    fixedRarities:["epic","rare"],
+    rates:{ common:24, uncommon:48, rare:28 },
   },
   {
     id:"pack_legendary",
     name:"Mazzo della Leggenda",
-    subtitle:"5 carte - Leggendaria garantita",
+    subtitle:"5 carte - Leggendaria, Epica e Rara garantite",
     accent:"#fbbf24",
     art:"/assets/cards/packs/pack-legendary.png",
     rewardOnly:true,
     acquisition:"Ricompensa: dungeon epici, eventi e boss lunghi",
     slots:5,
     guaranteed:"legendary",
-    rates:{ rare:45, epic:38, legendary:15, mythic:2 },
+    fixedRarities:["legendary","epic","rare"],
+    rates:{ common:18, uncommon:47, rare:35 },
   },
   {
     id:"pack_mythic",
     name:"Mazzo del Mito",
-    subtitle:"6 carte - Mitica garantita",
+    subtitle:"6 carte - Mitica, 2 Leggendarie ed Epica garantite",
     accent:"#fb7185",
     art:"/assets/cards/packs/pack-mythic.png",
     rewardOnly:true,
     acquisition:"Ricompensa: eventi mensili, campagne leggendarie e imprese uniche",
     slots:6,
     guaranteed:"mythic",
-    rates:{ epic:52, legendary:38, mythic:10 },
+    fixedRarities:["mythic","legendary","legendary","epic"],
+    rates:{ common:15, uncommon:45, rare:40 },
   },
 ];
 const CARD_COSMETICS = [
@@ -2082,13 +2085,13 @@ function allyToLootCard(ally) {
     acquiredAt:new Date().toISOString(),
   };
 }
-function pickPackReward(packDef, catalogItems, slotIndex) {
-  const rolled = slotIndex === 0 && packDef.guaranteed
+function pickPackReward(packDef, catalogItems, slotIndex, forcedRarity=null) {
+  const rolled = forcedRarity || (slotIndex === 0 && packDef.guaranteed
     ? packDef.guaranteed
-    : weightedCardRarity(packDef.rates);
-  const rarity = slotIndex === 0 && packDef.guaranteed && !rarityAtLeast(rolled, packDef.guaranteed)
+    : weightedCardRarity(packDef.rates));
+  const rarity = forcedRarity || (slotIndex === 0 && packDef.guaranteed && !rarityAtLeast(rolled, packDef.guaranteed)
     ? packDef.guaranteed
-    : rolled;
+    : rolled);
   const allyPool = CARD_ALLIES.filter(a => a.rarity === rarity);
   const useAlly = allyPool.length && (rarity === "mythic" || Math.random() < 0.22);
   if(useAlly) return allyToLootCard(allyPool[Math.floor(Math.random() * allyPool.length)]);
@@ -2099,6 +2102,18 @@ function pickPackReward(packDef, catalogItems, slotIndex) {
   const fallbackPool = (catalogItems || DEFAULT_ITEMS).filter(item => item.type !== "material");
   const item = (itemPool.length ? itemPool : fallbackPool)[Math.floor(Math.random() * Math.max(1, (itemPool.length ? itemPool : fallbackPool).length))];
   return item ? itemToLootCard(item, rarity) : cosmeticToLootCard(CARD_COSMETICS[0]);
+}
+function packRarityPlan(packDef) {
+  const slots = packDef.slots || 5;
+  const fixed = Array.isArray(packDef.fixedRarities) && packDef.fixedRarities.length
+    ? packDef.fixedRarities.slice(0, slots)
+    : (packDef.guaranteed ? [packDef.guaranteed] : []);
+  const planned = [...fixed];
+  while(planned.length < slots) planned.push(weightedCardRarity(packDef.rates));
+  return planned
+    .map((rarity, order) => ({ rarity, order, roll:Math.random() }))
+    .sort((a,b) => a.roll - b.roll)
+    .map(entry => entry.rarity);
 }
 function pickCardRewardOfRarity(rarity, catalogItems) {
   const allyPool = CARD_ALLIES.filter(a => a.rarity === rarity);
@@ -2112,7 +2127,7 @@ function pickCardRewardOfRarity(rarity, catalogItems) {
   return cosmeticToLootCard((cosmeticPool[0] || CARD_COSMETICS[0]));
 }
 function openCardPack(packDef, catalogItems) {
-  return Array.from({ length:packDef.slots || 5 }, (_, idx) => pickPackReward(packDef, catalogItems, idx))
+  return packRarityPlan(packDef).map((rarity, idx) => pickPackReward(packDef, catalogItems, idx, rarity))
     .sort((a,b) => (CARD_RARITY_ORDER[a.rarity] || 0) - (CARD_RARITY_ORDER[b.rarity] || 0));
 }
 function applyPackPity(rewards, vault, catalogItems) {
