@@ -1725,6 +1725,138 @@ function saveMeta(m)     { lsSet("eoz_meta", m); }
 ---------------------------------------------- */
 
 const DEFAULT_ITEM_MAP = new Map(DEFAULT_ITEMS.map(item => [item.id, item]));
+const CARD_FEATURE_PASSWORD = "zodar_test";
+const CARD_RARITY_ORDER = { common:0, uncommon:1, rare:2, epic:3, legendary:4, mythic:5 };
+const CARD_RARITY_COLOR = {
+  common:"#9ca3af",
+  uncommon:"#34d399",
+  rare:"#60a5fa",
+  epic:"#a78bfa",
+  legendary:"#fbbf24",
+  mythic:"#fb7185",
+};
+const CARD_PACK_DEFS = [
+  {
+    id:"pack_zodar",
+    name:"Pacchetto di Zodar",
+    subtitle:"5 carte - 1 Rara garantita",
+    accent:"#a78bfa",
+    slots:5,
+    guaranteed:"rare",
+    rates:{ common:52, uncommon:27, rare:14, epic:5.5, legendary:1.3, mythic:0.2 },
+  },
+  {
+    id:"pack_eclipse",
+    name:"Reliquiario dell'Eclissi",
+    subtitle:"5 carte - alte rarita piu vive",
+    accent:"#fbbf24",
+    slots:5,
+    guaranteed:"epic",
+    rates:{ common:36, uncommon:29, rare:22, epic:9.5, legendary:3, mythic:0.5 },
+  },
+];
+const CARD_COSMETICS = [
+  { id:"title_adepto_zodar", name:"Adepto di Zodar", type:"title", rarity:"epic", exclusive:true, description:"Titolo scenico esclusivo dei pacchetti.", actionLabel:"Attiva titolo" },
+  { id:"title_araldo_eclissi", name:"Araldo dell'Eclissi", type:"title", rarity:"legendary", exclusive:true, description:"Titolo da collezione per chi ha visto l'Eclissi aprirsi.", actionLabel:"Attiva titolo" },
+  { id:"title_primo_adepto", name:"Primo Adepto di Zodar", type:"title", rarity:"mythic", exclusive:true, description:"Titolo mitico pensato per il reveal ai tester.", actionLabel:"Attiva titolo" },
+  { id:"frame_sigil_antico", name:"Cornice Sigillo Antico", type:"frame", rarity:"epic", exclusive:true, description:"Cornice scenica per carte e profilo." },
+  { id:"aura_eco_nero", name:"Aura Eco Nero", type:"aura", rarity:"legendary", exclusive:true, description:"Effetto scenico da equipaggiare in futuro." },
+  { id:"back_reliquary", name:"Retro Reliquiario", type:"cardback", rarity:"rare", exclusive:true, description:"Retro carta esclusivo dei pacchetti." },
+];
+
+function cardVaultKey(playerId) {
+  return `eoz_card_vault_${playerId}`;
+}
+function cardFeatureUnlockKey(playerId) {
+  return `eoz_card_feature_unlocked_${playerId}`;
+}
+function defaultCardVault() {
+  return {
+    packs:{ pack_zodar:3, pack_eclipse:1 },
+    cards:[],
+    activeTitle:null,
+    fragments:0,
+    pity:{ legendary:0, mythic:0 },
+  };
+}
+function getStoredCardVault(playerId) {
+  if(!playerId) return defaultCardVault();
+  const stored = lsGet(cardVaultKey(playerId), null);
+  return {
+    ...defaultCardVault(),
+    ...(stored || {}),
+    packs:{ ...defaultCardVault().packs, ...(stored?.packs || {}) },
+    pity:{ ...defaultCardVault().pity, ...(stored?.pity || {}) },
+    cards:Array.isArray(stored?.cards) ? stored.cards : [],
+  };
+}
+function saveStoredCardVault(playerId, vault) {
+  if(playerId) lsSet(cardVaultKey(playerId), vault);
+}
+function cardRarityLabel(rarity) {
+  if(String(rarity).toLowerCase() === "mythic") return "Mitica";
+  return itemRarityLabel(rarity);
+}
+function weightedCardRarity(rates) {
+  const entries = Object.entries(rates || {});
+  const total = entries.reduce((sum, [, weight]) => sum + weight, 0);
+  let roll = Math.random() * Math.max(1, total);
+  for(const [rarity, weight] of entries) {
+    roll -= weight;
+    if(roll <= 0) return rarity;
+  }
+  return entries[entries.length - 1]?.[0] || "common";
+}
+function rarityAtLeast(rarity, minRarity) {
+  return (CARD_RARITY_ORDER[rarity] ?? 0) >= (CARD_RARITY_ORDER[minRarity] ?? 0);
+}
+function itemToLootCard(item, rarityOverride=null) {
+  const rarity = rarityOverride || item.rarity || "common";
+  return {
+    uid:`card_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+    cardId:`item_${item.id}`,
+    itemId:item.id,
+    kind:"item",
+    type:item.type || "item",
+    name:item.name,
+    rarity,
+    description:item.description || "",
+    image:getItemImage(item),
+    acquiredAt:new Date().toISOString(),
+  };
+}
+function cosmeticToLootCard(cosmetic) {
+  return {
+    uid:`card_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+    cardId:cosmetic.id,
+    kind:"cosmetic",
+    type:cosmetic.type,
+    name:cosmetic.name,
+    rarity:cosmetic.rarity,
+    description:cosmetic.description,
+    exclusive:!!cosmetic.exclusive,
+    acquiredAt:new Date().toISOString(),
+  };
+}
+function pickPackReward(packDef, catalogItems, slotIndex) {
+  const rolled = slotIndex === 0 && packDef.guaranteed
+    ? packDef.guaranteed
+    : weightedCardRarity(packDef.rates);
+  const rarity = slotIndex === 0 && packDef.guaranteed && !rarityAtLeast(rolled, packDef.guaranteed)
+    ? packDef.guaranteed
+    : rolled;
+  const cosmeticPool = CARD_COSMETICS.filter(c => c.rarity === rarity || (rarity === "mythic" && c.rarity === "legendary"));
+  const useCosmetic = cosmeticPool.length && (rarity === "mythic" || rarity === "legendary" || Math.random() < 0.32);
+  if(useCosmetic) return cosmeticToLootCard(cosmeticPool[Math.floor(Math.random() * cosmeticPool.length)]);
+  const itemPool = (catalogItems || DEFAULT_ITEMS).filter(item => item.rarity === rarity && item.type !== "material");
+  const fallbackPool = (catalogItems || DEFAULT_ITEMS).filter(item => item.type !== "material");
+  const item = (itemPool.length ? itemPool : fallbackPool)[Math.floor(Math.random() * Math.max(1, (itemPool.length ? itemPool : fallbackPool).length))];
+  return item ? itemToLootCard(item, rarity) : cosmeticToLootCard(CARD_COSMETICS[0]);
+}
+function openCardPack(packDef, catalogItems) {
+  return Array.from({ length:packDef.slots || 5 }, (_, idx) => pickPackReward(packDef, catalogItems, idx))
+    .sort((a,b) => (CARD_RARITY_ORDER[a.rarity] || 0) - (CARD_RARITY_ORDER[b.rarity] || 0));
+}
 
 function normalizeLegendaryInventoryItem(item) {
   return {
@@ -2749,6 +2881,7 @@ function itemRarityLabel(rarity) {
     rare: "Raro",
     epic: "Epico",
     legendary: "Leggendario",
+    mythic: "Mitico",
     base: "Base",
   })[String(rarity || "").toLowerCase()] || rarity || "Catalogo";
 }
@@ -9642,6 +9775,206 @@ function GlobalLeaderboardView({ myId, partyCode }) {
 /* ----------------------------------------------
    GAME SCREEN
 ---------------------------------------------- */
+function SecretCardsGate({ onUnlock }) {
+  const [value, setValue] = useState("");
+  const [error, setError] = useState("");
+  function submit(e) {
+    e?.preventDefault?.();
+    const password = value.trim();
+    if(password === CARD_FEATURE_PASSWORD || password === MASTER_PASSWORD) {
+      setError("");
+      onUnlock?.();
+      return;
+    }
+    setError("Password errata. Zodar resta in silenzio.");
+  }
+  return (
+    <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem", background:"rgba(3,7,18,0.62)" }}>
+      <form onSubmit={submit} style={{ width:"min(440px,100%)", background:"linear-gradient(180deg,rgba(16,12,28,0.98),rgba(5,8,18,0.98))", border:"1px solid rgba(168,85,247,0.38)", borderRadius:10, padding:"1.4rem", boxShadow:"0 24px 70px rgba(0,0,0,0.42)" }}>
+        <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#c4b5fd", fontSize:"1.05rem", letterSpacing:"0.06em", marginBottom:"0.4rem" }}>Archivio Sigillato</div>
+        <div style={{ color:"#64748b", fontSize:"0.82rem", lineHeight:1.6, marginBottom:"1rem" }}>Modulo in sviluppo. Inserisci la password interna per vedere pacchetti e carte.</div>
+        <input
+          type="password"
+          value={value}
+          onChange={e=>setValue(e.target.value)}
+          autoComplete="off"
+          placeholder="Password sviluppo"
+          style={{ width:"100%", padding:"0.72rem 0.85rem", borderRadius:6, border:"1px solid #334155", background:"rgba(15,23,42,0.82)", color:"#e2e8f0", marginBottom:"0.75rem" }}
+        />
+        {error && <div style={{ color:"#f87171", fontSize:"0.76rem", marginBottom:"0.75rem" }}>{error}</div>}
+        <BigBtn gold>Apri il sigillo</BigBtn>
+      </form>
+    </div>
+  );
+}
+
+function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
+  const color = CARD_RARITY_COLOR[card?.rarity] || "#94a3b8";
+  return (
+    <button onClick={onClick} style={{
+      border:"none",
+      background:"transparent",
+      padding:0,
+      cursor:onClick ? "pointer" : "default",
+      textAlign:"left",
+      minWidth:compact ? 132 : 150,
+    }}>
+      <div style={{
+        aspectRatio:"2.5 / 3.5",
+        borderRadius:8,
+        padding:compact ? "0.55rem" : "0.7rem",
+        background: revealed
+          ? `linear-gradient(160deg,rgba(15,23,42,0.98),rgba(5,8,18,0.98)), radial-gradient(circle at 50% 0%, ${color}44, transparent 55%)`
+          : "linear-gradient(160deg,rgba(25,18,45,0.98),rgba(5,8,18,0.98))",
+        border:`2px solid ${revealed ? color : "#4c1d95"}`,
+        boxShadow:revealed ? `0 18px 36px rgba(0,0,0,0.34), 0 0 24px ${color}28` : "0 18px 36px rgba(0,0,0,0.34)",
+        display:"flex",
+        flexDirection:"column",
+        gap:8,
+        overflow:"hidden",
+      }}>
+        {!revealed ? (
+          <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cinzel Decorative',serif", color:"#7c3aed", fontSize:"2rem" }}>Z</div>
+        ) : (
+          <>
+            <div style={{ height:compact ? 66 : 86, borderRadius:6, background:"rgba(2,6,23,0.72)", border:"1px solid rgba(148,163,184,0.12)", display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
+              {card.image ? <img src={card.image} alt={card.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} /> : <span style={{ fontSize:compact ? "1.7rem" : "2.2rem" }}>{card.type === "title" ? "🏷️" : card.type === "aura" ? "✨" : card.type === "frame" ? "▣" : "✦"}</span>}
+            </div>
+            <div style={{ minHeight:42 }}>
+              <div style={{ color:"#f8fafc", fontFamily:"'Cinzel',serif", fontSize:compact ? "0.72rem" : "0.82rem", fontWeight:700, lineHeight:1.18, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{card.name}</div>
+              <div style={{ color, fontSize:"0.64rem", textTransform:"uppercase", letterSpacing:"0.08em", marginTop:3 }}>{cardRarityLabel(card.rarity)}</div>
+            </div>
+            {!compact && <div style={{ color:"#64748b", fontSize:"0.66rem", lineHeight:1.3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical" }}>{card.description || "Carta collezionabile."}</div>}
+            {card.exclusive && <div style={{ marginTop:"auto", alignSelf:"flex-start", color:"#fbbf24", border:"1px solid rgba(251,191,36,0.28)", borderRadius:999, padding:"1px 7px", fontSize:"0.58rem" }}>SOLO PACCHETTI</div>}
+          </>
+        )}
+      </div>
+    </button>
+  );
+}
+
+function PacksView({ vault, catalogItems, onOpenPack, onGrantDevPack }) {
+  const [opening, setOpening] = useState(null); // { pack, rewards, revealed }
+  const [busy, setBusy] = useState(false);
+  async function openPack(pack) {
+    if(busy) return;
+    setBusy(true);
+    try {
+      const rewards = await onOpenPack(pack.id);
+      if(rewards?.length) setOpening({ pack, rewards, revealed:Array(rewards.length).fill(false) });
+    } finally {
+      setBusy(false);
+    }
+  }
+  const allRevealed = opening?.revealed?.every(Boolean);
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.55)" }}>
+      <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", marginBottom:"1rem" }}>
+        <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, flex:1 }}>Pacchetti</h3>
+        <SmallBtn onClick={onGrantDevPack}>+ Pacchetto test</SmallBtn>
+      </div>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:12 }}>
+        {CARD_PACK_DEFS.map(pack => {
+          const qty = vault?.packs?.[pack.id] || 0;
+          return (
+            <div key={pack.id} style={{ background:"rgba(15,23,42,0.78)", border:`1px solid ${pack.accent}55`, borderRadius:8, padding:"1rem", boxShadow:"0 14px 34px rgba(0,0,0,0.25)" }}>
+              <div style={{ height:130, borderRadius:8, background:`radial-gradient(circle at 50% 20%, ${pack.accent}55, transparent 55%), linear-gradient(160deg,rgba(30,20,55,0.95),rgba(5,8,18,0.98))`, border:`1px solid ${pack.accent}66`, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"0.8rem" }}>
+                <div style={{ textAlign:"center" }}>
+                  <div style={{ fontFamily:"'Cinzel Decorative',serif", color:pack.accent, fontSize:"2.2rem", lineHeight:1 }}>Z</div>
+                  <div style={{ color:"#cbd5e1", fontFamily:"'Cinzel',serif", fontSize:"0.72rem", letterSpacing:"0.08em" }}>PACCHETTO</div>
+                </div>
+              </div>
+              <div style={{ fontFamily:"'Cinzel',serif", color:"#e2e8f0", fontWeight:700 }}>{pack.name}</div>
+              <div style={{ color:"#94a3b8", fontSize:"0.78rem", marginTop:3 }}>{pack.subtitle}</div>
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", margin:"0.8rem 0" }}>
+                {Object.entries(pack.rates).map(([rarity, pct]) => (
+                  <span key={rarity} style={{ color:CARD_RARITY_COLOR[rarity], border:`1px solid ${CARD_RARITY_COLOR[rarity]}44`, borderRadius:999, padding:"1px 7px", fontSize:"0.62rem" }}>{cardRarityLabel(rarity)} {pct}%</span>
+                ))}
+              </div>
+              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
+                <span style={{ color:"#fbbf24", fontWeight:700, fontSize:"0.86rem", flex:1 }}>Posseduti: {qty}</span>
+                <BigBtn onClick={()=>openPack(pack)} gold disabled={!qty || busy}>Apri</BigBtn>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+      {opening && (
+        <div style={{ position:"fixed", inset:0, zIndex:99996, background:"rgba(2,6,23,0.92)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
+          <div style={{ width:"min(980px,100%)", textAlign:"center" }}>
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:opening.pack.accent, fontSize:"1.35rem", marginBottom:"0.3rem" }}>{opening.pack.name}</div>
+            <div style={{ color:"#64748b", fontSize:"0.8rem", marginBottom:"1rem" }}>{allRevealed ? "Ricompense ottenute" : "Clicca sulle carte per rivelarle"}</div>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(135px,1fr))", gap:12, alignItems:"stretch" }}>
+              {opening.rewards.map((card, idx) => (
+                <ZodarLootCard
+                  key={card.uid}
+                  card={card}
+                  revealed={opening.revealed[idx]}
+                  onClick={()=>setOpening(prev => prev ? { ...prev, revealed:prev.revealed.map((v,i)=>i===idx ? true : v) } : prev)}
+                />
+              ))}
+            </div>
+            <div style={{ display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap", marginTop:"1.2rem" }}>
+              {!allRevealed && <BigBtn onClick={()=>setOpening(prev => prev ? { ...prev, revealed:prev.revealed.map(()=>true) } : prev)} gold>Rivela tutto</BigBtn>}
+              <SmallBtn onClick={()=>setOpening(null)}>Chiudi</SmallBtn>
+            </div>
+          </div>
+        </div>
+      )}
+      {!catalogItems?.length && <div style={{ color:"#64748b", marginTop:"1rem" }}>Catalogo oggetti in caricamento...</div>}
+    </div>
+  );
+}
+
+function CardsCollectionView({ vault, inventoryGroups, equipment, onEquip, onUse, onActivateTitle, isMobile=false }) {
+  const [selectedUid, setSelectedUid] = useState(null);
+  const [filter, setFilter] = useState("all");
+  const cards = [...(vault?.cards || [])].sort((a,b) => (CARD_RARITY_ORDER[b.rarity] || 0) - (CARD_RARITY_ORDER[a.rarity] || 0));
+  const filtered = filter === "all" ? cards : cards.filter(card => card.kind === filter || card.type === filter || card.rarity === filter);
+  const selected = cards.find(card => card.uid === selectedUid) || filtered[0] || null;
+  const selectedGroup = selected?.itemId ? inventoryGroups.find(group => group.item.id === selected.itemId) : null;
+  const selectedEquipped = selectedGroup && itemSlot(selectedGroup.item) && equipment?.[itemSlot(selectedGroup.item)] === selectedGroup.item.id;
+  return (
+    <div style={{ flex:1, minHeight:0, display:"grid", gridTemplateColumns:isMobile ? "1fr" : "minmax(0,1fr) minmax(280px,360px)", gridTemplateRows:isMobile ? "minmax(0,1fr) auto" : "auto", gap:0, background:"rgba(3,7,18,0.55)", overflow:"hidden" }}>
+      <div style={{ overflowY:"auto", padding:"1rem" }}>
+        <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:"1rem" }}>
+          <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, flex:1 }}>Carte</h3>
+          {["all","item","cosmetic","title","epic","legendary","mythic"].map(k => (
+            <button key={k} onClick={()=>setFilter(k)} style={{ padding:"0.34rem 0.7rem", borderRadius:6, border:`1px solid ${filter===k?"#7c3aed":"#334155"}`, background:filter===k?"rgba(109,40,217,0.28)":"rgba(15,23,42,0.72)", color:filter===k?"#c4b5fd":"#94a3b8", fontSize:"0.7rem", cursor:"pointer" }}>
+              {k === "all" ? "Tutte" : k === "item" ? "Oggetti" : k === "cosmetic" ? "Sceniche" : cardRarityLabel(k)}
+            </button>
+          ))}
+        </div>
+        {!cards.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #334155", borderRadius:8 }}>Nessuna carta ancora. Apri un pacchetto e facciamo scintille.</div>}
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(132px,1fr))", gap:10 }}>
+          {filtered.map(card => <ZodarLootCard key={card.uid} card={card} compact onClick={()=>setSelectedUid(card.uid)} />)}
+        </div>
+      </div>
+      <div style={{ borderLeft:isMobile ? "none" : "1px solid rgba(148,163,184,0.12)", borderTop:isMobile ? "1px solid rgba(148,163,184,0.12)" : "none", padding:"1rem", overflowY:"auto", background:"rgba(2,6,23,0.45)", maxHeight:isMobile ? 360 : "none" }}>
+        {selected ? (
+          <>
+            <ZodarLootCard card={selected} />
+            <div style={{ marginTop:"1rem" }}>
+              <div style={{ fontFamily:"'Cinzel',serif", color:"#e2e8f0", fontWeight:700, fontSize:"1.05rem" }}>{selected.name}</div>
+              <div style={{ color:CARD_RARITY_COLOR[selected.rarity], fontSize:"0.75rem", textTransform:"uppercase", letterSpacing:"0.08em", marginTop:3 }}>{cardRarityLabel(selected.rarity)} · {selected.kind === "item" ? "Oggetto" : "Scenica"}</div>
+              <p style={{ color:"#94a3b8", fontSize:"0.84rem", lineHeight:1.55 }}>{selected.description || "Carta collezionabile."}</p>
+              <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
+                {selectedGroup && isEquippableItem(selectedGroup.item) && <BigBtn onClick={()=>onEquip(selectedGroup.entries[0])} gold disabled={selectedEquipped}>{selectedEquipped ? "Equipaggiata" : "Equipaggia"}</BigBtn>}
+                {selectedGroup?.item?.type === "potion" && <BigBtn onClick={()=>onUse(selectedGroup.entries[0])} gold>Usa</BigBtn>}
+                {selected.type === "title" && <BigBtn onClick={()=>onActivateTitle(selected)} gold>{vault.activeTitle === selected.cardId ? "Titolo attivo" : "Attiva titolo"}</BigBtn>}
+              </div>
+              {selected.kind === "item" && !selectedGroup && <div style={{ color:"#64748b", fontSize:"0.76rem", marginTop:"0.8rem" }}>La carta resta in collezione, ma l'oggetto non e presente nell'inventario.</div>}
+              {vault.activeTitle === selected.cardId && <div style={{ color:"#fbbf24", fontSize:"0.76rem", marginTop:"0.8rem" }}>Titolo attualmente sfoggiato.</div>}
+            </div>
+          </>
+        ) : (
+          <div style={{ color:"#64748b" }}>Seleziona una carta.</div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function GameScreen({ myId, setScreen, authUser }) {
   const { t, lang, itemName, localizeQuest, localizeStory } = useI18n();
   const [me, setMeRaw] = useState(null);
@@ -9714,6 +10047,8 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [catalogItems, setCatalogItems] = useState(DEFAULT_ITEMS);
   const [inventory, setInventory] = useState([]);
   const [equipment, setEquipment] = useState({ weapon:null, armor:null, shield:null, accessory:null });
+  const [cardVault, setCardVault] = useState(() => getStoredCardVault(myId));
+  const [cardFeatureUnlocked, setCardFeatureUnlocked] = useState(() => myId ? localStorage.getItem(cardFeatureUnlockKey(myId)) === "1" : false);
   const [preparedSpellIds, setPreparedSpellIds] = useState([]);
   const [inventoryLoading, setInventoryLoading] = useState(true);
   const [auctions, setAuctions] = useState([]);
@@ -9825,6 +10160,65 @@ function GameScreen({ myId, setScreen, authUser }) {
   const code = me?.partyCode;
   itemMapRef.current = new Map(catalogItems.map(item => [item.id, item]));
   const itemMap = itemMapRef.current;
+
+  useEffect(() => {
+    setCardVault(getStoredCardVault(myId));
+    setCardFeatureUnlocked(myId ? localStorage.getItem(cardFeatureUnlockKey(myId)) === "1" : false);
+  }, [myId]);
+
+  function unlockCardFeature() {
+    if(myId) localStorage.setItem(cardFeatureUnlockKey(myId), "1");
+    setCardFeatureUnlocked(true);
+  }
+
+  function persistCardVault(nextVault) {
+    setCardVault(nextVault);
+    saveStoredCardVault(myId, nextVault);
+  }
+
+  function grantDevCardPack() {
+    const nextVault = {
+      ...cardVault,
+      packs:{
+        ...(cardVault.packs || {}),
+        pack_zodar:(cardVault.packs?.pack_zodar || 0) + 1,
+      },
+    };
+    persistCardVault(nextVault);
+  }
+
+  async function handleOpenCardPack(packId) {
+    const pack = CARD_PACK_DEFS.find(entry => entry.id === packId);
+    const owned = cardVault.packs?.[packId] || 0;
+    if(!pack || owned <= 0 || !me?.id) return [];
+    const rewards = openCardPack(pack, catalogItems);
+    const itemRewards = rewards.filter(card => card.itemId);
+    for(const card of itemRewards) {
+      await dbAddPlayerItem(me.id, card.itemId);
+    }
+    const nextVault = {
+      ...cardVault,
+      packs:{ ...(cardVault.packs || {}), [packId]:owned - 1 },
+      cards:[...(cardVault.cards || []), ...rewards],
+      pity:{
+        legendary:rewards.some(card => card.rarity === "legendary" || card.rarity === "mythic") ? 0 : (cardVault.pity?.legendary || 0) + 1,
+        mythic:rewards.some(card => card.rarity === "mythic") ? 0 : (cardVault.pity?.mythic || 0) + 1,
+      },
+    };
+    persistCardVault(nextVault);
+    await refreshInventory(me);
+    const best = rewards.reduce((top, card) => (CARD_RARITY_ORDER[card.rarity] || 0) > (CARD_RARITY_ORDER[top.rarity] || 0) ? card : top, rewards[0]);
+    if(best && ["epic","legendary","mythic"].includes(best.rarity)) {
+      await addMsg(`📦 **${me.name}** apre **${pack.name}** e trova **${best.name}** (${cardRarityLabel(best.rarity)})!`, "info", "Pacchetti");
+    }
+    return rewards;
+  }
+
+  function activateCardTitle(card) {
+    if(!card || card.type !== "title") return;
+    const nextVault = { ...cardVault, activeTitle:card.cardId };
+    persistCardVault(nextVault);
+  }
 
   useEffect(() => {
     if(!code) {
@@ -10518,6 +10912,80 @@ function GameScreen({ myId, setScreen, authUser }) {
     const newCombatants = [...c.combatants, newCombatant].sort((a, b) => b.rollInit - a.rollInit);
     await saveQState({ ...latestQs, combat: { ...c, combatants: newCombatants, bossKnockedOut: newKO } });
     await addMsg(`⚔️ **${me.name}** rientra nell'arena!`, "combat", "Sistema");
+  }
+
+  function buildJoinCombatant(player) {
+    const hp = Math.max(1, Number(player?.hp || player?.maxHp || player?.max_hp || 1));
+    const maxHp = Math.max(hp, Number(player?.maxHp || player?.max_hp || hp));
+    return {
+      id: player.id,
+      name: player.name,
+      class: player.class || "warrior",
+      race: player.race || "human",
+      gender: player.gender || getStoredCharacterGender(player.id, "male"),
+      emoji: CLASSES[player.class || "warrior"]?.emoji || "⚔️",
+      hp,
+      maxHp,
+      atk: Number(player.atk || 0),
+      def: Number(player.def || 0),
+      mag: Number(player.mag || 0),
+      init: Number(player.init || 1),
+      weaponDie: getEquippedWeapon(equipment, itemMapRef.current).weapon_die || getCombatDamageDie(player),
+      isPlayer: true,
+      dying: false,
+      stable: false,
+      dead: false,
+      deathSuccesses: 0,
+      deathFailures: 0,
+      rollInit: (Number(player.init || 1)) + roll(20),
+    };
+  }
+
+  async function joinActiveCombat(targetPartyCode = code) {
+    if(!targetPartyCode || !me?.id) return false;
+    const latestQs = await dbGetPartyState(targetPartyCode);
+    const c = latestQs?.combat;
+    if(!c?.active || !Array.isArray(c.combatants)) return false;
+    if(c.combatants.some(x => x.id === myId)) {
+      if(targetPartyCode === code) setTab("combat");
+      return true;
+    }
+
+    const playerForCombat = { ...me, partyCode:targetPartyCode };
+    if(me.partyCode !== targetPartyCode) {
+      const updatedPlayer = { ...me, partyCode:targetPartyCode };
+      await dbSavePlayer(updatedPlayer);
+    }
+
+    const currentActor = c.combatants[c.turn % Math.max(1, c.combatants.length)];
+    const newCombatant = buildJoinCombatant(playerForCombat);
+    const newCombatants = [...c.combatants, newCombatant].sort((a, b) => (b.rollInit || 0) - (a.rollInit || 0));
+    const nextTurn = currentActor ? Math.max(0, newCombatants.findIndex(x => x.id === currentActor.id)) : c.turn;
+    const nextSpellSlots = {
+      ...(c.spellSlots || {}),
+      [myId]: getSpellSlots(me.level || 1),
+    };
+    const joinLog = `⚔️ **${me.name}** si unisce alla battaglia! Iniziativa: **${newCombatant.rollInit}**.`;
+    const newState = {
+      ...latestQs,
+      combat:{
+        ...c,
+        combatants:newCombatants,
+        turn:nextTurn >= 0 ? nextTurn : c.turn,
+        spellSlots:nextSpellSlots,
+        pendingLog:c.pendingLog || joinLog,
+      },
+    };
+    await dbSavePartyState(targetPartyCode, newState);
+    await dbSendMessage({ party_code:targetPartyCode, author:"Sistema", content:joinLog, type:"combat" });
+
+    if(targetPartyCode === code) {
+      setQs(newState);
+      setTab("combat");
+      return true;
+    }
+    window.location.reload();
+    return true;
   }
 
   // Summon attack — owner chooses target manually
@@ -12929,6 +13397,8 @@ ${stepText(step)}`, "quest","Master");
       ["storylibrary",`📚 ${t("nav.stories")}`],
       ["inventory",`🎒 ${t("nav.inventory")}`],
       ["equipment",`🎽 ${t("nav.equipment")}`],
+      ["cardpacks",`📦 Pacchetti${cardFeatureUnlocked ? "" : " 🔒"}`],
+      ["cardcollection",`🃏 Carte${cardFeatureUnlocked ? "" : " 🔒"}`],
       ["level",`⭐ ${t("nav.level")}`],
       ["diary",`📖 ${t("nav.diary")}`],
       ["combat",`⚔️ ${t("nav.battle")}`],
@@ -13438,10 +13908,11 @@ ${stepText(step)}`, "quest","Master");
               {row.map(([k,l])=>{
                 const isResting = !!(qs?.rest?.endsAt && new Date(qs.rest.endsAt) > new Date());
                 const combatLocked = !!combat?.active && !["inventory","equipment","combat"].includes(k);
+                const cardLocked = ["cardpacks","cardcollection"].includes(k) && !cardFeatureUnlocked;
                 const locked = combatLocked || isResting;
                 return (
-                <button key={k} onClick={()=>{ if(!locked){ setTab(k); if(isMobile) setSidebarOpen(false); if(k==="guild") refreshGuilds(); } }} title={isResting?"Riposo in corso…":combatLocked?"Non disponibile durante il combattimento":undefined}
-                  style={{ flexShrink:0, padding: isMobile?"0.55rem 0.72rem":"0.56rem 1.05rem", background:tab===k&&!isResting?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k&&!isResting?"2px solid #7c3aed":"2px solid transparent", color:locked?"#2d3748":tab===k?"#c4b5fd":"#94a3b8", cursor:locked?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize: isMobile?"0.66rem":"0.76rem", letterSpacing:"0.05em", opacity:locked?0.35:1, whiteSpace:"nowrap", filter:isResting?"grayscale(1)":"none" }}>
+                <button key={k} onClick={()=>{ if(cardLocked && !locked){ setTab(k); if(isMobile) setSidebarOpen(false); return; } if(!locked){ setTab(k); if(isMobile) setSidebarOpen(false); if(k==="guild") refreshGuilds(); } }} title={isResting?"Riposo in corso…":combatLocked?"Non disponibile durante il combattimento":cardLocked?"Modulo segreto in sviluppo":undefined}
+                  style={{ flexShrink:0, padding: isMobile?"0.55rem 0.72rem":"0.56rem 1.05rem", background:tab===k&&!isResting?"rgba(109,40,217,0.2)":"transparent", border:"none", borderBottom:tab===k&&!isResting?"2px solid #7c3aed":"2px solid transparent", color:locked?"#2d3748":tab===k?"#c4b5fd":cardLocked?"#7c3aed":"#94a3b8", cursor:locked?"not-allowed":"pointer", fontFamily:"'Cinzel',serif", fontSize: isMobile?"0.66rem":"0.76rem", letterSpacing:"0.05em", opacity:locked?0.35:1, whiteSpace:"nowrap", filter:isResting?"grayscale(1)":"none" }}>
                   {l}{k==="combat"&&combat?.active&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#7f1d1d", borderRadius:10, fontSize:"0.62rem", color:"#fca5a5" }}>LIVE</span>}{k==="combat"&&combat?.active&&!combat?.pendingLog&&combat?.combatants?.[combat.turn%Math.max(1,combat.combatants.length)]?.id===myId&&tab!=="combat"&&<span style={{ marginLeft:4, display:"inline-block", width:8, height:8, borderRadius:"50%", background:"#ef4444", boxShadow:"0 0 6px #ef4444", animation:"pulse 1s infinite" }} />}{k==="dungeon"&&qs?.dungeon?.active&&!qs?.dungeon?.completedAt&&<span style={{ marginLeft:5, padding:"1px 5px", background:"#701a75", borderRadius:10, fontSize:"0.62rem", color:"#e879f9" }}>LIVE</span>}
                 </button>);
               })}
@@ -13792,6 +14263,27 @@ ${stepText(step)}`, "quest","Master");
             </div>
           );
         })()}
+        {tab==="cardpacks" && !cardFeatureUnlocked && <SecretCardsGate onUnlock={unlockCardFeature} />}
+        {tab==="cardcollection" && !cardFeatureUnlocked && <SecretCardsGate onUnlock={unlockCardFeature} />}
+        {tab==="cardpacks" && cardFeatureUnlocked && (
+          <PacksView
+            vault={cardVault}
+            catalogItems={catalogItems}
+            onOpenPack={handleOpenCardPack}
+            onGrantDevPack={grantDevCardPack}
+          />
+        )}
+        {tab==="cardcollection" && cardFeatureUnlocked && (
+          <CardsCollectionView
+            vault={cardVault}
+            inventoryGroups={inventoryGroups}
+            equipment={equipment}
+            onEquip={equipItem}
+            onUse={usePotion}
+            onActivateTitle={activateCardTitle}
+            isMobile={isMobile}
+          />
+        )}
         {tab==="trade" && (
           <AuctionHouseView
             me={me}
@@ -13877,7 +14369,7 @@ ${stepText(step)}`, "quest","Master");
         )}
 
         {tab==="lore" && <div style={{ flex:1, minHeight:0, overflow:"hidden", display:"flex", flexDirection:"column" }}><LoreView /></div>}
-        {tab==="osservatorio" && me?.class==="custode_equilibrio" && <OsservatorioView me={me} myId={myId} code={code} supabase={supabase} partyPresenceMeta={partyPresenceMeta} onJoinParty={async(partyCode)=>{ const upd={...me,partyCode}; await dbSavePlayer(upd); window.location.reload(); }} onJoinCombat={async(partyCode,combatant)=>{ const upd={...me,partyCode}; await dbSavePlayer(upd); window.location.reload(); }} />}
+        {tab==="osservatorio" && me?.class==="custode_equilibrio" && <OsservatorioView me={me} myId={myId} code={code} supabase={supabase} partyPresenceMeta={partyPresenceMeta} onJoinParty={async(partyCode)=>{ const upd={...me,partyCode}; await dbSavePlayer(upd); window.location.reload(); }} onJoinCombat={async(partyCode)=>{ await joinActiveCombat(partyCode); }} />}
 
         {tab==="map" && (
           <MapView me={me} onNavigate={(zone) => { audioManager.playBGM(zone.bgm || 'dungeon'); setTab('dungeon'); }} />
@@ -15160,6 +15652,16 @@ ${stepText(step)}`, "quest","Master");
           onDecline={async () => { setDeclinedCombatAt(combat.startedAt); await leaveCombat(); }}
           startedAt={combat.startedAt}
         />
+      )}
+      {combat?.active && !combat.combatants?.some(c => c.id === myId) && !(combat?.isBossEvent && combat?.bossKnockedOut?.[myId]) && (
+        <div style={{ position:"fixed", bottom:24, left:"50%", transform:"translateX(-50%)", zIndex:9500, background:"rgba(2,6,23,0.97)", border:"2px solid #ef4444", borderRadius:12, padding:"1rem 1.5rem", display:"flex", flexDirection:"column", alignItems:"center", gap:8, boxShadow:"0 8px 32px rgba(0,0,0,0.6)", minWidth:260, textAlign:"center" }}>
+          <div style={{ fontSize:"1.8rem" }}>⚔️</div>
+          <div style={{ fontFamily:"'Cinzel',serif", color:"#fca5a5", fontSize:"0.9rem", fontWeight:700 }}>Battaglia in corso</div>
+          <div style={{ color:"#94a3b8", fontSize:"0.78rem" }}>Il party sta combattendo. Puoi unirti alla turnazione.</div>
+          <button onClick={() => joinActiveCombat(code)} style={{ marginTop:4, padding:"0.5rem 1.2rem", background:"linear-gradient(135deg,#7f1d1d,#b91c1c)", border:"2px solid #ef4444", borderRadius:8, color:"#fee2e2", fontFamily:"'Cinzel',serif", fontSize:"0.85rem", cursor:"pointer", letterSpacing:"0.06em" }}>
+            ⚔️ Unisciti alla battaglia
+          </button>
+        </div>
       )}
       {/* ── Boss Arena Re-entry Banner ── */}
       {combat?.active && combat?.isBossEvent && !combat?.combatants?.some(c => c.id === myId) && (() => {
