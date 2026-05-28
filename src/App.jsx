@@ -1915,6 +1915,24 @@ function combatLogCue(log, lang = "it") {
   if(damageMatches.length) return { type:"hit", icon:"⚔️", title:isEn ? "Hit" : "Colpo a Segno", value:`${Math.max(...damageMatches)} ${isEn ? "damage" : "danni"}`, color:"#f87171", bg:"rgba(127,29,29,0.38)" };
   return { type:"event", icon:"✨", title:isEn ? "Event" : "Evento", value:"", color:"#cbd5e1", bg:"rgba(30,41,59,0.42)" };
 }
+function summarizeCombatLogText(content, lang = "it") {
+  const isEn = lang === "en";
+  const text = String(content || "");
+  const cleanLines = text
+    .replace(/\*\*/g, "")
+    .replace(/\*/g, "")
+    .split(/\n+/)
+    .map(line => line.trim())
+    .filter(Boolean);
+  const header = cleanLines[0] || (isEn ? "Combat event" : "Evento di combattimento");
+  const hpLine = cleanLines.find(line => /HP\b/i.test(line) && /❤️/.test(line));
+  const rollLine = cleanLines.find(line => /Tiro|roll|d20|Damage|Danno/i.test(line));
+  const detail = hpLine || rollLine || cleanLines[1] || "";
+  const damageMatch = text.match(/(?:Danno finale:|Final damage:|Danno ridotto a|Damage reduced to|=>|Danno:|Damage:|Damage roll:)[^\d]*(\d+)/i);
+  const healMatch = text.match(/(?:Cura finale:|Healing|Heal|Cura:|recupera|restores|heals)[^\d]*(\d+)/i);
+  const value = damageMatch ? `-${damageMatch[1]}` : (healMatch ? `+${healMatch[1]}` : "");
+  return { header, detail, value, kind: damageMatch ? "damage" : (healMatch ? "heal" : "") };
+}
 function battleEffectFromLog(log, lang = "it") {
   const text = String(log || "");
   if(!text) return null;
@@ -14837,22 +14855,59 @@ ${stepText(step)}`, "quest","Master");
                       )}
                     </div>
 
-                    <div style={{ background:"rgba(8,14,28,0.9)", border:"1px solid rgba(148,163,184,0.16)", borderRadius:12, overflow:"hidden", boxShadow:"0 16px 34px rgba(0,0,0,0.18)" }}>
-                      <button onClick={()=>setShowCombatLog(v=>!v)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", padding:"0.75rem 1rem", background:"transparent", border:"none", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", color:"#cbd5e1", letterSpacing:"0.08em" }}>
-                        <span>📜 {lang === "en" ? "BATTLE LOG" : "LOG DI BATTAGLIA"} ({messages.filter(m=>m.type==="combat" && (!combat?.startedAt || new Date(m.created_at).getTime() >= combat.startedAt - 5000)).slice(-50).length})</span>
-                        <span style={{ fontSize:"0.9rem", color:"#94a3b8" }}>{showCombatLog ? (lang === "en" ? "▲ close" : "▲ chiudi") : (lang === "en" ? "▼ open" : "▼ apri")}</span>
-                      </button>
-                      {showCombatLog && (
-                        <div style={{ maxHeight:320, overflowY:"auto", padding:"0 0.85rem 0.85rem", borderTop:"1px solid rgba(148,163,184,0.1)" }} onClick={()=>setShowCombatLog(false)}>
-                          {messages.filter(m=>m.type==="combat" && (!combat?.startedAt || new Date(m.created_at).getTime() >= combat.startedAt - 5000)).slice(-50).map(m=>(
-                            <div key={m.id} style={{ padding:"0.65rem 0.75rem", background:"rgba(127,29,29,0.16)", border:"1px solid #7f1d1d", borderRadius:8, marginBottom:6, marginTop:6, fontSize:"0.82rem", color:"#fecaca", lineHeight:1.6 }}
-                              dangerouslySetInnerHTML={{ __html:fmt(m.content) }} />
-                          ))}
-                          <div ref={combatLogEndRef} />
-                          <div style={{ textAlign:"center", fontSize:"0.7rem", color:"#4b5563", marginTop:4 }}>{lang === "en" ? "tap to close" : "tocca per chiudere"}</div>
+                    {(() => {
+                      const battleLogEntries = messages
+                        .filter(m=>m.type==="combat" && (!combat?.startedAt || new Date(m.created_at).getTime() >= combat.startedAt - 5000))
+                        .slice(-50);
+                      return (
+                        <div style={{ background:"linear-gradient(180deg,rgba(8,14,28,0.94),rgba(15,23,42,0.86))", border:"1px solid rgba(148,163,184,0.18)", borderRadius:12, overflow:"hidden", boxShadow:"0 16px 34px rgba(0,0,0,0.18)" }}>
+                          <button onClick={()=>setShowCombatLog(v=>!v)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, padding:"0.75rem 1rem", background:"transparent", border:"none", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", color:"#cbd5e1", letterSpacing:"0.08em" }}>
+                            <span style={{ display:"flex", alignItems:"center", gap:8 }}>
+                              <span>📜</span>
+                              <span>{lang === "en" ? "BATTLE LOG" : "LOG DI BATTAGLIA"}</span>
+                              <span style={{ padding:"0.1rem 0.42rem", borderRadius:999, background:"rgba(148,163,184,0.12)", border:"1px solid rgba(148,163,184,0.16)", color:"#e2e8f0", fontSize:"0.68rem", letterSpacing:0 }}>{battleLogEntries.length}</span>
+                            </span>
+                            <span style={{ flexShrink:0, fontSize:"0.72rem", color:"#94a3b8" }}>{showCombatLog ? (lang === "en" ? "▲ close" : "▲ chiudi") : (lang === "en" ? "▼ open" : "▼ apri")}</span>
+                          </button>
+                          {showCombatLog && (
+                            <div style={{ maxHeight:340, overflowY:"auto", padding:"0.65rem 0.75rem 0.75rem", borderTop:"1px solid rgba(148,163,184,0.1)", display:"flex", flexDirection:"column", gap:7 }}>
+                              {battleLogEntries.length === 0 ? (
+                                <div style={{ padding:"1rem", color:"#64748b", textAlign:"center", fontSize:"0.78rem", fontFamily:"'Cinzel',serif" }}>
+                                  {lang === "en" ? "No combat actions recorded yet." : "Nessuna azione di combattimento registrata."}
+                                </div>
+                              ) : battleLogEntries.map((m, idx)=>{
+                                const cue = combatLogCue(m.content, lang);
+                                const summary = summarizeCombatLogText(m.content, lang);
+                                const time = m.created_at ? new Date(m.created_at).toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" }) : "";
+                                const isRecent = idx >= battleLogEntries.length - 3;
+                                const valueText = summary.value || cue?.value || "";
+                                const valueColor = summary.kind === "heal" ? "#86efac" : (summary.kind === "damage" ? "#fecaca" : cue?.color || "#cbd5e1");
+                                return (
+                                  <details key={m.id} open={isRecent} style={{ border:`1px solid ${cue?.color || "#64748b"}55`, borderRadius:10, background:cue?.bg || "rgba(30,41,59,0.42)", overflow:"hidden" }}>
+                                    <summary style={{ listStyle:"none", cursor:"pointer", display:"grid", gridTemplateColumns:"34px minmax(0,1fr) auto auto", alignItems:"center", gap:9, padding:"0.58rem 0.68rem" }}>
+                                      <span style={{ width:28, height:28, borderRadius:8, display:"grid", placeItems:"center", background:"rgba(2,6,23,0.48)", color:cue?.color || "#cbd5e1", border:`1px solid ${cue?.color || "#64748b"}55`, boxShadow:`0 0 16px ${cue?.color || "#64748b"}22` }}>{cue?.icon || "✨"}</span>
+                                      <span style={{ minWidth:0 }}>
+                                        <span style={{ display:"flex", flexWrap:"wrap", alignItems:"baseline", gap:6, color:"#f8fafc", fontSize:"0.78rem", fontWeight:800 }}>
+                                          <span style={{ color:cue?.color || "#cbd5e1", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>{cue?.title || (lang === "en" ? "Event" : "Evento")}</span>
+                                          <span style={{ color:"#cbd5e1", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:"100%" }}>{summary.header}</span>
+                                        </span>
+                                        {summary.detail && <span style={{ display:"block", marginTop:3, color:"#94a3b8", fontSize:"0.72rem", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{summary.detail}</span>}
+                                      </span>
+                                      {valueText && <span style={{ padding:"0.18rem 0.45rem", borderRadius:999, background:"rgba(2,6,23,0.44)", border:`1px solid ${valueColor}55`, color:valueColor, fontSize:"0.72rem", fontWeight:900, whiteSpace:"nowrap" }}>{valueText}</span>}
+                                      <span style={{ color:"#64748b", fontSize:"0.68rem", whiteSpace:"nowrap" }}>{time}</span>
+                                    </summary>
+                                    <div style={{ padding:"0 0.75rem 0.7rem 3.35rem", color:"#e2e8f0", fontSize:"0.78rem", lineHeight:1.55, borderTop:"1px solid rgba(148,163,184,0.08)" }}
+                                      dangerouslySetInnerHTML={{ __html:fmt(m.content) }} />
+                                  </details>
+                                );
+                              })}
+                              <div ref={combatLogEndRef} />
+                              <div style={{ textAlign:"center", fontSize:"0.68rem", color:"#475569", marginTop:2 }}>{lang === "en" ? "Last 50 combat actions" : "Ultime 50 azioni di combattimento"}</div>
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
+                      );
+                    })()}
 
                     <div style={{ padding:"0.75rem 1rem", background:"rgba(20,5,5,0.7)", border:"1px solid rgba(127,29,29,0.3)", borderRadius:10, display:"flex", flexDirection:"column", gap:6, alignItems:"center" }}>
                       <button onClick={abandonQuest} style={{ width:"100%", padding:"0.6rem 1rem", background:"rgba(127,29,29,0.18)", border:"1px solid rgba(127,29,29,0.5)", borderRadius:8, color:"#f87171", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", cursor:"pointer", letterSpacing:"0.05em" }}>
