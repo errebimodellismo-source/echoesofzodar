@@ -49,7 +49,7 @@ const VARIANTS = [
   'mysterious dark features',
   'warm friendly expression',
   'stern serious demeanor',
-  'exotic unusual coloring',
+  'tan skin with distinctive features',
   'weathered traveler appearance',
 ];
 

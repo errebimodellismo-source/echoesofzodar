@@ -12,7 +12,8 @@
       "Bash(npx netlify *)",
       "Read(//c/Users/roppo/echoesofzodar/dist/assets/**)",
       "Bash(Sort-Object)",
-      "Bash(node \"c:/Users/roppo/echoesofzodar/tmp/gen_quests.cjs\")"
+      "Bash(node \"c:/Users/roppo/echoesofzodar/tmp/gen_quests.cjs\")",
+      "Bash(node scripts/generate-portraits.mjs *)"
     ],
     "additionalDirectories": [
       "C:\\Users\\roppo\\Downloads"
