@@ -1210,6 +1210,43 @@ function getSpellSlots(level) {
   return { ...base };
 }
 
+const SPELL_NAME_EN = {
+  "Scintilla Arcana":"Arcane Spark", "Raggio di Brina":"Ray of Rime", "Mano Folgorante":"Shocking Hand", "Dardo Incantato":"Magic Missile", "Mano Bruciante":"Burning Hands", "Raggio di Gelo":"Ray of Frost", "Sonno":"Sleep", "Scudo Arcano":"Arcane Shield", "Dardo Acido":"Acid Bolt", "Freccia Acida":"Acid Arrow", "Invisibilità":"Invisibility", "Nebbia Velenosa":"Poisonous Mist", "Ragnatela":"Web", "Suggestione":"Suggestion", "Palla di Fuoco":"Fireball", "Fulmine":"Lightning Bolt", "Volo":"Flight", "Controincantesimo":"Counterspell", "Rallentamento":"Slow", "Muro di Fuoco":"Wall of Fire", "Porta Dimensionale":"Dimension Door", "Polimorfismo":"Polymorph", "Nebbia Arcana":"Arcane Mist", "Cono di Freddo":"Cone of Cold", "Disintegrazione":"Disintegration", "Telecinesi":"Telekinesis", "Nube Mortale":"Cloudkill",
+  "Fuoco delle Fate":"Faerie Fire", "Onda Tonante":"Thunderwave", "Cromosfera":"Chromatic Sphere", "Scudo":"Shield", "Taumaturgia":"Thaumaturgy", "Freccia di Acido":"Acid Arrow", "Disfatta":"Ruin", "Metamagia":"Metamagic", "Oscurità":"Darkness", "Impulso del Caos":"Chaos Surge", "Passaparola":"Whisperchain", "Forma Elementale":"Elemental Form", "Onda di Fuoco":"Fire Wave", "Maggior Invisib.":"Greater Invisibility", "Tempesta di Fuoco":"Fire Storm", "Forma Divina":"Divine Form",
+  "Fiamma Sacra":"Sacred Flame", "Raggio Sacro":"Sacred Ray", "Cura Minima":"Minor Heal", "Cura Ferite":"Cure Wounds", "Parola Sacra":"Holy Word", "Luce Sacra":"Sacred Light", "Benedizione":"Blessing", "Punizione Divina":"Divine Smite", "Scaccia Non-Morti":"Turn Undead", "Cura Moderata":"Moderate Heal", "Silenzio":"Silence", "Arma Spirituale":"Spiritual Weapon", "Protezione dal Male":"Protection from Evil", "Augura":"Augury", "Cura di Massa":"Mass Heal", "Colpo Radioso":"Radiant Strike", "Animare Morti":"Animate Dead", "Rimuovi Malediz.":"Remove Curse", "Custode della Fede":"Guardian of Faith", "Libertà di Movimento":"Freedom of Movement", "Tempesta Divina":"Divine Storm", "Resurrezione":"Resurrection", "Parola del Potere":"Power Word",
+  "Produzione di Fiamme":"Produce Flame", "Veleno Minore":"Minor Poison", "Avviluppo":"Entangle", "Guarire Ferite":"Heal Wounds", "Tuono delle Fiere":"Beast Thunder", "Forma Selvatica":"Wild Shape", "Nebbia":"Fog", "Veleno":"Poison", "Pelle Corticosa":"Barkskin", "Lama di Vento":"Wind Blade", "Sciame d'Insetti":"Insect Swarm", "Chiamata Animale":"Animal Call", "Colpo del Vento":"Wind Strike", "Cura di Gruppo":"Group Heal", "Tempesta di Spine":"Thornstorm", "Terreno Difficile":"Difficult Terrain", "Controllo Piante":"Control Plants", "Grandine":"Hailstorm", "Richiamare Fulmine":"Call Lightning", "Forma di Bestia":"Beast Shape", "Muro di Spine":"Wall of Thorns",
+  "Ispirazione Bardica":"Bardic Inspiration", "Cura Parole":"Healing Words", "Insulto Tagliente":"Cutting Insult", "Fascino":"Charm", "Suono Tonante":"Thunderous Sound", "Vedere l'Invisibile":"See Invisibility", "Imitazione":"Mimicry", "Ipnosi":"Hypnosis", "Onda Tonica":"Tonic Wave", "Vergogna":"Shame", "Confusione":"Confusion", "Grande Ispirazione":"Greater Inspiration", "Tentacoli Neri":"Black Tentacles", "Mass Cura":"Mass Cure", "Mente Vuota":"Empty Mind", "Leggenda Vivente":"Living Legend",
+  "Colpo degli Eletti":"Strike of the Chosen", "Maledizione Malefica":"Hexing Curse", "Armatura di Agathys":"Armor of Agathys", "Mani Brucianti":"Burning Hands", "Terrore":"Fear", "Frammenti del Vuoto":"Void Shards", "Oscurità Infernale":"Infernal Darkness", "Passo del Velo":"Veil Step", "Spirale del Caos":"Chaos Spiral", "Ipnosi Infernale":"Infernal Hypnosis", "Volo del Diavolo":"Devil Flight", "Terrore di Massa":"Mass Terror", "Fame del Vuoto":"Void Hunger", "Banishment":"Banishment", "Aura Infernale":"Infernal Aura", "Presenza del Padrone":"Patron's Presence", "Raggio Infernale":"Infernal Ray", "Contratto di Sangue":"Blood Contract", "Possessione":"Possession",
+  "Smiting Divino":"Divine Smiting", "Favore Divino":"Divine Favor", "Trovare Trappole":"Find Traps", "Ira Sacra":"Holy Wrath", "Zona della Verità":"Zone of Truth", "Forza del Paladino":"Paladin's Might", "Arma Magica":"Magic Weapon", "Cura Maggiore":"Greater Heal", "Aura del Coraggio":"Aura of Courage", "Colpo Purificante":"Purifying Strike", "Revoca Maledizione":"Lift Curse", "Crea Cibo":"Create Food", "Aura di Vita":"Aura of Life", "Giustizia Divina":"Divine Justice", "Muro Sacro":"Sacred Wall", "Smiting Divino Pot.":"Greater Divine Smiting", "Giudizio Finale":"Final Judgment",
+  "Freccia Avvelenata":"Poisoned Arrow", "Segna il Nemico":"Mark Enemy", "Passo del Vento":"Wind Step", "Piaga degli Animali":"Animal Plague", "Rete":"Net", "Freccia Esplosiva":"Explosive Arrow", "Passaggio Naturale":"Natural Passage", "Piaga del Fuoco":"Fire Plague", "Allerta":"Alertness", "Pioggia di Frecce":"Arrow Rain", "Forma Animale":"Animal Form", "Freccia del Vento":"Wind Arrow", "Compagno Animale":"Animal Companion", "Colpo del Cacciatore":"Hunter's Strike", "Trappola Arcana":"Arcane Trap", "Sensi Soprannaturali":"Supernatural Senses", "Freccia Devastante":"Devastating Arrow", "Tempesta di Frecce":"Arrow Storm", "Istinto del Predatore":"Predator Instinct",
+  "Tocco Necrotico":"Necrotic Touch", "Dito della Morte":"Finger of Death", "Raggio Vitale":"Life Ray", "Paura":"Fear", "Ossa Frantumate":"Shattered Bones", "Evoca Scheletro":"Summon Skeleton", "Anima il Morto":"Animate the Dead", "Drenaggio Vitale":"Life Drain", "Maledizione Putrescente":"Putrescent Curse", "Risurrezione":"Resurrection", "Ondata di Non-Morti":"Undead Surge", "Esplosione di Anime":"Soul Explosion", "Legione degli Scheletri":"Skeleton Legion", "Morte Istantanea":"Instant Death", "Aura della Morte":"Death Aura", "Apocalisse dei Morti":"Apocalypse of the Dead", "Lich Form":"Lich Form", "Resurrezione di Massa":"Mass Resurrection",
+  "Frammento Planare":"Planar Shard", "Manifestazione":"Manifestation", "Evoca Lupo Spettrale":"Summon Spectral Wolf", "Evoca Elementale Minore":"Summon Lesser Elemental", "Legame Planare":"Planar Bond", "Evoca Demone delle Ombre":"Summon Shadow Demon", "Portale Esplosivo":"Explosive Portal", "Evoca Grifone da Guerra":"Summon War Griffin", "Evoca Drago Minore":"Summon Lesser Dragon", "Tempesta Planare":"Planar Storm", "Evoca Idra":"Summon Hydra", "Evoca Golem di Cristallo":"Summon Crystal Golem", "Convocazione di Massa":"Mass Conjuration", "Implosione Dimensionale":"Dimensional Implosion", "Evoca Titano":"Summon Titan", "Apocalisse Planare":"Planar Apocalypse", "Legione Infinita":"Infinite Legion",
+  "Granata Mini":"Mini Grenade", "Scossa Elettrica":"Electric Shock", "Bomba a Frammentazione":"Fragmentation Bomb", "Torretta Automatica":"Automatic Turret", "Granata Fumogena":"Smoke Grenade", "Scudo Energetico":"Energy Shield", "Bomba Termica":"Thermal Bomb", "Granata Magnetica":"Magnetic Grenade", "Drone d'Attacco":"Attack Drone", "Esoscheletro Potenziato":"Powered Exoskeleton", "Missile Devastante":"Devastating Missile", "Bomba EMP":"EMP Bomb", "Drago Meccanico":"Mechanical Dragon", "Cannone di Plasma":"Plasma Cannon", "Protocollo Nemesi":"Nemesis Protocol", "Mech da Battaglia":"Battle Mech", "Protocollo Overkill":"Overkill Protocol", "Bomba Nucleare Arcana":"Arcane Nuclear Bomb", "Titano Meccanico":"Mechanical Titan",
+  "Tocco Infuocato":"Burning Touch", "Sguardo Ipnotico":"Hypnotic Gaze", "Bacio della Morte":"Kiss of Death", "Aura di Seduzione":"Seduction Aura", "Illusione Perfetta":"Perfect Illusion", "Freccia del Desiderio":"Arrow of Desire", "Charme Irresistibile":"Irresistible Charm", "Drenaggio dell'Anima":"Soul Drain", "Patto Infernale":"Infernal Pact", "Velo di Tenebra":"Veil of Darkness", "Dominazione Mentale":"Mind Domination", "Esplosione di Charme":"Charm Explosion", "Suzione Vitale":"Vital Siphon", "Estasi Infernale":"Infernal Ecstasy", "Prigione di Charme":"Charm Prison", "Vampirismo Assoluto":"Absolute Vampirism", "Forma Demoniaca":"Demonic Form", "Apocalisse del Desiderio":"Apocalypse of Desire", "Dominio Totale":"Total Dominion",
+  "Equilibrio Universale":"Universal Balance", "Benedizione del Caos":"Blessing of Chaos", "Flagello dell'Equilibrio":"Scourge of Balance", "Richiamo dall'Oblio":"Call from Oblivion", "Bilancia della Vita":"Scales of Life", "Velo dell'Eternità":"Veil of Eternity", "Volere del Caos":"Will of Chaos", "Frattura del Destino":"Fracture of Fate", "ZODAR VI OSSERVA":"ZODAR WATCHES YOU"
+};
+
+function englishSpellDescription(spell) {
+  const type = spell?.type || "utility";
+  const dmg = spell?.dmg && spell.dmg !== "0" ? ` Power: ${spell.dmg}.` : "";
+  if(type === "heal") return `Restorative magic that heals allies and turns the battle back in your favor.${dmg}`;
+  if(type === "damage") return `Offensive magic that strikes the enemy with focused force.${dmg}`;
+  if(type === "control") return `Control magic that disrupts enemy actions, timing, or positioning.${dmg}`;
+  if(type === "defense") return `Protective magic that raises defenses or prevents incoming harm.${dmg}`;
+  if(type === "buff") return `Empowering magic that strengthens you or the whole party.${dmg}`;
+  if(type === "summon") return `Summoning magic that calls an ally or manifestation onto the battlefield.${dmg}`;
+  return `Utility magic that changes the flow of the encounter.${dmg}`;
+}
+
+function spellDisplay(spell, lang = "it") {
+  if(lang !== "en" || !spell) return spell;
+  return {
+    ...spell,
+    name: spell.name_en || SPELL_NAME_EN[spell.name] || spell.name,
+    desc: spell.desc_en || englishSpellDescription(spell),
+  };
+}
+
 function availableSpellsFor(className, level) {
   if(className === 'custode_equilibrio') {
     return (SPELLS.custode_equilibrio?.[0] || []).map(s => ({ ...s, slot: 0 }));
@@ -8999,12 +9036,13 @@ function SpellbookView({ spellsByLevel, preparedSpellIds, preparedCount, maxPrep
             <Card key={level} title={level===0 ? `✨ ${lang === "en" ? "Cantrips" : "Trucchetti"}` : `🔮 ${lang === "en" ? "Level" : "Livello"} ${level}`}>
               <div style={{ display:"grid", gap:10 }}>
                 {spells.map(spell => {
+                  const shownSpell = spellDisplay(spell, lang);
                   const prepared = level === 0 || preparedSpellIds.includes(spell.id);
                   return (
                     <div key={spell.id} style={{ background:"rgba(15,23,42,0.72)", border:`1px solid ${prepared ? "#7c3aed" : "#334155"}`, borderRadius:10, padding:"0.95rem 1rem" }}>
                       <div style={{ display:"flex", justifyContent:"space-between", gap:12, alignItems:"flex-start", marginBottom:6, flexWrap:"wrap" }}>
                         <div>
-                          <div style={{ color:"#f8fafc", fontWeight:700, fontSize:"0.96rem" }}>{spell.emoji || "✨"} {spell.name}</div>
+                          <div style={{ color:"#f8fafc", fontWeight:700, fontSize:"0.96rem" }}>{spell.emoji || "✨"} {shownSpell.name}</div>
                           <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:4 }}>
                             {spellEffectSummary(spell, lang).map(detail => (
                               <span key={detail} style={{ fontSize:"0.72rem", color:"#cbd5e1", background:"rgba(255,255,255,0.04)", border:"1px solid #334155", borderRadius:999, padding:"3px 8px" }}>
@@ -9024,7 +9062,7 @@ function SpellbookView({ spellsByLevel, preparedSpellIds, preparedCount, maxPrep
                           </button>
                         )}
                       </div>
-                      <div style={{ color:"#cbd5e1", fontSize:"0.84rem", lineHeight:1.6 }}>{spell.desc}</div>
+                      <div style={{ color:"#cbd5e1", fontSize:"0.84rem", lineHeight:1.6 }}>{shownSpell.desc}</div>
                     </div>
                   );
                 })}
@@ -11841,6 +11879,7 @@ function GameScreen({ myId, setScreen, authUser }) {
 
   async function castSpell(spell, allyTargetId = null) {
     if(!combat?.active || combat.pendingLog) return;
+    const castSpellInfo = spellDisplay(spell, lang);
     try {
     const _computed = getSpellSlots(me.level || 1);
     const _stored = (combat.spellSlots||{})[myId];
@@ -11874,7 +11913,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     const spellMyBuffs = spellMasterBuffs[myId] || {};
     let newSpellMasterBuffs = spellMasterBuffs;
 
-    let log = lang === "en" ? `🔮 **${attacker.name}** casts **${spell.name}**!\n` : `🔮 **${attacker.name}** lancia **${spell.name}**!\n`;
+    let log = lang === "en" ? `🔮 **${attacker.name}** casts **${castSpellInfo.name}**!\n` : `🔮 **${attacker.name}** lancia **${spell.name}**!\n`;
     let newCombatants = combatants;
     let spellDmgToLog = 0;
 
@@ -11964,7 +12003,9 @@ function GameScreen({ myId, setScreen, authUser }) {
       const attackerIdx = newCombatants.findIndex(c => c.id === attacker.id);
       newCombatants.splice(attackerIdx + 1, 0, summonCombatant);
       const countNow = myCurrentSummons.length < maxSummons ? myCurrentSummons.length + 1 : maxSummons;
-      log += `💀 **${s.name}** (Lv.${me.level||1}) evocato al fianco di ${attacker.name}! (${countNow}/${maxSummons})\n❤️ ${summonHp} HP · ⚔️ ${summonAtk} ATK · 🛡️ ${summonDef} DEF\nAttaccherà automaticamente ogni turno.`;
+      log += lang === "en"
+        ? `💀 **${s.name}** (Lv.${me.level||1}) summoned beside ${attacker.name}! (${countNow}/${maxSummons})\n❤️ ${summonHp} HP · ⚔️ ${summonAtk} ATK · 🛡️ ${summonDef} DEF\nIt will attack automatically each turn.`
+        : `💀 **${s.name}** (Lv.${me.level||1}) evocato al fianco di ${attacker.name}! (${countNow}/${maxSummons})\n❤️ ${summonHp} HP · ⚔️ ${summonAtk} ATK · 🛡️ ${summonDef} DEF\nAttaccherà automaticamente ogni turno.`;
     } else if(spell.type === "drain") {
       const drainPct = spell.drainPct || 0.5;
       const base = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg,8), notation:spell.dmg, label:`Drenaggio ${spell.dmg}`, themeColor:"#f43f8e" });
@@ -11984,7 +12025,9 @@ function GameScreen({ myId, setScreen, authUser }) {
         }
         const aidx = newCombatants.findIndex(c=>c.id===attacker.id);
         if(aidx !== -1) newCombatants[aidx] = {...newCombatants[aidx], hp:Math.min(newCombatants[aidx].maxHp, newCombatants[aidx].hp+totalHeal)};
-        log += `💋 **${spell.name}** colpisce TUTTI i nemici!${areaLog}\n💗 Cura totale: **+${totalHeal} HP**`;
+        log += lang === "en"
+          ? `💋 **${castSpellInfo.name}** hits ALL enemies!${areaLog}\n💗 Total healing: **+${totalHeal} HP**`
+          : `💋 **${spell.name}** colpisce TUTTI i nemici!${areaLog}\n💗 Cura totale: **+${totalHeal} HP**`;
       } else {
         const dtidx = newCombatants.findIndex(c=>c.id===target.id);
         const dmg = Math.max(1, base + bonus - Math.floor(target.def/2));
@@ -11993,7 +12036,9 @@ function GameScreen({ myId, setScreen, authUser }) {
         const aidx = newCombatants.findIndex(c=>c.id===attacker.id);
         if(aidx !== -1) newCombatants[aidx] = {...newCombatants[aidx], hp:Math.min(newCombatants[aidx].maxHp, newCombatants[aidx].hp+heal)};
         spellDmgToLog = dmg;
-        log += `💋 **${spell.name}**\n💥 Danno: **${dmg}** a ${target.name}\n💗 Cura: **+${heal} HP**\n❤️ ${target.name}: ${newCombatants[dtidx].hp}/${target.maxHp} HP`;
+        log += lang === "en"
+          ? `💋 **${castSpellInfo.name}**\n💥 Damage: **${dmg}** to ${target.name}\n💗 Healing: **+${heal} HP**\n❤️ ${target.name}: ${newCombatants[dtidx].hp}/${target.maxHp} HP`
+          : `💋 **${spell.name}**\n💥 Danno: **${dmg}** a ${target.name}\n💗 Cura: **+${heal} HP**\n❤️ ${target.name}: ${newCombatants[dtidx].hp}/${target.maxHp} HP`;
       }
     } else if(spell.type === "reanimate") {
       // Anima l'ultimo nemico caduto come alleato non-morto
@@ -12048,12 +12093,16 @@ function GameScreen({ myId, setScreen, authUser }) {
       if(spell.area) {
         const aliveEnemies = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
         newCombatants = newCombatants.map(c => (!c.isPlayer && c.hp>0) ? {...c, statusEffects:[...(c.statusEffects||[]),{type:"stun",duration:1}]} : c);
-        log += `💜 **${spell.name}**\nTutti i nemici sono ammaliati e saltano il prossimo turno!\n${aliveEnemies.map(e=>`• ${e.name}`).join("\n")}`;
+        log += lang === "en"
+          ? `💜 **${castSpellInfo.name}**\nAll enemies are charmed or stunned and skip their next turn!\n${aliveEnemies.map(e=>`• ${e.name}`).join("\n")}`
+          : `💜 **${spell.name}**\nTutti i nemici sono ammaliati e saltano il prossimo turno!\n${aliveEnemies.map(e=>`• ${e.name}`).join("\n")}`;
       } else {
         const ctarget = [...newCombatants.filter(c=>!c.isPlayer&&c.hp>0)].sort((a,b)=>(b.atk||0)-(a.atk||0))[0] || target;
         const cidx = newCombatants.findIndex(c=>c.id===ctarget.id);
         if(cidx !== -1) newCombatants[cidx] = {...newCombatants[cidx], statusEffects:[...(newCombatants[cidx].statusEffects||[]),{type:"stun",duration:1}]};
-        log += `💜 **${spell.name}**\n${ctarget.name} è ammaliato/stordito e salta il prossimo turno!`;
+        log += lang === "en"
+          ? `💜 **${castSpellInfo.name}**\n${ctarget.name} is charmed or stunned and skips the next turn!`
+          : `💜 **${spell.name}**\n${ctarget.name} è ammaliato/stordito e salta il prossimo turno!`;
       }
     } else if(spell.type === "zodar_heal_all") {
       const allies = newCombatants.filter(c=>c.isPlayer && !c.isSummon);
@@ -12135,9 +12184,11 @@ function GameScreen({ myId, setScreen, authUser }) {
         newCombatants[aidx] = boosted;
         newSpellMasterBuffs = {...spellMasterBuffs, [myId]: {...spellMyBuffs, crit: (spellMyBuffs.crit||0)+1}};
       }
-      log += `😈 **${spell.name}**\n${attacker.name} si trasforma! +${spell.buffMag||15} MAG · +${spell.buffAtk||10} ATK · +${spell.buffInit||8} INIT per ${spell.buffDuration||2} round!`;
+      log += lang === "en"
+        ? `😈 **${castSpellInfo.name}**\n${attacker.name} transforms! +${spell.buffMag||15} MAG · +${spell.buffAtk||10} ATK · +${spell.buffInit||8} INIT for ${spell.buffDuration||2} rounds!`
+        : `😈 **${spell.name}**\n${attacker.name} si trasforma! +${spell.buffMag||15} MAG · +${spell.buffAtk||10} ATK · +${spell.buffInit||8} INIT per ${spell.buffDuration||2} round!`;
     } else {
-      log += `${spell.desc || "Effetto speciale"}`;
+      log += lang === "en" ? `${castSpellInfo.desc || "Special effect"}` : `${spell.desc || "Effetto speciale"}`;
     }
 
     // Decrement legendary item turns after spell
@@ -14739,10 +14790,12 @@ ${stepText(step)}`, "quest","Master");
                                       <span>{lvl===0 ? (lang === "en" ? "Cantrips" : "Trucchetti") : `${lang === "en" ? "Level" : "Livello"} ${lvl}`}</span>
                                       <span style={{ fontSize:"0.78rem", color:"#cbd5e1" }}>{lvl===0 ? (lang === "en" ? "free" : "gratis") : `${spellSlots[lvl]} slot`}</span>
                                     </div>
-                                    {spells.map(spell=> (
+                                    {spells.map(spell=> {
+                                      const shownSpell = spellDisplay(spell, lang);
+                                      return (
                                       <button key={spell.id} onClick={()=>{ castSpell(spell, spell.type==="heal"?selectedAllyTarget:null); }} style={{ width:"100%", padding:"0.95rem 1rem", background:"rgba(99,102,241,0.15)", border:`1px solid ${spell.type==="heal"?"#16a34a":"#4338ca"}`, borderRadius:10, color:"#e0d7ff", cursor:"pointer", fontFamily:"inherit", textAlign:"left", marginBottom:8 }}>
                                         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
-                                          <span style={{ fontWeight:700, fontSize:"0.9rem" }}>{spell.emoji||"✨"} {spell.name}</span>
+                                          <span style={{ fontWeight:700, fontSize:"0.9rem" }}>{spell.emoji||"✨"} {shownSpell.name}</span>
                                           <span style={{ fontSize:"0.74rem", color:"#cbd5e1" }}>{spell.slots===0 ? (lang === "en" ? "Free" : "Gratis") : `Slot ${spell.slots||0}`}</span>
                                         </div>
                                         <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:5 }}>
@@ -14757,9 +14810,10 @@ ${stepText(step)}`, "quest","Master");
                                             </span>
                                           )}
                                         </div>
-                                        <div style={{ fontSize:"0.76rem", color:"#cbd5e1", marginTop:4, lineHeight:1.45 }}>{spell.desc}</div>
+                                        <div style={{ fontSize:"0.76rem", color:"#cbd5e1", marginTop:4, lineHeight:1.45 }}>{shownSpell.desc}</div>
                                       </button>
-                                    ))}
+                                      );
+                                    })}
                                   </div>
                                 );
                               })}
