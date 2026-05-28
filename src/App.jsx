@@ -8295,7 +8295,7 @@ const MAP_ZONES = [
 const MAP_ASPECT_RATIO = 1774 / 887;
 
 // ── OsservatorioView — Zodar only ────────────────────────────────────────────
-function OsservatorioView({ me, myId, code, supabase, onJoinParty, onJoinCombat }) {
+function OsservatorioView({ me, myId, code, supabase, partyPresenceMeta = {}, onJoinParty, onJoinCombat }) {
   const [allPlayers, setAllPlayers] = useState([]);
   const [partyStates, setPartyStates] = useState({});
   const [loading, setLoading] = useState(true);
@@ -8326,10 +8326,7 @@ function OsservatorioView({ me, myId, code, supabase, onJoinParty, onJoinCombat 
     return acc;
   }, {});
 
-  const isOnline = (p) => {
-    if (!p.updated_at) return false;
-    return (Date.now() - new Date(p.updated_at).getTime()) < 10 * 60 * 1000;
-  };
+  const isOnline = (p) => isPartyPlayerOnline(p, partyPresenceMeta, Date.now());
 
   const S = {
     wrap: { flex:1, overflow:"auto", padding:"1.5rem", background:"rgba(2,0,10,0.7)" },
@@ -8386,7 +8383,17 @@ function OsservatorioView({ me, myId, code, supabase, onJoinParty, onJoinCombat 
                         <div style={{ height:"100%", width:`${hpPct}%`, background: hpPct > 50 ? "#22c55e" : hpPct > 25 ? "#f59e0b" : "#ef4444" }} />
                       </div>
                     </div>
-                    <span style={{ fontSize:"0.55rem", color: online ? "#22c55e" : "#374151", flexShrink:0 }}>{online ? "●" : "○"}</span>
+                    <span
+                      title={online ? "Online" : "Offline"}
+                      style={{
+                        width:8,
+                        height:8,
+                        borderRadius:"50%",
+                        background:online ? "#22c55e" : "#ef4444",
+                        boxShadow:online ? "0 0 7px rgba(34,197,94,0.85)" : "0 0 6px rgba(239,68,68,0.65)",
+                        flexShrink:0,
+                      }}
+                    />
                   </div>
                 );
               })}
@@ -13507,7 +13514,7 @@ ${stepText(step)}`, "quest","Master");
         )}
 
         {tab==="lore" && <div style={{ flex:1, minHeight:0, overflow:"hidden", display:"flex", flexDirection:"column" }}><LoreView /></div>}
-        {tab==="osservatorio" && me?.class==="custode_equilibrio" && <OsservatorioView me={me} myId={myId} code={code} supabase={supabase} onJoinParty={async(partyCode)=>{ const upd={...me,partyCode}; await dbSavePlayer(upd); window.location.reload(); }} onJoinCombat={async(partyCode,combatant)=>{ const upd={...me,partyCode}; await dbSavePlayer(upd); window.location.reload(); }} />}
+        {tab==="osservatorio" && me?.class==="custode_equilibrio" && <OsservatorioView me={me} myId={myId} code={code} supabase={supabase} partyPresenceMeta={partyPresenceMeta} onJoinParty={async(partyCode)=>{ const upd={...me,partyCode}; await dbSavePlayer(upd); window.location.reload(); }} onJoinCombat={async(partyCode,combatant)=>{ const upd={...me,partyCode}; await dbSavePlayer(upd); window.location.reload(); }} />}
 
         {tab==="map" && (
           <MapView me={me} onNavigate={(zone) => { audioManager.playBGM(zone.bgm || 'dungeon'); setTab('dungeon'); }} />
