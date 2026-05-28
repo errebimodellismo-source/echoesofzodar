@@ -179,7 +179,7 @@ function CombatantCard({ c, isActive, floats, isMobile, imgSrc, cueTarget }) {
   );
 }
 
-function BattlefieldSprite({ c, isActive, floats, isMobile, imgSrc, cueTarget, side, index, total }) {
+function BattlefieldSprite({ c, isActive, floats, isMobile, imgSrc, cueTarget, actionSource, side, index, total }) {
   const isDead = c.dead || c.hp <= 0;
   const isDying = c.dying && !c.dead;
   const [imgErr, setImgErr] = useState(false);
@@ -197,7 +197,7 @@ function BattlefieldSprite({ c, isActive, floats, isMobile, imgSrc, cueTarget, s
       ? 'battleSpriteReadyLeft 1.9s ease-in-out infinite'
       : 'battleSpriteReadyRight 1.9s ease-in-out infinite'
     : 'none';
-  const attackAnimation = cueTarget && !isDead
+  const attackAnimation = actionSource && !isDead
     ? side === 'left'
       ? 'battleSpriteStrikeLeft .72s ease-out'
       : 'battleSpriteStrikeRight .72s ease-out'
@@ -428,17 +428,30 @@ function BattleStageAction({ fx, activeCombatant, isMobile, effectKey, originPoi
   const label = fx.label || '';
   const magicTypes = new Set(['magic','healMagic','fire','ice','lightning','poison','shadow','holy','nature','sonic','control','divine']);
   const base = { position:'absolute', inset:0, pointerEvents:'none', zIndex:5, overflow:'hidden' };
+  const projectileFlip = fromLeft ? 'scaleX(1)' : 'scaleX(-1)';
+  const magicIcon = ({
+    fire:'🔥', ice:'❄️', lightning:'⚡', poison:'☠️', shadow:'🌑', holy:'✦',
+    nature:'🌿', sonic:'♪', control:'✧', divine:'⚖️', healMagic:'✚', magic:'✦',
+  })[fx.type] || '✦';
 
   if(fx.type === 'arrow') return (
     <div key={effectKey} style={base}>
-      <div style={{ position:'absolute', left:originX, top:originY, width:isMobile ? 120 : 220, height:5, borderRadius:999, background:'linear-gradient(90deg,transparent,#fde68a,#f59e0b)', boxShadow:'0 0 18px rgba(251,191,36,.95)', "--dx":dx, "--dy":dy, animation:'battleProjectileTravel .72s ease-out forwards' }} />
-      <div style={{ position:'absolute', left:originX, top:originY, color:'#fde68a', fontSize:isMobile ? '1.3rem' : '1.7rem', textShadow:'0 0 14px #f59e0b', "--dx":dx, "--dy":dy, animation:'battleProjectileTravel .72s ease-out forwards' }}>➤</div>
-      <div style={{ position:'absolute', left:targetX, top:targetY, width:70, height:70, transform:'translate(-50%,-50%)', borderRadius:'50%', background:'radial-gradient(circle,rgba(253,230,138,.45),transparent 68%)', animation:'battleMagicImpact .72s ease-out forwards' }} />
+      <div style={{ position:'absolute', left:originX, top:originY, width:isMobile ? 150 : 250, height:8, borderRadius:999, background:'linear-gradient(90deg,transparent,rgba(253,230,138,.18),#fde68a,#f59e0b)', boxShadow:'0 0 18px rgba(251,191,36,.95)', "--dx":dx, "--dy":dy, animation:'battleProjectileTravel .78s ease-out forwards' }} />
+      <div style={{ position:'absolute', left:originX, top:originY, "--dx":dx, "--dy":dy, animation:'battleProjectileTravel .78s ease-out forwards' }}>
+        <div style={{ transform:projectileFlip, color:'#fde68a', fontSize:isMobile ? '2rem' : '2.65rem', lineHeight:1, textShadow:'0 0 14px #f59e0b, 0 0 28px #f97316' }}>➤</div>
+      </div>
+      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 88 : 118, height:isMobile ? 88 : 118, transform:'translate(-50%,-50%)', borderRadius:'50%', background:'radial-gradient(circle,rgba(255,247,237,.72),rgba(253,230,138,.44) 26%,transparent 68%)', boxShadow:'0 0 34px rgba(251,191,36,.7)', animation:'battleArrowImpact .82s ease-out forwards' }} />
+      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 86 : 118, height:2, background:'linear-gradient(90deg,transparent,#fff7ed,transparent)', transform:'translate(-50%,-50%) rotate(-18deg)', animation:'battleShardBurst .82s ease-out forwards' }} />
     </div>
   );
 
   if(fx.type === 'slash' || fx.type === 'hit' || fx.type === 'miss') return (
     <div key={effectKey} style={base}>
+      <div style={{ position:'absolute', left:originX, top:originY, "--dx":dx, "--dy":dy, animation:'battleBladeTravel .62s cubic-bezier(.15,.88,.32,1) forwards' }}>
+        <div style={{ transform:`${projectileFlip} rotate(-32deg)`, transformOrigin:'50% 70%', color:'#f8fafc', fontSize:isMobile ? '2.25rem' : '3.25rem', lineHeight:1, textShadow:'0 0 12px #f8fafc, 0 0 28px #ef4444' }}>🗡️</div>
+      </div>
+      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 112 : 168, height:isMobile ? 112 : 168, transform:'translate(-50%,-50%) rotate(-18deg)', borderRadius:18, background:'linear-gradient(135deg,transparent 25%,#fff7ed 42%,#ef4444 49%,#7f1d1d 56%,transparent 72%)', filter:'drop-shadow(0 0 18px rgba(248,113,113,.98))', animation:'battleSlashImpact .82s ease-out forwards' }} />
+      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 92 : 132, height:isMobile ? 92 : 132, transform:'translate(-50%,-50%) rotate(28deg)', borderRadius:18, background:'linear-gradient(135deg,transparent 34%,rgba(255,255,255,.82) 48%,transparent 60%)', filter:'drop-shadow(0 0 16px rgba(255,247,237,.85))', animation:'battleSlashImpact .72s ease-out .08s forwards' }} />
       <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 90 : 142, height:isMobile ? 90 : 142, transform:'translate(-50%,-50%) rotate(-18deg)', borderRadius:18, background:'linear-gradient(135deg,transparent 28%,#fff7ed 45%,#ef4444 52%,transparent 68%)', filter:'drop-shadow(0 0 16px rgba(248,113,113,.95))', animation:'battleSlashImpact .78s ease-out forwards' }} />
       <div style={{ position:'absolute', left:targetX, top:targetY, transform:'translate(-50%,-50%)', color:'#fecaca', fontFamily:"'Cinzel Decorative',serif", fontSize:isMobile ? '.9rem' : '1.1rem', textShadow:'0 0 14px #ef4444', animation:'battleImpactText .8s ease-out forwards' }}>{fx.type === 'miss' ? 'MISS' : 'SLASH'}</div>
     </div>
@@ -451,9 +464,14 @@ function BattleStageAction({ fx, activeCombatant, isMobile, effectKey, originPoi
     return (
       <div key={effectKey} style={base}>
         {fx.type === 'divine' && <div style={{ position:'absolute', left:'50%', top:0, width:isMobile ? 120 : 180, height:'100%', transform:'translateX(-50%)', background:'linear-gradient(180deg,transparent,rgba(254,243,199,.7),rgba(168,85,247,.22),transparent)', filter:'blur(10px)', animation:'battleDivineColumn .95s ease-out forwards' }} />}
-        <div style={{ position:'absolute', left:originX, top:originY, width:isMobile ? 54 : 76, height:isMobile ? 54 : 76, borderRadius:'50%', background:`radial-gradient(circle,#fff 0%,${auraColor} 24%,${auraColor}88 48%,transparent 72%)`, boxShadow:`0 0 32px ${auraColor}, 0 0 70px ${auraColor}66`, "--dx":dx, "--dy":dy, animation:heal ? 'battleHealBloom .95s ease-out forwards' : 'battleProjectileTravel .88s cubic-bezier(.16,.85,.3,1) forwards' }} />
+        {!heal && [0,1,2].map(i => (
+          <div key={`spark_${i}`} style={{ position:'absolute', left:originX, top:originY, width:isMobile ? 14 : 18, height:isMobile ? 14 : 18, borderRadius:'50%', background:auraColor, boxShadow:`0 0 16px ${auraColor}`, "--dx":dx, "--dy":dy, animation:`battleSparkTrail .82s ease-out ${i * .07}s forwards` }} />
+        ))}
+        <div style={{ position:'absolute', left:originX, top:originY, width:isMobile ? 58 : 84, height:isMobile ? 58 : 84, borderRadius:'50%', display:'grid', placeItems:'center', color:'#fff', fontSize:isMobile ? '1.3rem' : '1.85rem', background:`radial-gradient(circle,#fff 0%,${auraColor} 22%,${auraColor}88 48%,transparent 72%)`, boxShadow:`0 0 32px ${auraColor}, 0 0 70px ${auraColor}66`, textShadow:`0 0 14px ${auraColor}`, "--dx":dx, "--dy":dy, animation:heal ? 'battleHealBloom .95s ease-out forwards' : 'battleProjectileTravel .88s cubic-bezier(.16,.85,.3,1) forwards' }}>
+          {magicIcon}
+        </div>
         {(areaTargetPoints.length > 1 ? areaTargetPoints : [targetPoint]).map((pt, idx) => (
-          <div key={`${idx}_${pt?.x}_${pt?.y}`} style={{ position:'absolute', left:`${pt?.x ?? 50}%`, top:`${pt?.y ?? 47}%`, width:isMobile ? 138 : 210, height:isMobile ? 138 : 210, transform:'translate(-50%,-50%)', borderRadius:'50%', background:`radial-gradient(circle,${auraColor}66,${auraColor}24 35%,transparent 68%)`, boxShadow:`inset 0 0 28px ${auraColor}55, 0 0 42px ${auraColor}66`, animation:`battleMagicImpact .95s ease-out ${idx * 0.08}s forwards` }} />
+          <div key={`${idx}_${pt?.x}_${pt?.y}`} style={{ position:'absolute', left:`${pt?.x ?? 50}%`, top:`${pt?.y ?? 47}%`, width:isMobile ? 146 : 224, height:isMobile ? 146 : 224, transform:'translate(-50%,-50%)', borderRadius:'50%', background:`radial-gradient(circle,#ffffff88 0%,${auraColor}66 18%,${auraColor}24 42%,transparent 70%)`, boxShadow:`inset 0 0 34px ${auraColor}66, 0 0 52px ${auraColor}88`, animation:`battleMagicImpact .95s ease-out ${idx * 0.08}s forwards` }} />
         ))}
         {label && <div style={{ position:'absolute', left:targetX, top:isMobile ? '28%' : '25%', transform:'translateX(-50%)', color:fx.type === 'divine' ? '#fef3c7' : auraColor, fontFamily:"'Cinzel Decorative',serif", fontWeight:900, fontSize:isMobile ? '.82rem' : '1rem', letterSpacing:'.1em', textTransform:'uppercase', textShadow:`0 0 18px ${auraColor}`, whiteSpace:'nowrap', animation:'battleImpactText .95s ease-out forwards' }}>{label}</div>}
       </div>
@@ -503,6 +521,7 @@ function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, is
           isMobile={isMobile}
           imgSrc={images[c.id] || ''}
           cueTarget={cueTargetId === c.id || targetIds.has(c.id)}
+          actionSource={combatants[activeIdx]?.id === c.id && !!actionFx}
         />
       )) : (
         <div style={{ textAlign:'center', color:'#4b5563', fontSize:'0.8rem', padding:'1rem' }}>
@@ -636,7 +655,11 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {}, 
         @keyframes battleTravelLeftToRight { 0%{transform:translate(-10%,-50%) scale(.75);opacity:0} 18%{opacity:1} 78%{opacity:1} 100%{transform:translate(210%,-50%) scale(1.08);opacity:0} }
         @keyframes battleTravelRightToLeft { 0%{transform:translate(10%,-50%) scale(.75) rotate(180deg);opacity:0} 18%{opacity:1} 78%{opacity:1} 100%{transform:translate(-210%,-50%) scale(1.08) rotate(180deg);opacity:0} }
         @keyframes battleProjectileTravel { 0%{transform:translate(-50%,-50%) scale(.72);opacity:0} 18%{opacity:1} 78%{opacity:1} 100%{transform:translate(calc(var(--dx) - 50%),calc(var(--dy) - 50%)) scale(1.08);opacity:0} }
+        @keyframes battleBladeTravel { 0%{transform:translate(-50%,-50%) scale(.58);opacity:0} 18%{opacity:1} 68%{opacity:1} 100%{transform:translate(calc(var(--dx) - 50%),calc(var(--dy) - 50%)) scale(1.18);opacity:0} }
+        @keyframes battleSparkTrail { 0%{transform:translate(-50%,-50%) scale(.45);opacity:0} 18%{opacity:.9} 100%{transform:translate(calc(var(--dx) - 50%),calc(var(--dy) - 50%)) scale(.1);opacity:0} }
         @keyframes battleSlashImpact { 0%{opacity:0;clip-path:inset(50% 50% 50% 50%);filter:blur(6px)} 28%{opacity:1;clip-path:inset(0 0 0 0);filter:blur(0)} 100%{opacity:0;clip-path:inset(0 0 0 0);filter:blur(5px);transform:translate(-50%,-50%) rotate(18deg) scale(1.2)} }
+        @keyframes battleArrowImpact { 0%{opacity:0;transform:translate(-50%,-50%) scale(.35)} 28%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.55)} }
+        @keyframes battleShardBurst { 0%{opacity:0;transform:translate(-50%,-50%) rotate(-18deg) scaleX(.2)} 24%{opacity:1} 100%{opacity:0;transform:translate(-50%,-50%) rotate(-18deg) scaleX(1.55)} }
         @keyframes battleMagicImpact { 0%{opacity:0;transform:translate(-50%,-50%) scale(.25)} 28%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.45)} }
         @keyframes battleHealBloom { 0%{opacity:0;transform:translate(-50%,-50%) scale(.5)} 35%{opacity:1;transform:translate(-50%,-50%) scale(1.2)} 100%{opacity:0;transform:translate(-50%,-82%) scale(1.55)} }
         @keyframes battleDivineColumn { 0%{opacity:0;transform:translateX(-50%) scaleY(.35)} 30%{opacity:1;transform:translateX(-50%) scaleY(1)} 100%{opacity:0;transform:translateX(-50%) scaleY(1.18)} }
