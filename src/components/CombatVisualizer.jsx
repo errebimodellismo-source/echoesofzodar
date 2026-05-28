@@ -433,47 +433,56 @@ function BattleStageAction({ fx, activeCombatant, isMobile, effectKey, originPoi
     fire:'🔥', ice:'❄️', lightning:'⚡', poison:'☠️', shadow:'🌑', holy:'✦',
     nature:'🌿', sonic:'♪', control:'✧', divine:'⚖️', healMagic:'✚', magic:'✦',
   })[fx.type] || '✦';
+  const chargeSize = isMobile ? 92 : 126;
+  const chargeFx = (
+    <>
+      <div style={{ position:'absolute', left:originX, top:originY, width:chargeSize, height:chargeSize, transform:'translate(-50%,-50%)', borderRadius:'50%', border:`2px solid ${color}`, boxShadow:`0 0 22px ${color}88, inset 0 0 24px ${color}44`, opacity:0, animation:'battleActionCharge .36s ease-out both' }} />
+      <div style={{ position:'absolute', left:originX, top:originY, width:chargeSize * 0.55, height:chargeSize * 0.55, transform:'translate(-50%,-50%)', borderRadius:'50%', background:`radial-gradient(circle,#fff8,${color}66 38%,transparent 70%)`, filter:'blur(1px)', opacity:0, animation:'battleActionChargeCore .36s ease-out both' }} />
+    </>
+  );
 
   if(fx.type === 'arrow') return (
     <div key={effectKey} style={base}>
-      <div style={{ position:'absolute', left:originX, top:originY, width:isMobile ? 150 : 250, height:8, borderRadius:999, background:'linear-gradient(90deg,transparent,rgba(253,230,138,.18),#fde68a,#f59e0b)', boxShadow:'0 0 18px rgba(251,191,36,.95)', "--dx":dx, "--dy":dy, animation:'battleProjectileTravel .78s ease-out forwards' }} />
-      <div style={{ position:'absolute', left:originX, top:originY, "--dx":dx, "--dy":dy, animation:'battleProjectileTravel .78s ease-out forwards' }}>
+      {chargeFx}
+      <div style={{ position:'absolute', left:originX, top:originY, width:isMobile ? 150 : 250, height:8, borderRadius:999, background:'linear-gradient(90deg,transparent,rgba(253,230,138,.18),#fde68a,#f59e0b)', boxShadow:'0 0 18px rgba(251,191,36,.95)', "--dx":dx, "--dy":dy, opacity:0, animation:'battleProjectileTravel .78s ease-out .32s both' }} />
+      <div style={{ position:'absolute', left:originX, top:originY, "--dx":dx, "--dy":dy, opacity:0, animation:'battleProjectileTravel .78s ease-out .32s both' }}>
         <div style={{ transform:projectileFlip, color:'#fde68a', fontSize:isMobile ? '2rem' : '2.65rem', lineHeight:1, textShadow:'0 0 14px #f59e0b, 0 0 28px #f97316' }}>➤</div>
       </div>
-      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 88 : 118, height:isMobile ? 88 : 118, transform:'translate(-50%,-50%)', borderRadius:'50%', background:'radial-gradient(circle,rgba(255,247,237,.72),rgba(253,230,138,.44) 26%,transparent 68%)', boxShadow:'0 0 34px rgba(251,191,36,.7)', animation:'battleArrowImpact .82s ease-out forwards' }} />
-      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 86 : 118, height:2, background:'linear-gradient(90deg,transparent,#fff7ed,transparent)', transform:'translate(-50%,-50%) rotate(-18deg)', animation:'battleShardBurst .82s ease-out forwards' }} />
+      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 88 : 118, height:isMobile ? 88 : 118, transform:'translate(-50%,-50%)', borderRadius:'50%', background:'radial-gradient(circle,rgba(255,247,237,.72),rgba(253,230,138,.44) 26%,transparent 68%)', boxShadow:'0 0 34px rgba(251,191,36,.7)', opacity:0, animation:'battleArrowImpact .82s ease-out .9s both' }} />
+      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 86 : 118, height:2, background:'linear-gradient(90deg,transparent,#fff7ed,transparent)', transform:'translate(-50%,-50%) rotate(-18deg)', opacity:0, animation:'battleShardBurst .82s ease-out .9s both' }} />
     </div>
   );
 
   if(fx.type === 'slash' || fx.type === 'hit' || fx.type === 'miss') return (
     <div key={effectKey} style={base}>
-      <div style={{ position:'absolute', left:originX, top:originY, "--dx":dx, "--dy":dy, animation:'battleBladeTravel .62s cubic-bezier(.15,.88,.32,1) forwards' }}>
+      {chargeFx}
+      <div style={{ position:'absolute', left:originX, top:originY, "--dx":dx, "--dy":dy, opacity:0, animation:'battleBladeTravel .62s cubic-bezier(.15,.88,.32,1) .28s both' }}>
         <div style={{ transform:`${projectileFlip} rotate(-32deg)`, transformOrigin:'50% 70%', color:'#f8fafc', fontSize:isMobile ? '2.25rem' : '3.25rem', lineHeight:1, textShadow:'0 0 12px #f8fafc, 0 0 28px #ef4444' }}>🗡️</div>
       </div>
-      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 112 : 168, height:isMobile ? 112 : 168, transform:'translate(-50%,-50%) rotate(-18deg)', borderRadius:18, background:'linear-gradient(135deg,transparent 25%,#fff7ed 42%,#ef4444 49%,#7f1d1d 56%,transparent 72%)', filter:'drop-shadow(0 0 18px rgba(248,113,113,.98))', animation:'battleSlashImpact .82s ease-out forwards' }} />
-      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 92 : 132, height:isMobile ? 92 : 132, transform:'translate(-50%,-50%) rotate(28deg)', borderRadius:18, background:'linear-gradient(135deg,transparent 34%,rgba(255,255,255,.82) 48%,transparent 60%)', filter:'drop-shadow(0 0 16px rgba(255,247,237,.85))', animation:'battleSlashImpact .72s ease-out .08s forwards' }} />
-      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 90 : 142, height:isMobile ? 90 : 142, transform:'translate(-50%,-50%) rotate(-18deg)', borderRadius:18, background:'linear-gradient(135deg,transparent 28%,#fff7ed 45%,#ef4444 52%,transparent 68%)', filter:'drop-shadow(0 0 16px rgba(248,113,113,.95))', animation:'battleSlashImpact .78s ease-out forwards' }} />
-      <div style={{ position:'absolute', left:targetX, top:targetY, transform:'translate(-50%,-50%)', color:'#fecaca', fontFamily:"'Cinzel Decorative',serif", fontSize:isMobile ? '.9rem' : '1.1rem', textShadow:'0 0 14px #ef4444', animation:'battleImpactText .8s ease-out forwards' }}>{fx.type === 'miss' ? 'MISS' : 'SLASH'}</div>
+      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 112 : 168, height:isMobile ? 112 : 168, transform:'translate(-50%,-50%) rotate(-18deg)', borderRadius:18, background:'linear-gradient(135deg,transparent 25%,#fff7ed 42%,#ef4444 49%,#7f1d1d 56%,transparent 72%)', filter:'drop-shadow(0 0 18px rgba(248,113,113,.98))', opacity:0, animation:'battleSlashImpact .82s ease-out .78s both' }} />
+      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 92 : 132, height:isMobile ? 92 : 132, transform:'translate(-50%,-50%) rotate(28deg)', borderRadius:18, background:'linear-gradient(135deg,transparent 34%,rgba(255,255,255,.82) 48%,transparent 60%)', filter:'drop-shadow(0 0 16px rgba(255,247,237,.85))', opacity:0, animation:'battleSlashImpact .72s ease-out .88s both' }} />
+      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 90 : 142, height:isMobile ? 90 : 142, transform:'translate(-50%,-50%) rotate(-18deg)', borderRadius:18, background:'linear-gradient(135deg,transparent 28%,#fff7ed 45%,#ef4444 52%,transparent 68%)', filter:'drop-shadow(0 0 16px rgba(248,113,113,.95))', opacity:0, animation:'battleSlashImpact .78s ease-out .84s both' }} />
+      <div style={{ position:'absolute', left:targetX, top:targetY, transform:'translate(-50%,-50%)', color:'#fecaca', fontFamily:"'Cinzel Decorative',serif", fontSize:isMobile ? '.9rem' : '1.1rem', textShadow:'0 0 14px #ef4444', opacity:0, animation:'battleImpactText .8s ease-out .82s both' }}>{fx.type === 'miss' ? 'MISS' : 'SLASH'}</div>
     </div>
   );
 
   if(magicTypes.has(fx.type)) {
     const heal = fx.type === 'healMagic';
-    const endX = heal ? originX : targetX;
     const auraColor = heal ? '#34d399' : color;
     return (
       <div key={effectKey} style={base}>
-        {fx.type === 'divine' && <div style={{ position:'absolute', left:'50%', top:0, width:isMobile ? 120 : 180, height:'100%', transform:'translateX(-50%)', background:'linear-gradient(180deg,transparent,rgba(254,243,199,.7),rgba(168,85,247,.22),transparent)', filter:'blur(10px)', animation:'battleDivineColumn .95s ease-out forwards' }} />}
+        {chargeFx}
+        {fx.type === 'divine' && <div style={{ position:'absolute', left:'50%', top:0, width:isMobile ? 120 : 180, height:'100%', transform:'translateX(-50%)', background:'linear-gradient(180deg,transparent,rgba(254,243,199,.7),rgba(168,85,247,.22),transparent)', filter:'blur(10px)', opacity:0, animation:'battleDivineColumn .95s ease-out .34s both' }} />}
         {!heal && [0,1,2].map(i => (
-          <div key={`spark_${i}`} style={{ position:'absolute', left:originX, top:originY, width:isMobile ? 14 : 18, height:isMobile ? 14 : 18, borderRadius:'50%', background:auraColor, boxShadow:`0 0 16px ${auraColor}`, "--dx":dx, "--dy":dy, animation:`battleSparkTrail .82s ease-out ${i * .07}s forwards` }} />
+          <div key={`spark_${i}`} style={{ position:'absolute', left:originX, top:originY, width:isMobile ? 14 : 18, height:isMobile ? 14 : 18, borderRadius:'50%', background:auraColor, boxShadow:`0 0 16px ${auraColor}`, "--dx":dx, "--dy":dy, opacity:0, animation:`battleSparkTrail .82s ease-out ${0.3 + i * .07}s both` }} />
         ))}
-        <div style={{ position:'absolute', left:originX, top:originY, width:isMobile ? 58 : 84, height:isMobile ? 58 : 84, borderRadius:'50%', display:'grid', placeItems:'center', color:'#fff', fontSize:isMobile ? '1.3rem' : '1.85rem', background:`radial-gradient(circle,#fff 0%,${auraColor} 22%,${auraColor}88 48%,transparent 72%)`, boxShadow:`0 0 32px ${auraColor}, 0 0 70px ${auraColor}66`, textShadow:`0 0 14px ${auraColor}`, "--dx":dx, "--dy":dy, animation:heal ? 'battleHealBloom .95s ease-out forwards' : 'battleProjectileTravel .88s cubic-bezier(.16,.85,.3,1) forwards' }}>
+        <div style={{ position:'absolute', left:originX, top:originY, width:isMobile ? 58 : 84, height:isMobile ? 58 : 84, borderRadius:'50%', display:'grid', placeItems:'center', color:'#fff', fontSize:isMobile ? '1.3rem' : '1.85rem', background:`radial-gradient(circle,#fff 0%,${auraColor} 22%,${auraColor}88 48%,transparent 72%)`, boxShadow:`0 0 32px ${auraColor}, 0 0 70px ${auraColor}66`, textShadow:`0 0 14px ${auraColor}`, "--dx":dx, "--dy":dy, opacity:0, animation:heal ? 'battleHealBloom .95s ease-out .32s both' : 'battleProjectileTravel .88s cubic-bezier(.16,.85,.3,1) .32s both' }}>
           {magicIcon}
         </div>
         {(areaTargetPoints.length > 1 ? areaTargetPoints : [targetPoint]).map((pt, idx) => (
-          <div key={`${idx}_${pt?.x}_${pt?.y}`} style={{ position:'absolute', left:`${pt?.x ?? 50}%`, top:`${pt?.y ?? 47}%`, width:isMobile ? 146 : 224, height:isMobile ? 146 : 224, transform:'translate(-50%,-50%)', borderRadius:'50%', background:`radial-gradient(circle,#ffffff88 0%,${auraColor}66 18%,${auraColor}24 42%,transparent 70%)`, boxShadow:`inset 0 0 34px ${auraColor}66, 0 0 52px ${auraColor}88`, animation:`battleMagicImpact .95s ease-out ${idx * 0.08}s forwards` }} />
+          <div key={`${idx}_${pt?.x}_${pt?.y}`} style={{ position:'absolute', left:`${pt?.x ?? 50}%`, top:`${pt?.y ?? 47}%`, width:isMobile ? 146 : 224, height:isMobile ? 146 : 224, transform:'translate(-50%,-50%)', borderRadius:'50%', background:`radial-gradient(circle,#ffffff88 0%,${auraColor}66 18%,${auraColor}24 42%,transparent 70%)`, boxShadow:`inset 0 0 34px ${auraColor}66, 0 0 52px ${auraColor}88`, opacity:0, animation:`battleMagicImpact .95s ease-out ${0.86 + idx * 0.08}s both` }} />
         ))}
-        {label && <div style={{ position:'absolute', left:targetX, top:isMobile ? '28%' : '25%', transform:'translateX(-50%)', color:fx.type === 'divine' ? '#fef3c7' : auraColor, fontFamily:"'Cinzel Decorative',serif", fontWeight:900, fontSize:isMobile ? '.82rem' : '1rem', letterSpacing:'.1em', textTransform:'uppercase', textShadow:`0 0 18px ${auraColor}`, whiteSpace:'nowrap', animation:'battleImpactText .95s ease-out forwards' }}>{label}</div>}
+        {label && <div style={{ position:'absolute', left:targetX, top:isMobile ? '28%' : '25%', transform:'translateX(-50%)', color:fx.type === 'divine' ? '#fef3c7' : auraColor, fontFamily:"'Cinzel Decorative',serif", fontWeight:900, fontSize:isMobile ? '.82rem' : '1rem', letterSpacing:'.1em', textTransform:'uppercase', textShadow:`0 0 18px ${auraColor}`, whiteSpace:'nowrap', opacity:0, animation:'battleImpactText .95s ease-out .9s both' }}>{label}</div>}
       </div>
     );
   }
@@ -652,6 +661,8 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {}, 
         @keyframes battleSpriteStrikeRight { 0%{transform:translateX(0) scale(1)} 28%{transform:translateX(-28px) scale(1.04)} 52%{transform:translateX(4px) scale(.99)} 100%{transform:translateX(0) scale(1)} }
         @keyframes battleSpriteWound { 0%,100%{opacity:.1} 50%{opacity:.36} }
         @keyframes battleCenterPulse { 0%,100%{opacity:.45;transform:translate(-50%,-50%) scale(.92)} 50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)} }
+        @keyframes battleActionCharge { 0%{opacity:0;transform:translate(-50%,-50%) scale(.38)} 42%{opacity:1;transform:translate(-50%,-50%) scale(.78)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)} }
+        @keyframes battleActionChargeCore { 0%{opacity:0;transform:translate(-50%,-50%) scale(.25);filter:blur(7px)} 46%{opacity:1;transform:translate(-50%,-50%) scale(.9);filter:blur(1px)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.28);filter:blur(5px)} }
         @keyframes battleTravelLeftToRight { 0%{transform:translate(-10%,-50%) scale(.75);opacity:0} 18%{opacity:1} 78%{opacity:1} 100%{transform:translate(210%,-50%) scale(1.08);opacity:0} }
         @keyframes battleTravelRightToLeft { 0%{transform:translate(10%,-50%) scale(.75) rotate(180deg);opacity:0} 18%{opacity:1} 78%{opacity:1} 100%{transform:translate(-210%,-50%) scale(1.08) rotate(180deg);opacity:0} }
         @keyframes battleProjectileTravel { 0%{transform:translate(-50%,-50%) scale(.72);opacity:0} 18%{opacity:1} 78%{opacity:1} 100%{transform:translate(calc(var(--dx) - 50%),calc(var(--dy) - 50%)) scale(1.08);opacity:0} }
