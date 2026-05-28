@@ -1764,27 +1764,71 @@ const PREMIUM_PRODUCTS = [
 ];
 const CARD_PACK_DEFS = [
   {
-    id:"pack_zodar",
-    name:"Pacchetto di Zodar",
-    subtitle:"5 carte - 1 Rara garantita",
+    id:"pack_recruit",
+    name:"Mazzo della Recluta",
+    subtitle:"5 carte - solo Comuni e Non Comuni",
     accent:"#a78bfa",
     art:"/assets/cards/packs/pack-zodar.png",
-    price:350,
-    sealPrice:80,
+    price:140,
+    sealPrice:30,
     slots:5,
-    guaranteed:"rare",
-    rates:{ common:52, uncommon:27, rare:14, epic:5.5, legendary:1.3, mythic:0.2 },
+    guaranteed:"common",
+    rates:{ common:82, uncommon:18 },
   },
   {
-    id:"pack_eclipse",
-    name:"Reliquiario dell'Eclissi",
-    subtitle:"5 carte - alte rarita piu vive",
-    accent:"#fbbf24",
-    price:950,
-    sealPrice:190,
+    id:"pack_vanguard",
+    name:"Mazzo dell'Avanguardia",
+    subtitle:"5 carte - Non Comune garantita",
+    accent:"#34d399",
+    price:360,
+    sealPrice:75,
+    slots:5,
+    guaranteed:"uncommon",
+    rates:{ common:52, uncommon:43, rare:5 },
+  },
+  {
+    id:"pack_oath",
+    name:"Mazzo del Giuramento",
+    subtitle:"5 carte - Rara garantita",
+    accent:"#60a5fa",
+    price:900,
+    sealPrice:165,
+    slots:5,
+    guaranteed:"rare",
+    rates:{ common:24, uncommon:46, rare:25, epic:4.8, legendary:0.2 },
+  },
+  {
+    id:"pack_epic",
+    name:"Mazzo dell'Epopea",
+    subtitle:"5 carte - Epica garantita",
+    accent:"#a78bfa",
+    rewardOnly:true,
+    acquisition:"Ricompensa: dungeon difficili e storie lunghe",
     slots:5,
     guaranteed:"epic",
-    rates:{ common:36, uncommon:29, rare:22, epic:9.5, legendary:3, mythic:0.5 },
+    rates:{ uncommon:28, rare:48, epic:21, legendary:2.8, mythic:0.2 },
+  },
+  {
+    id:"pack_legendary",
+    name:"Mazzo della Leggenda",
+    subtitle:"5 carte - Leggendaria garantita",
+    accent:"#fbbf24",
+    rewardOnly:true,
+    acquisition:"Ricompensa: dungeon epici, eventi e boss lunghi",
+    slots:5,
+    guaranteed:"legendary",
+    rates:{ rare:45, epic:38, legendary:15, mythic:2 },
+  },
+  {
+    id:"pack_mythic",
+    name:"Mazzo del Mito",
+    subtitle:"6 carte - Mitica garantita",
+    accent:"#fb7185",
+    rewardOnly:true,
+    acquisition:"Ricompensa: eventi mensili, campagne leggendarie e imprese uniche",
+    slots:6,
+    guaranteed:"mythic",
+    rates:{ epic:52, legendary:38, mythic:10 },
   },
 ];
 const CARD_COSMETICS = [
@@ -1866,7 +1910,7 @@ function parseCardPackGrant(msg) {
 }
 function defaultCardVault() {
   return {
-    packs:{ pack_zodar:3, pack_eclipse:1 },
+    packs:{ pack_recruit:3, pack_vanguard:1, pack_oath:1 },
     cards:[],
     activeTitle:null,
     fragments:0,
@@ -1878,10 +1922,15 @@ function defaultCardVault() {
 function getStoredCardVault(playerId) {
   if(!playerId) return defaultCardVault();
   const stored = lsGet(cardVaultKey(playerId), null);
+  const migratedPacks = {
+    ...(stored?.packs || {}),
+    ...((stored?.packs?.pack_zodar || 0) > 0 ? { pack_recruit:(stored?.packs?.pack_recruit || 0) + stored.packs.pack_zodar } : {}),
+    ...((stored?.packs?.pack_eclipse || 0) > 0 ? { pack_epic:(stored?.packs?.pack_epic || 0) + stored.packs.pack_eclipse } : {}),
+  };
   return {
     ...defaultCardVault(),
     ...(stored || {}),
-    packs:{ ...defaultCardVault().packs, ...(stored?.packs || {}) },
+    packs:{ ...defaultCardVault().packs, ...migratedPacks },
     pity:{ ...defaultCardVault().pity, ...(stored?.pity || {}) },
     cards:Array.isArray(stored?.cards) ? stored.cards : [],
     premiumBalance:Math.max(0, Number(stored?.premiumBalance) || 0),
@@ -10436,8 +10485,8 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
           const qty = vault?.packs?.[pack.id] || 0;
           const price = pack.price || 0;
           const sealPrice = pack.sealPrice || 0;
-          const canBuy = !!me?.id && (me?.gold || 0) >= price;
-          const canBuyPremium = (vault?.premiumBalance || 0) >= sealPrice;
+          const canBuy = !pack.rewardOnly && price > 0 && !!me?.id && (me?.gold || 0) >= price;
+          const canBuyPremium = !pack.rewardOnly && sealPrice > 0 && (vault?.premiumBalance || 0) >= sealPrice;
           return (
             <div key={pack.id} style={{ background:"rgba(15,23,42,0.78)", border:`1px solid ${pack.accent}55`, borderRadius:8, padding:"1rem", boxShadow:"0 14px 34px rgba(0,0,0,0.25)" }}>
               <div style={{ minHeight:196, borderRadius:8, background:`radial-gradient(circle at 50% 18%, ${pack.accent}33, transparent 58%), linear-gradient(160deg,rgba(15,23,42,0.78),rgba(5,8,18,0.98))`, border:`1px solid ${pack.accent}55`, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"0.8rem", overflow:"hidden" }}>
@@ -10445,6 +10494,7 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
               </div>
               <div style={{ fontFamily:"'Cinzel',serif", color:"#e2e8f0", fontWeight:700 }}>{pack.name}</div>
               <div style={{ color:"#94a3b8", fontSize:"0.78rem", marginTop:3 }}>{pack.subtitle}</div>
+              {pack.acquisition && <div style={{ color:"#fbbf24", fontSize:"0.7rem", marginTop:5, lineHeight:1.35 }}>{pack.acquisition}</div>}
               <div style={{ display:"flex", gap:6, flexWrap:"wrap", margin:"0.8rem 0" }}>
                 {Object.entries(pack.rates).map(([rarity, pct]) => (
                   <span key={rarity} style={{ color:CARD_RARITY_COLOR[rarity], border:`1px solid ${CARD_RARITY_COLOR[rarity]}44`, borderRadius:999, padding:"1px 7px", fontSize:"0.62rem" }}>{cardRarityLabel(rarity)} {pct}%</span>
@@ -10472,8 +10522,14 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
               </div>
               <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
                 <span style={{ color:"#fbbf24", fontWeight:700, fontSize:"0.86rem", flex:"1 1 110px" }}>Posseduti: {qty}</span>
-                <SmallBtn onClick={()=>onBuyPack(pack)} disabled={!canBuy || busy}>{canBuy ? `Compra ${price}` : `💰 ${price}`}</SmallBtn>
-                <SmallBtn onClick={()=>onBuyPackWithPremium?.(pack)} disabled={!sealPrice || !canBuyPremium || busy}>{sealPrice ? `${PREMIUM_CURRENCY.icon} ${sealPrice}` : "N/D"}</SmallBtn>
+                {pack.rewardOnly ? (
+                  <span style={{ color:"#94a3b8", border:"1px solid rgba(148,163,184,0.24)", borderRadius:6, padding:"0.42rem 0.7rem", fontSize:"0.7rem", fontWeight:800 }}>Solo ricompensa</span>
+                ) : (
+                  <>
+                    <SmallBtn onClick={()=>onBuyPack(pack)} disabled={!canBuy || busy}>{canBuy ? `Compra ${price}` : `💰 ${price}`}</SmallBtn>
+                    <SmallBtn onClick={()=>onBuyPackWithPremium?.(pack)} disabled={!sealPrice || !canBuyPremium || busy}>{sealPrice ? `${PREMIUM_CURRENCY.icon} ${sealPrice}` : "N/D"}</SmallBtn>
+                  </>
+                )}
                 <BigBtn onClick={()=>openPack(pack)} gold disabled={!qty || busy}>Apri</BigBtn>
               </div>
             </div>
@@ -10832,7 +10888,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       ...cardVault,
       packs:{
         ...(cardVault.packs || {}),
-        pack_zodar:(cardVault.packs?.pack_zodar || 0) + 1,
+        pack_recruit:(cardVault.packs?.pack_recruit || 0) + 1,
       },
     };
     persistCardVault(nextVault);
@@ -10841,6 +10897,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   async function handleBuyCardPack(pack) {
     if(!pack || !me?.id) return;
     const price = pack.price || 0;
+    if(pack.rewardOnly || price <= 0) { window.alert("Questo mazzo si ottiene come ricompensa, non dal negozio."); return; }
     if((me.gold || 0) < price) { window.alert("Non hai abbastanza oro."); return; }
     if(!window.confirm(`Acquistare ${pack.name} per ${price} oro?`)) return;
     const updatedPlayer = { ...me, gold:(me.gold || 0) - price };
@@ -10861,6 +10918,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   async function handleBuyCardPackWithPremium(pack) {
     if(!pack || !me?.id) return;
     const price = pack.sealPrice || 0;
+    if(pack.rewardOnly || price <= 0) { window.alert("Questo mazzo si ottiene come ricompensa, non dal negozio."); return; }
     if(price <= 0) return;
     if((cardVault.premiumBalance || 0) < price) { window.alert(`Non hai abbastanza ${PREMIUM_CURRENCY.shortName}.`); return; }
     if(!window.confirm(`Acquistare ${pack.name} per ${price} ${PREMIUM_CURRENCY.shortName}?`)) return;

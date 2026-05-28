@@ -12,6 +12,21 @@ Il sistema carte deve essere un extra collezionabile e godibile, non un muro pay
 - In futuro possono esistere monete speciali acquistabili con euro, usabili per comprare pacchetti o accelerare leggermente il progresso.
 - Lo sbustamento deve essere visibile, lento quanto basta, piacevole e con momento speciale per leggendarie e mitiche.
 
+Scala mazzi prototipo:
+
+- Mazzo della Recluta: comuni e non comuni, comprabile con oro o Sigilli.
+- Mazzo dell'Avanguardia: non comune garantita, piccola possibilita di raro, comprabile con oro o Sigilli.
+- Mazzo del Giuramento: rara garantita, piccola possibilita di epico/leggendario, comprabile con oro o Sigilli.
+- Mazzo dell'Epopea: epica garantita, solo ricompensa da dungeon difficili e storie lunghe.
+- Mazzo della Leggenda: leggendaria garantita, solo ricompensa da dungeon epici, eventi e boss lunghi.
+- Mazzo del Mito: mitica garantita, solo ricompensa da eventi mensili, campagne leggendarie e imprese uniche.
+
+Regola economica:
+
+- I primi tre mazzi devono essere acquistabili anche farmando missioni, cosi chi non spende puo comunque avanzare.
+- I tre mazzi alti devono essere ottenibili giocando contenuti importanti, non solo pagando.
+- Questo mantiene la possibilita di arrivare al top senza spendere soldi reali.
+
 ## Negozio e Pacchetti
 
 - Il negozio normale resta dedicato agli equip comuni, non comuni e rari.
@@ -148,6 +163,8 @@ Gia implementato:
 - Acquisto pacchetti con gold dalla tab Pacchetti.
 - Shop test dei Sigilli di Zodar con pacchetti valuta finti.
 - Acquisto pacchetti con Sigilli di Zodar.
+- Scala da 6 mazzi: comune/non comune, non comune, raro, epico, leggendario, mitico.
+- Mazzi epici/leggendari/mitici marcati come solo ricompensa.
 - Ledger locale delle transazioni premium test.
 - Carte alleato generate nei 6 gradi di rarita.
 - Evocazione prototipo degli alleati in battaglia dalla collezione carte.
