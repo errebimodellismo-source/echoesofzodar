@@ -1796,12 +1796,12 @@ const CARD_COSMETICS = [
   { id:"back_reliquary", name:"Retro Reliquiario", type:"cardback", rarity:"rare", exclusive:true, description:"Retro carta esclusivo dei pacchetti." },
 ];
 const CARD_ALLY_RARITY_CONFIG = {
-  common:{ count:42, hp:18, atk:4, def:1, mag:0, init:2, dmgDie:"1d6" },
-  uncommon:{ count:34, hp:26, atk:6, def:2, mag:1, init:3, dmgDie:"1d8" },
-  rare:{ count:26, hp:36, atk:8, def:4, mag:2, init:4, dmgDie:"1d10" },
-  epic:{ count:18, hp:50, atk:11, def:6, mag:4, init:5, dmgDie:"2d8" },
-  legendary:{ count:10, hp:68, atk:15, def:8, mag:6, init:6, dmgDie:"2d10" },
-  mythic:{ count:6, hp:90, atk:19, def:11, mag:9, init:8, dmgDie:"3d10" },
+  common:{ count:80, hp:18, atk:4, def:1, mag:0, init:2, dmgDie:"1d6", roleHint:"soldati, mercenari, apprendisti, bestie semplici", power:"utili ma sacrificabili" },
+  uncommon:{ count:50, hp:28, atk:6, def:3, mag:1, init:3, dmgDie:"1d8", roleHint:"specialisti, guardie esperte, chierici minori", power:"buoni supporti" },
+  rare:{ count:35, hp:42, atk:9, def:5, mag:3, init:4, dmgDie:"1d12", roleHint:"veterani, maghi, assassini, cavalieri", power:"forti davvero" },
+  epic:{ count:20, hp:60, atk:13, def:7, mag:5, init:5, dmgDie:"2d8", roleHint:"campioni, mostri intelligenti, eroi decaduti", power:"cambiano una battaglia" },
+  legendary:{ count:12, hp:82, atk:17, def:10, mag:7, init:7, dmgDie:"2d12", roleHint:"grandi eroi, draghi minori, entita antiche", power:"quasi boss alleati" },
+  mythic:{ count:3, hp:120, atk:24, def:14, mag:11, init:10, dmgDie:"4d10", roleHint:"personaggi unici del mondo di Zodar", power:"devastanti, rarissimi" },
 };
 const ALLY_NAME_PARTS = {
   first:["Arian","Mira","Thane","Seren","Kael","Lys","Dorian","Nyra","Borin","Elara","Varek","Ilyon","Maera","Rurik","Selka","Tavian","Orin","Velia"],
@@ -1829,7 +1829,9 @@ function buildCardAllies() {
         mag:cfg.mag,
         init:cfg.init + (i % 3),
         dmgDie:cfg.dmgDie,
-        description:`${role} richiamabile in battaglia tramite carta alleato. Se cade, il legame si spezza.`,
+        roleHint:cfg.roleHint,
+        power:cfg.power,
+        description:`${role} richiamabile in battaglia tramite carta alleato. ${cfg.power}. Se cade, il legame si spezza.`,
       });
     }
   }
@@ -1961,8 +1963,9 @@ function allyToLootCard(ally) {
     effectLines:[
       `Alleato evocabile: ${ally.role}`,
       `Entra in battaglia con ${ally.hp} HP`,
+      ally.power ? `Potenza: ${ally.power}` : "",
       `Quando viene usato, lascia la collezione del prototipo.`,
-    ],
+    ].filter(Boolean),
     stats:[`❤️ ${ally.hp}`, `⚔️ ${ally.atk}`, `🛡️ ${ally.def}`, `🎲 ${ally.dmgDie}`],
     acquiredAt:new Date().toISOString(),
   };

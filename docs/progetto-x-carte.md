@@ -86,7 +86,14 @@ Idea: alcuni pacchetti possono contenere NPC collezionabili da usare in battagli
 Regole prototipo:
 
 - Gli alleati sono divisi nei 6 gradi di rarita.
-- Il prototipo genera un catalogo iniziale di oltre 100 alleati.
+- Il prototipo genera un catalogo iniziale di 200 alleati.
+- Distribuzione alleati: 80 comuni, 50 non comuni, 35 rari, 20 epici, 12 leggendari, 3 mitici.
+- Comuni: soldati, mercenari, apprendisti, bestie semplici; utili ma sacrificabili.
+- Non comuni: specialisti, guardie esperte, chierici minori; buoni supporti.
+- Rari: veterani, maghi, assassini, cavalieri; forti davvero.
+- Epici: campioni, mostri intelligenti, eroi decaduti; cambiano una battaglia.
+- Leggendari: grandi eroi, draghi minori, entita antiche; quasi boss alleati.
+- Mitici: personaggi unici del mondo di Zodar; devastanti e rarissimi.
 - Le carte alleato possono uscire dai pacchetti.
 - Dalla tab Carte si possono evocare solo durante un combattimento.
 - Nel prototipo la carta viene consumata quando l'alleato entra in battaglia.
