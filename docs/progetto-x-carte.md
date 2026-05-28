@@ -172,6 +172,7 @@ Gia implementato:
 - Sbustamento con reveal.
 - Grafica base dei pacchetti con busta fantasy, sigillo e animazione di apertura.
 - Primo asset generato per il Pacchetto di Zodar.
+- Asset generati per le 6 buste/retro carta: Recluta, Avanguardia, Giuramento, Epopea, Leggenda, Mito.
 - Rarita e pity.
 - Frammenti per doppioni cosmetici.
 - Carte ottenute salvate in collezione.
