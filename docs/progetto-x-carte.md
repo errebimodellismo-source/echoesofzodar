@@ -104,6 +104,7 @@ Gia implementato:
 
 - Tab Pacchetti e Carte protette.
 - Pacchetti test.
+- Acquisto pacchetti con gold dalla tab Pacchetti.
 - Sbustamento con reveal.
 - Rarita e pity.
 - Frammenti per doppioni cosmetici.
@@ -119,4 +120,5 @@ Da fare:
 - Identita visiva diversa per rarita.
 - Animazioni migliori di sbustamento.
 - Shop/pacchetti collegati a gold, dungeon, eventi e valuta speciale.
+- Drop pacchetti da dungeon, eventi e ricompense mensili.
 - Bilanciamento finale delle probabilita.

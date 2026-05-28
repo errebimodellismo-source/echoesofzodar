@@ -1751,6 +1751,7 @@ const CARD_PACK_DEFS = [
     name:"Pacchetto di Zodar",
     subtitle:"5 carte - 1 Rara garantita",
     accent:"#a78bfa",
+    price:350,
     slots:5,
     guaranteed:"rare",
     rates:{ common:52, uncommon:27, rare:14, epic:5.5, legendary:1.3, mythic:0.2 },
@@ -1760,6 +1761,7 @@ const CARD_PACK_DEFS = [
     name:"Reliquiario dell'Eclissi",
     subtitle:"5 carte - alte rarita piu vive",
     accent:"#fbbf24",
+    price:950,
     slots:5,
     guaranteed:"epic",
     rates:{ common:36, uncommon:29, rare:22, epic:9.5, legendary:3, mythic:0.5 },
@@ -10020,7 +10022,7 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
   );
 }
 
-function PacksView({ vault, catalogItems, onOpenPack, onGrantDevPack }) {
+function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onGrantDevPack }) {
   const [opening, setOpening] = useState(null); // { pack, rewards, revealed }
   const [busy, setBusy] = useState(false);
   const [spotlight, setSpotlight] = useState(null);
@@ -10057,12 +10059,15 @@ function PacksView({ vault, catalogItems, onOpenPack, onGrantDevPack }) {
     <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.55)" }}>
       <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", marginBottom:"1rem" }}>
         <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, flex:1 }}>Pacchetti</h3>
+        <span style={{ color:"#fbbf24", border:"1px solid rgba(251,191,36,0.32)", borderRadius:999, padding:"3px 10px", fontSize:"0.72rem", fontWeight:800 }}>Oro: {me?.gold || 0}</span>
         <span style={{ color:"#c4b5fd", border:"1px solid rgba(168,85,247,0.28)", borderRadius:999, padding:"3px 10px", fontSize:"0.72rem", fontWeight:700 }}>Frammenti: {vault?.fragments || 0}</span>
         <SmallBtn onClick={onGrantDevPack}>+ Pacchetto test</SmallBtn>
       </div>
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(240px,1fr))", gap:12 }}>
         {CARD_PACK_DEFS.map(pack => {
           const qty = vault?.packs?.[pack.id] || 0;
+          const price = pack.price || 0;
+          const canBuy = !!me?.id && (me?.gold || 0) >= price;
           return (
             <div key={pack.id} style={{ background:"rgba(15,23,42,0.78)", border:`1px solid ${pack.accent}55`, borderRadius:8, padding:"1rem", boxShadow:"0 14px 34px rgba(0,0,0,0.25)" }}>
               <div style={{ height:130, borderRadius:8, background:`radial-gradient(circle at 50% 20%, ${pack.accent}55, transparent 55%), linear-gradient(160deg,rgba(30,20,55,0.95),rgba(5,8,18,0.98))`, border:`1px solid ${pack.accent}66`, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"0.8rem" }}>
@@ -10098,8 +10103,9 @@ function PacksView({ vault, catalogItems, onOpenPack, onGrantDevPack }) {
                   );
                 })}
               </div>
-              <div style={{ display:"flex", alignItems:"center", gap:8 }}>
-                <span style={{ color:"#fbbf24", fontWeight:700, fontSize:"0.86rem", flex:1 }}>Posseduti: {qty}</span>
+              <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+                <span style={{ color:"#fbbf24", fontWeight:700, fontSize:"0.86rem", flex:"1 1 110px" }}>Posseduti: {qty}</span>
+                <SmallBtn onClick={()=>onBuyPack(pack)} disabled={!canBuy || busy}>{canBuy ? `Compra ${price}` : `💰 ${price}`}</SmallBtn>
                 <BigBtn onClick={()=>openPack(pack)} gold disabled={!qty || busy}>Apri</BigBtn>
               </div>
             </div>
@@ -10435,6 +10441,26 @@ function GameScreen({ myId, setScreen, authUser }) {
       },
     };
     persistCardVault(nextVault);
+  }
+
+  async function handleBuyCardPack(pack) {
+    if(!pack || !me?.id) return;
+    const price = pack.price || 0;
+    if((me.gold || 0) < price) { window.alert("Non hai abbastanza oro."); return; }
+    if(!window.confirm(`Acquistare ${pack.name} per ${price} oro?`)) return;
+    const updatedPlayer = { ...me, gold:(me.gold || 0) - price };
+    const synced = applyEquipmentToPlayer(updatedPlayer, equipment, itemMap);
+    await dbSavePlayer(synced);
+    setMeRaw(synced);
+    const nextVault = {
+      ...cardVault,
+      packs:{
+        ...(cardVault.packs || {}),
+        [pack.id]:(cardVault.packs?.[pack.id] || 0) + 1,
+      },
+    };
+    persistCardVault(nextVault);
+    await addMsg(`📦 **${me.name}** acquista **${pack.name}** per ${price} oro.`, "info", "Pacchetti");
   }
 
   async function handleOpenCardPack(packId) {
@@ -14526,7 +14552,9 @@ ${stepText(step)}`, "quest","Master");
           <PacksView
             vault={cardVault}
             catalogItems={catalogItems}
+            me={me}
             onOpenPack={handleOpenCardPack}
+            onBuyPack={handleBuyCardPack}
             onGrantDevPack={grantDevCardPack}
           />
         )}
