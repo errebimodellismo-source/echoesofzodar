@@ -576,6 +576,22 @@ function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, is
   const alivePlayers = players.filter(c => !c.dead && c.hp > 0).length;
   const aliveMonsters = monsters.filter(c => !c.dead && c.hp > 0).length;
   const activeCombatant = combatants[activeIdx];
+  const logText = String(actionLog || "");
+  const isCritAction = /CRITICO|CRITICAL|critical|critico/i.test(logText);
+  const isMissAction = /Mancato|Miss|miss|manca/i.test(logText) || actionFx?.type === "miss";
+  const isDivineAction = actionFx?.type === "divine";
+  const damageNumbers = [...logText.matchAll(/(?:=>|Danno finale:|Final damage:|Danno ridotto a|Damage reduced to|Danno:|Damage:)[^\d]*(\d+)/gi)].map(m => Number(m[1])).filter(Boolean);
+  const bigDamage = damageNumbers.some(n => n >= 60);
+  const cameraAnim = actionFx
+    ? isDivineAction
+      ? "battleCameraDivine 1.45s ease-out both"
+      : isCritAction || bigDamage
+        ? "battleCameraHeavy 1.08s ease-out both"
+        : isMissAction
+          ? "battleCameraMiss .78s ease-out both"
+          : "battleCameraFocus 1.05s ease-out both"
+    : "none";
+  const flashColor = isDivineAction ? "rgba(254,243,199,.26)" : isCritAction ? "rgba(251,191,36,.2)" : bigDamage ? "rgba(248,113,113,.18)" : "rgba(255,255,255,.08)";
   const targetCombatants = inferBattleTargets({ log: actionLog, combatants, activeCombatant, fx: actionFx });
   const targetIds = new Set(targetCombatants.map(c => c.id));
   const primaryTarget = targetCombatants[0] || null;
@@ -628,7 +644,24 @@ function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, is
       background:'radial-gradient(circle at 18% 34%,rgba(124,58,237,.22),transparent 34%),radial-gradient(circle at 82% 30%,rgba(127,29,29,.28),transparent 36%),linear-gradient(180deg,rgba(15,23,42,.82) 0%,rgba(2,6,23,.94) 58%,rgba(10,6,20,.98) 100%)',
       boxShadow:'inset 0 0 50px rgba(2,6,23,.82), 0 18px 42px rgba(0,0,0,.26)',
       padding:isMobile ? '2.4rem .75rem 1rem' : '2.6rem 1.15rem 1.05rem',
+      animation:cameraAnim,
+      transformOrigin: activeCombatant?.isPlayer ? "35% 52%" : "65% 52%",
     }}>
+      {actionFx && !isMissAction && (
+        <div style={{
+          position:'absolute',
+          inset:0,
+          background:flashColor,
+          mixBlendMode:'screen',
+          pointerEvents:'none',
+          zIndex:7,
+          opacity:0,
+          animation:`battleImpactFlash ${isCritAction || isDivineAction || bigDamage ? ".92s" : ".58s"} ease-out .78s both`,
+        }} />
+      )}
+      {actionFx && (isCritAction || bigDamage) && (
+        <div style={{ position:'absolute', inset:0, pointerEvents:'none', zIndex:6, background:'radial-gradient(circle at 50% 48%,rgba(255,255,255,.18),rgba(248,113,113,.12) 22%,transparent 52%)', opacity:0, animation:'battleShockwave .88s ease-out .72s both' }} />
+      )}
       <div style={{ position:'absolute', inset:'0 0 auto', height:'52%', background:'linear-gradient(180deg,rgba(148,163,184,.08),transparent)', pointerEvents:'none' }} />
       <div style={{ position:'absolute', left:'-12%', right:'-12%', bottom:'-17%', height:'42%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(71,85,105,.52),rgba(15,23,42,.7) 46%,rgba(2,6,23,.95) 72%)', borderTop:'1px solid rgba(148,163,184,.18)' }} />
       <div style={{ position:'absolute', left:'-10%', top:'18%', width:'120%', height:'22%', background:'linear-gradient(90deg,transparent,rgba(148,163,184,.09),transparent)', filter:'blur(10px)', animation:'battleStageMist 6s ease-in-out infinite', pointerEvents:'none' }} />
@@ -746,6 +779,12 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {}, 
         @keyframes battleSpriteHealPulse { 0%{opacity:0;transform:scale(.72)} 34%{opacity:1;transform:scale(1.02)} 100%{opacity:0;transform:scale(1.28)} }
         @keyframes battleStatusAura { 0%,100%{opacity:.45;transform:translateY(0) scale(.95)} 50%{opacity:.9;transform:translateY(-3px) scale(1.04)} }
         @keyframes battleCenterPulse { 0%,100%{opacity:.45;transform:translate(-50%,-50%) scale(.92)} 50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)} }
+        @keyframes battleCameraFocus { 0%{transform:scale(1)} 28%{transform:scale(1.018)} 100%{transform:scale(1)} }
+        @keyframes battleCameraHeavy { 0%{transform:scale(1) translate(0,0)} 22%{transform:scale(1.025) translate(-4px,2px)} 31%{transform:scale(1.032) translate(5px,-3px)} 42%{transform:scale(1.024) translate(-3px,3px)} 62%{transform:scale(1.012) translate(2px,0)} 100%{transform:scale(1) translate(0,0)} }
+        @keyframes battleCameraDivine { 0%{transform:scale(1);filter:brightness(1)} 18%{transform:scale(1.018);filter:brightness(1.25)} 34%{transform:scale(1.035);filter:brightness(1.42)} 72%{transform:scale(1.018);filter:brightness(1.12)} 100%{transform:scale(1);filter:brightness(1)} }
+        @keyframes battleCameraMiss { 0%{transform:translateX(0)} 22%{transform:translateX(3px)} 44%{transform:translateX(-3px)} 66%{transform:translateX(2px)} 100%{transform:translateX(0)} }
+        @keyframes battleImpactFlash { 0%{opacity:0} 18%{opacity:1} 100%{opacity:0} }
+        @keyframes battleShockwave { 0%{opacity:0;transform:scale(.35)} 24%{opacity:.95;transform:scale(.82)} 100%{opacity:0;transform:scale(1.45)} }
         @keyframes battleActionCharge { 0%{opacity:0;transform:translate(-50%,-50%) scale(.38)} 42%{opacity:1;transform:translate(-50%,-50%) scale(.78)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.18)} }
         @keyframes battleActionChargeCore { 0%{opacity:0;transform:translate(-50%,-50%) scale(.25);filter:blur(7px)} 46%{opacity:1;transform:translate(-50%,-50%) scale(.9);filter:blur(1px)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.28);filter:blur(5px)} }
         @keyframes battleTravelLeftToRight { 0%{transform:translate(-10%,-50%) scale(.75);opacity:0} 18%{opacity:1} 78%{opacity:1} 100%{transform:translate(210%,-50%) scale(1.08);opacity:0} }
