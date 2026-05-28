@@ -9883,6 +9883,7 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
 function PacksView({ vault, catalogItems, onOpenPack, onGrantDevPack }) {
   const [opening, setOpening] = useState(null); // { pack, rewards, revealed }
   const [busy, setBusy] = useState(false);
+  const [spotlight, setSpotlight] = useState(null);
   async function openPack(pack) {
     if(busy) return;
     setBusy(true);
@@ -9894,6 +9895,24 @@ function PacksView({ vault, catalogItems, onOpenPack, onGrantDevPack }) {
     }
   }
   const allRevealed = opening?.revealed?.every(Boolean);
+  const summary = opening?.rewards?.reduce((acc, card) => {
+    acc.total += 1;
+    acc.byRarity[card.rarity] = (acc.byRarity[card.rarity] || 0) + 1;
+    acc.fragments += card.convertedFragments || 0;
+    const rank = CARD_RARITY_ORDER[card.rarity] || 0;
+    if(!acc.best || rank > (CARD_RARITY_ORDER[acc.best.rarity] || 0)) acc.best = card;
+    return acc;
+  }, { total:0, byRarity:{}, fragments:0, best:null });
+  function revealCard(idx) {
+    setOpening(prev => {
+      if(!prev || prev.revealed[idx]) return prev;
+      const card = prev.rewards[idx];
+      if(["legendary","mythic"].includes(card?.rarity)) {
+        setSpotlight(card);
+      }
+      return { ...prev, revealed:prev.revealed.map((v,i)=>i===idx ? true : v) };
+    });
+  }
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.55)" }}>
       <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap", marginBottom:"1rem" }}>
@@ -9958,14 +9977,47 @@ function PacksView({ vault, catalogItems, onOpenPack, onGrantDevPack }) {
                   key={card.uid}
                   card={card}
                   revealed={opening.revealed[idx]}
-                  onClick={()=>setOpening(prev => prev ? { ...prev, revealed:prev.revealed.map((v,i)=>i===idx ? true : v) } : prev)}
+                  onClick={()=>revealCard(idx)}
                 />
               ))}
             </div>
+            {allRevealed && summary && (
+              <div style={{ margin:"1rem auto 0", maxWidth:760, background:"rgba(15,23,42,0.78)", border:"1px solid rgba(148,163,184,0.16)", borderRadius:8, padding:"0.8rem 1rem", display:"grid", gap:8 }}>
+                <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
+                  <span style={{ color:"#94a3b8", fontSize:"0.72rem", textTransform:"uppercase", letterSpacing:"0.1em" }}>Riepilogo</span>
+                  {Object.entries(summary.byRarity).sort((a,b)=>(CARD_RARITY_ORDER[b[0]]||0)-(CARD_RARITY_ORDER[a[0]]||0)).map(([rarity, count]) => (
+                    <span key={rarity} style={{ color:CARD_RARITY_COLOR[rarity], border:`1px solid ${CARD_RARITY_COLOR[rarity]}44`, borderRadius:999, padding:"2px 8px", fontSize:"0.68rem" }}>{cardRarityLabel(rarity)} x{count}</span>
+                  ))}
+                  {summary.fragments > 0 && <span style={{ marginLeft:"auto", color:"#c4b5fd", fontWeight:700, fontSize:"0.74rem" }}>+{summary.fragments} frammenti</span>}
+                </div>
+                {summary.best && (
+                  <div style={{ color:"#e2e8f0", fontFamily:"'Cinzel',serif", fontSize:"0.9rem" }}>
+                    Miglior ritrovamento: <span style={{ color:CARD_RARITY_COLOR[summary.best.rarity], fontWeight:700 }}>{summary.best.name}</span>
+                  </div>
+                )}
+              </div>
+            )}
             <div style={{ display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap", marginTop:"1.2rem" }}>
-              {!allRevealed && <BigBtn onClick={()=>setOpening(prev => prev ? { ...prev, revealed:prev.revealed.map(()=>true) } : prev)} gold>Rivela tutto</BigBtn>}
+              {!allRevealed && <BigBtn onClick={()=>setOpening(prev => {
+                const best = prev?.rewards?.find(card => ["mythic","legendary"].includes(card.rarity));
+                if(best) setSpotlight(best);
+                return prev ? { ...prev, revealed:prev.revealed.map(()=>true) } : prev;
+              })} gold>Rivela tutto</BigBtn>}
               <SmallBtn onClick={()=>setOpening(null)}>Chiudi</SmallBtn>
             </div>
+          </div>
+        </div>
+      )}
+      {spotlight && (
+        <div onClick={()=>setSpotlight(null)} style={{ position:"fixed", inset:0, zIndex:99997, background:"radial-gradient(circle at 50% 40%,rgba(251,191,36,0.18),rgba(2,6,23,0.95) 58%,rgba(0,0,0,0.98))", display:"flex", alignItems:"center", justifyContent:"center", padding:"1rem", animation:"fadeUp 0.22s ease" }}>
+          <div style={{ width:"min(440px,100%)", textAlign:"center" }}>
+            <div style={{ color:CARD_RARITY_COLOR[spotlight.rarity], fontFamily:"'Cinzel Decorative',serif", fontSize:spotlight.rarity === "mythic" ? "1.65rem" : "1.35rem", letterSpacing:"0.12em", marginBottom:"0.8rem", textShadow:`0 0 32px ${CARD_RARITY_COLOR[spotlight.rarity]}88` }}>
+              {spotlight.rarity === "mythic" ? "MITICA" : "LEGGENDARIA"}
+            </div>
+            <div style={{ transform:"scale(1.05)", display:"inline-block" }}>
+              <ZodarLootCard card={spotlight} />
+            </div>
+            <div style={{ color:"#94a3b8", fontSize:"0.76rem", marginTop:"1rem" }}>Clicca per continuare</div>
           </div>
         </div>
       )}
