@@ -762,22 +762,43 @@ const CRAFT_MATERIALS = [
   { id:"mat_rune_of_zodar",      name:"Runa di Zodar",       emoji:"🌌", type:"material", rarity:"legendary", price:100000,description:"La runa suprema del mondo di Zodar.", available:true },
 ];
 
-const FORGE_DIE_PROGRESSION = ['1d4','1d6','1d8','1d10','1d12','2d6','2d8','2d10','1d20','1d20+1d4','1d20+1d6','1d20+1d8','1d20+1d10','1d20+1d12','2d20'];
+const FORGE_DIE_PROGRESSION = [
+  '1d4','1d6','1d8','1d10','1d12','1d20',
+  '1d20+1d4','1d20+1d6','1d20+1d8','1d20+1d10','1d20+1d12','2d20',
+  '2d20+1d4','2d20+1d6','2d20+1d8','2d20+1d10','2d20+1d12','3d20',
+  '3d20+1d4','3d20+1d6','3d20+1d8','3d20+1d10','3d20+1d12','4d20',
+  '4d20+1d4','4d20+1d6','4d20+1d8','4d20+1d10','4d20+1d12','5d20',
+];
 const FORGE_MATERIAL_REQ = [
-  'mat_iron_ore',      // → 1d6       (idx 1)
-  'mat_steel_ingot',   // → 1d8       (idx 2)
-  'mat_mithril_ore',   // → 1d10      (idx 3)
-  'mat_star_metal',    // → 1d12      (idx 4)
-  'mat_ether_crystal', // → 2d6       (idx 5) — tier leggendario
-  'mat_adamantite_ore',// → 2d8       (idx 6)
-  'mat_dragon_scale',  // → 2d10      (idx 7)
-  'mat_void_essence',  // → 1d20      (idx 8)
-  'mat_phoenix_feather',// → 1d20+1d4 (idx 9)
-  'mat_dragon_heart',  // → 1d20+1d6  (idx 10)
-  'mat_zodar_essence', // → 1d20+1d8  (idx 11)
-  'mat_phoenix_ash',   // → 1d20+1d10 (idx 12)
-  'mat_tarrasque_hide',// → 1d20+1d12 (idx 13)
-  'mat_rune_of_zodar', // → 2d20      (idx 14) — forgiatura suprema
+  'mat_iron_ore',          // -> 1d6
+  'mat_steel_ingot',       // -> 1d8
+  'mat_mithril_ore',       // -> 1d10
+  'mat_star_metal',        // -> 1d12
+  'mat_ether_crystal',     // -> 1d20
+  'mat_adamantite_ore',    // -> 1d20+1d4
+  'mat_dragon_scale',      // -> 1d20+1d6
+  'mat_void_essence',      // -> 1d20+1d8
+  'mat_phoenix_feather',   // -> 1d20+1d10
+  'mat_dragon_heart',      // -> 1d20+1d12
+  'mat_zodar_essence',     // -> 2d20
+  'mat_phoenix_ash',       // -> 2d20+1d4
+  'mat_tarrasque_hide',    // -> 2d20+1d6
+  'mat_rune_of_power',     // -> 2d20+1d8
+  'mat_rune_of_protection',// -> 2d20+1d10
+  'mat_rune_of_swiftness', // -> 2d20+1d12
+  'mat_rune_of_wisdom',    // -> 3d20
+  'mat_zodar_gem',         // -> 3d20+1d4
+  'mat_zodar_ore',         // -> 3d20+1d6
+  'mat_celestial_diamond', // -> 3d20+1d8
+  'mat_infinity_stone',    // -> 3d20+1d10
+  'mat_rune_of_zodar',     // -> 3d20+1d12
+  'mat_zodar_essence',     // -> 4d20
+  'mat_zodar_gem',         // -> 4d20+1d4
+  'mat_zodar_ore',         // -> 4d20+1d6
+  'mat_celestial_diamond', // -> 4d20+1d8
+  'mat_infinity_stone',    // -> 4d20+1d10
+  'mat_rune_of_zodar',     // -> 4d20+1d12
+  'mat_zodar_essence',     // -> 5d20
 ];
 
 function getForgeLevel(itemId) { const m = String(itemId||'').match(/__f(\d+)$/); return m ? Number(m[1]) : 0; }
@@ -6636,7 +6657,8 @@ function ItemEditForm({ item, onSave, onCancel }) {
           <div>
             <label style={labelStyle}>Dado danno</label>
             <select style={{...inputStyle,cursor:"pointer"}} value={ei.weapon_die||"1d6"} onChange={e=>setEi(i=>({...i,weapon_die:e.target.value}))}>
-              {["1d4","1d6","1d8","1d10","1d12","1d20",
+              {[...new Set([...FORGE_DIE_PROGRESSION,
+                "1d4","1d6","1d8","1d10","1d12","1d20",
                 "2d4","2d6","2d8","2d10","2d12","2d20",
                 "3d4","3d6","3d8","3d10","3d12","3d20",
                 "4d4","4d6","4d8","4d10","4d12","4d20",
@@ -6644,7 +6666,7 @@ function ItemEditForm({ item, onSave, onCancel }) {
                 "6d6","6d8","6d10","6d12","6d20",
                 "8d6","8d8","8d10","8d12","8d20",
                 "10d6","10d8","10d10","10d12","10d20",
-              ].map(d=><option key={d} value={d}>{d}</option>)}
+              ])].map(d=><option key={d} value={d}>{d}</option>)}
             </select>
           </div>
         )}
