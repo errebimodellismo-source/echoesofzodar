@@ -510,6 +510,40 @@ function BattleStageAction({ fx, activeCombatant, isMobile, effectKey, originPoi
   if(magicTypes.has(fx.type)) {
     const heal = fx.type === 'healMagic';
     const auraColor = heal ? '#34d399' : color;
+    const impactPoints = areaTargetPoints.length > 1 ? areaTargetPoints : [targetPoint];
+    const renderElementalImpact = (pt, idx) => {
+      const left = `${pt?.x ?? 50}%`;
+      const top = `${pt?.y ?? 47}%`;
+      const delay = `${0.86 + idx * 0.08}s`;
+      if(fx.type === 'fire') return (
+        <div key={`fire_${idx}`} style={{ position:'absolute', left, top, width:isMobile ? 170 : 250, height:isMobile ? 170 : 250, transform:'translate(-50%,-50%)', borderRadius:'44% 56% 48% 52%', background:'radial-gradient(circle at 50% 60%,#fff7ed 0%,#fbbf24 17%,#f97316 38%,#7f1d1d 62%,transparent 72%)', filter:'blur(1px)', boxShadow:'0 0 54px rgba(249,115,22,.9)', opacity:0, animation:`battleFireBurst 1.05s ease-out ${delay} both` }} />
+      );
+      if(fx.type === 'ice') return (
+        <div key={`ice_${idx}`} style={{ position:'absolute', left, top, width:isMobile ? 150 : 220, height:isMobile ? 150 : 220, transform:'translate(-50%,-50%)', background:'conic-gradient(from 0deg,transparent,#e0f2fe,transparent,#60a5fa,transparent,#bfdbfe,transparent)', clipPath:'polygon(50% 0,61% 35%,98% 35%,68% 56%,79% 91%,50% 70%,21% 91%,32% 56%,2% 35%,39% 35%)', filter:'drop-shadow(0 0 22px #93c5fd)', opacity:0, animation:`battleIceCrystal 1.05s ease-out ${delay} both` }} />
+      );
+      if(fx.type === 'lightning') return (
+        <div key={`lightning_${idx}`} style={{ position:'absolute', left, top, width:isMobile ? 72 : 96, height:isMobile ? 230 : 320, transform:'translate(-50%,-72%)', background:'linear-gradient(180deg,#fff7ad,#facc15,#38bdf8)', clipPath:'polygon(44% 0,64% 0,52% 38%,72% 38%,33% 100%,43% 56%,24% 56%)', filter:'drop-shadow(0 0 28px #facc15)', opacity:0, animation:`battleLightningStrike .78s ease-out ${delay} both` }} />
+      );
+      if(fx.type === 'poison') return (
+        <div key={`poison_${idx}`} style={{ position:'absolute', left, top, width:isMobile ? 180 : 260, height:isMobile ? 118 : 160, transform:'translate(-50%,-50%)', borderRadius:'50%', background:'radial-gradient(circle,#bbf7d0 0%,rgba(34,197,94,.5) 34%,rgba(20,83,45,.3) 55%,transparent 72%)', filter:'blur(8px)', opacity:0, animation:`battlePoisonCloud 1.15s ease-out ${delay} both` }} />
+      );
+      if(fx.type === 'shadow') return (
+        <div key={`shadow_${idx}`} style={{ position:'absolute', left, top, width:isMobile ? 170 : 250, height:isMobile ? 170 : 250, transform:'translate(-50%,-50%)', borderRadius:'50%', background:'conic-gradient(from 90deg,#020617,#581c87,#0f172a,#7e22ce,#020617)', boxShadow:'0 0 54px rgba(88,28,135,.75)', opacity:0, animation:`battleShadowVortex 1.08s ease-out ${delay} both` }} />
+      );
+      if(fx.type === 'holy' || fx.type === 'divine') return (
+        <div key={`holy_${idx}`} style={{ position:'absolute', left, top:'0%', width:isMobile ? 96 : 132, height:'100%', transform:'translateX(-50%)', background:'linear-gradient(180deg,transparent,rgba(254,243,199,.82),rgba(251,191,36,.22),transparent)', filter:'blur(8px)', opacity:0, animation:`battleHolyRay 1.02s ease-out ${delay} both` }} />
+      );
+      if(fx.type === 'nature') return (
+        <div key={`nature_${idx}`} style={{ position:'absolute', left, top, width:isMobile ? 155 : 230, height:isMobile ? 155 : 230, transform:'translate(-50%,-48%)', background:'repeating-conic-gradient(from 0deg,transparent 0deg,transparent 24deg,#86efac 28deg,#14532d 34deg,transparent 40deg)', clipPath:'circle(48% at 50% 50%)', filter:'drop-shadow(0 0 18px #22c55e)', opacity:0, animation:`battleNatureBloom 1.05s ease-out ${delay} both` }} />
+      );
+      if(fx.type === 'sonic') return (
+        <div key={`sonic_${idx}`} style={{ position:'absolute', left, top, width:isMobile ? 80 : 110, height:isMobile ? 80 : 110, transform:'translate(-50%,-50%)', borderRadius:'50%', border:'2px solid rgba(249,168,212,.85)', boxShadow:'0 0 22px rgba(249,168,212,.7)', opacity:0, animation:`battleSonicWave 1s ease-out ${delay} both` }} />
+      );
+      if(fx.type === 'control') return (
+        <div key={`control_${idx}`} style={{ position:'absolute', left, top, width:isMobile ? 132 : 190, height:isMobile ? 132 : 190, transform:'translate(-50%,-50%)', borderRadius:'50%', border:'3px dashed rgba(196,181,253,.9)', boxShadow:'0 0 32px rgba(124,58,237,.7), inset 0 0 26px rgba(124,58,237,.28)', opacity:0, animation:`battleControlSigil 1.08s ease-out ${delay} both` }} />
+      );
+      return null;
+    };
     return (
       <div key={effectKey} style={base}>
         {chargeFx}
@@ -520,8 +554,11 @@ function BattleStageAction({ fx, activeCombatant, isMobile, effectKey, originPoi
         <div style={{ position:'absolute', left:originX, top:originY, width:isMobile ? 58 : 84, height:isMobile ? 58 : 84, borderRadius:'50%', display:'grid', placeItems:'center', color:'#fff', fontSize:isMobile ? '1.3rem' : '1.85rem', background:`radial-gradient(circle,#fff 0%,${auraColor} 22%,${auraColor}88 48%,transparent 72%)`, boxShadow:`0 0 32px ${auraColor}, 0 0 70px ${auraColor}66`, textShadow:`0 0 14px ${auraColor}`, "--dx":dx, "--dy":dy, opacity:0, animation:heal ? 'battleHealBloom .95s ease-out .32s both' : 'battleProjectileTravel .88s cubic-bezier(.16,.85,.3,1) .32s both' }}>
           {magicIcon}
         </div>
-        {(areaTargetPoints.length > 1 ? areaTargetPoints : [targetPoint]).map((pt, idx) => (
-          <div key={`${idx}_${pt?.x}_${pt?.y}`} style={{ position:'absolute', left:`${pt?.x ?? 50}%`, top:`${pt?.y ?? 47}%`, width:isMobile ? 146 : 224, height:isMobile ? 146 : 224, transform:'translate(-50%,-50%)', borderRadius:'50%', background:`radial-gradient(circle,#ffffff88 0%,${auraColor}66 18%,${auraColor}24 42%,transparent 70%)`, boxShadow:`inset 0 0 34px ${auraColor}66, 0 0 52px ${auraColor}88`, opacity:0, animation:`battleMagicImpact .95s ease-out ${0.86 + idx * 0.08}s both` }} />
+        {impactPoints.map((pt, idx) => (
+          <div key={`${idx}_${pt?.x}_${pt?.y}`}>
+            <div style={{ position:'absolute', left:`${pt?.x ?? 50}%`, top:`${pt?.y ?? 47}%`, width:isMobile ? 146 : 224, height:isMobile ? 146 : 224, transform:'translate(-50%,-50%)', borderRadius:'50%', background:`radial-gradient(circle,#ffffff88 0%,${auraColor}66 18%,${auraColor}24 42%,transparent 70%)`, boxShadow:`inset 0 0 34px ${auraColor}66, 0 0 52px ${auraColor}88`, opacity:0, animation:`battleMagicImpact .95s ease-out ${0.86 + idx * 0.08}s both` }} />
+            {renderElementalImpact(pt, idx)}
+          </div>
         ))}
         {label && <div style={{ position:'absolute', left:targetX, top:isMobile ? '28%' : '25%', transform:'translateX(-50%)', color:fx.type === 'divine' ? '#fef3c7' : auraColor, fontFamily:"'Cinzel Decorative',serif", fontWeight:900, fontSize:isMobile ? '.82rem' : '1rem', letterSpacing:'.1em', textTransform:'uppercase', textShadow:`0 0 18px ${auraColor}`, whiteSpace:'nowrap', opacity:0, animation:'battleImpactText .95s ease-out .9s both' }}>{label}</div>}
       </div>
@@ -720,6 +757,15 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {}, 
         @keyframes battleArrowImpact { 0%{opacity:0;transform:translate(-50%,-50%) scale(.35)} 28%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.55)} }
         @keyframes battleShardBurst { 0%{opacity:0;transform:translate(-50%,-50%) rotate(-18deg) scaleX(.2)} 24%{opacity:1} 100%{opacity:0;transform:translate(-50%,-50%) rotate(-18deg) scaleX(1.55)} }
         @keyframes battleMagicImpact { 0%{opacity:0;transform:translate(-50%,-50%) scale(.25)} 28%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.45)} }
+        @keyframes battleFireBurst { 0%{opacity:0;transform:translate(-50%,-40%) scale(.36);filter:blur(10px)} 26%{opacity:1;transform:translate(-50%,-50%) scale(1);filter:blur(1px)} 100%{opacity:0;transform:translate(-50%,-64%) scale(1.42);filter:blur(4px)} }
+        @keyframes battleIceCrystal { 0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.22)} 34%{opacity:1;transform:translate(-50%,-50%) rotate(28deg) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) rotate(105deg) scale(1.28)} }
+        @keyframes battleLightningStrike { 0%,100%{opacity:0;transform:translate(-50%,-78%) scaleY(.32) skewX(0deg)} 12%,46%{opacity:1} 24%{transform:translate(-50%,-72%) scaleY(1.08) skewX(-8deg)} 58%{opacity:.45} }
+        @keyframes battlePoisonCloud { 0%{opacity:0;transform:translate(-50%,-28%) scale(.55)} 28%{opacity:.95;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-72%) scale(1.28)} }
+        @keyframes battleShadowVortex { 0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.35);filter:blur(5px)} 34%{opacity:.92;filter:blur(0)} 100%{opacity:0;transform:translate(-50%,-50%) rotate(240deg) scale(1.35);filter:blur(8px)} }
+        @keyframes battleHolyRay { 0%{opacity:0;transform:translateX(-50%) scaleY(.25)} 26%{opacity:.95;transform:translateX(-50%) scaleY(1)} 100%{opacity:0;transform:translateX(-50%) scaleY(1.18)} }
+        @keyframes battleNatureBloom { 0%{opacity:0;transform:translate(-50%,-30%) rotate(0deg) scale(.25)} 34%{opacity:.95;transform:translate(-50%,-48%) rotate(24deg) scale(1)} 100%{opacity:0;transform:translate(-50%,-62%) rotate(72deg) scale(1.22)} }
+        @keyframes battleSonicWave { 0%{opacity:0;transform:translate(-50%,-50%) scale(.2)} 24%{opacity:.9} 100%{opacity:0;transform:translate(-50%,-50%) scale(2.25)} }
+        @keyframes battleControlSigil { 0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.4)} 32%{opacity:.95} 100%{opacity:0;transform:translate(-50%,-50%) rotate(300deg) scale(1.28)} }
         @keyframes battleHealBloom { 0%{opacity:0;transform:translate(-50%,-50%) scale(.5)} 35%{opacity:1;transform:translate(-50%,-50%) scale(1.2)} 100%{opacity:0;transform:translate(-50%,-82%) scale(1.55)} }
         @keyframes battleDivineColumn { 0%{opacity:0;transform:translateX(-50%) scaleY(.35)} 30%{opacity:1;transform:translateX(-50%) scaleY(1)} 100%{opacity:0;transform:translateX(-50%) scaleY(1.18)} }
         @keyframes battleImpactText { 0%{opacity:0;transform:translate(-50%,12px) scale(.8)} 25%{opacity:1;transform:translate(-50%,0) scale(1)} 100%{opacity:0;transform:translate(-50%,-26px) scale(1.08)} }
