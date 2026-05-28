@@ -179,6 +179,164 @@ function CombatantCard({ c, isActive, floats, isMobile, imgSrc, cueTarget }) {
   );
 }
 
+function BattlefieldSprite({ c, isActive, floats, isMobile, imgSrc, cueTarget, side, index, total }) {
+  const isDead = c.dead || c.hp <= 0;
+  const isDying = c.dying && !c.dead;
+  const [imgErr, setImgErr] = useState(false);
+  const cardFloats = floats.filter(f => f.id === c.id);
+  const hpPct = c.maxHp > 0 ? Math.round((Math.max(0, c.hp) / c.maxHp) * 100) : 0;
+  const aliveColor = c.isPlayer ? '#a78bfa' : '#f87171';
+  const activeColor = c.isPlayer ? '#fbbf24' : '#ef4444';
+  const baseColor = isDead ? '#475569' : isActive ? activeColor : aliveColor;
+  const spriteW = isMobile ? 82 : 106;
+  const spriteH = isMobile ? 108 : 142;
+  const stagger = total > 1 ? (index - (total - 1) / 2) : 0;
+  const yOffset = Math.max(-28, Math.min(28, stagger * (isMobile ? 12 : 16)));
+  const activeAnimation = isActive && !isDead
+    ? side === 'left'
+      ? 'battleSpriteReadyLeft 1.9s ease-in-out infinite'
+      : 'battleSpriteReadyRight 1.9s ease-in-out infinite'
+    : 'none';
+  const attackAnimation = cueTarget && !isDead
+    ? side === 'left'
+      ? 'battleSpriteStrikeLeft .72s ease-out'
+      : 'battleSpriteStrikeRight .72s ease-out'
+    : activeAnimation;
+
+  return (
+    <div style={{
+      position:'relative',
+      width:isMobile ? 116 : 148,
+      minWidth:isMobile ? 104 : 130,
+      transform:`translateY(${yOffset}px)`,
+      opacity:isDead ? 0.45 : 1,
+      transition:'opacity .35s ease, transform .35s ease',
+      display:'flex',
+      flexDirection:'column',
+      alignItems:'center',
+      zIndex:isActive ? 4 : Math.max(1, 3 - Math.abs(stagger)),
+    }}>
+      {cardFloats.map(f => (
+        <FloatNumber key={f.key} value={f.amount} kind={f.kind} onDone={f.onDone} />
+      ))}
+
+      {isActive && !isDead && (
+        <div style={{
+          position:'absolute',
+          top:isMobile ? -10 : -14,
+          left:'50%',
+          transform:'translateX(-50%)',
+          width:isMobile ? 28 : 34,
+          height:isMobile ? 28 : 34,
+          borderRadius:'50%',
+          background:`radial-gradient(circle,${activeColor}cc,transparent 68%)`,
+          boxShadow:`0 0 18px ${activeColor}`,
+          animation:'battleTurnMarker 1.2s ease-in-out infinite',
+        }} />
+      )}
+
+      <div style={{
+        position:'relative',
+        width:spriteW,
+        height:spriteH,
+        borderRadius: isMobile ? '18px 18px 28px 28px' : '22px 22px 34px 34px',
+        border:`2px solid ${baseColor}`,
+        background:isDead
+          ? 'linear-gradient(180deg,rgba(15,23,42,0.9),rgba(2,6,23,0.95))'
+          : c.isPlayer
+            ? 'linear-gradient(180deg,rgba(49,46,129,0.42),rgba(15,23,42,0.94))'
+            : 'linear-gradient(180deg,rgba(127,29,29,0.42),rgba(15,23,42,0.94))',
+        boxShadow:isActive
+          ? `0 0 26px ${activeColor}66, 0 18px 28px rgba(0,0,0,.42)`
+          : cueTarget
+            ? `0 0 22px ${baseColor}77`
+            : '0 14px 24px rgba(0,0,0,.38)',
+        overflow:'hidden',
+        display:'flex',
+        alignItems:'center',
+        justifyContent:'center',
+        filter:isDead ? 'grayscale(1)' : 'none',
+        animation: cardFloats.length ? 'hitShake .45s ease' : attackAnimation,
+      }}>
+        <div style={{
+          position:'absolute',
+          inset:0,
+          background:`radial-gradient(circle at 50% 20%,${baseColor}24,transparent 52%)`,
+          pointerEvents:'none',
+        }} />
+        {imgSrc && !imgErr ? (
+          <img
+            src={imgSrc}
+            alt={c.name}
+            onError={() => setImgErr(true)}
+            style={{
+              width:'100%',
+              height:'100%',
+              objectFit:'cover',
+              objectPosition:c.isPlayer ? '50% 22%' : '50% 34%',
+              display:'block',
+              transform:c.isPlayer ? 'scale(1.1)' : 'scale(1.05)',
+            }}
+          />
+        ) : (
+          <span style={{
+            fontSize:isMobile ? '3.1rem' : '4.1rem',
+            lineHeight:1,
+            textShadow:`0 0 18px ${baseColor}`,
+            filter:isActive ? 'drop-shadow(0 0 10px currentColor)' : 'none',
+          }}>
+            {isDead ? '💀' : c.emoji || (c.isPlayer ? '🧙' : '👾')}
+          </span>
+        )}
+        {isDying && <div style={{ position:'absolute', inset:0, background:'rgba(249,115,22,0.18)', animation:'battleSpriteWound 1s ease-in-out infinite' }} />}
+        {isDead && <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg,transparent,rgba(2,6,23,0.75))' }} />}
+      </div>
+
+      <div style={{
+        width:isMobile ? 108 : 136,
+        marginTop:-3,
+        height:20,
+        borderRadius:'50%',
+        background:'radial-gradient(ellipse,rgba(0,0,0,.58),rgba(0,0,0,.18) 58%,transparent 72%)',
+        filter:'blur(.2px)',
+      }} />
+
+      <div style={{
+        width:'100%',
+        marginTop:-6,
+        padding:'0.45rem 0.5rem 0.52rem',
+        borderRadius:10,
+        background:'rgba(2,6,23,0.68)',
+        border:`1px solid ${baseColor}55`,
+        boxShadow:'0 10px 18px rgba(0,0,0,.26)',
+      }}>
+        <div style={{
+          display:'flex',
+          alignItems:'center',
+          justifyContent:'center',
+          gap:5,
+          minWidth:0,
+          color:isDead ? '#64748b' : c.isPlayer ? '#ddd6fe' : '#fecaca',
+          fontFamily:"'Cinzel',serif",
+          fontWeight:800,
+          fontSize:isMobile ? '0.68rem' : '0.76rem',
+          whiteSpace:'nowrap',
+          overflow:'hidden',
+          textOverflow:'ellipsis',
+        }}>
+          <span style={{ overflow:'hidden', textOverflow:'ellipsis' }}>{c.name}</span>
+          {c.isBoss && <span style={{ color:'#fbbf24', flexShrink:0 }}>★</span>}
+        </div>
+        <HpBar cur={c.hp} max={c.maxHp} dead={isDead} dying={isDying} />
+        <div style={{ display:'flex', justifyContent:'space-between', gap:4, fontSize:'0.62rem', color:'#94a3b8', marginTop:3 }}>
+          <span>{Math.max(0, c.hp)}/{c.maxHp} HP</span>
+          <span>{hpPct}%</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function InitiativeStrip({ combatants, activeIdx }) {
   return (
     <div style={{ display:'flex', gap:6, overflowX:'auto', padding:'0.35rem 0.2rem 0.65rem', marginBottom:10 }}>
@@ -203,6 +361,102 @@ function InitiativeStrip({ combatants, activeIdx }) {
           </div>
         );
       })}
+    </div>
+  );
+}
+
+function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, isMobile, images, cue, cueTargetId }) {
+  const alivePlayers = players.filter(c => !c.dead && c.hp > 0).length;
+  const aliveMonsters = monsters.filter(c => !c.dead && c.hp > 0).length;
+
+  const renderSide = (list, side) => (
+    <div style={{
+      display:'flex',
+      justifyContent:isMobile ? 'center' : side === 'left' ? 'flex-start' : 'flex-end',
+      alignItems:'center',
+      gap:isMobile ? 8 : 12,
+      flexWrap:'wrap',
+      minHeight:isMobile ? 160 : 260,
+      paddingRight:!isMobile && side === 'left' ? 10 : 0,
+      paddingLeft:!isMobile && side === 'right' ? 10 : 0,
+    }}>
+      {list.length ? list.map((c, i) => (
+        <BattlefieldSprite
+          key={c.id || i}
+          c={c}
+          side={side}
+          index={i}
+          total={list.length}
+          isActive={combatants[activeIdx]?.id === c.id}
+          floats={floats}
+          isMobile={isMobile}
+          imgSrc={images[c.id] || ''}
+          cueTarget={cueTargetId === c.id}
+        />
+      )) : (
+        <div style={{ textAlign:'center', color:'#4b5563', fontSize:'0.8rem', padding:'1rem' }}>
+          {side === 'left' ? 'Nessun alleato' : 'Nessun nemico'}
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div style={{
+      position:'relative',
+      minHeight:isMobile ? 430 : 390,
+      borderRadius:16,
+      overflow:'hidden',
+      border:'1px solid rgba(148,163,184,0.16)',
+      background:'radial-gradient(circle at 18% 34%,rgba(124,58,237,.22),transparent 34%),radial-gradient(circle at 82% 30%,rgba(127,29,29,.28),transparent 36%),linear-gradient(180deg,rgba(15,23,42,.82) 0%,rgba(2,6,23,.94) 58%,rgba(10,6,20,.98) 100%)',
+      boxShadow:'inset 0 0 50px rgba(2,6,23,.82), 0 18px 42px rgba(0,0,0,.26)',
+      padding:isMobile ? '2.4rem .75rem 1rem' : '2.6rem 1.15rem 1.05rem',
+    }}>
+      <div style={{ position:'absolute', inset:'0 0 auto', height:'52%', background:'linear-gradient(180deg,rgba(148,163,184,.08),transparent)', pointerEvents:'none' }} />
+      <div style={{ position:'absolute', left:'-12%', right:'-12%', bottom:'-17%', height:'42%', borderRadius:'50%', background:'radial-gradient(ellipse,rgba(71,85,105,.52),rgba(15,23,42,.7) 46%,rgba(2,6,23,.95) 72%)', borderTop:'1px solid rgba(148,163,184,.18)' }} />
+      <div style={{ position:'absolute', left:'-10%', top:'18%', width:'120%', height:'22%', background:'linear-gradient(90deg,transparent,rgba(148,163,184,.09),transparent)', filter:'blur(10px)', animation:'battleStageMist 6s ease-in-out infinite', pointerEvents:'none' }} />
+
+      <div style={{ position:'absolute', left:12, top:10, display:'flex', alignItems:'center', gap:8, color:'#c4b5fd', fontFamily:"'Cinzel',serif", fontSize:'0.68rem', letterSpacing:'.12em', textTransform:'uppercase' }}>
+        <span>🛡️ Party</span>
+        <span style={{ color:'#94a3b8', letterSpacing:0 }}>({alivePlayers}/{players.length})</span>
+      </div>
+      <div style={{ position:'absolute', right:12, top:10, display:'flex', alignItems:'center', gap:8, color:'#fca5a5', fontFamily:"'Cinzel',serif", fontSize:'0.68rem', letterSpacing:'.12em', textTransform:'uppercase' }}>
+        <span>💀 Nemici</span>
+        <span style={{ color:'#94a3b8', letterSpacing:0 }}>({aliveMonsters}/{monsters.length})</span>
+      </div>
+
+      <div style={{
+        position:'absolute',
+        left:'50%',
+        top:'52%',
+        transform:'translate(-50%,-50%)',
+        width:isMobile ? 52 : 68,
+        height:isMobile ? 52 : 68,
+        borderRadius:'50%',
+        display:'grid',
+        placeItems:'center',
+        background:'radial-gradient(circle,rgba(239,68,68,.22),rgba(124,58,237,.16),transparent 72%)',
+        border:'1px solid rgba(251,191,36,.2)',
+        boxShadow:'0 0 24px rgba(239,68,68,.32)',
+        animation: cue ? 'battleCenterPulse .9s ease-in-out infinite' : 'none',
+        zIndex:2,
+      }}>
+        <span style={{ fontSize:isMobile ? '1.4rem' : '1.8rem', filter:'drop-shadow(0 0 8px #ef4444)' }}>⚔️</span>
+      </div>
+
+      <div style={{
+        position:'relative',
+        zIndex:3,
+        minHeight:isMobile ? 360 : 318,
+        display:'grid',
+        gridTemplateColumns:isMobile ? '1fr' : 'minmax(0,1fr) 92px minmax(0,1fr)',
+        gap:isMobile ? 18 : 8,
+        alignItems:'center',
+      }}>
+        {renderSide(players, 'left')}
+        {!isMobile && <div />}
+        {renderSide(monsters, 'right')}
+      </div>
     </div>
   );
 }
@@ -249,6 +503,16 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {}, 
 
   return (
     <div style={{ fontFamily: 'inherit' }}>
+      <style>{`
+        @keyframes battleStageMist { 0%{transform:translateX(-3%);opacity:.42} 50%{transform:translateX(3%);opacity:.68} 100%{transform:translateX(-3%);opacity:.42} }
+        @keyframes battleTurnMarker { 0%,100%{transform:translateX(-50%) scale(.82);opacity:.6} 50%{transform:translateX(-50%) scale(1.12);opacity:1} }
+        @keyframes battleSpriteReadyLeft { 0%,100%{transform:translateY(0) translateX(0)} 50%{transform:translateY(-3px) translateX(2px)} }
+        @keyframes battleSpriteReadyRight { 0%,100%{transform:translateY(0) translateX(0)} 50%{transform:translateY(-3px) translateX(-2px)} }
+        @keyframes battleSpriteStrikeLeft { 0%{transform:translateX(0) scale(1)} 28%{transform:translateX(28px) scale(1.04)} 52%{transform:translateX(-4px) scale(.99)} 100%{transform:translateX(0) scale(1)} }
+        @keyframes battleSpriteStrikeRight { 0%{transform:translateX(0) scale(1)} 28%{transform:translateX(-28px) scale(1.04)} 52%{transform:translateX(4px) scale(.99)} 100%{transform:translateX(0) scale(1)} }
+        @keyframes battleSpriteWound { 0%,100%{opacity:.1} 50%{opacity:.36} }
+        @keyframes battleCenterPulse { 0%,100%{opacity:.45;transform:translate(-50%,-50%) scale(.92)} 50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)} }
+      `}</style>
       <div style={{
         textAlign: 'center', marginBottom: isMobile ? 10 : 14,
         padding: '0.5rem 1rem',
@@ -288,7 +552,19 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {}, 
         </div>
       )}
 
-      <div style={{
+      <BattlefieldStage
+        players={players}
+        monsters={monsters}
+        combatants={combatants}
+        activeIdx={activeIdx}
+        floats={floats}
+        isMobile={isMobile}
+        images={images}
+        cue={cue}
+        cueTargetId={cueTargetId}
+      />
+
+      {false && <div style={{
         display: 'flex',
         gap: isMobile ? 8 : 16,
         alignItems: 'flex-start',
@@ -353,7 +629,7 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {}, 
             </div>
           )}
         </div>
-      </div>
+      </div>}
     </div>
   );
 }
