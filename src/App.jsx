@@ -1810,7 +1810,8 @@ const CARD_PACK_DEFS = [
     accent:"#a78bfa",
     art:"/assets/cards/packs/pack-epic.png",
     rewardOnly:true,
-    acquisition:"Ricompensa: dungeon difficili e storie lunghe",
+    acquisition:"Ricompensa: dungeon difficili e storie lunghe, oppure Sigilli",
+    sealPrice:320,
     slots:5,
     guaranteed:"epic",
     fixedRarities:["epic","rare"],
@@ -1823,7 +1824,8 @@ const CARD_PACK_DEFS = [
     accent:"#fbbf24",
     art:"/assets/cards/packs/pack-legendary.png",
     rewardOnly:true,
-    acquisition:"Ricompensa: dungeon epici, eventi e boss lunghi",
+    acquisition:"Ricompensa: dungeon epici, eventi e boss lunghi, oppure Sigilli",
+    sealPrice:720,
     slots:5,
     guaranteed:"legendary",
     fixedRarities:["legendary","epic","rare"],
@@ -1836,7 +1838,8 @@ const CARD_PACK_DEFS = [
     accent:"#fb7185",
     art:"/assets/cards/packs/pack-mythic.png",
     rewardOnly:true,
-    acquisition:"Ricompensa: eventi mensili, campagne leggendarie e imprese uniche",
+    acquisition:"Ricompensa: eventi mensili, campagne leggendarie e imprese uniche, oppure Sigilli",
+    sealPrice:1600,
     slots:6,
     guaranteed:"mythic",
     fixedRarities:["mythic","legendary","legendary","epic"],
@@ -10676,7 +10679,7 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
           const price = pack.price || 0;
           const sealPrice = pack.sealPrice || 0;
           const canBuy = !pack.rewardOnly && price > 0 && !!me?.id && (me?.gold || 0) >= price;
-          const canBuyPremium = !pack.rewardOnly && sealPrice > 0 && (vault?.premiumBalance || 0) >= sealPrice;
+          const canBuyPremium = sealPrice > 0 && (vault?.premiumBalance || 0) >= sealPrice;
           return (
             <div key={pack.id} style={{ background:"rgba(15,23,42,0.78)", border:`1px solid ${pack.accent}55`, borderRadius:8, padding:"1rem", boxShadow:"0 14px 34px rgba(0,0,0,0.25)" }}>
               <div style={{ minHeight:196, borderRadius:8, background:`radial-gradient(circle at 50% 18%, ${pack.accent}33, transparent 58%), linear-gradient(160deg,rgba(15,23,42,0.78),rgba(5,8,18,0.98))`, border:`1px solid ${pack.accent}55`, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"0.8rem", overflow:"hidden" }}>
@@ -10712,11 +10715,12 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
               </div>
               <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
                 <span style={{ color:"#fbbf24", fontWeight:700, fontSize:"0.86rem", flex:"1 1 110px" }}>Posseduti: {qty}</span>
-                {pack.rewardOnly ? (
+                {pack.rewardOnly && !sealPrice ? (
                   <span style={{ color:"#94a3b8", border:"1px solid rgba(148,163,184,0.24)", borderRadius:6, padding:"0.42rem 0.7rem", fontSize:"0.7rem", fontWeight:800 }}>Solo ricompensa</span>
                 ) : (
                   <>
-                    <SmallBtn onClick={()=>onBuyPack(pack)} disabled={!canBuy || busy}>{canBuy ? `Compra ${price}` : `💰 ${price}`}</SmallBtn>
+                    {!pack.rewardOnly && <SmallBtn onClick={()=>onBuyPack(pack)} disabled={!canBuy || busy}>{canBuy ? `Compra ${price}` : `💰 ${price}`}</SmallBtn>}
+                    {pack.rewardOnly && <span style={{ color:"#94a3b8", border:"1px solid rgba(148,163,184,0.24)", borderRadius:6, padding:"0.42rem 0.7rem", fontSize:"0.7rem", fontWeight:800 }}>Ricompensa</span>}
                     <SmallBtn onClick={()=>onBuyPackWithPremium?.(pack)} disabled={!sealPrice || !canBuyPremium || busy}>{sealPrice ? `${PREMIUM_CURRENCY.icon} ${sealPrice}` : "N/D"}</SmallBtn>
                   </>
                 )}
@@ -11120,7 +11124,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   async function handleBuyCardPackWithPremium(pack) {
     if(!pack || !me?.id) return;
     const price = pack.sealPrice || 0;
-    if(pack.rewardOnly || price <= 0) { window.alert("Questo mazzo si ottiene come ricompensa, non dal negozio."); return; }
+    if(price <= 0) { window.alert(`Questo mazzo non e acquistabile con ${PREMIUM_CURRENCY.shortName}.`); return; }
     if(price <= 0) return;
     if((cardVault.premiumBalance || 0) < price) { window.alert(`Non hai abbastanza ${PREMIUM_CURRENCY.shortName}.`); return; }
     if(!window.confirm(`Acquistare ${pack.name} per ${price} ${PREMIUM_CURRENCY.shortName}?`)) return;
