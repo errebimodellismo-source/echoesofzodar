@@ -1756,6 +1756,7 @@ const CARD_PACK_DEFS = [
     name:"Pacchetto di Zodar",
     subtitle:"5 carte - 1 Rara garantita",
     accent:"#a78bfa",
+    art:"/assets/cards/packs/pack-zodar.png",
     price:350,
     slots:5,
     guaranteed:"rare",
@@ -10183,6 +10184,30 @@ function ZodarPackArtwork({ pack, large=false, opening=false }) {
   const isEclipse = pack?.id === "pack_eclipse";
   const width = large ? 260 : 150;
   const height = large ? 350 : 190;
+  if(pack?.art) {
+    return (
+      <div style={{ position:"relative", width, maxWidth:"100%", height, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"center" }}>
+        {large && (
+          <>
+            <div style={{ position:"absolute", left:"50%", top:"50%", width:350, aspectRatio:"1", borderRadius:"50%", transform:"translate(-50%,-50%)", background:`radial-gradient(circle,${accent}44,transparent 64%)`, filter:"blur(10px)", opacity:0.9 }} />
+            {opening && <div style={{ position:"absolute", left:"50%", top:"50%", width:360, aspectRatio:"1", borderRadius:"50%", transform:"translate(-50%,-50%)", background:`conic-gradient(from 0deg,transparent,${accent},transparent,#fef3c7,transparent)`, animation:"cardPackBurst 0.9s ease-out forwards" }} />}
+          </>
+        )}
+        <img
+          src={pack.art}
+          alt={pack.name}
+          style={{
+            position:"relative",
+            width:"100%",
+            height:"100%",
+            objectFit:"contain",
+            filter:`drop-shadow(0 0 ${large ? 34 : 16}px ${accent}66)`,
+            animation:opening ? "cardPackOpen 0.9s ease forwards" : large ? "cardPackFloat 3.2s ease-in-out infinite" : "none",
+          }}
+        />
+      </div>
+    );
+  }
   return (
     <div style={{ position:"relative", width, maxWidth:"100%", height, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"center", perspective:900 }}>
       {large && (
