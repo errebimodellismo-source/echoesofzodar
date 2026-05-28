@@ -2492,6 +2492,41 @@ function cardStatBadge(card) {
   if(card.kind === "cosmetic") return "SCENA";
   return "";
 }
+function canUseBrowserNotifications() {
+  return typeof window !== "undefined" && "Notification" in window;
+}
+function getNotificationPermission() {
+  if(!canUseBrowserNotifications()) return "unsupported";
+  try {
+    return window.Notification.permission;
+  } catch {
+    return "unsupported";
+  }
+}
+function requestBrowserNotificationPermission() {
+  if(getNotificationPermission() !== "default") return;
+  try {
+    window.Notification.requestPermission?.().catch?.(() => {});
+  } catch {}
+}
+async function showBrowserNotification(title, options={}) {
+  if(getNotificationPermission() !== "granted") return false;
+  try {
+    if(typeof navigator !== "undefined" && navigator.serviceWorker?.ready) {
+      const registration = await navigator.serviceWorker.ready;
+      if(registration?.showNotification) {
+        await registration.showNotification(title, options);
+        return true;
+      }
+    }
+  } catch {}
+  try {
+    new window.Notification(title, options);
+    return true;
+  } catch {
+    return false;
+  }
+}
 function itemTypeLabel(type) {
   return ({
     weapon: "Arma",
@@ -10841,8 +10876,8 @@ function GameScreen({ myId, setScreen, authUser }) {
   const prevMyTurnRef = useRef(false);
   // Request notification permission as soon as combat starts
   useEffect(() => {
-    if(qs?.combat?.active && "Notification" in window && Notification.permission === "default") {
-      Notification.requestPermission();
+    if(qs?.combat?.active) {
+      requestBrowserNotificationPermission();
     }
   }, [!!qs?.combat?.active]);
 
@@ -10869,10 +10904,8 @@ function GameScreen({ myId, setScreen, authUser }) {
     if (isNowMyTurn && !prevMyTurnRef.current) {
       // Notify whenever the user is not watching the combat tab
       const awayFromCombat = document.hidden || tab !== "combat";
-      if (awayFromCombat && "Notification" in window) {
-        if (Notification.permission === "granted") {
-          new Notification("Echoes of Zodar ⚔️", { body: `⚔️ È il tuo turno, ${me?.name || "Eroe"}! Hai 30 secondi.`, icon: "/favicon.ico", tag: "my-turn", renotify: true });
-        }
+      if (awayFromCombat) {
+        showBrowserNotification("Echoes of Zodar ⚔️", { body: `⚔️ È il tuo turno, ${me?.name || "Eroe"}! Hai 30 secondi.`, icon: "/favicon.ico", tag: "my-turn", renotify: true });
       }
     }
     prevMyTurnRef.current = isNowMyTurn;
@@ -15457,8 +15490,8 @@ ${stepText(step)}`, "quest","Master");
                     <h3 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fca5a5", margin:"0 0 0.35rem", fontSize:"1.5rem", letterSpacing:"0.04em" }}>⚔️ {lang === "en" ? "Battle" : "Battaglia"}</h3>
                     <div style={{ color:"#cbd5e1", fontSize:"0.9rem" }}>Round {combat.round} • {combat.combatants.length} {lang === "en" ? "combatants" : "partecipanti"} • {lang === "en" ? "fate is decided now" : "il destino si decide ora"}</div>
                     <div style={{ display:"flex", gap:6, marginTop:6, flexWrap:"wrap" }}>
-                      {"Notification" in window && Notification.permission !== "granted" && (
-                        <button onClick={()=>Notification.requestPermission()} style={{ padding:"0.25rem 0.7rem", background:"rgba(109,40,217,0.2)", border:"1px solid #7c3aed", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontSize:"0.68rem" }}>
+                      {getNotificationPermission() !== "unsupported" && getNotificationPermission() !== "granted" && (
+                        <button onClick={requestBrowserNotificationPermission} style={{ padding:"0.25rem 0.7rem", background:"rgba(109,40,217,0.2)", border:"1px solid #7c3aed", borderRadius:6, color:"#c4b5fd", cursor:"pointer", fontSize:"0.68rem" }}>
                           🔔 {lang === "en" ? "Notifications" : "Notifiche"}
                         </button>
                       )}
