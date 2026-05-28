@@ -108,6 +108,7 @@ Gia implementato:
 - Acquisto pacchetti con gold dalla tab Pacchetti.
 - Tab Master "Pacchetti" per regalare pacchetti ai player selezionati.
 - Sbustamento con reveal.
+- Grafica base dei pacchetti con busta fantasy, sigillo e animazione di apertura.
 - Rarita e pity.
 - Frammenti per doppioni cosmetici.
 - Carte ottenute salvate in collezione.
@@ -120,7 +121,7 @@ Da fare:
 
 - Grafica estetica completa delle carte.
 - Identita visiva diversa per rarita.
-- Animazioni migliori di sbustamento.
+- Animazioni avanzate di sbustamento, con effetti speciali dedicati a epiche, leggendarie e mitiche.
 - Shop/pacchetti collegati a gold, dungeon, eventi e valuta speciale.
 - Drop pacchetti da dungeon, eventi e ricompense mensili.
 - Bilanciamento finale delle probabilita.

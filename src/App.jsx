@@ -54,6 +54,11 @@ import { I18nProvider, LanguageToggle, useI18n } from "./i18n.jsx";
     @keyframes victorySunburst { 0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.35)} 28%{opacity:.95;transform:translate(-50%,-50%) rotate(35deg) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) rotate(105deg) scale(1.4)} }
     @keyframes victoryRibbon { 0%{transform:scaleX(0);opacity:0} 22%{transform:scaleX(1);opacity:1} 78%{opacity:1} 100%{transform:scaleX(.2);opacity:0} }
     @keyframes victorySparkRise { 0%{opacity:0;transform:translateY(38px) scale(.65)} 24%{opacity:1} 100%{opacity:0;transform:translateY(-110px) scale(1.15)} }
+    @keyframes cardPackFloat { 0%,100%{transform:translateY(0) rotate(-1deg)} 50%{transform:translateY(-7px) rotate(1deg)} }
+    @keyframes cardPackSealPulse { 0%,100%{transform:translate(-50%,-50%) scale(1);filter:drop-shadow(0 0 10px rgba(251,191,36,.42))} 50%{transform:translate(-50%,-50%) scale(1.06);filter:drop-shadow(0 0 24px rgba(251,191,36,.82))} }
+    @keyframes cardPackOpen { 0%{transform:translateY(0) scale(1);filter:brightness(1)} 45%{transform:translateY(-10px) scale(1.05);filter:brightness(1.45)} 100%{transform:translateY(18px) scale(.9);opacity:0;filter:blur(8px) brightness(1.8)} }
+    @keyframes cardPackBurst { 0%{opacity:0;transform:translate(-50%,-50%) scale(.35) rotate(0deg)} 38%{opacity:.95} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.45) rotate(55deg)} }
+    @keyframes cardRevealGridIn { from{opacity:0;transform:translateY(18px) scale(.96)} to{opacity:1;transform:none} }
     @keyframes dice-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
     .dice-spin { animation:dice-spin .55s linear infinite; }
     @keyframes restOverlayIn { from{opacity:0} to{opacity:1} }
@@ -10173,8 +10178,52 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
   );
 }
 
+function ZodarPackArtwork({ pack, large=false, opening=false }) {
+  const accent = pack?.accent || "#a78bfa";
+  const isEclipse = pack?.id === "pack_eclipse";
+  const width = large ? 260 : 150;
+  const height = large ? 350 : 190;
+  return (
+    <div style={{ position:"relative", width, maxWidth:"100%", height, margin:"0 auto", display:"flex", alignItems:"center", justifyContent:"center", perspective:900 }}>
+      {large && (
+        <>
+          <div style={{ position:"absolute", left:"50%", top:"50%", width:large ? 350 : 190, aspectRatio:"1", borderRadius:"50%", transform:"translate(-50%,-50%)", background:`radial-gradient(circle,${accent}44,transparent 64%)`, filter:"blur(10px)", opacity:0.9 }} />
+          {opening && <div style={{ position:"absolute", left:"50%", top:"50%", width:360, aspectRatio:"1", borderRadius:"50%", transform:"translate(-50%,-50%)", background:`conic-gradient(from 0deg,transparent,${accent},transparent,#fef3c7,transparent)`, animation:"cardPackBurst 0.9s ease-out forwards" }} />}
+        </>
+      )}
+      <div style={{
+        position:"relative",
+        width:"78%",
+        height:"92%",
+        borderRadius:large ? 18 : 12,
+        overflow:"hidden",
+        background:isEclipse
+          ? "linear-gradient(150deg,#451a03 0%,#111827 36%,#581c87 72%,#030712 100%)"
+          : "linear-gradient(150deg,#1e1b4b 0%,#111827 38%,#172554 74%,#030712 100%)",
+        border:`${large ? 4 : 3}px solid ${accent}`,
+        boxShadow:`0 0 ${large ? 38 : 18}px ${accent}66, inset 0 0 0 2px rgba(255,255,255,0.18), inset 0 0 38px rgba(0,0,0,0.58)`,
+        transformStyle:"preserve-3d",
+        animation:opening ? "cardPackOpen 0.9s ease forwards" : large ? "cardPackFloat 3.2s ease-in-out infinite" : "none",
+      }}>
+        <div style={{ position:"absolute", inset:0, background:"linear-gradient(120deg,rgba(255,255,255,0.12),transparent 28%,rgba(255,255,255,0.08) 52%,transparent 74%)" }} />
+        <div style={{ position:"absolute", inset:"8% 8% auto", height:"22%", clipPath:"polygon(0 0,100% 0,50% 100%)", background:`linear-gradient(180deg,rgba(255,255,255,0.2),${accent}33)`, borderBottom:`2px solid ${accent}99` }} />
+        <div style={{ position:"absolute", left:"10%", right:"10%", top:"23%", height:2, background:`linear-gradient(90deg,transparent,${accent},transparent)`, boxShadow:`0 0 12px ${accent}` }} />
+        <div style={{ position:"absolute", left:"50%", top:"39%", width:large ? 92 : 52, height:large ? 92 : 52, borderRadius:"50%", transform:"translate(-50%,-50%)", background:`radial-gradient(circle at 36% 28%,#fff7ed,${accent} 36%,#111827 72%)`, border:`${large ? 4 : 3}px solid rgba(254,243,199,0.78)`, boxShadow:`0 0 ${large ? 28 : 14}px ${accent}`, animation:large ? "cardPackSealPulse 2.6s ease-in-out infinite" : "none", display:"flex", alignItems:"center", justifyContent:"center" }}>
+          <div style={{ color:"#020617", fontFamily:"'Cinzel Decorative',serif", fontSize:large ? "2.15rem" : "1.2rem", fontWeight:900, textShadow:"0 1px 0 rgba(255,255,255,0.45)" }}>Z</div>
+        </div>
+        <div style={{ position:"absolute", left:"9%", right:"9%", bottom:"13%", textAlign:"center" }}>
+          <div style={{ color:"#f8fafc", fontFamily:"'Cinzel Decorative',serif", fontSize:large ? "1.05rem" : "0.58rem", lineHeight:1.05, textShadow:"0 2px 8px rgba(0,0,0,0.9)" }}>{pack?.name || "Pacchetto"}</div>
+          <div style={{ margin:"0.42rem auto 0", width:"78%", height:1, background:`linear-gradient(90deg,transparent,${accent},transparent)` }} />
+          <div style={{ color:"#cbd5e1", fontFamily:"'Cinzel',serif", fontSize:large ? "0.7rem" : "0.48rem", marginTop:"0.42rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>{pack?.guaranteed ? `${cardRarityLabel(pack.guaranteed)} garantita` : "Sigillo di Zodar"}</div>
+        </div>
+        <div style={{ position:"absolute", inset:"auto 0 0", height:"18%", background:`linear-gradient(180deg,transparent,${accent}33,rgba(2,6,23,0.75))` }} />
+      </div>
+    </div>
+  );
+}
+
 function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onGrantDevPack }) {
-  const [opening, setOpening] = useState(null); // { pack, rewards, revealed }
+  const [opening, setOpening] = useState(null); // { pack, rewards, revealed, phase }
   const [busy, setBusy] = useState(false);
   const [spotlight, setSpotlight] = useState(null);
   async function openPack(pack) {
@@ -10182,10 +10231,16 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onGrantDevP
     setBusy(true);
     try {
       const rewards = await onOpenPack(pack.id);
-      if(rewards?.length) setOpening({ pack, rewards, revealed:Array(rewards.length).fill(false) });
+      if(rewards?.length) setOpening({ pack, rewards, revealed:Array(rewards.length).fill(false), phase:"sealed" });
     } finally {
       setBusy(false);
     }
+  }
+  function startPackReveal() {
+    setOpening(prev => prev ? { ...prev, phase:"opening" } : prev);
+    window.setTimeout(() => {
+      setOpening(prev => prev ? { ...prev, phase:"cards" } : prev);
+    }, 780);
   }
   const allRevealed = opening?.revealed?.every(Boolean);
   const summary = opening?.rewards?.reduce((acc, card) => {
@@ -10221,11 +10276,8 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onGrantDevP
           const canBuy = !!me?.id && (me?.gold || 0) >= price;
           return (
             <div key={pack.id} style={{ background:"rgba(15,23,42,0.78)", border:`1px solid ${pack.accent}55`, borderRadius:8, padding:"1rem", boxShadow:"0 14px 34px rgba(0,0,0,0.25)" }}>
-              <div style={{ height:130, borderRadius:8, background:`radial-gradient(circle at 50% 20%, ${pack.accent}55, transparent 55%), linear-gradient(160deg,rgba(30,20,55,0.95),rgba(5,8,18,0.98))`, border:`1px solid ${pack.accent}66`, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"0.8rem" }}>
-                <div style={{ textAlign:"center" }}>
-                  <div style={{ fontFamily:"'Cinzel Decorative',serif", color:pack.accent, fontSize:"2.2rem", lineHeight:1 }}>Z</div>
-                  <div style={{ color:"#cbd5e1", fontFamily:"'Cinzel',serif", fontSize:"0.72rem", letterSpacing:"0.08em" }}>PACCHETTO</div>
-                </div>
+              <div style={{ minHeight:196, borderRadius:8, background:`radial-gradient(circle at 50% 18%, ${pack.accent}33, transparent 58%), linear-gradient(160deg,rgba(15,23,42,0.78),rgba(5,8,18,0.98))`, border:`1px solid ${pack.accent}55`, display:"flex", alignItems:"center", justifyContent:"center", marginBottom:"0.8rem", overflow:"hidden" }}>
+                <ZodarPackArtwork pack={pack} />
               </div>
               <div style={{ fontFamily:"'Cinzel',serif", color:"#e2e8f0", fontWeight:700 }}>{pack.name}</div>
               <div style={{ color:"#94a3b8", fontSize:"0.78rem", marginTop:3 }}>{pack.subtitle}</div>
@@ -10267,35 +10319,45 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onGrantDevP
         <div style={{ position:"fixed", inset:0, zIndex:99996, background:"rgba(2,6,23,0.92)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
           <div style={{ width:"min(1240px,100%)", textAlign:"center" }}>
             <div style={{ fontFamily:"'Cinzel Decorative',serif", color:opening.pack.accent, fontSize:"1.35rem", marginBottom:"0.3rem" }}>{opening.pack.name}</div>
-            <div style={{ color:"#64748b", fontSize:"0.8rem", marginBottom:"1rem" }}>{allRevealed ? "Ricompense ottenute" : "Clicca sulle carte per rivelarle"}</div>
-            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))", gap:14, alignItems:"stretch", justifyItems:"center" }}>
-              {opening.rewards.map((card, idx) => (
-                <ZodarLootCard
-                  key={card.uid}
-                  card={card}
-                  revealed={opening.revealed[idx]}
-                  onClick={()=>revealCard(idx)}
-                />
-              ))}
-            </div>
-            {allRevealed && summary && (
-              <div style={{ margin:"1rem auto 0", maxWidth:760, background:"rgba(15,23,42,0.78)", border:"1px solid rgba(148,163,184,0.16)", borderRadius:8, padding:"0.8rem 1rem", display:"grid", gap:8 }}>
-                <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
-                  <span style={{ color:"#94a3b8", fontSize:"0.72rem", textTransform:"uppercase", letterSpacing:"0.1em" }}>Riepilogo</span>
-                  {Object.entries(summary.byRarity).sort((a,b)=>(CARD_RARITY_ORDER[b[0]]||0)-(CARD_RARITY_ORDER[a[0]]||0)).map(([rarity, count]) => (
-                    <span key={rarity} style={{ color:CARD_RARITY_COLOR[rarity], border:`1px solid ${CARD_RARITY_COLOR[rarity]}44`, borderRadius:999, padding:"2px 8px", fontSize:"0.68rem" }}>{cardRarityLabel(rarity)} x{count}</span>
+            {opening.phase !== "cards" ? (
+              <div style={{ minHeight:430, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:18 }}>
+                <ZodarPackArtwork pack={opening.pack} large opening={opening.phase === "opening"} />
+                <div style={{ color:"#94a3b8", fontSize:"0.82rem" }}>{opening.phase === "opening" ? "Il sigillo si spezza..." : "Pacchetto sigillato"}</div>
+                {opening.phase === "sealed" && <BigBtn onClick={startPackReveal} gold>Apri pacchetto</BigBtn>}
+              </div>
+            ) : (
+              <>
+                <div style={{ color:"#64748b", fontSize:"0.8rem", marginBottom:"1rem" }}>{allRevealed ? "Ricompense ottenute" : "Clicca sulle carte per rivelarle"}</div>
+                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))", gap:14, alignItems:"stretch", justifyItems:"center", animation:"cardRevealGridIn 0.34s ease both" }}>
+                  {opening.rewards.map((card, idx) => (
+                    <ZodarLootCard
+                      key={card.uid}
+                      card={card}
+                      revealed={opening.revealed[idx]}
+                      onClick={()=>revealCard(idx)}
+                    />
                   ))}
-                  {summary.fragments > 0 && <span style={{ marginLeft:"auto", color:"#c4b5fd", fontWeight:700, fontSize:"0.74rem" }}>+{summary.fragments} frammenti</span>}
                 </div>
-                {summary.best && (
-                  <div style={{ color:"#e2e8f0", fontFamily:"'Cinzel',serif", fontSize:"0.9rem" }}>
-                    Miglior ritrovamento: <span style={{ color:CARD_RARITY_COLOR[summary.best.rarity], fontWeight:700 }}>{summary.best.name}</span>
+                {allRevealed && summary && (
+                  <div style={{ margin:"1rem auto 0", maxWidth:760, background:"rgba(15,23,42,0.78)", border:"1px solid rgba(148,163,184,0.16)", borderRadius:8, padding:"0.8rem 1rem", display:"grid", gap:8 }}>
+                    <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
+                      <span style={{ color:"#94a3b8", fontSize:"0.72rem", textTransform:"uppercase", letterSpacing:"0.1em" }}>Riepilogo</span>
+                      {Object.entries(summary.byRarity).sort((a,b)=>(CARD_RARITY_ORDER[b[0]]||0)-(CARD_RARITY_ORDER[a[0]]||0)).map(([rarity, count]) => (
+                        <span key={rarity} style={{ color:CARD_RARITY_COLOR[rarity], border:`1px solid ${CARD_RARITY_COLOR[rarity]}44`, borderRadius:999, padding:"2px 8px", fontSize:"0.68rem" }}>{cardRarityLabel(rarity)} x{count}</span>
+                      ))}
+                      {summary.fragments > 0 && <span style={{ marginLeft:"auto", color:"#c4b5fd", fontWeight:700, fontSize:"0.74rem" }}>+{summary.fragments} frammenti</span>}
+                    </div>
+                    {summary.best && (
+                      <div style={{ color:"#e2e8f0", fontFamily:"'Cinzel',serif", fontSize:"0.9rem" }}>
+                        Miglior ritrovamento: <span style={{ color:CARD_RARITY_COLOR[summary.best.rarity], fontWeight:700 }}>{summary.best.name}</span>
+                      </div>
+                    )}
                   </div>
                 )}
-              </div>
+              </>
             )}
             <div style={{ display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap", marginTop:"1.2rem" }}>
-              {!allRevealed && <BigBtn onClick={()=>setOpening(prev => {
+              {opening.phase === "cards" && !allRevealed && <BigBtn onClick={()=>setOpening(prev => {
                 const best = prev?.rewards?.find(card => ["mythic","legendary"].includes(card.rarity));
                 if(best) setSpotlight(best);
                 return prev ? { ...prev, revealed:prev.revealed.map(()=>true) } : prev;
