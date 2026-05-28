@@ -365,7 +365,53 @@ function InitiativeStrip({ combatants, activeIdx }) {
   );
 }
 
-function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, isMobile, images, cue, cueTargetId }) {
+function BattleStageAction({ fx, activeCombatant, isMobile, effectKey }) {
+  if(!fx || !activeCombatant) return null;
+  const fromLeft = !!activeCombatant.isPlayer;
+  const color = fx.color || '#f87171';
+  const travelName = fromLeft ? 'battleTravelLeftToRight' : 'battleTravelRightToLeft';
+  const targetX = fromLeft ? '73%' : '27%';
+  const originX = fromLeft ? '25%' : '75%';
+  const label = fx.label || '';
+  const magicTypes = new Set(['magic','healMagic','fire','ice','lightning','poison','shadow','holy','nature','sonic','control','divine']);
+  const base = { position:'absolute', inset:0, pointerEvents:'none', zIndex:5, overflow:'hidden' };
+
+  if(fx.type === 'arrow') return (
+    <div key={effectKey} style={base}>
+      <div style={{ position:'absolute', left:originX, top:'48%', width:isMobile ? 120 : 220, height:5, borderRadius:999, background:'linear-gradient(90deg,transparent,#fde68a,#f59e0b)', boxShadow:'0 0 18px rgba(251,191,36,.95)', transformOrigin:fromLeft ? 'left center' : 'right center', animation:`${travelName} .72s ease-out forwards` }} />
+      <div style={{ position:'absolute', left:originX, top:'45%', color:'#fde68a', fontSize:isMobile ? '1.3rem' : '1.7rem', textShadow:'0 0 14px #f59e0b', animation:`${travelName} .72s ease-out forwards` }}>➤</div>
+    </div>
+  );
+
+  if(fx.type === 'slash' || fx.type === 'hit' || fx.type === 'miss') return (
+    <div key={effectKey} style={base}>
+      <div style={{ position:'absolute', left:targetX, top:'47%', width:isMobile ? 90 : 142, height:isMobile ? 90 : 142, transform:'translate(-50%,-50%) rotate(-18deg)', borderRadius:18, background:'linear-gradient(135deg,transparent 28%,#fff7ed 45%,#ef4444 52%,transparent 68%)', filter:'drop-shadow(0 0 16px rgba(248,113,113,.95))', animation:'battleSlashImpact .78s ease-out forwards' }} />
+      <div style={{ position:'absolute', left:targetX, top:'48%', transform:'translate(-50%,-50%)', color:'#fecaca', fontFamily:"'Cinzel Decorative',serif", fontSize:isMobile ? '.9rem' : '1.1rem', textShadow:'0 0 14px #ef4444', animation:'battleImpactText .8s ease-out forwards' }}>{fx.type === 'miss' ? 'MISS' : 'SLASH'}</div>
+    </div>
+  );
+
+  if(magicTypes.has(fx.type)) {
+    const heal = fx.type === 'healMagic';
+    const endX = heal ? originX : targetX;
+    const auraColor = heal ? '#34d399' : color;
+    return (
+      <div key={effectKey} style={base}>
+        {fx.type === 'divine' && <div style={{ position:'absolute', left:'50%', top:0, width:isMobile ? 120 : 180, height:'100%', transform:'translateX(-50%)', background:'linear-gradient(180deg,transparent,rgba(254,243,199,.7),rgba(168,85,247,.22),transparent)', filter:'blur(10px)', animation:'battleDivineColumn .95s ease-out forwards' }} />}
+        <div style={{ position:'absolute', left:originX, top:'47%', width:isMobile ? 54 : 76, height:isMobile ? 54 : 76, borderRadius:'50%', background:`radial-gradient(circle,#fff 0%,${auraColor} 24%,${auraColor}88 48%,transparent 72%)`, boxShadow:`0 0 32px ${auraColor}, 0 0 70px ${auraColor}66`, animation:heal ? 'battleHealBloom .95s ease-out forwards' : `${travelName} .88s cubic-bezier(.16,.85,.3,1) forwards` }} />
+        <div style={{ position:'absolute', left:endX, top:'47%', width:isMobile ? 138 : 210, height:isMobile ? 138 : 210, transform:'translate(-50%,-50%)', borderRadius:'50%', background:`radial-gradient(circle,${auraColor}66,${auraColor}24 35%,transparent 68%)`, boxShadow:`inset 0 0 28px ${auraColor}55, 0 0 42px ${auraColor}66`, animation:'battleMagicImpact .95s ease-out forwards' }} />
+        {label && <div style={{ position:'absolute', left:endX, top:isMobile ? '28%' : '25%', transform:'translateX(-50%)', color:fx.type === 'divine' ? '#fef3c7' : auraColor, fontFamily:"'Cinzel Decorative',serif", fontWeight:900, fontSize:isMobile ? '.82rem' : '1rem', letterSpacing:'.1em', textTransform:'uppercase', textShadow:`0 0 18px ${auraColor}`, whiteSpace:'nowrap', animation:'battleImpactText .95s ease-out forwards' }}>{label}</div>}
+      </div>
+    );
+  }
+
+  return (
+    <div key={effectKey} style={base}>
+      <div style={{ position:'absolute', left:targetX, top:'48%', width:isMobile ? 120 : 180, height:isMobile ? 120 : 180, transform:'translate(-50%,-50%)', borderRadius:'50%', background:`radial-gradient(circle,${color}55,transparent 68%)`, boxShadow:`0 0 36px ${color}88`, animation:'battleMagicImpact .8s ease-out forwards' }} />
+    </div>
+  );
+}
+
+function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, isMobile, images, cue, cueTargetId, actionFx, effectKey }) {
   const alivePlayers = players.filter(c => !c.dead && c.hp > 0).length;
   const aliveMonsters = monsters.filter(c => !c.dead && c.hp > 0).length;
 
@@ -444,6 +490,13 @@ function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, is
         <span style={{ fontSize:isMobile ? '1.4rem' : '1.8rem', filter:'drop-shadow(0 0 8px #ef4444)' }}>⚔️</span>
       </div>
 
+      <BattleStageAction
+        fx={actionFx}
+        activeCombatant={combatants[activeIdx]}
+        isMobile={isMobile}
+        effectKey={effectKey}
+      />
+
       <div style={{
         position:'relative',
         zIndex:3,
@@ -461,7 +514,7 @@ function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, is
   );
 }
 
-export default function CombatVisualizer({ combat, myId, isMobile, images = {}, cue = null }) {
+export default function CombatVisualizer({ combat, myId, isMobile, images = {}, cue = null, actionFx = null, effectKey = "" }) {
   const { combatants = [], turn = 0, round = 1 } = combat || {};
   const activeIdx = turn % Math.max(1, combatants.length);
 
@@ -512,6 +565,13 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {}, 
         @keyframes battleSpriteStrikeRight { 0%{transform:translateX(0) scale(1)} 28%{transform:translateX(-28px) scale(1.04)} 52%{transform:translateX(4px) scale(.99)} 100%{transform:translateX(0) scale(1)} }
         @keyframes battleSpriteWound { 0%,100%{opacity:.1} 50%{opacity:.36} }
         @keyframes battleCenterPulse { 0%,100%{opacity:.45;transform:translate(-50%,-50%) scale(.92)} 50%{opacity:1;transform:translate(-50%,-50%) scale(1.08)} }
+        @keyframes battleTravelLeftToRight { 0%{transform:translate(-10%,-50%) scale(.75);opacity:0} 18%{opacity:1} 78%{opacity:1} 100%{transform:translate(210%,-50%) scale(1.08);opacity:0} }
+        @keyframes battleTravelRightToLeft { 0%{transform:translate(10%,-50%) scale(.75) rotate(180deg);opacity:0} 18%{opacity:1} 78%{opacity:1} 100%{transform:translate(-210%,-50%) scale(1.08) rotate(180deg);opacity:0} }
+        @keyframes battleSlashImpact { 0%{opacity:0;clip-path:inset(50% 50% 50% 50%);filter:blur(6px)} 28%{opacity:1;clip-path:inset(0 0 0 0);filter:blur(0)} 100%{opacity:0;clip-path:inset(0 0 0 0);filter:blur(5px);transform:translate(-50%,-50%) rotate(18deg) scale(1.2)} }
+        @keyframes battleMagicImpact { 0%{opacity:0;transform:translate(-50%,-50%) scale(.25)} 28%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.45)} }
+        @keyframes battleHealBloom { 0%{opacity:0;transform:translate(-50%,-50%) scale(.5)} 35%{opacity:1;transform:translate(-50%,-50%) scale(1.2)} 100%{opacity:0;transform:translate(-50%,-82%) scale(1.55)} }
+        @keyframes battleDivineColumn { 0%{opacity:0;transform:translateX(-50%) scaleY(.35)} 30%{opacity:1;transform:translateX(-50%) scaleY(1)} 100%{opacity:0;transform:translateX(-50%) scaleY(1.18)} }
+        @keyframes battleImpactText { 0%{opacity:0;transform:translate(-50%,12px) scale(.8)} 25%{opacity:1;transform:translate(-50%,0) scale(1)} 100%{opacity:0;transform:translate(-50%,-26px) scale(1.08)} }
       `}</style>
       <div style={{
         textAlign: 'center', marginBottom: isMobile ? 10 : 14,
@@ -562,6 +622,8 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {}, 
         images={images}
         cue={cue}
         cueTargetId={cueTargetId}
+        actionFx={actionFx}
+        effectKey={effectKey}
       />
 
       {false && <div style={{

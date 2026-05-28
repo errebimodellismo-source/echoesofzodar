@@ -14665,6 +14665,8 @@ ${stepText(step)}`, "quest","Master");
                           c.isSummon ? getMonsterImage(c) : c.isPlayer ? getPlayerPortrait(c) : getMonsterImage(c)
                         ]))}
                         cue={combatLogCue(combat.pendingLog, lang)}
+                        actionFx={battleEffectFromLog(combat.pendingLog, lang)}
+                        effectKey={combat.pendingLog || ""}
                       />
                       <BattleActionEffect log={combat.pendingLog} lang={lang} />
                     </div>
