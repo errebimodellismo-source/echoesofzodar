@@ -105,6 +105,7 @@ Gia implementato:
 - Tab Pacchetti e Carte protette.
 - Pacchetti test.
 - Acquisto pacchetti con gold dalla tab Pacchetti.
+- Tab Master "Pacchetti" per regalare pacchetti ai player selezionati.
 - Sbustamento con reveal.
 - Rarita e pity.
 - Frammenti per doppioni cosmetici.

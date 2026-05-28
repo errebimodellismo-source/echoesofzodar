@@ -1782,6 +1782,25 @@ function cardVaultKey(playerId) {
 function cardFeatureUnlockKey(playerId) {
   return `eoz_card_feature_unlocked_${playerId}`;
 }
+function cardGrantProcessedKey(playerId) {
+  return `eoz_card_grants_processed_${playerId}`;
+}
+function parseCardPackGrant(msg) {
+  if(msg?.type !== "card_grant") return null;
+  try {
+    const parsed = JSON.parse(msg.content || "{}");
+    if(parsed?.kind !== "card_pack_grant" || !parsed?.targetPlayerId || !parsed?.packId) return null;
+    return {
+      grantId: parsed.grantId || msg.id || `${parsed.targetPlayerId}_${parsed.packId}_${msg.created_at || ""}`,
+      targetPlayerId: parsed.targetPlayerId,
+      packId: parsed.packId,
+      quantity: Math.max(1, Number(parsed.quantity) || 1),
+      note: parsed.note || "",
+    };
+  } catch {
+    return null;
+  }
+}
 function defaultCardVault() {
   return {
     packs:{ pack_zodar:3, pack_eclipse:1 },
@@ -4950,7 +4969,7 @@ function MasterPanel({ setScreen, authUser }) {
     return ()=>{ alive = false; clearInterval(timer); };
   }, [tab]);
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"questbuilder",l:"⚔️ Quest Builder"},{k:"stories",l:"📖 Storie"},{k:"editor",l:"✏️ Editor"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"online",l:"👁️ Online"},{k:"users",l:"📊 Report"}];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"questbuilder",l:"⚔️ Quest Builder"},{k:"stories",l:"📖 Storie"},{k:"editor",l:"✏️ Editor"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"cardpacks",l:"📦 Pacchetti"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"online",l:"👁️ Online"},{k:"users",l:"📊 Report"}];
   const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
   const visibleQuests = quests.filter(q => {
     const term = questSearch.trim().toLowerCase();
@@ -5441,6 +5460,7 @@ function MasterPanel({ setScreen, authUser }) {
       )}
 
       {tab==="players" && <PlayersView authUser={authUser} />}
+      {tab==="cardpacks" && <MasterCardPacksView authUser={authUser} />}
       {tab==="party" && <PartiesView authUser={authUser} />}
       {tab==="guilds" && <MasterGuildsView />}
       {tab==="market" && <MarketView />}
@@ -6396,6 +6416,137 @@ function PlayersView({ authUser }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function MasterCardPacksView({ authUser }) {
+  const [players, setPlayers] = useState([]);
+  const [playerMeta, setPlayerMeta] = useState({});
+  const [targetId, setTargetId] = useState("");
+  const [packId, setPackId] = useState(CARD_PACK_DEFS[0]?.id || "");
+  const [quantity, setQuantity] = useState(1);
+  const [announce, setAnnounce] = useState(true);
+  const [busy, setBusy] = useState(false);
+
+  async function reload() {
+    const [{ data }, meta] = await Promise.all([
+      supabase.from("players").select("id,name,party_code,class,level,gold").order("name", { ascending:true }),
+      dbGetPlayerMasterMeta().catch(() => ({})),
+    ]);
+    setPlayers(data || []);
+    setPlayerMeta(meta || {});
+    if(!targetId && data?.[0]?.id) setTargetId(data[0].id);
+  }
+
+  useEffect(() => {
+    reload();
+    const timer = setInterval(reload, 6000);
+    return () => clearInterval(timer);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  async function grantPack() {
+    const player = players.find(p => p.id === targetId);
+    const pack = CARD_PACK_DEFS.find(p => p.id === packId);
+    const qty = Math.max(1, Number(quantity) || 1);
+    if(!player || !pack) return;
+    if(!player.party_code) { window.alert("Questo player non è in un party: non posso consegnare il grant."); return; }
+    if(!window.confirm(`Regalare ${qty}x ${pack.name} a ${player.name}?`)) return;
+    setBusy(true);
+    try {
+      const grantId = `grant_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+      await dbSendMessage({
+        party_code:player.party_code,
+        author:"Dungeon Master",
+        type:"card_grant",
+        content:JSON.stringify({
+          kind:"card_pack_grant",
+          grantId,
+          targetPlayerId:player.id,
+          playerName:player.name,
+          packId:pack.id,
+          quantity:qty,
+          createdAt:new Date().toISOString(),
+        }),
+      });
+      if(announce) {
+        await dbSendMessage({
+          party_code:player.party_code,
+          author:"Dungeon Master",
+          type:"narration",
+          content:`📦 **Dono del Master:** ${player.name} riceve **${qty}x ${pack.name}**.`,
+        });
+      }
+      window.alert(`✅ Donati ${qty}x ${pack.name} a ${player.name}. Il player li riceverà al prossimo refresh/caricamento.`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  const selectedPlayer = players.find(p => p.id === targetId);
+
+  return (
+    <div style={{ display:"grid", gap:"1rem" }}>
+      {!canAccessMasterPanel(authUser) && (
+        <div style={{ background:"rgba(127,29,29,0.78)", border:"1px solid #fca5a5", color:"#fff1f2", borderRadius:6, padding:"0.8rem 1rem", fontSize:"0.82rem", lineHeight:1.45 }}>
+          Devi accedere con l'account Master autorizzato per vedere e premiare tutti i player.
+        </div>
+      )}
+      <Card title="📦 Regala Pacchetti">
+        <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 1rem", lineHeight:1.5 }}>
+          Seleziona un player e inviagli pacchetti direttamente nella tab Pacchetti. Il dono viene riscattato automaticamente dal client del giocatore una sola volta.
+        </p>
+        <div style={{ display:"grid", gridTemplateColumns:"minmax(220px,1.3fr) minmax(220px,1fr) 120px", gap:10, alignItems:"end" }}>
+          <div>
+            <label style={labelStyle}>Player</label>
+            <select style={{...inputStyle,cursor:"pointer"}} value={targetId} onChange={e=>setTargetId(e.target.value)}>
+              {players.map(p => {
+                const meta = playerMeta[p.id] || {};
+                return <option key={p.id} value={p.id}>{p.name}{meta.realPlayerName ? ` (${meta.realPlayerName})` : ""} · {p.party_code || "senza party"}</option>;
+              })}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Pacchetto</label>
+            <select style={{...inputStyle,cursor:"pointer"}} value={packId} onChange={e=>setPackId(e.target.value)}>
+              {CARD_PACK_DEFS.map(pack => <option key={pack.id} value={pack.id}>{pack.name} · {pack.price || 0} oro</option>)}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Quantità</label>
+            <input style={inputStyle} type="number" min="1" max="20" value={quantity} onChange={e=>setQuantity(Math.max(1, Number(e.target.value) || 1))} />
+          </div>
+        </div>
+        <label style={{ display:"flex", alignItems:"center", gap:8, color:"#cbd5e1", fontSize:"0.82rem", marginTop:"0.9rem", cursor:"pointer" }}>
+          <input type="checkbox" checked={announce} onChange={e=>setAnnounce(e.target.checked)} />
+          Annuncia il dono nel party
+        </label>
+        {selectedPlayer && (
+          <div style={{ marginTop:"0.9rem", color:"#64748b", fontSize:"0.76rem" }}>
+            Destinatario: <strong style={{ color:"#e2e8f0" }}>{selectedPlayer.name}</strong> · Party: <strong style={{ color:selectedPlayer.party_code ? "#a78bfa" : "#fca5a5" }}>{selectedPlayer.party_code || "nessuno"}</strong>
+          </div>
+        )}
+        <div style={{ display:"flex", gap:8, justifyContent:"flex-end", marginTop:"1rem", flexWrap:"wrap" }}>
+          <SmallBtn onClick={reload} disabled={busy}>Aggiorna lista</SmallBtn>
+          <BigBtn onClick={grantPack} gold disabled={busy || !targetId || !packId}>{busy ? "Invio..." : "Regala pacchetti"}</BigBtn>
+        </div>
+      </Card>
+      <Card title="🎴 Pacchetti Disponibili">
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(220px,1fr))", gap:10 }}>
+          {CARD_PACK_DEFS.map(pack => (
+            <div key={pack.id} style={{ background:"rgba(15,23,42,0.72)", border:`1px solid ${pack.accent}66`, borderRadius:8, padding:"0.85rem" }}>
+              <div style={{ fontFamily:"'Cinzel',serif", color:pack.accent, fontWeight:800 }}>{pack.name}</div>
+              <div style={{ color:"#94a3b8", fontSize:"0.76rem", marginTop:3 }}>{pack.subtitle}</div>
+              <div style={{ display:"flex", gap:5, flexWrap:"wrap", marginTop:"0.65rem" }}>
+                {Object.entries(pack.rates).map(([rarity, pct]) => (
+                  <span key={rarity} style={{ color:CARD_RARITY_COLOR[rarity], border:`1px solid ${CARD_RARITY_COLOR[rarity]}44`, borderRadius:999, padding:"1px 7px", fontSize:"0.62rem" }}>{cardRarityLabel(rarity)} {pct}%</span>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </Card>
     </div>
   );
 }
@@ -10431,6 +10582,21 @@ function GameScreen({ myId, setScreen, authUser }) {
     setCardVault(nextVault);
     saveStoredCardVault(myId, nextVault);
   }
+
+  useEffect(() => {
+    if(!myId || !messages?.length) return;
+    const processed = new Set(lsGet(cardGrantProcessedKey(myId), []));
+    const grants = messages.map(parseCardPackGrant).filter(grant => grant && grant.targetPlayerId === myId && !processed.has(grant.grantId));
+    if(!grants.length) return;
+    const nextVault = { ...cardVault, packs:{ ...(cardVault.packs || {}) } };
+    for(const grant of grants) {
+      nextVault.packs[grant.packId] = (nextVault.packs[grant.packId] || 0) + grant.quantity;
+      processed.add(grant.grantId);
+    }
+    persistCardVault(nextVault);
+    lsSet(cardGrantProcessedKey(myId), Array.from(processed).slice(-200));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [messages, myId]);
 
   function grantDevCardPack() {
     const nextVault = {
