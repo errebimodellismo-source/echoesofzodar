@@ -1795,6 +1795,47 @@ const CARD_COSMETICS = [
   { id:"aura_eco_nero", name:"Aura Eco Nero", type:"aura", rarity:"legendary", exclusive:true, description:"Effetto scenico da equipaggiare in futuro." },
   { id:"back_reliquary", name:"Retro Reliquiario", type:"cardback", rarity:"rare", exclusive:true, description:"Retro carta esclusivo dei pacchetti." },
 ];
+const CARD_ALLY_RARITY_CONFIG = {
+  common:{ count:42, hp:18, atk:4, def:1, mag:0, init:2, dmgDie:"1d6" },
+  uncommon:{ count:34, hp:26, atk:6, def:2, mag:1, init:3, dmgDie:"1d8" },
+  rare:{ count:26, hp:36, atk:8, def:4, mag:2, init:4, dmgDie:"1d10" },
+  epic:{ count:18, hp:50, atk:11, def:6, mag:4, init:5, dmgDie:"2d8" },
+  legendary:{ count:10, hp:68, atk:15, def:8, mag:6, init:6, dmgDie:"2d10" },
+  mythic:{ count:6, hp:90, atk:19, def:11, mag:9, init:8, dmgDie:"3d10" },
+};
+const ALLY_NAME_PARTS = {
+  first:["Arian","Mira","Thane","Seren","Kael","Lys","Dorian","Nyra","Borin","Elara","Varek","Ilyon","Maera","Rurik","Selka","Tavian","Orin","Velia"],
+  title:["del Velo","delle Rune","di Brumafonda","del Giuramento","di Ferrochiaro","della Soglia","dei Sussurri","di Nerocanto","dell'Alba Spenta","di Pietraluce"],
+  role:["Guardia","Cacciatrice","Mistico","Lama","Arcanista","Sentinella","Duellante","Custode","Spezzaossa","Oracolo","Predone Redento","Lanciere"],
+  emoji:["🗡️","🛡️","🏹","🔮","⚔️","✨","🪓","🌙","🔥","❄️"],
+};
+function buildCardAllies() {
+  const allies = [];
+  for(const [rarity, cfg] of Object.entries(CARD_ALLY_RARITY_CONFIG)) {
+    for(let i=0;i<cfg.count;i++) {
+      const first = ALLY_NAME_PARTS.first[(i + rarity.length) % ALLY_NAME_PARTS.first.length];
+      const title = ALLY_NAME_PARTS.title[(i * 3 + rarity.length) % ALLY_NAME_PARTS.title.length];
+      const role = ALLY_NAME_PARTS.role[(i * 5 + rarity.length) % ALLY_NAME_PARTS.role.length];
+      const emoji = ALLY_NAME_PARTS.emoji[(i * 7 + rarity.length) % ALLY_NAME_PARTS.emoji.length];
+      allies.push({
+        id:`ally_${rarity}_${i+1}`,
+        name:`${first} ${title}`,
+        role,
+        emoji,
+        rarity,
+        hp:cfg.hp + Math.floor(i % 5) * 2,
+        atk:cfg.atk + Math.floor(i % 4),
+        def:cfg.def + Math.floor(i % 3),
+        mag:cfg.mag,
+        init:cfg.init + (i % 3),
+        dmgDie:cfg.dmgDie,
+        description:`${role} richiamabile in battaglia tramite carta alleato. Se cade, il legame si spezza.`,
+      });
+    }
+  }
+  return allies;
+}
+const CARD_ALLIES = buildCardAllies();
 
 function cardVaultKey(playerId) {
   return `eoz_card_vault_${playerId}`;
@@ -1907,6 +1948,25 @@ function cosmeticToLootCard(cosmetic) {
     acquiredAt:new Date().toISOString(),
   };
 }
+function allyToLootCard(ally) {
+  return {
+    uid:`card_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+    cardId:ally.id,
+    kind:"ally",
+    type:"ally",
+    name:ally.name,
+    rarity:ally.rarity,
+    description:ally.description,
+    ally:{ ...ally },
+    effectLines:[
+      `Alleato evocabile: ${ally.role}`,
+      `Entra in battaglia con ${ally.hp} HP`,
+      `Quando viene usato, lascia la collezione del prototipo.`,
+    ],
+    stats:[`❤️ ${ally.hp}`, `⚔️ ${ally.atk}`, `🛡️ ${ally.def}`, `🎲 ${ally.dmgDie}`],
+    acquiredAt:new Date().toISOString(),
+  };
+}
 function pickPackReward(packDef, catalogItems, slotIndex) {
   const rolled = slotIndex === 0 && packDef.guaranteed
     ? packDef.guaranteed
@@ -1914,6 +1974,9 @@ function pickPackReward(packDef, catalogItems, slotIndex) {
   const rarity = slotIndex === 0 && packDef.guaranteed && !rarityAtLeast(rolled, packDef.guaranteed)
     ? packDef.guaranteed
     : rolled;
+  const allyPool = CARD_ALLIES.filter(a => a.rarity === rarity);
+  const useAlly = allyPool.length && (rarity === "mythic" || Math.random() < 0.22);
+  if(useAlly) return allyToLootCard(allyPool[Math.floor(Math.random() * allyPool.length)]);
   const cosmeticPool = CARD_COSMETICS.filter(c => c.rarity === rarity || (rarity === "mythic" && c.rarity === "legendary"));
   const useCosmetic = cosmeticPool.length && (rarity === "mythic" || rarity === "legendary" || Math.random() < 0.32);
   if(useCosmetic) return cosmeticToLootCard(cosmeticPool[Math.floor(Math.random() * cosmeticPool.length)]);
@@ -1923,6 +1986,8 @@ function pickPackReward(packDef, catalogItems, slotIndex) {
   return item ? itemToLootCard(item, rarity) : cosmeticToLootCard(CARD_COSMETICS[0]);
 }
 function pickCardRewardOfRarity(rarity, catalogItems) {
+  const allyPool = CARD_ALLIES.filter(a => a.rarity === rarity);
+  if(allyPool.length && Math.random() < 0.35) return allyToLootCard(allyPool[Math.floor(Math.random() * allyPool.length)]);
   const cosmeticPool = CARD_COSMETICS.filter(c => c.rarity === rarity);
   if(cosmeticPool.length && (rarity === "legendary" || rarity === "mythic" || Math.random() < 0.5)) {
     return cosmeticToLootCard(cosmeticPool[Math.floor(Math.random() * cosmeticPool.length)]);
@@ -2527,6 +2592,7 @@ function cardEffectLines(card, item=null) {
 }
 function cardTypeLine(card) {
   if(!card) return "Carta";
+  if(card.kind === "ally") return "Alleato";
   if(card.kind === "cosmetic") {
     return card.type === "title" ? "Titolo scenico" : card.type === "aura" ? "Aura scenica" : card.type === "frame" ? "Cornice" : card.type === "cardback" ? "Retro carta" : "Scenica";
   }
@@ -2540,6 +2606,10 @@ function cardStatBadge(card) {
   const defense = stats.find(s => String(s).includes("🛡️"));
   const heal = stats.find(s => String(s).includes("Cura"));
   const magic = stats.find(s => String(s).includes("✨"));
+  if(card.kind === "ally") {
+    const hp = stats.find(s => String(s).includes("❤️"));
+    return hp ? hp.replace("❤️ ", "HP ") : "ALLEATO";
+  }
   if(damage || attack) return [damage, attack].filter(Boolean).join(" / ").replace("🎲 ", "").replace("⚔️ ", "");
   if(defense) return defense.replace("🛡️ ", "DEF ");
   if(heal) return heal.replace("🧪 ", "");
@@ -10183,7 +10253,7 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
                 <div style={{ height:"100%", aspectRatio:"1 / 1", maxWidth:"100%", display:"flex", alignItems:"center", justifyContent:"center" }}>
                   <img src={card.image} alt={card.name} style={{ width:"100%", height:"100%", objectFit:"contain", filter:"drop-shadow(0 8px 14px rgba(0,0,0,0.42))" }} />
                 </div>
-              ) : <span style={{ fontSize:compact ? "1.7rem" : "2.2rem" }}>{card.type === "title" ? "🏷️" : card.type === "aura" ? "✨" : card.type === "frame" ? "▣" : "✦"}</span>}
+              ) : <span style={{ fontSize:compact ? "1.7rem" : "2.2rem" }}>{card.kind === "ally" ? (card.ally?.emoji || "⚔️") : card.type === "title" ? "🏷️" : card.type === "aura" ? "✨" : card.type === "frame" ? "▣" : "✦"}</span>}
             </div>
             <div style={{ minHeight:compact ? 22 : 31, borderRadius:7, background:`linear-gradient(180deg,${rarityStyle.plate},rgba(226,232,240,0.82))`, border:`2px solid ${rarityStyle.dark}`, color:rarityStyle.ink, fontFamily:"'Cinzel',serif", fontSize:compact ? "0.58rem" : "0.7rem", fontWeight:900, lineHeight:1.1, padding:compact ? "0.22rem 0.34rem" : "0.32rem 0.45rem", overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"space-between", gap:6 }}>
               <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", minWidth:0 }}>{typeLine}</span>
@@ -10477,7 +10547,7 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
   );
 }
 
-function CardsCollectionView({ vault, inventoryGroups, equipment, onEquip, onUse, onActivateTitle, isMobile=false }) {
+function CardsCollectionView({ vault, inventoryGroups, equipment, onEquip, onUse, onActivateTitle, onSummonAlly, combatActive=false, isMobile=false }) {
   const [selectedUid, setSelectedUid] = useState(null);
   const [filter, setFilter] = useState("all");
   const cards = [...(vault?.cards || [])].sort((a,b) => (CARD_RARITY_ORDER[b.rarity] || 0) - (CARD_RARITY_ORDER[a.rarity] || 0));
@@ -10492,9 +10562,9 @@ function CardsCollectionView({ vault, inventoryGroups, equipment, onEquip, onUse
         <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:"1rem" }}>
           <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, flex:1 }}>Carte</h3>
           <span style={{ color:"#c4b5fd", border:"1px solid rgba(168,85,247,0.28)", borderRadius:999, padding:"3px 10px", fontSize:"0.72rem", fontWeight:700 }}>Frammenti: {vault?.fragments || 0}</span>
-          {["all","item","cosmetic","title","epic","legendary","mythic"].map(k => (
+          {["all","item","ally","cosmetic","title","epic","legendary","mythic"].map(k => (
             <button key={k} onClick={()=>setFilter(k)} style={{ padding:"0.34rem 0.7rem", borderRadius:6, border:`1px solid ${filter===k?"#7c3aed":"#334155"}`, background:filter===k?"rgba(109,40,217,0.28)":"rgba(15,23,42,0.72)", color:filter===k?"#c4b5fd":"#94a3b8", fontSize:"0.7rem", cursor:"pointer" }}>
-              {k === "all" ? "Tutte" : k === "item" ? "Oggetti" : k === "cosmetic" ? "Sceniche" : cardRarityLabel(k)}
+              {k === "all" ? "Tutte" : k === "item" ? "Oggetti" : k === "ally" ? "Alleati" : k === "cosmetic" ? "Sceniche" : cardRarityLabel(k)}
             </button>
           ))}
         </div>
@@ -10509,7 +10579,7 @@ function CardsCollectionView({ vault, inventoryGroups, equipment, onEquip, onUse
             <ZodarLootCard card={selected} />
             <div style={{ marginTop:"1rem" }}>
               <div style={{ fontFamily:"'Cinzel',serif", color:"#e2e8f0", fontWeight:700, fontSize:"1.05rem" }}>{selected.name}</div>
-              <div style={{ color:CARD_RARITY_COLOR[selected.rarity], fontSize:"0.75rem", textTransform:"uppercase", letterSpacing:"0.08em", marginTop:3 }}>{cardRarityLabel(selected.rarity)} · {selected.kind === "item" ? "Oggetto" : "Scenica"}</div>
+              <div style={{ color:CARD_RARITY_COLOR[selected.rarity], fontSize:"0.75rem", textTransform:"uppercase", letterSpacing:"0.08em", marginTop:3 }}>{cardRarityLabel(selected.rarity)} · {selected.kind === "item" ? "Oggetto" : selected.kind === "ally" ? "Alleato" : "Scenica"}</div>
               <p style={{ color:"#94a3b8", fontSize:"0.84rem", lineHeight:1.55 }}>{selected.description || "Carta collezionabile."}</p>
               {!!selectedEffectLines.length && (
                 <div style={{ border:`1px solid ${CARD_RARITY_COLOR[selected.rarity]}44`, background:"rgba(15,23,42,0.72)", borderRadius:8, padding:"0.75rem", margin:"0 0 0.9rem", display:"grid", gap:6 }}>
@@ -10522,9 +10592,11 @@ function CardsCollectionView({ vault, inventoryGroups, equipment, onEquip, onUse
               <div style={{ display:"flex", gap:8, flexWrap:"wrap" }}>
                 {selectedGroup && isEquippableItem(selectedGroup.item) && <BigBtn onClick={()=>onEquip(selectedGroup.entries[0])} gold disabled={selectedEquipped}>{selectedEquipped ? "Equipaggiata" : "Equipaggia"}</BigBtn>}
                 {selectedGroup?.item?.type === "potion" && <BigBtn onClick={()=>onUse(selectedGroup.entries[0])} gold>Usa</BigBtn>}
+                {selected.kind === "ally" && <BigBtn onClick={()=>onSummonAlly?.(selected)} gold disabled={!combatActive}>{combatActive ? "Evoca alleato" : "Solo in battaglia"}</BigBtn>}
                 {selected.type === "title" && <BigBtn onClick={()=>onActivateTitle(selected)} gold>{vault.activeTitle === selected.cardId ? "Titolo attivo" : "Attiva titolo"}</BigBtn>}
               </div>
               {selected.kind === "item" && !selectedGroup && <div style={{ color:"#64748b", fontSize:"0.76rem", marginTop:"0.8rem" }}>La carta resta in collezione, ma l'oggetto non e presente nell'inventario.</div>}
+              {selected.kind === "ally" && <div style={{ color:"#64748b", fontSize:"0.76rem", marginTop:"0.8rem" }}>Prototipo: l'alleato viene consumato quando lo evochi. La versione finale potra farlo sparire solo alla morte.</div>}
               {vault.activeTitle === selected.cardId && <div style={{ color:"#fbbf24", fontSize:"0.76rem", marginTop:"0.8rem" }}>Titolo attualmente sfoggiato.</div>}
             </div>
           </>
@@ -10869,6 +10941,61 @@ function GameScreen({ myId, setScreen, authUser }) {
     if(!card || card.type !== "title") return;
     const nextVault = { ...cardVault, activeTitle:card.cardId };
     persistCardVault(nextVault);
+  }
+
+  async function summonAllyCard(card) {
+    if(!card?.ally || !me?.id || !code) return;
+    const latestQs = await dbGetPartyState(code);
+    const c = latestQs?.combat;
+    if(!c?.active || !Array.isArray(c.combatants)) {
+      window.alert("Puoi evocare un alleato solo durante un combattimento.");
+      return;
+    }
+    if(c.pendingLog) {
+      window.alert("Attendi la risoluzione del log di combattimento prima di evocare un alleato.");
+      return;
+    }
+    if(c.combatants.some(x => x.cardUid === card.uid || x.id === `ally_${card.uid}`)) return;
+    if(!window.confirm(`Evocare ${card.name}? Nel prototipo la carta viene consumata.`)) return;
+    const ally = card.ally;
+    const currentActor = c.combatants[c.turn % Math.max(1, c.combatants.length)];
+    const summoned = {
+      id:`ally_${card.uid}`,
+      cardUid:card.uid,
+      allyCardId:card.cardId,
+      name:ally.name,
+      emoji:ally.emoji || "⚔️",
+      hp:ally.hp,
+      maxHp:ally.hp,
+      atk:ally.atk,
+      def:ally.def,
+      mag:ally.mag || 0,
+      init:ally.init || 1,
+      dmgDie:ally.dmgDie || "1d6",
+      isPlayer:true,
+      isSummon:true,
+      summonOwner:myId,
+      summonedBy:me.name,
+      dying:false,
+      stable:false,
+      dead:false,
+      deathSuccesses:0,
+      deathFailures:0,
+      rollInit:(ally.init || 1) + roll(20),
+    };
+    const combatants = [...c.combatants, summoned].sort((a,b)=>(b.rollInit || 0) - (a.rollInit || 0));
+    const nextTurn = currentActor ? Math.max(0, combatants.findIndex(x => x.id === currentActor.id)) : c.turn;
+    const nextVault = { ...cardVault, cards:(cardVault.cards || []).filter(entry => entry.uid !== card.uid) };
+    persistCardVault(nextVault);
+    await saveQState({
+      ...latestQs,
+      combat:{
+        ...c,
+        combatants,
+        turn:nextTurn >= 0 ? nextTurn : c.turn,
+        pendingLog:`${summoned.emoji} **${me.name}** evoca **${summoned.name}** dalla carta alleato! Iniziativa: **${summoned.rollInit}**.`,
+      },
+    });
   }
 
   useEffect(() => {
@@ -14934,6 +15061,8 @@ ${stepText(step)}`, "quest","Master");
             onEquip={equipItem}
             onUse={usePotion}
             onActivateTitle={activateCardTitle}
+            onSummonAlly={summonAllyCard}
+            combatActive={!!combat?.active}
             isMobile={isMobile}
           />
         )}

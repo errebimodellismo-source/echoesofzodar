@@ -79,6 +79,25 @@ Le carte oggetto devono spiegare bonus e uso, per esempio danno arma, attacco, d
 
 Le carte sceniche devono spiegare che sono estetiche e non aumentano le statistiche.
 
+## Carte Alleato
+
+Idea: alcuni pacchetti possono contenere NPC collezionabili da usare in battaglia.
+
+Regole prototipo:
+
+- Gli alleati sono divisi nei 6 gradi di rarita.
+- Il prototipo genera un catalogo iniziale di oltre 100 alleati.
+- Le carte alleato possono uscire dai pacchetti.
+- Dalla tab Carte si possono evocare solo durante un combattimento.
+- Nel prototipo la carta viene consumata quando l'alleato entra in battaglia.
+
+Regole finali desiderate:
+
+- Se l'alleato sopravvive allo scontro puo tornare nella collezione.
+- Se l'alleato muore, la carta sparisce definitivamente.
+- Gli alleati piu rari devono avere identita, arte e magari piccole abilita speciali.
+- I giocatori devono voler cercare personaggi specifici, come succede nei giochi veri.
+
 ## Direzione Grafica
 
 La carta deve prendere spunto dalla chiarezza dei grandi giochi di carte, senza copiarne cornici, simboli o composizione protetta.
@@ -123,6 +142,8 @@ Gia implementato:
 - Shop test dei Sigilli di Zodar con pacchetti valuta finti.
 - Acquisto pacchetti con Sigilli di Zodar.
 - Ledger locale delle transazioni premium test.
+- Carte alleato generate nei 6 gradi di rarita.
+- Evocazione prototipo degli alleati in battaglia dalla collezione carte.
 - Tab Master "Pacchetti" per regalare pacchetti ai player selezionati.
 - Sbustamento con reveal.
 - Grafica base dei pacchetti con busta fantasy, sigillo e animazione di apertura.
@@ -144,5 +165,7 @@ Da fare:
 - Shop/pacchetti collegati a gold, dungeon, eventi e valuta speciale.
 - Collegamento reale a Steam Wallet e Google Play Billing.
 - Backend definitivo per ordini, verifica acquisti, accrediti e rimborsi.
+- Persistenza finale delle carte alleato: ritorno se sopravvivono, distruzione se muoiono.
+- Arte e identita unica per NPC alleati rari, leggendari e mitici.
 - Drop pacchetti da dungeon, eventi e ricompense mensili.
 - Bilanciamento finale delle probabilita.
