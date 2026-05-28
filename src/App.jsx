@@ -15305,8 +15305,8 @@ ${stepText(step)}`, "quest","Master");
 
       {/* ── Cinematic Victory Flash ── */}
       {showVictory && victoryCinematicTs === currentVictoryData?.ts && (
-        <div style={{
-          position:"fixed", inset:0, zIndex:10080, pointerEvents:"none",
+        <div onClick={e => e.stopPropagation()} style={{
+          position:"fixed", inset:0, zIndex:10080, pointerEvents:"auto",
           display:"flex", alignItems:"center", justifyContent:"center",
           background:"radial-gradient(circle at 50% 42%,rgba(251,191,36,0.22),rgba(168,85,247,0.18) 28%,rgba(2,6,23,0.96) 72%)",
           overflow:"hidden", animation:"victoryCinematicIn 3.8s ease forwards",
