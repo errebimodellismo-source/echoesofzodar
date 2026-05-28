@@ -607,8 +607,49 @@ const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','pala
 const STATUS_EFFECTS = {
   poison: { label: 'Avvelenato',  emoji: '🐍', color: '#4ade80', damagePerRound: 3 },
   burn:   { label: 'In fiamme',   emoji: '🔥', color: '#fb923c', damagePerRound: 5 },
+  acid:   { label: 'Corroso',     emoji: '🟢', color: '#84cc16', damagePerRound: 4 },
+  thorn:  { label: 'Lacerato',    emoji: '🌿', color: '#22c55e', damagePerRound: 4 },
+  shadow: { label: 'Soffocato',   emoji: '🌑', color: '#a78bfa', damagePerRound: 5 },
   stun:   { label: 'Stordito',    emoji: '💫', color: '#facc15', skipTurn: true   },
+  shield: { label: 'Protetto',    emoji: '🛡️', color: '#60a5fa' },
+  buff:   { label: 'Potenziato',  emoji: '✨', color: '#fbbf24' },
 };
+
+function mergeStatusEffects(existing = [], next) {
+  if (!next?.type || !next.duration) return existing || [];
+  const effects = [...(existing || [])];
+  const idx = effects.findIndex(fx => fx.type === next.type);
+  if (idx === -1) return [...effects, next];
+  effects[idx] = {
+    ...effects[idx],
+    ...next,
+    duration: Math.max(effects[idx].duration || 0, next.duration || 0),
+    damagePerRound: Math.max(effects[idx].damagePerRound || 0, next.damagePerRound || 0),
+  };
+  return effects;
+}
+
+function inferSpellStatusEffect(spell, attacker) {
+  const text = `${spell?.id || ""} ${spell?.name || ""} ${spell?.desc || ""}`.toLowerCase();
+  const hasDurationHint = /\b[2-5]\s*(round|turn|rounds|turni)\b/.test(text)
+    || /continua|avvelena|veleno|tossic|nube|nuvola|nebbia|muro|sciame|spine|soffoca|riempie il campo|brucia chiunque/.test(text);
+  if (!hasDurationHint) return null;
+  const explicitDuration = Number((text.match(/\b([2-5])\s*(?:round|turn|rounds|turni)\b/) || [])[1]);
+  const duration = spell.statusDuration || explicitDuration || (/nube|nuvola|nebbia|muro|sciame|riempie il campo/.test(text) ? 3 : 2);
+  const slots = Math.max(1, Number(spell?.slots || 1));
+  const scaling = Math.max(1, Math.floor((attacker?.mag || 0) / 8) + Math.floor(slots / 2));
+  if (/acido|acid|corrod/.test(text)) return { type: "acid", duration, damagePerRound: scaling + 3, source: spell?.id };
+  if (/veleno|poison|tossic|nube mortale|nebbia velenosa/.test(text)) return { type: "poison", duration, damagePerRound: scaling + 2, source: spell?.id };
+  if (/fuoco|fiamma|bruc|fire|flame|infernal/.test(text)) return { type: "burn", duration, damagePerRound: scaling + 3, source: spell?.id };
+  if (/spine|insetti|sciame|thorn/.test(text)) return { type: "thorn", duration, damagePerRound: scaling + 2, source: spell?.id };
+  if (/ombra|tenebra|oscura|shadow|soffoca/.test(text)) return { type: "shadow", duration, damagePerRound: scaling + 2, source: spell?.id };
+  return null;
+}
+
+function isAreaDamageSpell(spell) {
+  const text = `${spell?.name || ""} ${spell?.desc || ""}`.toLowerCase();
+  return !!spell?.area || /tutti i nemici|all enemies|area|campo di battaglia|nube|nuvola|nebbia|tempesta|palla di fuoco|fulmine|cono|muro|sciame|esplosione|travolge tutti/.test(text);
+}
 
 function processStatusEffects(combatant) {
   const effects = combatant.statusEffects || [];
@@ -616,11 +657,11 @@ function processStatusEffects(combatant) {
   let dmg = 0, skipTurn = false;
   const logs = [], remaining = [];
   for (const fx of effects) {
-    const def = STATUS_EFFECTS[fx.type];
-    if (!def) continue;
-    if (def.damagePerRound) {
-      dmg += def.damagePerRound;
-      logs.push(`${def.emoji} **${combatant.name}** subisce **${def.damagePerRound}** danni da ${def.label.toLowerCase()}`);
+    const def = STATUS_EFFECTS[fx.type] || { label: fx.label || fx.type || "Effetto", emoji: fx.emoji || "✨" };
+    const tickDamage = fx.damagePerRound ?? def.damagePerRound ?? 0;
+    if (tickDamage) {
+      dmg += tickDamage;
+      logs.push(`${def.emoji} **${combatant.name}** subisce **${tickDamage}** danni da ${def.label.toLowerCase()}`);
     }
     if (def.skipTurn) {
       skipTurn = true;
@@ -631,11 +672,15 @@ function processStatusEffects(combatant) {
     else logs.push(`✨ L'effetto **${def.label}** su **${combatant.name}** è terminato.`);
   }
   const newHp = Math.max(0, (combatant.hp || 0) - dmg);
+  const nextCombatant = newHp <= 0 && combatant.isPlayer && dmg > 0
+    ? { ...combatant, hp: 0, dying: true, stable: false, dead: false, statusEffects: remaining }
+    : { ...combatant, hp: newHp, statusEffects: remaining };
   return {
-    combatant: { ...combatant, hp: newHp, statusEffects: remaining },
+    combatant: nextCombatant,
     log: logs.length ? logs.join('\n') : null,
     skipTurn,
     died: newHp <= 0,
+    damage: dmg,
   };
 }
 const SUBCLASSES = {
@@ -11778,6 +11823,14 @@ function GameScreen({ myId, setScreen, authUser }) {
     if ((attacker.statusEffects || []).length > 0) {
       const sfx = processStatusEffects(attacker);
       combatants[turn] = sfx.combatant;
+      if (sfx.damage > 0 && sfx.combatant.isPlayer) {
+        const playerData = partyPlayers.find(p => p.id === sfx.combatant.id) || (sfx.combatant.id === myId ? me : null);
+        if (playerData) {
+          const updatedPlayer = { ...playerData, hp: sfx.combatant.hp, dead: !!sfx.combatant.dead };
+          await dbSavePlayer(updatedPlayer);
+          if (sfx.combatant.id === myId) setMeRaw(updatedPlayer);
+        }
+      }
       if (sfx.skipTurn || sfx.died) {
         const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
         await saveQState({ ...freshQs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: sfx.log } });
@@ -11885,10 +11938,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     const tidx = combatants.findIndex(c=>c.id===target.id);
     const targetAfterDmg = { ...target, hp: Math.max(0, target.hp - finalDmg) };
     if (attackStatusEffect) {
-      const existing = targetAfterDmg.statusEffects || [];
-      if (!existing.some(e => e.type === attackStatusEffect.type)) {
-        targetAfterDmg.statusEffects = [...existing, attackStatusEffect];
-      }
+      targetAfterDmg.statusEffects = mergeStatusEffects(targetAfterDmg.statusEffects, attackStatusEffect);
     }
     combatants[tidx] = targetAfterDmg;
     let log = formatWeaponAttackLog(attacker, target, effectiveResolved2, weapon.name, combatants[tidx].hp, target.maxHp, { resisted, statusApplied: attackStatusEffect?.type, lang });
@@ -11943,13 +11993,31 @@ function GameScreen({ myId, setScreen, authUser }) {
       setSpellMenu(false);
       return;
     }
+    const latestSpellBuffState = await dbGetPartyState(code);
+    if ((attacker.statusEffects || []).length > 0) {
+      const sfx = processStatusEffects(attacker);
+      combatants[turn] = sfx.combatant;
+      if (sfx.damage > 0 && sfx.combatant.isPlayer) {
+        const playerData = partyPlayers.find(p => p.id === sfx.combatant.id) || (sfx.combatant.id === myId ? me : null);
+        if (playerData) {
+          const updatedPlayer = { ...playerData, hp: sfx.combatant.hp, dead: !!sfx.combatant.dead };
+          await dbSavePlayer(updatedPlayer);
+          if (sfx.combatant.id === myId) setMeRaw(updatedPlayer);
+        }
+      }
+      if (sfx.skipTurn || sfx.died) {
+        const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
+        setSpellMenu(false);
+        await saveQState({ ...latestSpellBuffState, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: sfx.log } });
+        return;
+      }
+    }
 
     const enemies = combatants.filter(c=>!c.isPlayer && c.hp>0);
     if(!enemies.length) { await endCombat(); setSpellMenu(false); return; }
     const target = enemies.find(c=>c.id===selectedTarget) || enemies[0];
     setSelectedTarget(null);
 
-    const latestSpellBuffState = await dbGetPartyState(code);
     const spellMasterBuffs = latestSpellBuffState.masterBuffs || {};
     const spellMyBuffs = spellMasterBuffs[myId] || {};
     let newSpellMasterBuffs = spellMasterBuffs;
@@ -11967,14 +12035,36 @@ function GameScreen({ myId, setScreen, authUser }) {
         effectiveBase = base * 2;
         newSpellMasterBuffs = { ...spellMasterBuffs, [myId]: { ...spellMyBuffs, crit: spellMyBuffs.crit - 1 } };
       }
-      const dmg = Math.max(1, effectiveBase + bonus - Math.floor(target.def/2));
-      spellDmgToLog = dmg;
-      const tidx = newCombatants.findIndex(c=>c.id===target.id);
-      newCombatants[tidx] = {...target, hp:Math.max(0,target.hp-dmg)};
       const bonusLabel = magLegBonus > 0 ? `+${Math.floor((attacker.mag||0)/2)} +${magLegBonus}(leg)` : `+${bonus}`;
+      const spellStatusEffect = inferSpellStatusEffect(spell, attacker);
+      const spellTargets = isAreaDamageSpell(spell)
+        ? newCombatants.filter(c => !c.isPlayer && c.hp > 0)
+        : [target];
+      const hitLines = [];
+      for (const spellTarget of spellTargets) {
+        const dmg = Math.max(1, effectiveBase + bonus - Math.floor((spellTarget.def || 0) / 2));
+        spellDmgToLog += dmg;
+        const tidx = newCombatants.findIndex(c=>c.id===spellTarget.id);
+        const damagedTarget = {
+          ...newCombatants[tidx],
+          hp: Math.max(0, (newCombatants[tidx].hp || 0) - dmg),
+        };
+        if (spellStatusEffect && damagedTarget.hp > 0) {
+          damagedTarget.statusEffects = mergeStatusEffects(damagedTarget.statusEffects, spellStatusEffect);
+        }
+        newCombatants[tidx] = damagedTarget;
+        hitLines.push(`❤️ ${spellTarget.name}: -${dmg} → ${damagedTarget.hp}/${spellTarget.maxHp} HP`);
+      }
+      const firstReduction = Math.floor((spellTargets[0]?.def || target.def || 0) / 2);
+      const areaLabel = spellTargets.length > 1
+        ? (lang === "en" ? `\n🌐 Targets hit: **${spellTargets.length}**` : `\n🌐 Bersagli colpiti: **${spellTargets.length}**`)
+        : "";
+      const statusLine = spellStatusEffect
+        ? `\n${STATUS_EFFECTS[spellStatusEffect.type]?.emoji || "✨"} ${lang === "en" ? "Ongoing effect" : "Effetto persistente"}: **${STATUS_EFFECTS[spellStatusEffect.type]?.label || spellStatusEffect.type}** · ${spellStatusEffect.damagePerRound}/round · ${spellStatusEffect.duration} round`
+        : "";
       log += lang === "en"
-        ? `💥 Damage roll: **${spell.dmg} = ${base}**\n✨ Magic bonus: **${bonusLabel}**\n🛡️ Target reduction: **-${Math.floor(target.def/2)}**\n🔥 Final damage: **${dmg}**\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`
-        : `💥 Tiro danno: **${spell.dmg} = ${base}**\n✨ Bonus magia: **${bonusLabel}**\n🛡️ Riduzione bersaglio: **-${Math.floor(target.def/2)}**\n🔥 Danno finale: **${dmg}**\n❤️ ${target.name}: ${newCombatants[tidx].hp}/${target.maxHp} HP`;
+        ? `💥 Damage roll: **${spell.dmg} = ${base}**\n✨ Magic bonus: **${bonusLabel}**\n🛡️ Target reduction: **-${firstReduction}**${areaLabel}\n🔥 Damage dealt: **${spellDmgToLog}**\n${hitLines.join("\n")}${statusLine}`
+        : `💥 Tiro danno: **${spell.dmg} = ${base}**\n✨ Bonus magia: **${bonusLabel}**\n🛡️ Riduzione bersaglio: **-${firstReduction}**${areaLabel}\n🔥 Danno inflitto: **${spellDmgToLog}**\n${hitLines.join("\n")}${statusLine}`;
     } else if(spell.type === "heal") {
       const magLegHealBonus = (spellMyBuffs.legendaryItem?.turnsLeft > 0 && spellMyBuffs.legendaryItem?.bonus_mag) ? spellMyBuffs.legendaryItem.bonus_mag : 0;
       const baseHeal = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), notation:spell.dmg, label:`${lang === "en" ? "Heal" : "Cura"} ${spell.dmg}`, themeColor:"#10b981" });
@@ -12133,14 +12223,14 @@ function GameScreen({ myId, setScreen, authUser }) {
     } else if(spell.type === "control") {
       if(spell.area) {
         const aliveEnemies = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
-        newCombatants = newCombatants.map(c => (!c.isPlayer && c.hp>0) ? {...c, statusEffects:[...(c.statusEffects||[]),{type:"stun",duration:1}]} : c);
+        newCombatants = newCombatants.map(c => (!c.isPlayer && c.hp>0) ? {...c, statusEffects:mergeStatusEffects(c.statusEffects,{type:"stun",duration:1})} : c);
         log += lang === "en"
           ? `💜 **${castSpellInfo.name}**\nAll enemies are charmed or stunned and skip their next turn!\n${aliveEnemies.map(e=>`• ${e.name}`).join("\n")}`
           : `💜 **${spell.name}**\nTutti i nemici sono ammaliati e saltano il prossimo turno!\n${aliveEnemies.map(e=>`• ${e.name}`).join("\n")}`;
       } else {
         const ctarget = [...newCombatants.filter(c=>!c.isPlayer&&c.hp>0)].sort((a,b)=>(b.atk||0)-(a.atk||0))[0] || target;
         const cidx = newCombatants.findIndex(c=>c.id===ctarget.id);
-        if(cidx !== -1) newCombatants[cidx] = {...newCombatants[cidx], statusEffects:[...(newCombatants[cidx].statusEffects||[]),{type:"stun",duration:1}]};
+        if(cidx !== -1) newCombatants[cidx] = {...newCombatants[cidx], statusEffects:mergeStatusEffects(newCombatants[cidx].statusEffects,{type:"stun",duration:1})};
         log += lang === "en"
           ? `💜 **${castSpellInfo.name}**\n${ctarget.name} is charmed or stunned and skips the next turn!`
           : `💜 **${spell.name}**\n${ctarget.name} è ammaliato/stordito e salta il prossimo turno!`;
@@ -12165,7 +12255,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       log += `☄️ **FLAGELLO DELL'EQUILIBRIO**\n⚡ La bilancia cade — tutti i nemici sono annientati!\n${enemies3.map(e=>`💀 ${e.name} — distrutto`).join("\n")}`;
     } else if(spell.type === "zodar_divine_punishment") {
       const enemies4 = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
-      newCombatants = newCombatants.map(c=>!c.isPlayer && c.hp>0 ? {...c, hp:Math.max(0,c.hp-500), statusEffects:[...(c.statusEffects||[]),{type:"stun",duration:2}]} : c);
+      newCombatants = newCombatants.map(c=>!c.isPlayer && c.hp>0 ? {...c, hp:Math.max(0,c.hp-500), statusEffects:mergeStatusEffects(c.statusEffects,{type:"stun",duration:2})} : c);
       log += `⚡ **PUNIZIONE DIVINA**\n🔥 500 danni + stordimento 2 round a tutti i nemici!\n${enemies4.map(e=>`💥 ${e.name}: ${Math.max(0,e.hp-500)}/${e.maxHp} HP 💫stordito`).join("\n")}`;
     } else if(spell.type === "zodar_revive_all") {
       const allDead2 = newCombatants.filter(c=>c.isPlayer && !c.isSummon && (c.dead||c.dying||c.hp<=0));
@@ -12185,7 +12275,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       newCombatants = newCombatants.map(c=>(!c.dead && c.hp>0) ? {...c, hp:Math.min(c.maxHp,share)} : c);
       log += `🔮 **BILANCIA DELLA VITA**\n⚖️ HP totali redistribuiti equamente: ${share} HP a ciascuno.\n${alive.map(c=>`• ${c.name}: ${Math.min(c.maxHp,share)}/${c.maxHp}`).join("\n")}`;
     } else if(spell.type === "zodar_immortal") {
-      newCombatants = newCombatants.map(c=>c.isPlayer && !c.isSummon ? {...c, statusEffects:[...(c.statusEffects||[]),{type:"shield",duration:2}]} : c);
+      newCombatants = newCombatants.map(c=>c.isPlayer && !c.isSummon ? {...c, statusEffects:mergeStatusEffects(c.statusEffects,{type:"shield",duration:2})} : c);
       const allies2 = newCombatants.filter(c=>c.isPlayer && !c.isSummon);
       log += `🌫️ **VELO DELL'ETERNITÀ**\n✨ Tutti gli alleati sono intoccabili per 2 round!\n${allies2.map(a=>`🛡️ ${a.name} — immortale`).join("\n")}`;
     } else if(spell.type === "zodar_chaos") {
@@ -12220,7 +12310,7 @@ function GameScreen({ myId, setScreen, authUser }) {
           mag:  (newCombatants[aidx].mag||0)  + (spell.buffMag||15),
           atk:  (newCombatants[aidx].atk||0)  + (spell.buffAtk||10),
           init: (newCombatants[aidx].init||0)  + (spell.buffInit||8),
-          statusEffects:[...(newCombatants[aidx].statusEffects||[]),{type:"buff",duration:spell.buffDuration||2}]
+          statusEffects:mergeStatusEffects(newCombatants[aidx].statusEffects,{type:"buff",duration:spell.buffDuration||2})
         };
         newCombatants[aidx] = boosted;
         newSpellMasterBuffs = {...spellMasterBuffs, [myId]: {...spellMyBuffs, crit: (spellMyBuffs.crit||0)+1}};
