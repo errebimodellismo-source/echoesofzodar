@@ -41,6 +41,11 @@ import { I18nProvider, LanguageToggle, useI18n } from "./i18n.jsx";
     @keyframes battleMagicFx { 0%{opacity:0;transform:translate(-50%,-50%) scale(.28);filter:blur(8px)} 35%{opacity:1;filter:blur(0)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.65);filter:blur(4px)} }
     @keyframes battleDivineTextFx { 0%{opacity:0;transform:translate(-50%,16px) scale(.92);letter-spacing:.32em} 22%{opacity:1;transform:translate(-50%,0) scale(1);letter-spacing:.18em} 78%{opacity:1} 100%{opacity:0;transform:translate(-50%,-24px) scale(1.04);letter-spacing:.26em} }
     @keyframes battleDivineRayFx { 0%{opacity:0;transform:scaleY(.1)} 28%{opacity:.9;transform:scaleY(1)} 100%{opacity:0;transform:scaleY(1.15)} }
+    @keyframes victoryCinematicIn { 0%{opacity:0;filter:blur(12px)} 16%{opacity:1;filter:blur(0)} 82%{opacity:1} 100%{opacity:0;filter:blur(10px)} }
+    @keyframes victoryTitleBloom { 0%{opacity:0;transform:scale(.72);letter-spacing:.42em;filter:blur(8px)} 24%{opacity:1;transform:scale(1.04);letter-spacing:.18em;filter:blur(0)} 55%{transform:scale(1);letter-spacing:.14em} 100%{opacity:0;transform:scale(1.1);letter-spacing:.24em;filter:blur(5px)} }
+    @keyframes victorySunburst { 0%{opacity:0;transform:translate(-50%,-50%) rotate(0deg) scale(.35)} 28%{opacity:.95;transform:translate(-50%,-50%) rotate(35deg) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) rotate(105deg) scale(1.4)} }
+    @keyframes victoryRibbon { 0%{transform:scaleX(0);opacity:0} 22%{transform:scaleX(1);opacity:1} 78%{opacity:1} 100%{transform:scaleX(.2);opacity:0} }
+    @keyframes victorySparkRise { 0%{opacity:0;transform:translateY(38px) scale(.65)} 24%{opacity:1} 100%{opacity:0;transform:translateY(-110px) scale(1.15)} }
     @keyframes dice-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
     .dice-spin { animation:dice-spin .55s linear infinite; }
     @keyframes restOverlayIn { from{opacity:0} to{opacity:1} }
@@ -9477,6 +9482,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const [showLoreModal, setShowLoreModal] = useState(() => !localStorage.getItem('zodar_lore_seen'));
   const [zodarObserves, setZodarObserves] = useState(false);
   const [dismissedVictoryTs, setDismissedVictoryTs] = useState(null);
+  const [victoryCinematicTs, setVictoryCinematicTs] = useState(null);
   const [declinedCombatAt, setDeclinedCombatAt] = useState(null);
   const [nowTick, setNowTick] = useState(Date.now());
   const [combatView, setCombatView] = useState('visual');
@@ -12413,6 +12419,15 @@ ${stepText(step)}`, "quest","Master");
   const currentVictoryData = qs?.combat?.victoryData;
   const showVictory = !!(currentVictoryData && currentVictoryData.ts !== dismissedVictoryTs);
 
+  useEffect(() => {
+    if(!currentVictoryData?.ts || currentVictoryData.ts === dismissedVictoryTs) return;
+    setVictoryCinematicTs(currentVictoryData.ts);
+    const timer = setTimeout(() => {
+      setVictoryCinematicTs(ts => ts === currentVictoryData.ts ? null : ts);
+    }, 3800);
+    return () => clearTimeout(timer);
+  }, [currentVictoryData?.ts, dismissedVictoryTs]);
+
   async function advanceQuest() {
     const quests = getQuests();
     const q = quests.find(x=>x.id===qs?.currentId);
@@ -15104,6 +15119,48 @@ ${stepText(step)}`, "quest","Master");
               style={{ marginTop:"1rem", width:"100%", padding:"0.55rem", background:"rgba(239,68,68,0.15)", border:"1px solid #7f1d1d", borderRadius:8, color:"#f87171", cursor:"pointer", fontFamily:"inherit", fontSize:"0.82rem" }}>
               Annulla
             </button>
+          </div>
+        </div>
+      )}
+
+      {/* ── Cinematic Victory Flash ── */}
+      {showVictory && victoryCinematicTs === currentVictoryData?.ts && (
+        <div style={{
+          position:"fixed", inset:0, zIndex:10080, pointerEvents:"none",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          background:"radial-gradient(circle at 50% 42%,rgba(251,191,36,0.22),rgba(168,85,247,0.18) 28%,rgba(2,6,23,0.96) 72%)",
+          overflow:"hidden", animation:"victoryCinematicIn 3.8s ease forwards",
+        }}>
+          <div style={{ position:"absolute", left:"50%", top:"50%", width:"min(74vw,680px)", aspectRatio:"1", borderRadius:"50%", transform:"translate(-50%,-50%)", background:"conic-gradient(from 0deg,transparent,rgba(251,191,36,0.65),transparent,rgba(255,255,255,0.35),transparent,rgba(168,85,247,0.42),transparent)", filter:"blur(1px)", animation:"victorySunburst 3.8s ease-out forwards" }} />
+          <div style={{ position:"absolute", left:"50%", top:"50%", width:"min(86vw,820px)", height:2, transform:"translate(-50%,-50%)", background:"linear-gradient(90deg,transparent,#fde68a,#fff7ed,#fde68a,transparent)", boxShadow:"0 0 28px rgba(251,191,36,0.95)", animation:"victoryRibbon 3.8s ease forwards" }} />
+          {Array.from({ length:18 }).map((_, i) => (
+            <span key={i} style={{
+              position:"absolute",
+              left:`${12 + (i * 5.1) % 76}%`,
+              bottom:`${8 + (i % 5) * 7}%`,
+              color:i % 3 === 0 ? "#fef3c7" : i % 3 === 1 ? "#fbbf24" : "#c4b5fd",
+              fontSize:`${0.8 + (i % 4) * 0.18}rem`,
+              textShadow:"0 0 14px currentColor",
+              animation:`victorySparkRise ${2.4 + (i % 4) * 0.25}s ease-out ${i * 0.05}s forwards`,
+            }}>✦</span>
+          ))}
+          <div style={{ position:"relative", textAlign:"center", padding:"1rem", transform:"translateY(-0.3rem)" }}>
+            <div style={{
+              fontFamily:"'Cinzel Decorative',serif",
+              fontSize:"clamp(3rem,10vw,8rem)",
+              fontWeight:900,
+              background:"linear-gradient(180deg,#fff7ed 0%,#fde68a 32%,#f59e0b 66%,#92400e 100%)",
+              WebkitBackgroundClip:"text",
+              WebkitTextFillColor:"transparent",
+              textShadow:"0 0 36px rgba(251,191,36,0.65)",
+              animation:"victoryTitleBloom 3.8s ease forwards",
+              whiteSpace:"nowrap",
+            }}>
+              {lang === "en" ? "VICTORY" : "VITTORIA"}
+            </div>
+            <div style={{ margin:"0.4rem auto 0", maxWidth:620, color:"#fde68a", fontFamily:"'Cinzel',serif", letterSpacing:"0.18em", textTransform:"uppercase", fontSize:"clamp(0.78rem,2vw,1rem)", textShadow:"0 0 16px rgba(251,191,36,0.85)", animation:"combatCueIn 1.2s ease both" }}>
+              {lang === "en" ? "The battlefield falls silent" : "Il campo di battaglia tace"}
+            </div>
           </div>
         </div>
       )}
