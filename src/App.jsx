@@ -1901,12 +1901,15 @@ function parseCardPackGrant(msg) {
   if(msg?.type !== "card_grant") return null;
   try {
     const parsed = JSON.parse(msg.content || "{}");
-    if(parsed?.kind !== "card_pack_grant" || !parsed?.targetPlayerId || !parsed?.packId) return null;
+    if(!["card_pack_grant","premium_currency_grant"].includes(parsed?.kind) || !parsed?.targetPlayerId) return null;
+    if(parsed.kind === "card_pack_grant" && !parsed?.packId) return null;
     return {
       grantId: parsed.grantId || msg.id || `${parsed.targetPlayerId}_${parsed.packId}_${msg.created_at || ""}`,
+      kind: parsed.kind,
       targetPlayerId: parsed.targetPlayerId,
       packId: parsed.packId,
       quantity: Math.max(1, Number(parsed.quantity) || 1),
+      amount: Math.max(1, Number(parsed.amount) || 1),
       note: parsed.note || "",
     };
   } catch {
@@ -6587,6 +6590,7 @@ function MasterCardPacksView({ authUser }) {
   const [targetId, setTargetId] = useState("");
   const [packId, setPackId] = useState(CARD_PACK_DEFS[0]?.id || "");
   const [quantity, setQuantity] = useState(1);
+  const [sealAmount, setSealAmount] = useState(120);
   const [announce, setAnnounce] = useState(true);
   const [busy, setBusy] = useState(false);
 
@@ -6645,6 +6649,43 @@ function MasterCardPacksView({ authUser }) {
     }
   }
 
+  async function grantPremiumCurrency() {
+    const player = players.find(p => p.id === targetId);
+    const amount = Math.max(1, Number(sealAmount) || 1);
+    if(!player) return;
+    if(!player.party_code) { window.alert("Questo player non è in un party: non posso consegnare il grant."); return; }
+    if(!window.confirm(`Regalare ${amount} ${PREMIUM_CURRENCY.name} a ${player.name}?`)) return;
+    setBusy(true);
+    try {
+      const grantId = `grant_${Date.now()}_${Math.random().toString(36).slice(2,8)}`;
+      await dbSendMessage({
+        party_code:player.party_code,
+        author:"Dungeon Master",
+        type:"card_grant",
+        content:JSON.stringify({
+          kind:"premium_currency_grant",
+          grantId,
+          targetPlayerId:player.id,
+          playerName:player.name,
+          amount,
+          note:`Dono Master: ${amount} ${PREMIUM_CURRENCY.name}`,
+          createdAt:new Date().toISOString(),
+        }),
+      });
+      if(announce) {
+        await dbSendMessage({
+          party_code:player.party_code,
+          author:"Dungeon Master",
+          type:"narration",
+          content:`◆ **Dono del Master:** ${player.name} riceve **${amount} ${PREMIUM_CURRENCY.name}**.`,
+        });
+      }
+      window.alert(`✅ Donati ${amount} ${PREMIUM_CURRENCY.name} a ${player.name}. Il player li riceverà al prossimo refresh/caricamento.`);
+    } finally {
+      setBusy(false);
+    }
+  }
+
   const selectedPlayer = players.find(p => p.id === targetId);
 
   return (
@@ -6691,6 +6732,35 @@ function MasterCardPacksView({ authUser }) {
         <div style={{ display:"flex", gap:8, justifyContent:"flex-end", marginTop:"1rem", flexWrap:"wrap" }}>
           <SmallBtn onClick={reload} disabled={busy}>Aggiorna lista</SmallBtn>
           <BigBtn onClick={grantPack} gold disabled={busy || !targetId || !packId}>{busy ? "Invio..." : "Regala pacchetti"}</BigBtn>
+        </div>
+      </Card>
+      <Card title={`◆ Regala ${PREMIUM_CURRENCY.name}`}>
+        <p style={{ color:"#94a3b8", fontSize:"0.82rem", margin:"0 0 1rem", lineHeight:1.5 }}>
+          Strumento test per sviluppatori e amici: accredita valuta premium finta senza passare dallo shop.
+        </p>
+        <div style={{ display:"grid", gridTemplateColumns:"minmax(220px,1fr) 160px", gap:10, alignItems:"end" }}>
+          <div>
+            <label style={labelStyle}>Player</label>
+            <select style={{...inputStyle,cursor:"pointer"}} value={targetId} onChange={e=>setTargetId(e.target.value)}>
+              {players.map(p => {
+                const meta = playerMeta[p.id] || {};
+                return <option key={p.id} value={p.id}>{p.name}{meta.realPlayerName ? ` (${meta.realPlayerName})` : ""} · {p.party_code || "senza party"}</option>;
+              })}
+            </select>
+          </div>
+          <div>
+            <label style={labelStyle}>Sigilli</label>
+            <input style={inputStyle} type="number" min="1" max="10000" value={sealAmount} onChange={e=>setSealAmount(Math.max(1, Number(e.target.value) || 1))} />
+          </div>
+        </div>
+        <div style={{ display:"flex", gap:8, flexWrap:"wrap", marginTop:"0.8rem" }}>
+          {[120,320,720,1600].map(amount => (
+            <SmallBtn key={amount} onClick={()=>setSealAmount(amount)} disabled={busy}>{PREMIUM_CURRENCY.icon} {amount}</SmallBtn>
+          ))}
+        </div>
+        <div style={{ display:"flex", gap:8, justifyContent:"flex-end", marginTop:"1rem", flexWrap:"wrap" }}>
+          <SmallBtn onClick={reload} disabled={busy}>Aggiorna lista</SmallBtn>
+          <BigBtn onClick={grantPremiumCurrency} gold disabled={busy || !targetId}>{busy ? "Invio..." : `Regala ${PREMIUM_CURRENCY.shortName}`}</BigBtn>
         </div>
       </Card>
       <Card title="🎴 Pacchetti Disponibili">
@@ -10878,11 +10948,21 @@ function GameScreen({ myId, setScreen, authUser }) {
     const processed = new Set(lsGet(cardGrantProcessedKey(myId), []));
     const grants = messages.map(parseCardPackGrant).filter(grant => grant && grant.targetPlayerId === myId && !processed.has(grant.grantId));
     if(!grants.length) return;
-    const nextVault = { ...cardVault, packs:{ ...(cardVault.packs || {}) } };
+    const nextVault = {
+      ...cardVault,
+      packs:{ ...(cardVault.packs || {}) },
+      premiumLedger:[...(cardVault.premiumLedger || [])],
+    };
     for(const grant of grants) {
-      nextVault.packs[grant.packId] = (nextVault.packs[grant.packId] || 0) + grant.quantity;
+      if(grant.kind === "premium_currency_grant") {
+        nextVault.premiumBalance = (nextVault.premiumBalance || 0) + grant.amount;
+        nextVault.premiumLedger.push(makePremiumLedgerEntry("master_grant", grant.amount, grant.note || "Dono del Master", { grantId:grant.grantId, provider:"master_panel" }));
+      } else {
+        nextVault.packs[grant.packId] = (nextVault.packs[grant.packId] || 0) + grant.quantity;
+      }
       processed.add(grant.grantId);
     }
+    nextVault.premiumLedger = nextVault.premiumLedger.slice(-80);
     persistCardVault(nextVault);
     lsSet(cardGrantProcessedKey(myId), Array.from(processed).slice(-200));
   // eslint-disable-next-line react-hooks/exhaustive-deps

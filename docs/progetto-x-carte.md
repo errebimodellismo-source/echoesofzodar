@@ -169,6 +169,7 @@ Gia implementato:
 - Carte alleato generate nei 6 gradi di rarita.
 - Evocazione prototipo degli alleati in battaglia dalla collezione carte.
 - Tab Master "Pacchetti" per regalare pacchetti ai player selezionati.
+- Tab Master "Pacchetti" per regalare Sigilli di Zodar test ai player selezionati.
 - Sbustamento con reveal.
 - Grafica base dei pacchetti con busta fantasy, sigillo e animazione di apertura.
 - Primo asset generato per il Pacchetto di Zodar.
