@@ -59,10 +59,15 @@ import { I18nProvider, LanguageToggle, useI18n } from "./i18n.jsx";
     @keyframes cardPackOpen { 0%{transform:translateY(0) scale(1);filter:brightness(1)} 45%{transform:translateY(-10px) scale(1.05);filter:brightness(1.45)} 100%{transform:translateY(18px) scale(.9);opacity:0;filter:blur(8px) brightness(1.8)} }
     @keyframes cardPackBurst { 0%{opacity:0;transform:translate(-50%,-50%) scale(.35) rotate(0deg)} 38%{opacity:.95} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.45) rotate(55deg)} }
     @keyframes cardRevealGridIn { from{opacity:0;transform:translateY(18px) scale(.96)} to{opacity:1;transform:none} }
-    @keyframes packTearLeft { 0%{opacity:1;transform:translateX(0) rotate(0deg) scale(1)} 38%{filter:brightness(1.45)} 100%{opacity:.92;transform:translateX(-86px) translateY(10px) rotate(-13deg) scale(.98);filter:brightness(1.18)} }
-    @keyframes packTearRight { 0%{opacity:1;transform:translateX(0) rotate(0deg) scale(1)} 38%{filter:brightness(1.45)} 100%{opacity:.92;transform:translateX(86px) translateY(10px) rotate(13deg) scale(.98);filter:brightness(1.18)} }
-    @keyframes packTearFlash { 0%{opacity:0;transform:translate(-50%,-50%) scale(.35)} 34%{opacity:1} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.35)} }
-    @keyframes packCardStream { 0%{opacity:0;transform:translate(-50%,35px) rotate(var(--rot,0deg)) scale(.42)} 24%{opacity:1} 100%{opacity:0;transform:translate(calc(-50% + var(--dx,0px)),calc(-72px + var(--dy,0px))) rotate(var(--rot,0deg)) scale(.82)} }
+    @keyframes packTableGlow { 0%,100%{opacity:.58;transform:translate(-50%,-50%) scale(1)} 50%{opacity:.95;transform:translate(-50%,-50%) scale(1.06)} }
+    @keyframes packPacketSettle { 0%,18%,34%{transform:translateY(0) rotate(0deg)} 9%{transform:translateY(-4px) rotate(-1.4deg)} 26%{transform:translateY(-3px) rotate(1.2deg)} 48%,100%{transform:translateY(16px) rotate(0deg)} }
+    @keyframes packTopRip { 0%,30%{transform:translateY(0) rotateX(0deg);opacity:1;filter:brightness(1)} 48%{filter:brightness(1.45)} 100%{transform:translateY(-118px) translateX(16px) rotateZ(9deg) rotateX(58deg);opacity:.96;filter:brightness(1.18) drop-shadow(0 22px 18px rgba(0,0,0,.5))} }
+    @keyframes packBodySink { 0%,36%{transform:translateY(0) scale(1)} 100%{transform:translateY(54px) scale(.96);filter:brightness(.82)} }
+    @keyframes packTearLine { 0%,26%{clip-path:inset(0 100% 0 0);opacity:0} 38%{opacity:1} 68%,100%{clip-path:inset(0 0 0 0);opacity:0} }
+    @keyframes packInnerGlow { 0%,42%{opacity:0;transform:translate(-50%,-50%) scale(.6)} 58%{opacity:.95} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.45)} }
+    @keyframes packCardSlide { 0%,46%{opacity:0;transform:translate(-50%,48px) rotate(0deg) scale(.72)} 60%{opacity:1} 100%{opacity:1;transform:translate(calc(-50% + var(--dx,0px)),var(--dy,-98px)) rotate(var(--rot,0deg)) scale(1)} }
+    @keyframes packScrapFall { 0%,48%{opacity:0;transform:translate(0,0) rotate(0deg)} 58%{opacity:1} 100%{opacity:.8;transform:translate(var(--sx,0px),var(--sy,80px)) rotate(var(--sr,25deg))} }
+    @keyframes packDustSpark { 0%,36%{opacity:0;transform:translate(-50%,-50%) scale(.5)} 48%{opacity:1} 100%{opacity:0;transform:translate(calc(-50% + var(--dx,0px)),calc(-50% + var(--dy,-90px))) scale(.12)} }
     @keyframes dice-spin { from{transform:rotate(0deg)} to{transform:rotate(360deg)} }
     .dice-spin { animation:dice-spin .55s linear infinite; }
     @keyframes restOverlayIn { from{opacity:0} to{opacity:1} }
@@ -10555,45 +10560,95 @@ function ZodarPackArtwork({ pack, large=false, opening=false }) {
 
 function ZodarPackTearAnimation({ pack }) {
   const accent = pack?.accent || "#a78bfa";
+  const packArt = pack?.art;
   const cardOffsets = [
-    { dx:-170, dy:10, rot:-12 },
-    { dx:-84, dy:-18, rot:-5 },
-    { dx:0, dy:-28, rot:2 },
-    { dx:84, dy:-16, rot:7 },
-    { dx:170, dy:8, rot:13 },
+    { dx:"clamp(-205px,-31vw,-96px)", dy:-66, rot:-11 },
+    { dx:"clamp(-122px,-18vw,-58px)", dy:-92, rot:-5 },
+    { dx:"clamp(-40px,-6vw,-18px)", dy:-108, rot:1 },
+    { dx:"clamp(42px,6vw,42px)", dy:-96, rot:6 },
+    { dx:"clamp(58px,18vw,126px)", dy:-72, rot:12 },
+    { dx:"clamp(96px,31vw,204px)", dy:-52, rot:16 },
+  ];
+  const scraps = [
+    { left:"29%", top:"38%", sx:"-70px", sy:"74px", sr:"-44deg" },
+    { left:"69%", top:"39%", sx:"76px", sy:"68px", sr:"51deg" },
+    { left:"47%", top:"33%", sx:"-18px", sy:"96px", sr:"27deg" },
   ];
   return (
-    <div style={{ position:"relative", width:"min(520px,92vw)", height:430, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
-      <div style={{ position:"absolute", left:"50%", top:"50%", width:390, aspectRatio:"1", borderRadius:"50%", transform:"translate(-50%,-50%)", background:`radial-gradient(circle,${accent}55,transparent 66%)`, filter:"blur(12px)", opacity:0.95 }} />
-      <div style={{ position:"absolute", left:"50%", top:"46%", width:360, aspectRatio:"1", borderRadius:"50%", background:`conic-gradient(from 0deg,transparent,${accent},transparent,#fef3c7,transparent,${accent},transparent)`, animation:"packTearFlash 1.05s ease-out forwards" }} />
+    <div style={{ position:"relative", width:"min(760px,94vw)", height:"min(540px,70vh)", minHeight:420, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden", perspective:1000 }}>
+      <div style={{ position:"absolute", left:"50%", top:"70%", width:"min(680px,92vw)", height:190, borderRadius:"50%", transform:"translate(-50%,-50%)", background:`radial-gradient(ellipse at center,${accent}44,rgba(15,23,42,0.48) 42%,transparent 72%)`, filter:"blur(16px)", animation:"packTableGlow 2s ease-in-out infinite" }} />
+      <div style={{ position:"absolute", left:"50%", top:"71%", width:"min(620px,88vw)", height:96, borderRadius:"50%", transform:"translate(-50%,-50%)", background:"radial-gradient(ellipse at center,rgba(2,6,23,0.86),rgba(2,6,23,0.12) 68%,transparent)", boxShadow:"0 34px 70px rgba(0,0,0,0.58)" }} />
+      <div style={{ position:"absolute", left:"50%", top:"47%", width:410, height:410, borderRadius:"50%", transform:"translate(-50%,-50%)", background:`radial-gradient(circle,${accent}55,transparent 62%)`, filter:"blur(18px)", opacity:0.92 }} />
+      <div style={{ position:"absolute", left:"50%", top:"45%", width:420, aspectRatio:"1", borderRadius:"50%", transform:"translate(-50%,-50%)", background:`conic-gradient(from 0deg,transparent,${accent}88,transparent,#fef3c7cc,transparent,${accent}88,transparent)`, animation:"packInnerGlow 1.8s ease-out forwards" }} />
+
       {cardOffsets.map((card, idx) => (
         <div key={idx} style={{
           position:"absolute",
           left:"50%",
-          top:"53%",
-          width:84,
+          top:"58%",
+          width:"clamp(70px,10vw,104px)",
           aspectRatio:"2.5 / 3.5",
-          borderRadius:7,
-          background:`linear-gradient(135deg,${accent},rgba(15,23,42,0.98) 35%,rgba(2,6,23,1) 70%,${accent})`,
-          border:`3px solid ${accent}`,
-          boxShadow:`0 0 24px ${accent}66, inset 0 0 0 2px rgba(255,255,255,0.16)`,
-          "--dx":`${card.dx}px`,
+          borderRadius:8,
+          background:`linear-gradient(135deg,${accent},rgba(15,23,42,0.98) 28%,rgba(2,6,23,1) 70%,${accent}), radial-gradient(circle at 50% 34%,${accent}66,transparent 40%)`,
+          border:`3px solid ${accent}cc`,
+          boxShadow:`0 18px 34px rgba(0,0,0,0.58), 0 0 24px ${accent}66, inset 0 0 0 2px rgba(255,255,255,0.16)`,
+          "--dx":card.dx,
           "--dy":`${card.dy}px`,
           "--rot":`${card.rot}deg`,
-          animation:`packCardStream 1.05s ease-out ${idx * 0.05}s forwards`,
+          animation:`packCardSlide 1.85s cubic-bezier(.16,.86,.22,1) ${idx * 0.07}s forwards`,
+        }}>
+          <div style={{ position:"absolute", inset:"8%", borderRadius:6, border:`1px solid ${accent}88`, boxShadow:`inset 0 0 22px ${accent}44` }} />
+          <div style={{ position:"absolute", left:"50%", top:"50%", width:"44%", aspectRatio:"1", borderRadius:"50%", transform:"translate(-50%,-50%)", border:`2px solid ${accent}99`, boxShadow:`0 0 18px ${accent}66` }} />
+          <div style={{ position:"absolute", inset:0, background:"linear-gradient(110deg,rgba(255,255,255,.18),transparent 24%,transparent 70%,rgba(255,255,255,.1))", borderRadius:6 }} />
+        </div>
+      ))}
+
+      {Array.from({ length:12 }).map((_, idx) => (
+        <div key={`spark-${idx}`} style={{
+          position:"absolute",
+          left:`${42 + (idx % 5) * 4}%`,
+          top:`${35 + (idx % 3) * 4}%`,
+          width:idx % 3 === 0 ? 4 : 3,
+          height:idx % 3 === 0 ? 16 : 10,
+          borderRadius:99,
+          background:idx % 2 ? "#fef3c7" : accent,
+          boxShadow:`0 0 12px ${idx % 2 ? "#fef3c7" : accent}`,
+          "--dx":`${(idx - 5) * 18}px`,
+          "--dy":`${-70 - (idx % 4) * 24}px`,
+          animation:`packDustSpark 1.45s ease-out ${0.28 + idx * 0.035}s forwards`,
         }} />
       ))}
-      {pack?.art ? (
+
+      {packArt ? (
         <>
-          <img src={pack.art} alt="" style={{ position:"absolute", width:270, height:365, objectFit:"contain", clipPath:"polygon(0 0,52% 0,46% 100%,0 100%)", transformOrigin:"50% 50%", filter:`drop-shadow(0 0 30px ${accent}66)`, animation:"packTearLeft 1.05s cubic-bezier(.2,.8,.2,1) forwards" }} />
-          <img src={pack.art} alt="" style={{ position:"absolute", width:270, height:365, objectFit:"contain", clipPath:"polygon(48% 0,100% 0,100% 100%,54% 100%)", transformOrigin:"50% 50%", filter:`drop-shadow(0 0 30px ${accent}66)`, animation:"packTearRight 1.05s cubic-bezier(.2,.8,.2,1) forwards" }} />
+          <img src={packArt} alt="" style={{ position:"absolute", width:"min(290px,46vw)", height:"min(390px,58vh)", maxHeight:390, objectFit:"contain", clipPath:"polygon(0 24%,100% 24%,100% 100%,0 100%)", transformOrigin:"50% 70%", filter:`drop-shadow(0 28px 28px rgba(0,0,0,.62)) drop-shadow(0 0 34px ${accent}66)`, animation:"packBodySink 1.85s cubic-bezier(.18,.82,.22,1) forwards" }} />
+          <img src={packArt} alt="" style={{ position:"absolute", width:"min(290px,46vw)", height:"min(390px,58vh)", maxHeight:390, objectFit:"contain", clipPath:"polygon(0 0,100% 0,100% 31%,0 23%)", transformOrigin:"50% 31%", filter:`drop-shadow(0 0 34px ${accent}66)`, animation:"packTopRip 1.85s cubic-bezier(.16,.82,.24,1) forwards" }} />
         </>
       ) : (
-        <div style={{ animation:"cardPackOpen 1.05s ease forwards" }}>
+        <div style={{ animation:"packPacketSettle 1.85s ease forwards" }}>
           <ZodarPackArtwork pack={pack} large />
         </div>
       )}
-      <div style={{ position:"absolute", bottom:20, color:"#cbd5e1", fontSize:"0.82rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em", textTransform:"uppercase", textShadow:`0 0 18px ${accent}` }}>Il sigillo si spezza</div>
+
+      <div style={{ position:"absolute", left:"50%", top:"39%", width:"min(310px,48vw)", height:5, transform:"translateX(-50%) rotate(-1deg)", background:`linear-gradient(90deg,transparent,#fef3c7,${accent},#fef3c7,transparent)`, borderRadius:999, boxShadow:`0 0 20px ${accent}`, animation:"packTearLine 1.15s ease-out forwards" }} />
+      {scraps.map((scrap, idx) => (
+        <div key={`scrap-${idx}`} style={{
+          position:"absolute",
+          left:scrap.left,
+          top:scrap.top,
+          width:idx === 2 ? 32 : 44,
+          height:idx === 2 ? 15 : 22,
+          clipPath:"polygon(0 18%,46% 0,100% 26%,78% 100%,24% 82%)",
+          background:`linear-gradient(135deg,${accent}dd,rgba(15,23,42,.95))`,
+          border:`1px solid ${accent}aa`,
+          boxShadow:`0 10px 22px rgba(0,0,0,.45),0 0 12px ${accent}55`,
+          "--sx":scrap.sx,
+          "--sy":scrap.sy,
+          "--sr":scrap.sr,
+          animation:`packScrapFall 1.65s cubic-bezier(.2,.7,.2,1) ${0.3 + idx * 0.08}s forwards`,
+        }} />
+      ))}
+      <div style={{ position:"absolute", bottom:20, color:"#e2e8f0", fontSize:"0.82rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.08em", textTransform:"uppercase", textShadow:`0 0 18px ${accent}` }}>La busta si apre</div>
     </div>
   );
 }
@@ -10616,7 +10671,7 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
     setOpening(prev => prev ? { ...prev, phase:"opening" } : prev);
     window.setTimeout(() => {
       setOpening(prev => prev ? { ...prev, phase:"cards" } : prev);
-    }, 1120);
+    }, 2050);
   }
   const allRevealed = opening?.revealed?.every(Boolean);
   const summary = opening?.rewards?.reduce((acc, card) => {
