@@ -2462,6 +2462,28 @@ function cardEffectLines(card, item=null) {
   if(card?.kind === "cosmetic") return cosmeticEffectLines(card);
   return [];
 }
+function cardTypeLine(card) {
+  if(!card) return "Carta";
+  if(card.kind === "cosmetic") {
+    return `Scenica - ${card.type === "title" ? "Titolo" : card.type === "aura" ? "Aura" : card.type === "frame" ? "Cornice" : card.type === "cardback" ? "Retro carta" : "Collezione"}`;
+  }
+  return `Oggetto - ${itemTypeLabel(card.type)}`;
+}
+function cardStatBadge(card) {
+  if(!card) return "";
+  const stats = Array.isArray(card.stats) ? card.stats : [];
+  const damage = stats.find(s => String(s).includes("🎲"));
+  const attack = stats.find(s => String(s).includes("⚔️"));
+  const defense = stats.find(s => String(s).includes("🛡️"));
+  const heal = stats.find(s => String(s).includes("Cura"));
+  const magic = stats.find(s => String(s).includes("✨"));
+  if(damage || attack) return [damage, attack].filter(Boolean).join(" / ").replace("🎲 ", "").replace("⚔️ ", "");
+  if(defense) return defense.replace("🛡️ ", "DEF ");
+  if(heal) return heal.replace("🧪 ", "");
+  if(magic) return magic.replace("✨ ", "MAG ");
+  if(card.kind === "cosmetic") return "SCENA";
+  return "";
+}
 function itemTypeLabel(type) {
   return ({
     weapon: "Arma",
@@ -9886,6 +9908,9 @@ function SecretCardsGate({ onUnlock }) {
 function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
   const color = CARD_RARITY_COLOR[card?.rarity] || "#94a3b8";
   const effectLines = cardEffectLines(card);
+  const typeLine = cardTypeLine(card);
+  const statBadge = cardStatBadge(card);
+  const rarityInitial = cardRarityLabel(card?.rarity).slice(0,1);
   return (
     <button onClick={onClick} style={{
       border:"none",
@@ -9893,44 +9918,54 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
       padding:0,
       cursor:onClick ? "pointer" : "default",
       textAlign:"left",
-      minWidth:compact ? 132 : 150,
+      minWidth:compact ? 132 : 158,
+      width:"100%",
+      maxWidth:compact ? "none" : 260,
     }}>
       <div style={{
         aspectRatio:"2.5 / 3.5",
         borderRadius:8,
-        padding:compact ? "0.55rem" : "0.7rem",
+        padding:compact ? "0.42rem" : "0.55rem",
         background: revealed
-          ? `linear-gradient(160deg,rgba(15,23,42,0.98),rgba(5,8,18,0.98)), radial-gradient(circle at 50% 0%, ${color}44, transparent 55%)`
+          ? `linear-gradient(135deg,${color}55,rgba(15,23,42,0.98) 22%,rgba(2,6,23,0.98) 74%,${color}33), linear-gradient(160deg,rgba(15,23,42,0.98),rgba(5,8,18,0.98))`
           : "linear-gradient(160deg,rgba(25,18,45,0.98),rgba(5,8,18,0.98))",
         border:`2px solid ${revealed ? color : "#4c1d95"}`,
         boxShadow:revealed ? `0 18px 36px rgba(0,0,0,0.34), 0 0 24px ${color}28` : "0 18px 36px rgba(0,0,0,0.34)",
         display:"flex",
         flexDirection:"column",
-        gap:8,
+        gap:compact ? 5 : 7,
         overflow:"hidden",
       }}>
         {!revealed ? (
-          <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cinzel Decorative',serif", color:"#7c3aed", fontSize:"2rem" }}>Z</div>
+          <div style={{ flex:1, borderRadius:6, border:"1px solid rgba(196,181,253,0.22)", background:"radial-gradient(circle at 50% 38%,rgba(124,58,237,0.36),rgba(2,6,23,0.92) 62%)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cinzel Decorative',serif", color:"#c4b5fd", fontSize:"2rem" }}>Z</div>
         ) : (
           <>
-            <div style={{ height:compact ? 66 : 86, borderRadius:6, background:"rgba(2,6,23,0.72)", border:"1px solid rgba(148,163,184,0.12)", display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
+            <div style={{ minHeight:compact ? 26 : 32, borderRadius:6, background:`linear-gradient(180deg,rgba(248,250,252,0.9),rgba(203,213,225,0.78))`, border:`1px solid ${color}`, display:"grid", gridTemplateColumns:"minmax(0,1fr) auto", alignItems:"center", gap:6, padding:compact ? "0.18rem 0.34rem" : "0.24rem 0.42rem", boxShadow:"inset 0 0 0 1px rgba(2,6,23,0.24)" }}>
+              <div style={{ color:"#0f172a", fontFamily:"'Cinzel',serif", fontSize:compact ? "0.66rem" : "0.84rem", fontWeight:900, lineHeight:1.05, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{card.name}</div>
+              <div style={{ width:compact ? 20 : 24, height:compact ? 20 : 24, borderRadius:"50%", background:`linear-gradient(135deg,${color},#f8fafc)`, border:"1px solid rgba(15,23,42,0.55)", color:"#0f172a", display:"flex", alignItems:"center", justifyContent:"center", fontSize:compact ? "0.58rem" : "0.66rem", fontWeight:900 }}>{rarityInitial}</div>
+            </div>
+            <div style={{ height:compact ? 70 : 114, borderRadius:6, background:"rgba(2,6,23,0.72)", border:`2px solid ${color}`, display:"flex", alignItems:"center", justifyContent:"center", overflow:"hidden" }}>
               {card.image ? <img src={card.image} alt={card.name} style={{ width:"100%", height:"100%", objectFit:"cover" }} /> : <span style={{ fontSize:compact ? "1.7rem" : "2.2rem" }}>{card.type === "title" ? "🏷️" : card.type === "aura" ? "✨" : card.type === "frame" ? "▣" : "✦"}</span>}
             </div>
-            <div style={{ minHeight:42 }}>
-              <div style={{ color:"#f8fafc", fontFamily:"'Cinzel',serif", fontSize:compact ? "0.72rem" : "0.82rem", fontWeight:700, lineHeight:1.18, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{card.name}</div>
-              <div style={{ color, fontSize:"0.64rem", textTransform:"uppercase", letterSpacing:"0.08em", marginTop:3 }}>{cardRarityLabel(card.rarity)}</div>
+            <div style={{ minHeight:compact ? 22 : 28, borderRadius:6, background:`linear-gradient(180deg,rgba(248,250,252,0.88),rgba(203,213,225,0.74))`, border:`1px solid ${color}`, color:"#0f172a", fontFamily:"'Cinzel',serif", fontSize:compact ? "0.58rem" : "0.72rem", fontWeight:800, lineHeight:1.08, padding:compact ? "0.22rem 0.34rem" : "0.32rem 0.45rem", overflow:"hidden", display:"flex", alignItems:"center", justifyContent:"space-between", gap:6 }}>
+              <span style={{ overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{typeLine}</span>
+              <span style={{ color, textShadow:"0 1px 0 rgba(15,23,42,0.45)", flexShrink:0 }}>{cardRarityLabel(card.rarity)}</span>
             </div>
-            {!compact && <div style={{ color:"#64748b", fontSize:"0.66rem", lineHeight:1.3, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:3, WebkitBoxOrient:"vertical" }}>{card.description || "Carta collezionabile."}</div>}
-            {!compact && !!effectLines.length && (
-              <div style={{ border:`1px solid ${color}44`, background:`linear-gradient(180deg,${color}16,rgba(15,23,42,0.5))`, borderRadius:6, padding:"0.45rem 0.5rem", display:"grid", gap:3 }}>
-                <div style={{ color, fontSize:"0.56rem", fontWeight:800, textTransform:"uppercase", letterSpacing:"0.09em" }}>Effetto</div>
+            {!compact && (
+              <div style={{ flex:1, minHeight:0, borderRadius:6, background:"linear-gradient(180deg,rgba(241,245,249,0.92),rgba(203,213,225,0.84))", border:`1px solid ${color}`, color:"#0f172a", padding:"0.5rem 0.55rem", display:"flex", flexDirection:"column", gap:5, overflow:"hidden" }}>
                 {effectLines.slice(0,4).map((line, idx) => (
-                  <div key={idx} style={{ color:"#dbeafe", fontSize:"0.62rem", lineHeight:1.22 }}>{line}</div>
+                  <div key={idx} style={{ color:"#111827", fontSize:"0.68rem", lineHeight:1.18, fontWeight:idx === 0 ? 700 : 500 }}>{line}</div>
                 ))}
+                <div style={{ color:"#334155", fontSize:"0.64rem", lineHeight:1.2, fontStyle:"italic", marginTop:"auto", overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{card.description || "Carta collezionabile."}</div>
               </div>
             )}
-            {card.exclusive && <div style={{ marginTop:"auto", alignSelf:"flex-start", color:"#fbbf24", border:"1px solid rgba(251,191,36,0.28)", borderRadius:999, padding:"1px 7px", fontSize:"0.58rem" }}>SOLO PACCHETTI</div>}
-            {card.duplicate && <div style={{ alignSelf:"flex-start", color:"#c4b5fd", border:"1px solid rgba(196,181,253,0.28)", borderRadius:999, padding:"1px 7px", fontSize:"0.58rem" }}>DOPPIONE +{card.convertedFragments || 0}</div>}
+            <div style={{ minHeight:compact ? 18 : 24, display:"flex", alignItems:"center", gap:5, justifyContent:"space-between" }}>
+              <div style={{ display:"flex", gap:4, minWidth:0, overflow:"hidden" }}>
+                {card.exclusive && <span style={{ color:"#fbbf24", border:"1px solid rgba(251,191,36,0.35)", background:"rgba(2,6,23,0.55)", borderRadius:4, padding:"1px 5px", fontSize:compact ? "0.48rem" : "0.56rem", whiteSpace:"nowrap" }}>SOLO PACK</span>}
+                {card.duplicate && <span style={{ color:"#c4b5fd", border:"1px solid rgba(196,181,253,0.32)", background:"rgba(2,6,23,0.55)", borderRadius:4, padding:"1px 5px", fontSize:compact ? "0.48rem" : "0.56rem", whiteSpace:"nowrap" }}>+{card.convertedFragments || 0}</span>}
+              </div>
+              {statBadge && <div style={{ marginLeft:"auto", minWidth:compact ? 34 : 46, minHeight:compact ? 18 : 24, borderRadius:5, background:"rgba(248,250,252,0.9)", border:`1px solid ${color}`, color:"#0f172a", display:"flex", alignItems:"center", justifyContent:"center", padding:"0 0.35rem", fontFamily:"'Cinzel',serif", fontWeight:900, fontSize:compact ? "0.58rem" : "0.74rem", whiteSpace:"nowrap" }}>{statBadge}</div>}
+            </div>
           </>
         )}
       </div>

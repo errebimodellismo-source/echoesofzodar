@@ -66,6 +66,27 @@ Le carte oggetto devono spiegare bonus e uso, per esempio danno arma, attacco, d
 
 Le carte sceniche devono spiegare che sono estetiche e non aumentano le statistiche.
 
+## Direzione Grafica
+
+La carta deve prendere spunto dalla chiarezza dei grandi giochi di carte, senza copiarne cornici, simboli o composizione protetta.
+
+Struttura desiderata:
+
+- Barra superiore con nome della carta.
+- Simbolo o medaglione di rarita.
+- Illustrazione grande e centrale.
+- Riga tipo, per esempio "Oggetto - Arma" o "Scenica - Titolo".
+- Box regole con cosa fa in gioco.
+- Testo narrativo breve in stile flavour.
+- Targhetta in basso per dato importante, per esempio dado arma, bonus, cura o natura scenica.
+
+Stile Echoes of Zodar:
+
+- Cornici da reliquia fantasy oscura.
+- Colori guidati dalla rarita.
+- Aspetto collezionabile, leggibile e non identico a Magic, Pokemon o altri TCG.
+- Versione compatta per la griglia collezione e versione grande per sbustamento/dettaglio.
+
 ## Tab In Game
 
 Sono previste due tab:
@@ -88,6 +109,7 @@ Gia implementato:
 - Equip/uso da carta quando l'oggetto esiste in inventario.
 - Immagini degli item forgiati +1, +2, +3 ricondotte all'immagine base.
 - Box "Effetto" e "Cosa fa" sulle carte.
+- Layout carta ispirato ai TCG: nome, illustrazione, tipo, effetto, flavour e stat in basso.
 
 Da fare:
 
