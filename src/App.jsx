@@ -10414,9 +10414,43 @@ function SecretCardsGate({ onUnlock }) {
   );
 }
 
-function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
+function ZodarCardBack({ pack=null, compact=false }) {
+  const accent = pack?.accent || "#8b5cf6";
+  const art = pack?.art;
+  return (
+    <div style={{
+      flex:1,
+      minHeight:0,
+      borderRadius:8,
+      position:"relative",
+      overflow:"hidden",
+      border:`${compact ? 2 : 3}px solid ${accent}`,
+      background:`linear-gradient(145deg,rgba(3,7,18,0.98),rgba(17,24,39,0.98) 42%,${accent}33 100%)`,
+      boxShadow:`inset 0 0 0 2px rgba(255,255,255,0.12), inset 0 0 40px rgba(0,0,0,0.8), 0 0 ${compact ? 14 : 24}px ${accent}55`,
+      display:"flex",
+      alignItems:"center",
+      justifyContent:"center",
+    }}>
+      <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 50% 38%,${accent}55,transparent 34%), linear-gradient(115deg,rgba(255,255,255,0.1),transparent 28%,transparent 68%,rgba(255,255,255,0.08))` }} />
+      <div style={{ position:"absolute", inset:"7%", borderRadius:7, border:`1px solid ${accent}99`, boxShadow:`inset 0 0 18px ${accent}44` }} />
+      <div style={{ position:"absolute", inset:"13%", borderRadius:6, border:"1px solid rgba(254,243,199,0.32)" }} />
+      <div style={{ position:"absolute", left:"50%", top:"50%", width:"72%", aspectRatio:"1", borderRadius:"50%", transform:"translate(-50%,-50%)", border:`2px solid ${accent}aa`, boxShadow:`0 0 22px ${accent}66, inset 0 0 28px rgba(0,0,0,0.72)` }} />
+      {art && (
+        <img src={art} alt="" style={{ position:"absolute", left:"50%", top:"50%", width:"58%", height:"70%", objectFit:"contain", transform:"translate(-50%,-50%)", opacity:0.34, filter:`drop-shadow(0 0 18px ${accent}) saturate(1.15)` }} />
+      )}
+      <div style={{ position:"absolute", left:"50%", top:"50%", width:"44%", aspectRatio:"1", borderRadius:"50%", transform:"translate(-50%,-50%)", background:`radial-gradient(circle at 35% 28%,#fef3c7,${accent} 42%,rgba(2,6,23,0.95) 78%)`, border:"2px solid rgba(254,243,199,0.72)", boxShadow:`0 0 ${compact ? 18 : 30}px ${accent}` }} />
+      <div style={{ position:"relative", color:"#020617", fontFamily:"'Cinzel Decorative',serif", fontSize:compact ? "1.2rem" : "2rem", fontWeight:900, textShadow:"0 1px 0 rgba(255,255,255,0.55)" }}>Z</div>
+      <div style={{ position:"absolute", left:"12%", right:"12%", top:"10%", height:1, background:`linear-gradient(90deg,transparent,${accent},#fef3c7,${accent},transparent)` }} />
+      <div style={{ position:"absolute", left:"12%", right:"12%", bottom:"10%", height:1, background:`linear-gradient(90deg,transparent,${accent},#fef3c7,${accent},transparent)` }} />
+      <div style={{ position:"absolute", inset:0, background:"repeating-linear-gradient(45deg,rgba(255,255,255,0.045) 0 1px,transparent 1px 8px)", mixBlendMode:"screen", opacity:0.7 }} />
+    </div>
+  );
+}
+
+function ZodarLootCard({ card, revealed=true, onClick, compact=false, backPack=null }) {
   const color = CARD_RARITY_COLOR[card?.rarity] || "#94a3b8";
   const rarityStyle = CARD_RARITY_STYLE[card?.rarity] || CARD_RARITY_STYLE.common;
+  const backAccent = backPack?.accent || "#4c1d95";
   const effectLines = cardEffectLines(card);
   const typeLine = cardTypeLine(card);
   const statBadge = cardStatBadge(card);
@@ -10438,11 +10472,11 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
         padding:compact ? "0.42rem" : "0.64rem",
         background: revealed
           ? `linear-gradient(135deg,${rarityStyle.edge},${rarityStyle.main} 18%,${rarityStyle.dark} 46%,rgba(2,6,23,0.98) 72%,${rarityStyle.main}), repeating-linear-gradient(45deg,rgba(255,255,255,0.08) 0 2px,transparent 2px 7px)`
-          : "linear-gradient(160deg,rgba(25,18,45,0.98),rgba(5,8,18,0.98))",
-        border:`${compact ? 4 : 7}px solid ${revealed ? rarityStyle.main : "#4c1d95"}`,
-        outline:revealed ? `2px solid ${rarityStyle.edge}` : "1px solid rgba(196,181,253,0.22)",
+          : `linear-gradient(135deg,rgba(226,232,240,0.72),${backAccent} 18%,rgba(2,6,23,0.98) 56%,${backAccent})`,
+        border:`${compact ? 4 : 7}px solid ${revealed ? rarityStyle.main : backAccent}`,
+        outline:revealed ? `2px solid ${rarityStyle.edge}` : "2px solid rgba(254,243,199,0.32)",
         outlineOffset:-3,
-        boxShadow:revealed ? `0 18px 36px rgba(0,0,0,0.42), 0 0 0 1px ${rarityStyle.edge}, 0 0 ${compact ? 18 : 34}px ${rarityStyle.glow}` : "0 18px 36px rgba(0,0,0,0.34)",
+        boxShadow:revealed ? `0 18px 36px rgba(0,0,0,0.42), 0 0 0 1px ${rarityStyle.edge}, 0 0 ${compact ? 18 : 34}px ${rarityStyle.glow}` : `0 18px 36px rgba(0,0,0,0.42), 0 0 ${compact ? 18 : 34}px ${backAccent}55`,
         display:"flex",
         flexDirection:"column",
         gap:compact ? 5 : 7,
@@ -10450,7 +10484,7 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false }) {
         position:"relative",
       }}>
         {!revealed ? (
-          <div style={{ flex:1, borderRadius:6, border:"1px solid rgba(196,181,253,0.22)", background:"radial-gradient(circle at 50% 38%,rgba(124,58,237,0.36),rgba(2,6,23,0.92) 62%)", display:"flex", alignItems:"center", justifyContent:"center", fontFamily:"'Cinzel Decorative',serif", color:"#c4b5fd", fontSize:"2rem" }}>Z</div>
+          <ZodarCardBack pack={backPack} compact={compact} />
         ) : (
           <>
             <div style={{ minHeight:compact ? 27 : 42, borderRadius:7, background:`linear-gradient(180deg,${rarityStyle.plate},rgba(248,250,252,0.82))`, border:`2px solid ${rarityStyle.dark}`, display:"grid", gridTemplateColumns:"minmax(0,1fr) auto", alignItems:"center", gap:6, padding:compact ? "0.18rem 0.34rem" : "0.32rem 0.48rem", boxShadow:`inset 0 0 0 1px ${rarityStyle.edge}, 0 2px 0 rgba(2,6,23,0.35)` }}>
@@ -10810,6 +10844,7 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
                       key={card.uid}
                       card={card}
                       revealed={opening.revealed[idx]}
+                      backPack={opening.pack}
                       onClick={()=>revealCard(idx)}
                     />
                   ))}
