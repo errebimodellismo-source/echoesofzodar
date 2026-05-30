@@ -522,18 +522,84 @@ function BattleStageAction({ fx, activeCombatant, isMobile, effectKey, originPoi
     </div>
   );
 
-  if(fx.type === 'slash' || fx.type === 'hit' || fx.type === 'miss') return (
-    <div key={effectKey} style={base}>
-      {chargeFx}
-      <div style={{ position:'absolute', left:originX, top:originY, "--dx":dx, "--dy":dy, opacity:0, animation:'battleBladeTravel .62s cubic-bezier(.15,.88,.32,1) .28s both' }}>
-        <div style={{ transform:`${projectileFlip} rotate(-32deg)`, transformOrigin:'50% 70%', color:'#f8fafc', fontSize:isMobile ? '2.25rem' : '3.25rem', lineHeight:1, textShadow:'0 0 12px #f8fafc, 0 0 28px #ef4444' }}>🗡️</div>
+  if(fx.type === 'slash' || fx.type === 'hit' || fx.type === 'miss') {
+    const isMiss = fx.type === 'miss';
+    const slashColor = isMiss ? '#94a3b8' : '#f87171';
+    const slashW = isMobile ? 160 : 240;
+    const sparkAngles = [0, 45, 90, 135, 180, 225, 270, 315];
+    const sparkDist = isMobile ? 38 : 58;
+    return (
+      <div key={effectKey} style={base}>
+        {chargeFx}
+
+        {/* Spada che vola verso il bersaglio + trail */}
+        <div style={{ position:'absolute', left:originX, top:originY, "--dx":dx, "--dy":dy, opacity:0, animation:'battleBladeTravel .58s cubic-bezier(.12,.9,.28,1) .26s both' }}>
+          <div style={{ position:'relative' }}>
+            <div style={{ position:'absolute', right:'100%', top:'50%', transform:'translateY(-50%)', width:isMobile ? 44 : 64, height:3, background:`linear-gradient(${fromLeft?'90deg':'270deg'},transparent,rgba(248,113,113,.7),white)`, borderRadius:999, filter:'blur(.8px)' }} />
+            <div style={{ transform:`${projectileFlip} rotate(-28deg)`, transformOrigin:'50% 65%', fontSize:isMobile ? '2.5rem' : '3.6rem', lineHeight:1, filter:'drop-shadow(0 0 10px white) drop-shadow(0 0 22px #ef4444)' }}>🗡️</div>
+          </div>
+        </div>
+
+        {/* Flash bianco all'impatto sul bersaglio */}
+        <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 140 : 210, height:isMobile ? 140 : 210, transform:'translate(-50%,-50%)', borderRadius:'50%', background:'radial-gradient(circle,rgba(255,255,255,.95) 0%,rgba(248,113,113,.5) 28%,transparent 62%)', opacity:0, animation:'battleSlashFlash .45s ease-out .72s both', pointerEvents:'none' }} />
+
+        {/* Linee SVG — veri tagli di spada */}
+        <svg
+          style={{ position:'absolute', left:targetX, top:targetY, transform:'translate(-50%,-50%)', width:slashW, height:slashW, overflow:'visible', opacity:0, animation:'battleSlashSvg .7s ease-out .75s both', pointerEvents:'none' }}
+          viewBox={`0 0 ${slashW} ${slashW}`}
+        >
+          <defs>
+            <filter id={`slashGlow_${effectKey}`} x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3.5" result="blur"/>
+              <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+            </filter>
+          </defs>
+          {/* Slash principale */}
+          <line x1="28" y1="28" x2={slashW - 28} y2={slashW - 28}
+            stroke="white" strokeWidth={isMobile ? 3.5 : 4.5} strokeLinecap="round"
+            filter={`url(#slashGlow_${effectKey})`} opacity="0.95" />
+          {/* Secondo slash offset */}
+          <line x1="44" y1="18" x2={slashW - 18} y2={slashW - 44}
+            stroke={slashColor} strokeWidth={isMobile ? 2.5 : 3.2} strokeLinecap="round"
+            filter={`url(#slashGlow_${effectKey})`} opacity="0.78" />
+          {/* Terzo slash — controtag */}
+          <line x1={slashW - 38} y1="38" x2="38" y2={slashW - 38}
+            stroke={isMiss ? '#64748b' : '#fecaca'} strokeWidth={isMobile ? 1.8 : 2.2} strokeLinecap="round"
+            opacity="0.55" />
+          {/* Punto d'impatto */}
+          <circle cx={slashW / 2} cy={slashW / 2} r={isMobile ? 8 : 11}
+            fill="white" opacity="0.9" filter={`url(#slashGlow_${effectKey})`} />
+        </svg>
+
+        {/* Scintille all'impatto */}
+        {!isMiss && sparkAngles.map((angle, i) => {
+          const rad = angle * Math.PI / 180;
+          const sdx = Math.round(Math.cos(rad) * sparkDist);
+          const sdy = Math.round(Math.sin(rad) * sparkDist);
+          return (
+            <div key={`sp_${i}`} style={{
+              position:'absolute', left:targetX, top:targetY,
+              width:isMobile ? 5 : 7, height:isMobile ? 5 : 7,
+              borderRadius:'50%',
+              background: i % 3 === 0 ? 'white' : i % 3 === 1 ? '#fca5a5' : '#fbbf24',
+              boxShadow:`0 0 7px ${i % 3 === 0 ? 'white' : '#ef4444'}`,
+              opacity:0,
+              '--sdx': `${sdx}px`,
+              '--sdy': `${sdy}px`,
+              transform:'translate(-50%,-50%)',
+              animation:`battleSlashSpark .6s ease-out ${.74 + i * .025}s both`,
+              pointerEvents:'none',
+            }} />
+          );
+        })}
+
+        {/* Testo impatto */}
+        <div style={{ position:'absolute', left:targetX, top:`calc(${targetY} - ${isMobile ? 34 : 46}px)`, transform:'translateX(-50%)', color: isMiss ? '#94a3b8' : '#fecaca', fontFamily:"'Cinzel Decorative',serif", fontSize:isMobile ? '.88rem' : '1.1rem', fontWeight:900, letterSpacing:'.12em', textShadow:`0 0 18px ${slashColor}, 0 2px 4px #000`, opacity:0, animation:'battleImpactText .8s ease-out .8s both', pointerEvents:'none' }}>
+          {isMiss ? 'MISS' : 'SLASH'}
+        </div>
       </div>
-      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 112 : 168, height:isMobile ? 112 : 168, transform:'translate(-50%,-50%) rotate(-18deg)', borderRadius:18, background:'linear-gradient(135deg,transparent 25%,#fff7ed 42%,#ef4444 49%,#7f1d1d 56%,transparent 72%)', filter:'drop-shadow(0 0 18px rgba(248,113,113,.98))', opacity:0, animation:'battleSlashImpact .82s ease-out .78s both' }} />
-      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 92 : 132, height:isMobile ? 92 : 132, transform:'translate(-50%,-50%) rotate(28deg)', borderRadius:18, background:'linear-gradient(135deg,transparent 34%,rgba(255,255,255,.82) 48%,transparent 60%)', filter:'drop-shadow(0 0 16px rgba(255,247,237,.85))', opacity:0, animation:'battleSlashImpact .72s ease-out .88s both' }} />
-      <div style={{ position:'absolute', left:targetX, top:targetY, width:isMobile ? 90 : 142, height:isMobile ? 90 : 142, transform:'translate(-50%,-50%) rotate(-18deg)', borderRadius:18, background:'linear-gradient(135deg,transparent 28%,#fff7ed 45%,#ef4444 52%,transparent 68%)', filter:'drop-shadow(0 0 16px rgba(248,113,113,.95))', opacity:0, animation:'battleSlashImpact .78s ease-out .84s both' }} />
-      <div style={{ position:'absolute', left:targetX, top:targetY, transform:'translate(-50%,-50%)', color:'#fecaca', fontFamily:"'Cinzel Decorative',serif", fontSize:isMobile ? '.9rem' : '1.1rem', textShadow:'0 0 14px #ef4444', opacity:0, animation:'battleImpactText .8s ease-out .82s both' }}>{fx.type === 'miss' ? 'MISS' : 'SLASH'}</div>
-    </div>
-  );
+    );
+  }
 
   if(magicTypes.has(fx.type)) {
     const heal = fx.type === 'healMagic';
@@ -860,6 +926,9 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {}, 
         @keyframes battleBladeTravel { 0%{transform:translate(-50%,-50%) scale(.58);opacity:0} 18%{opacity:1} 68%{opacity:1} 100%{transform:translate(calc(var(--dx) - 50%),calc(var(--dy) - 50%)) scale(1.18);opacity:0} }
         @keyframes battleSparkTrail { 0%{transform:translate(-50%,-50%) scale(.45);opacity:0} 18%{opacity:.9} 100%{transform:translate(calc(var(--dx) - 50%),calc(var(--dy) - 50%)) scale(.1);opacity:0} }
         @keyframes battleSlashImpact { 0%{opacity:0;clip-path:inset(50% 50% 50% 50%);filter:blur(6px)} 28%{opacity:1;clip-path:inset(0 0 0 0);filter:blur(0)} 100%{opacity:0;clip-path:inset(0 0 0 0);filter:blur(5px);transform:translate(-50%,-50%) rotate(18deg) scale(1.2)} }
+        @keyframes battleSlashFlash { 0%{opacity:0;transform:translate(-50%,-50%) scale(.28)} 22%{opacity:.98;transform:translate(-50%,-50%) scale(.72)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.6)} }
+        @keyframes battleSlashSvg { 0%{opacity:0;transform:translate(-50%,-50%) scale(.32) rotate(-24deg)} 24%{opacity:1;transform:translate(-50%,-50%) scale(1.06) rotate(0deg)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.4) rotate(6deg);filter:blur(3px)} }
+        @keyframes battleSlashSpark { 0%{opacity:0;transform:translate(-50%,-50%) scale(0)} 18%{opacity:1;transform:translate(-50%,-50%) scale(1.2)} 100%{opacity:0;transform:translate(calc(var(--sdx) - 50%),calc(var(--sdy) - 50%)) scale(.15)} }
         @keyframes battleArrowImpact { 0%{opacity:0;transform:translate(-50%,-50%) scale(.35)} 28%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.55)} }
         @keyframes battleShardBurst { 0%{opacity:0;transform:translate(-50%,-50%) rotate(-18deg) scaleX(.2)} 24%{opacity:1} 100%{opacity:0;transform:translate(-50%,-50%) rotate(-18deg) scaleX(1.55)} }
         @keyframes battleMagicImpact { 0%{opacity:0;transform:translate(-50%,-50%) scale(.25)} 28%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.45)} }
