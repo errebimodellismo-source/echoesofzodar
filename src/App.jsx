@@ -1594,11 +1594,40 @@ function getClassPortraitPath(cls, gender) {
 function keyToAssetSlug(key) {
   return String(key || "").replaceAll("_", "-");
 }
+
+// Razze segrete → razza base più vicina per face portraits e fallback portrait
+const SECRET_RACE_BASE_FALLBACK = {
+  minotaur:'halforc', angel:'human', succubus:'tiefling',
+  aasimar:'human', drow:'elf', forged:'human', renegade_vampire:'human',
+  sirenide:'elf', echide:'human', genasi:'tiefling', ancient_draconid:'dragonborn',
+  shadow_awakened:'elf', fae:'halfling', echo_born:'human', mezzo_djinn:'tiefling',
+  golemide:'halforc', void_touched:'human', fallen_seraphite:'human',
+  primordial_draconian:'dragonborn', night_child:'human', ancient_silvan:'elf',
+  atlantean:'human', living_mirror:'human',
+};
+// Classi segrete senza portrait dedicato → classe base visivamente simile
+const SECRET_CLASS_BASE_FALLBACK = {
+  necromancer:'warlock', artificer:'warrior', summoner:'mage', seductress:'rogue',
+  echo_knight:'warrior', sigilwarden:'paladin', ashen_oracle:'cleric',
+  blood_cartographer:'rogue', moon_reaver:'rogue', void_sage:'mage',
+  herald_zodar:'paladin', relic_tamer:'warrior', oathblade:'paladin',
+  echo_singer:'bard', echo_reaper:'rogue', seal_inquisitor:'paladin',
+  blood_alchemist:'cleric', rune_elder:'mage', blade_dancer:'rogue',
+  cursebreaker:'cleric', star_pilgrim:'ranger', soul_forger:'warrior',
+  doom_prophet:'warlock', maze_keeper:'mage',
+};
+
 function getCharacterChoiceArt(kind, key, value, gender="male") {
   if(kind === "classes" && value?._cardUnlock) return `/assets/cards/art/unlock/class-${keyToAssetSlug(key)}.png`;
-  if(kind === "races" && value?._cardUnlock) return `/assets/cards/art/unlock/race-${keyToAssetSlug(key)}.png`;
-  if(kind === "classes") return getClassPortraitPath(key, gender);
-  return getRacePortraitPath(key, gender);
+  if(kind === "races"   && value?._cardUnlock) return `/assets/cards/art/unlock/race-${keyToAssetSlug(key)}.png`;
+  if(kind === "classes") {
+    // Classi segrete senza cardUnlock: usa portrait della classe base più vicina
+    const effectiveCls = SECRET_CLASS_BASE_FALLBACK[key] || key;
+    return getClassPortraitPath(effectiveCls, gender);
+  }
+  // Razze segrete senza cardUnlock: usa portrait della razza base più vicina
+  const effectiveRace = SECRET_RACE_BASE_FALLBACK[key] || key;
+  return getRacePortraitPath(effectiveRace, gender);
 }
 function makeCharacterChoiceFallbackArt(kind, key, value) {
   const isClass = kind === "classes";
@@ -4483,14 +4512,37 @@ function getPlayerPortrait(player) {
   if(isZodarEntity(player)) return ZODAR_PORTRAIT_URL;
   if(player.portrait) return player.portrait;
   if(player.image) return player.image;
-  const cls  = (player.class  || "warrior").toLowerCase();
-  const race = (player.race   || "human").toLowerCase();
+  const cls    = (player.class  || "warrior").toLowerCase();
+  const race   = (player.race   || "human").toLowerCase();
   const gender = player.gender || getStoredCharacterGender(player.id, "male");
-  if(hasGeneratedAppearance(player)) return `/assets/portraits/${race}_${gender}_face_${player.portrait_face || 1}.png`;
-  // Secret races don't have class-specific portraits — use race_gender directly
-  const SECRET_RACES = ['minotaur','angel','succubus'];
-  if(SECRET_RACES.includes(race)) return getRacePortraitPath(race, gender);
-  return getPortraitPath(cls, race, gender);
+
+  // Custom appearance: usa face portrait della razza (con fallback sulla razza base)
+  if(hasGeneratedAppearance(player)) {
+    const faceRace = SECRET_RACE_BASE_FALLBACK[race] || race;
+    return `/assets/portraits/${faceRace}_${gender}_face_${player.portrait_face || 1}.png`;
+  }
+
+  // Razze segrete con card art — usala come portrait
+  const raceData = RACES[race];
+  if(raceData?._cardUnlock) {
+    return `/assets/cards/art/unlock/race-${keyToAssetSlug(race)}.png`;
+  }
+  // Razze segrete senza card art (minotaur, angel, succubus)
+  if(['minotaur','angel','succubus'].includes(race)) {
+    return getRacePortraitPath(race, gender);
+  }
+
+  // Classi segrete con card art — usala come portrait
+  const clsData = CLASSES[cls];
+  if(clsData?._cardUnlock) {
+    return `/assets/cards/art/unlock/class-${keyToAssetSlug(cls)}.png`;
+  }
+
+  // Classe senza portrait dedicato → fallback classe base + razza, poi solo classe base
+  const effectiveCls  = SECRET_CLASS_BASE_FALLBACK[cls]  || cls;
+  const effectiveRace = SECRET_RACE_BASE_FALLBACK[race] || race;
+  // Prova classe+razza, poi classe generica
+  return getPortraitPath(effectiveCls, effectiveRace, gender);
 }
 
 function hasGeneratedAppearance(player) {
@@ -4612,7 +4664,9 @@ function CharacterPortrait({ player, race, gender, cls, face=1, eyes=1, scar=0, 
   const finalScar = Number(player?.portrait_scar || scar || 0);
   const finalHair = Number(player?.portrait_hair || hair || 0);
   const finalBeard = finalGender === "male" ? Number(player?.portrait_beard || beard || 0) : 0;
-  const baseSrc = `/assets/portraits/${finalRace}_${finalGender}_face_${finalFace}.png`;
+  // Per razze segrete senza face portrait dedicato, usa la razza base più vicina
+  const faceRace = SECRET_RACE_BASE_FALLBACK[finalRace] || finalRace;
+  const baseSrc = `/assets/portraits/${faceRace}_${finalGender}_face_${finalFace}.png`;
   const generatedFaceMode = !player || hasGeneratedAppearance(player);
   return (
     <div style={{
