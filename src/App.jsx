@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "./supabase";
-import { CLASSES, RACES, SECRET_UNLOCK_KEY, SECRET_PASSWORD } from "./data/characterData";
+import { CLASSES, RACES, SECRET_UNLOCK_KEY, SECRET_PASSWORD, MAGIC_CLASSES as DATA_MAGIC_CLASSES } from "./data/characterData";
 import { SPELL_SLOTS, SPELLS } from "./data/spellsData";
 import { DEFAULT_QUESTS } from "./data/questsData";
 import { DEFAULT_MONSTERS } from "./data/monstersData";
@@ -616,7 +616,7 @@ function canAccessMasterPanel(user) {
   return !!email && MASTER_EMAILS.includes(email);
 }
 
-const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock','paladin','ranger','necromancer','summoner','artificer','seductress'];
+const MAGIC_CLASSES = DATA_MAGIC_CLASSES;
 
 const STATUS_EFFECTS = {
   poison: { label: 'Avvelenato',  emoji: '🐍', color: '#4ade80', damagePerRound: 3 },
@@ -1102,6 +1102,26 @@ const CLASS_ABILITY_BASES = {
   mage:     { str:8,  dex:14, con:12, int:16, wis:12, cha:10 },
   sorcerer: { str:8,  dex:14, con:12, int:10, wis:12, cha:16 },
   warlock:  { str:10, dex:12, con:14, int:12, wis:10, cha:16 },
+  echo_knight:{ str:16, dex:12, con:15, int:10, wis:12, cha:11 },
+  void_sage:{ str:8, dex:12, con:12, int:17, wis:13, cha:10 },
+  sigilwarden:{ str:12, dex:10, con:15, int:14, wis:13, cha:10 },
+  ashen_oracle:{ str:8, dex:12, con:12, int:14, wis:16, cha:11 },
+  blood_cartographer:{ str:12, dex:14, con:13, int:15, wis:12, cha:10 },
+  moon_reaver:{ str:12, dex:17, con:12, int:10, wis:12, cha:10 },
+  herald_zodar:{ str:13, dex:11, con:14, int:12, wis:14, cha:15 },
+  relic_tamer:{ str:13, dex:12, con:14, int:14, wis:11, cha:12 },
+  oathblade:{ str:16, dex:12, con:14, int:10, wis:12, cha:13 },
+  echo_singer:{ str:9, dex:14, con:12, int:12, wis:12, cha:17 },
+  echo_reaper:{ str:14, dex:14, con:13, int:10, wis:13, cha:11 },
+  seal_inquisitor:{ str:14, dex:12, con:14, int:12, wis:15, cha:10 },
+  blood_alchemist:{ str:10, dex:12, con:14, int:16, wis:10, cha:12 },
+  rune_elder:{ str:8, dex:10, con:14, int:17, wis:15, cha:10 },
+  blade_dancer:{ str:12, dex:17, con:12, int:10, wis:12, cha:11 },
+  cursebreaker:{ str:13, dex:12, con:14, int:11, wis:15, cha:12 },
+  star_pilgrim:{ str:9, dex:14, con:12, int:13, wis:15, cha:13 },
+  soul_forger:{ str:14, dex:10, con:15, int:15, wis:11, cha:10 },
+  doom_prophet:{ str:8, dex:10, con:12, int:13, wis:17, cha:12 },
+  maze_keeper:{ str:10, dex:12, con:14, int:15, wis:14, cha:10 },
 };
 const RACE_ABILITY_BONUSES = {
   human:     { str:1, dex:1, con:1, int:1, wis:1, cha:1 },
@@ -1113,6 +1133,26 @@ const RACE_ABILITY_BONUSES = {
   halfelf:   { str:0, dex:1, con:1, int:0, wis:0, cha:2 },
   halforc:   { str:2, dex:0, con:1, int:0, wis:0, cha:0 },
   tiefling:  { str:0, dex:0, con:0, int:1, wis:0, cha:2 },
+  aasimar: { str:0, dex:0, con:1, int:0, wis:1, cha:2 },
+  drow: { str:0, dex:2, con:0, int:0, wis:0, cha:1 },
+  forged: { str:1, dex:0, con:2, int:1, wis:0, cha:0 },
+  renegade_vampire: { str:1, dex:2, con:0, int:0, wis:0, cha:1 },
+  sirenide: { str:0, dex:1, con:0, int:0, wis:1, cha:2 },
+  echide: { str:0, dex:0, con:1, int:1, wis:1, cha:2 },
+  genasi: { str:0, dex:1, con:1, int:0, wis:1, cha:1 },
+  ancient_draconid: { str:2, dex:0, con:1, int:0, wis:0, cha:1 },
+  shadow_awakened: { str:0, dex:2, con:0, int:1, wis:0, cha:1 },
+  fae: { str:-1, dex:2, con:0, int:0, wis:1, cha:1 },
+  echo_born: { str:0, dex:1, con:1, int:1, wis:1, cha:1 },
+  half_djinn: { str:0, dex:1, con:0, int:0, wis:0, cha:2 },
+  golemide: { str:2, dex:-1, con:2, int:0, wis:0, cha:0 },
+  void_touched: { str:0, dex:0, con:0, int:2, wis:0, cha:1 },
+  fallen_seraphite: { str:1, dex:0, con:1, int:0, wis:0, cha:2 },
+  primordial_draconian: { str:2, dex:0, con:2, int:0, wis:0, cha:0 },
+  night_child: { str:0, dex:2, con:0, int:0, wis:0, cha:1 },
+  ancient_silvan: { str:0, dex:0, con:2, int:0, wis:2, cha:0 },
+  atlantean: { str:1, dex:0, con:1, int:1, wis:1, cha:0 },
+  living_mirror: { str:0, dex:1, con:0, int:1, wis:0, cha:2 },
 };
 const CLASS_LEVEL_GAINS = {
   barbarian:{ hp:16, atk:3, def:1, mag:0, label:"+16 HP, +3 ATK, +1 DEF" },
@@ -1127,7 +1167,331 @@ const CLASS_LEVEL_GAINS = {
   mage:     { hp:6,  atk:0, def:1, mag:3, label:"+6 HP, +1 DEF, +3 MAG" },
   sorcerer: { hp:6,  atk:0, def:0, mag:4, label:"+6 HP, +4 MAG" },
   warlock:  { hp:7,  atk:1, def:1, mag:3, label:"+7 HP, +1 ATK, +1 DEF, +3 MAG" },
+  echo_knight:{ hp:13, atk:3, def:2, mag:1, label:"+13 HP, +3 ATK, +2 DEF, +1 MAG" },
+  void_sage:{ hp:7, atk:0, def:1, mag:4, label:"+7 HP, +1 DEF, +4 MAG" },
+  sigilwarden:{ hp:12, atk:1, def:3, mag:2, label:"+12 HP, +1 ATK, +3 DEF, +2 MAG" },
+  ashen_oracle:{ hp:8, atk:1, def:1, mag:4, label:"+8 HP, +1 ATK, +1 DEF, +4 MAG" },
+  blood_cartographer:{ hp:10, atk:2, def:1, mag:2, label:"+10 HP, +2 ATK, +1 DEF, +2 MAG" },
+  moon_reaver:{ hp:9, atk:3, def:1, mag:1, label:"+9 HP, +3 ATK, +1 DEF, +1 MAG" },
+  herald_zodar:{ hp:11, atk:2, def:2, mag:3, label:"+11 HP, +2 ATK, +2 DEF, +3 MAG" },
+  relic_tamer:{ hp:10, atk:2, def:2, mag:2, label:"+10 HP, +2 ATK, +2 DEF, +2 MAG" },
+  oathblade:{ hp:12, atk:3, def:2, mag:1, label:"+12 HP, +3 ATK, +2 DEF, +1 MAG" },
+  echo_singer:{ hp:8, atk:1, def:1, mag:3, label:"+8 HP, +1 ATK, +1 DEF, +3 MAG" },
+  echo_reaper:{ hp:10, atk:3, def:1, mag:2, label:"+10 HP, +3 ATK, +1 DEF, +2 MAG" },
+  seal_inquisitor:{ hp:11, atk:2, def:2, mag:1, label:"+11 HP, +2 ATK, +2 DEF, +1 MAG" },
+  blood_alchemist:{ hp:9, atk:1, def:1, mag:3, label:"+9 HP, +1 ATK, +1 DEF, +3 MAG" },
+  rune_elder:{ hp:9, atk:1, def:2, mag:4, label:"+9 HP, +1 ATK, +2 DEF, +4 MAG" },
+  blade_dancer:{ hp:8, atk:3, def:1, mag:0, label:"+8 HP, +3 ATK, +1 DEF" },
+  cursebreaker:{ hp:10, atk:2, def:2, mag:2, label:"+10 HP, +2 ATK, +2 DEF, +2 MAG" },
+  star_pilgrim:{ hp:8, atk:1, def:1, mag:4, label:"+8 HP, +1 ATK, +1 DEF, +4 MAG" },
+  soul_forger:{ hp:11, atk:2, def:2, mag:2, label:"+11 HP, +2 ATK, +2 DEF, +2 MAG" },
+  doom_prophet:{ hp:7, atk:1, def:1, mag:4, label:"+7 HP, +1 ATK, +1 DEF, +4 MAG" },
+  maze_keeper:{ hp:10, atk:1, def:2, mag:2, label:"+10 HP, +1 ATK, +2 DEF, +2 MAG" },
 };
+const CLASS_FEATURES = {
+  echo_knight:{ name:"Eco Gemello", desc:"+1 a colpire e +2 danni con armi; i critici partono da 19." },
+  void_sage:{ name:"Vuoto Affamato", desc:"+3 danni magici e gli effetti d'ombra durano piu a lungo." },
+  sigilwarden:{ name:"Barriera dei Sigilli", desc:"Riduce i danni subiti del 10% e cura/protegge con +2 efficacia." },
+  ashen_oracle:{ name:"Presagio di Cenere", desc:"+2 danni magici; magie di fuoco e cenere applicano bruciatura piu intensa." },
+  blood_cartographer:{ name:"Mappa Viva", desc:"+1 a colpire; le magie e tecniche segnano il bersaglio con danno persistente." },
+  moon_reaver:{ name:"Lama Lunare", desc:"+2 a colpire, +2 danni arma e critico da 19." },
+  herald_zodar:{ name:"Equilibrio di Zodar", desc:"+2 cure, +2 danni magici e lieve riduzione dei danni subiti." },
+  relic_tamer:{ name:"Canalizza Reliquia", desc:"+1 a colpire, +1 danni arma/magia; evocazioni e reliquie sono piu robuste." },
+  oathblade:{ name:"Giuramento Inciso", desc:"+2 danni arma e -8% danni subiti quando mantiene la linea." },
+  echo_singer:{ name:"Canto Risonante", desc:"+2 cure e +2 danni magici; controllo sonoro piu affidabile." },
+  echo_reaper:{ name:"Raccolta d'Echi", desc:"+3 danni arma, +2 danni magici e critico da 19." },
+  seal_inquisitor:{ name:"Sigillo Inquisitorio", desc:"+1 a colpire; colpi e magie possono stordire il bersaglio." },
+  blood_alchemist:{ name:"Reazione Ematica", desc:"+3 danni magici e drenaggi/cure potenziati." },
+  rune_elder:{ name:"Runa Preparata", desc:"+4 danni magici; lento, ma le magie pesanti picchiano forte." },
+  blade_dancer:{ name:"Ritmo di Lama", desc:"+2 a colpire, +3 danni arma e critico da 19." },
+  cursebreaker:{ name:"Rottura della Maledizione", desc:"+2 danni contro nemici afflitti; magie sacre e fuoco applicano pressione." },
+  star_pilgrim:{ name:"Coordinate Stellari", desc:"+1 a colpire, +3 danni magici e +1 iniziativa effettiva." },
+  soul_forger:{ name:"Arma Spirituale", desc:"+2 danni arma/magia; evocazioni e colpi spirituali crescono meglio." },
+  doom_prophet:{ name:"Presagio Finale", desc:"+4 danni magici quando lancia; le magie di controllo sono piu decisive." },
+  maze_keeper:{ name:"Lettura del Labirinto", desc:"+1 a colpire, -8% danni subiti e controllo piu stabile." },
+};
+const CLASS_SPELL_BONUSES = {
+  echo_knight:{ title:"Magia d'Eco", lines:["Le magie ad area rappresentano colpi doppi: ottime quando il party deve pulire gruppi.", "Resta ibrido: scala soprattutto con ATK, critico e danni arma."] },
+  void_sage:{ title:"Vuoto Affamato", lines:["Ogni danno magico riceve un forte bonus fisso.", "Status e ombra durano di piu: meglio contro boss lunghi che contro nemici fragili."] },
+  sigilwarden:{ title:"Sigilli Difensivi", lines:["Cure e barriere sono potenziate, con riduzione passiva dei danni subiti.", "I controlli servono a comprare tempo per il party, non a fare DPS puro."] },
+  ashen_oracle:{ title:"Cenere Profetica", lines:["Le magie offensive applicano bruciature automatiche.", "Alterna controllo e fuoco: il valore cresce nei combattimenti a piu round."] },
+  blood_cartographer:{ title:"Cartografia Viva", lines:["I colpi segnano il bersaglio e aggiungono pressione persistente.", "Le magie migliori sono quelle ad area o di precisione contro un bersaglio gia indebolito."] },
+  moon_reaver:{ title:"Caccia Lunare", lines:["Tecniche rapide con alto hit bonus e critico facilitato.", "Le magie di drenaggio sono il suo modo di restare in piedi mentre esegue."] },
+  herald_zodar:{ title:"Equilibrio di Zodar", lines:["Cura e danno magico crescono insieme.", "E' una classe da stabilizzazione: meno picchi assurdi, piu costanza quando il party oscilla."] },
+  relic_tamer:{ title:"Canalizzazione di Reliquie", lines:["Evocazioni piu robuste e danni misti leggermente potenziati.", "Le magie di summon sono prioritarie nei fight lunghi."] },
+  oathblade:{ title:"Giuramento Inciso", lines:["Le tecniche magiche puniscono e tengono la linea.", "La riduzione danni lo rende un caster frontale piu sicuro degli altri ibridi."] },
+  echo_singer:{ title:"Risonanza Corale", lines:["Cure, danni sonori e controllo ricevono bonus affidabili.", "Il meglio arriva quando deve tenere vivo tutto il party, non solo chiudere un bersaglio."] },
+  echo_reaper:{ title:"Mietitura d'Echi", lines:["Ogni uccisione accumula Echi che aumentano danni arma e magia.", "Le magie ad area diventano molto piu forti dopo i primi nemici caduti."] },
+  seal_inquisitor:{ title:"Inquisizione Sigillata", lines:["Colpi e controlli possono bloccare il bersaglio.", "Eccelle contro nemici pericolosi singoli: prima interrompe, poi condanna."] },
+  blood_alchemist:{ title:"Reazione Ematica", lines:["Le magie con costo HP caricano piu velocemente la Reazione.", "Piu Reazione significa piu danno e cure, ma il margine di errore resta basso."] },
+  rune_elder:{ title:"Runa Preparata", lines:["La prima magia di ogni combattimento e' sovraccaricata.", "Lento e poco flessibile, ma i tier alti hanno i dadi piu pesanti."] },
+  blade_dancer:{ title:"Ritmo di Lama", lines:["Gli attacchi accumulano Ritmo, migliorando danno e critico.", "Le tecniche magiche sono finisher: rendono al massimo dopo qualche colpo fisico."] },
+  cursebreaker:{ title:"Purga della Maledizione", lines:["Fuoco e luce spingono danni e pressione sugli afflitti.", "Puo passare da danno ad area a cura di massa senza cambiare ruolo."] },
+  star_pilgrim:{ title:"Coordinate Stellari", lines:["Le uccisioni fissano Coordinate che aumentano magia e iniziativa.", "Le magie cosmiche ad area sono la sua firma quando il campo e' pieno."] },
+  soul_forger:{ title:"Forgia Spirituale", lines:["Le uccisioni creano cariche d'anima che potenziano danni ed evocazioni.", "Le summon di alto tier diventano il miglior investimento nei boss lunghi."] },
+  doom_prophet:{ title:"Presagi della Fine", lines:["Ogni magia accumula Presagi; se il Profeta e' ferito, crescono piu in fretta.", "E' progettato per ribaltare situazioni brutte, non per giocare comodo."] },
+  maze_keeper:{ title:"Geometria del Labirinto", lines:["Le magie di controllo aumentano Letture, che migliorano difesa e durata dei blocchi.", "Il tier alto serve a trasformare il campo: meno burst secco, piu controllo ad area."] },
+};
+const RACE_FEATURES = {
+  aasimar:{ name:"Luce Celestiale", desc:"+1 cure e -8% danni subiti." },
+  drow:{ name:"Passo d'Ombra", desc:"+1 a colpire e +1 danni d'ombra." },
+  forged:{ name:"Corpo Forgiato", desc:"-10% danni subiti e +1 danni arma." },
+  renegade_vampire:{ name:"Sete Controllata", desc:"+2 danni arma e drenaggi piu efficaci." },
+  sirenide:{ name:"Voce Abissale", desc:"+1 danni magici e controllo piu incisivo." },
+  echide:{ name:"Sangue d'Eco", desc:"+1 danni arma/magia e +1 cure: grande sinergia con Risonanza." },
+  genasi:{ name:"Anima Elementale", desc:"+2 danni magici elementali." },
+  ancient_draconid:{ name:"Sangue Draconico", desc:"+2 danni arma e +1 danni magici." },
+  shadow_awakened:{ name:"Corpo d'Ombra", desc:"+1 a colpire e -6% danni subiti." },
+  fae:{ name:"Fortuna Fatata", desc:"+1 a colpire e critico piu facile con tecniche precise." },
+  echo_born:{ name:"Nato dalla Risonanza", desc:"+1 danni e cure; migliora ogni effetto Echo." },
+  half_djinn:{ name:"Desiderio Instabile", desc:"+2 danni magici e +1 a colpire." },
+  golemide:{ name:"Pietra Animata", desc:"-15% danni subiti, ma iniziativa bassa." },
+  void_touched:{ name:"Marchio del Vuoto", desc:"+3 danni magici e status d'ombra piu dolorosi." },
+  fallen_seraphite:{ name:"Luce Caduta", desc:"+1 cure, +1 danni magici e -6% danni subiti." },
+  primordial_draconian:{ name:"Furia Primordiale", desc:"+3 danni arma e resistenza fisica leggera." },
+  night_child:{ name:"Figlio della Notte", desc:"+1 a colpire, +1 danni arma e critico da 19 se la classe lo favorisce." },
+  ancient_silvan:{ name:"Radici Antiche", desc:"+2 cure e -8% danni subiti." },
+  atlantean:{ name:"Reliquia Sommersa", desc:"+1 danni magici, +1 cure e difesa stabile." },
+  living_mirror:{ name:"Riflesso Vivente", desc:"Copia una scintilla del gruppo: +1 a colpire, danni e cure." },
+};
+const CLASS_COMBAT_TRAITS = {
+  echo_knight:{ hitBonus:1, weaponDamageBonus:2, critThreshold:19 },
+  void_sage:{ spellDamageBonus:3, statusDamageBonus:1, statusDurationBonus:1 },
+  sigilwarden:{ incomingDamageMultiplier:0.9, healBonus:2 },
+  ashen_oracle:{ spellDamageBonus:2, statusOnSpell:{ type:"burn", duration:2, damagePerRound:4 } },
+  blood_cartographer:{ hitBonus:1, spellDamageBonus:1, statusOnSpell:{ type:"thorn", duration:2, damagePerRound:3 } },
+  moon_reaver:{ hitBonus:2, weaponDamageBonus:2, critThreshold:19 },
+  herald_zodar:{ spellDamageBonus:2, healBonus:2, incomingDamageMultiplier:0.94 },
+  relic_tamer:{ hitBonus:1, weaponDamageBonus:1, spellDamageBonus:1, summonHpBonus:12, summonAtkBonus:2 },
+  oathblade:{ weaponDamageBonus:2, incomingDamageMultiplier:0.92 },
+  echo_singer:{ spellDamageBonus:2, healBonus:2, controlDurationBonus:1 },
+  echo_reaper:{ weaponDamageBonus:3, spellDamageBonus:2, critThreshold:19 },
+  seal_inquisitor:{ hitBonus:1, statusOnHit:{ type:"stun", duration:1 }, controlDurationBonus:1 },
+  blood_alchemist:{ spellDamageBonus:3, healBonus:1 },
+  rune_elder:{ spellDamageBonus:4 },
+  blade_dancer:{ hitBonus:2, weaponDamageBonus:3, critThreshold:19 },
+  cursebreaker:{ weaponDamageBonus:1, spellDamageBonus:2, statusDamageBonus:1 },
+  star_pilgrim:{ hitBonus:1, spellDamageBonus:3, initBonus:1 },
+  soul_forger:{ weaponDamageBonus:2, spellDamageBonus:2, summonHpBonus:8, summonAtkBonus:1 },
+  doom_prophet:{ spellDamageBonus:4, controlDurationBonus:1 },
+  maze_keeper:{ hitBonus:1, incomingDamageMultiplier:0.92, controlDurationBonus:1 },
+};
+const RACE_COMBAT_TRAITS = {
+  aasimar:{ healBonus:1, incomingDamageMultiplier:0.92 },
+  drow:{ hitBonus:1, spellDamageBonus:1 },
+  forged:{ incomingDamageMultiplier:0.9, weaponDamageBonus:1 },
+  renegade_vampire:{ weaponDamageBonus:2, healBonus:1 },
+  sirenide:{ spellDamageBonus:1, controlDurationBonus:1 },
+  echide:{ weaponDamageBonus:1, spellDamageBonus:1, healBonus:1 },
+  genasi:{ spellDamageBonus:2 },
+  ancient_draconid:{ weaponDamageBonus:2, spellDamageBonus:1 },
+  shadow_awakened:{ hitBonus:1, incomingDamageMultiplier:0.94 },
+  fae:{ hitBonus:1, critThreshold:19 },
+  echo_born:{ weaponDamageBonus:1, spellDamageBonus:1, healBonus:1 },
+  half_djinn:{ hitBonus:1, spellDamageBonus:2 },
+  golemide:{ incomingDamageMultiplier:0.85 },
+  void_touched:{ spellDamageBonus:3, statusDamageBonus:1 },
+  fallen_seraphite:{ spellDamageBonus:1, healBonus:1, incomingDamageMultiplier:0.94 },
+  primordial_draconian:{ weaponDamageBonus:3, incomingDamageMultiplier:0.95 },
+  night_child:{ hitBonus:1, weaponDamageBonus:1 },
+  ancient_silvan:{ healBonus:2, incomingDamageMultiplier:0.92 },
+  atlantean:{ spellDamageBonus:1, healBonus:1 },
+  living_mirror:{ hitBonus:1, weaponDamageBonus:1, spellDamageBonus:1, healBonus:1 },
+};
+const CLASS_RACE_SYNERGIES = {
+  "echo_knight:echo_born":{ name:"Eco Perfetto", desc:"+1 danni arma/magia e +1 a colpire: corpo ed eco risuonano insieme.", trait:{ hitBonus:1, weaponDamageBonus:1, spellDamageBonus:1 } },
+  "void_sage:void_touched":{ name:"Vuoto su Vuoto", desc:"+2 danni magici e status d'ombra piu dolorosi.", trait:{ spellDamageBonus:2, statusDamageBonus:1 } },
+  "sigilwarden:forged":{ name:"Corazza Sigillata", desc:"-6% danni subiti e +1 cure: i sigilli trovano metallo vivo.", trait:{ incomingDamageMultiplier:0.94, healBonus:1 } },
+  "ashen_oracle:fallen_seraphite":{ name:"Cenere Angelica", desc:"+1 danni magici, +1 cure e bruciature piu incisive.", trait:{ spellDamageBonus:1, healBonus:1, statusDamageBonus:1 } },
+  "blood_cartographer:renegade_vampire":{ name:"Atlante Cremisi", desc:"+1 a colpire e drenaggi migliorati sulle magie ematiche.", trait:{ hitBonus:1, healBonus:1, spellDamageBonus:1 } },
+  "moon_reaver:night_child":{ name:"Lama Senza Alba", desc:"+1 a colpire, +1 danni arma e critico ancora piu minaccioso.", trait:{ hitBonus:1, weaponDamageBonus:1, critThreshold:18 } },
+  "herald_zodar:aasimar":{ name:"Bilancia Celeste", desc:"+2 cure e difesa piu stabile quando il party vacilla.", trait:{ healBonus:2, incomingDamageMultiplier:0.9 } },
+  "relic_tamer:atlantean":{ name:"Reliquiario Sommerso", desc:"+1 magie/cure ed evocazioni con +8 HP.", trait:{ spellDamageBonus:1, healBonus:1, summonHpBonus:8 } },
+  "oathblade:primordial_draconian":{ name:"Giuramento Primordiale", desc:"+2 danni arma e riduzione danni leggera.", trait:{ weaponDamageBonus:2, incomingDamageMultiplier:0.94 } },
+  "echo_singer:sirenide":{ name:"Canto Abissale", desc:"+2 cure e controlli sonori piu lunghi.", trait:{ healBonus:2, controlDurationBonus:1 } },
+  "echo_reaper:shadow_awakened":{ name:"Mietitura d'Ombra", desc:"+1 danni arma/magia; gli status feriscono di piu.", trait:{ weaponDamageBonus:1, spellDamageBonus:1, statusDamageBonus:1 } },
+  "seal_inquisitor:drow":{ name:"Sigillo del Sottosuolo", desc:"+1 a colpire e controllo piu affidabile contro bersagli pericolosi.", trait:{ hitBonus:1, controlDurationBonus:1 } },
+  "blood_alchemist:golemide":{ name:"Sangue Minerale", desc:"-5% danni subiti e reazioni ematiche piu controllate.", trait:{ incomingDamageMultiplier:0.95, spellDamageBonus:1, healBonus:1 } },
+  "rune_elder:ancient_silvan":{ name:"Radice Runica", desc:"+1 cure, +1 magia e controllo runico piu lungo.", trait:{ spellDamageBonus:1, healBonus:1, controlDurationBonus:1 } },
+  "blade_dancer:fae":{ name:"Danza Fatata", desc:"+1 a colpire e critico da 18 durante il ritmo perfetto.", trait:{ hitBonus:1, critThreshold:18 } },
+  "cursebreaker:aasimar":{ name:"Assoluzione Celeste", desc:"+1 danni magici, +2 cure e pressione sacra piu forte.", trait:{ spellDamageBonus:1, healBonus:2, statusDamageBonus:1 } },
+  "star_pilgrim:half_djinn":{ name:"Coordinate del Desiderio", desc:"+2 danni magici e +1 iniziativa: varchi piu rapidi e instabili.", trait:{ spellDamageBonus:2, initBonus:1 } },
+  "soul_forger:forged":{ name:"Anima in Metallo", desc:"+1 danni arma/magia ed evocazioni rinforzate.", trait:{ weaponDamageBonus:1, spellDamageBonus:1, summonHpBonus:10 } },
+  "doom_prophet:void_touched":{ name:"Fine del Vuoto", desc:"+2 danni magici e controlli profetici piu lunghi.", trait:{ spellDamageBonus:2, controlDurationBonus:1 } },
+  "maze_keeper:living_mirror":{ name:"Specchio del Labirinto", desc:"+1 a colpire, -5% danni subiti e controllo piu stabile.", trait:{ hitBonus:1, incomingDamageMultiplier:0.95, controlDurationBonus:1 } },
+};
+const CLASS_RESOURCE_INFO = {
+  echo_reaper:{ key:"echoStacks", icon:"☠️", label:"Echi", max:9, desc:"Aumentano danni arma e magia durante il combattimento." },
+  soul_forger:{ key:"soulCharges", icon:"⚒️", label:"Anime", max:6, desc:"Cariche spirituali forgiate dai nemici caduti." },
+  blade_dancer:{ key:"rhythm", icon:"🗡️", label:"Ritmo", max:3, desc:"Cresce quando colpisci; aumenta danni e critico." },
+  rune_elder:{ key:"runeCharge", icon:"ᚱ", label:"Runa", max:1, desc:"La prima magia del combattimento e' sovraccaricata." },
+  doom_prophet:{ key:"presages", icon:"⏳", label:"Presagi", max:6, desc:"Crescono quando il party e' in pericolo." },
+  blood_alchemist:{ key:"bloodHeat", icon:"🧪", label:"Reazione", max:5, desc:"Aumenta dopo tecniche ematiche e potenzia l'alchimia." },
+  maze_keeper:{ key:"mazeReads", icon:"🧭", label:"Letture", max:3, desc:"Letture del campo che rafforzano controllo e difesa." },
+  star_pilgrim:{ key:"coordinates", icon:"⭐", label:"Coordinate", max:5, desc:"Coordinate stellari accumulate in battaglia." },
+};
+function getInitialClassCombatState(player={}) {
+  if(player.class === "rune_elder") return { runeCharge:1 };
+  if(player.class === "maze_keeper") return { mazeReads:1 };
+  if(player.class === "star_pilgrim") return { coordinates:1 };
+  return {};
+}
+function getDynamicClassTrait(actor={}) {
+  const trait = {};
+  const echoStacks = Math.min(9, Number(actor.echoStacks || 0));
+  if(actor.class === "echo_reaper" && echoStacks > 0) {
+    trait.weaponDamageBonus = echoStacks;
+    trait.spellDamageBonus = Math.floor(echoStacks / 2);
+  }
+  const soulCharges = Math.min(6, Number(actor.soulCharges || 0));
+  if(actor.class === "soul_forger" && soulCharges > 0) {
+    trait.weaponDamageBonus = Math.floor(soulCharges / 2);
+    trait.spellDamageBonus = Math.floor(soulCharges / 2);
+    trait.summonHpBonus = soulCharges * 3;
+  }
+  const rhythm = Math.min(3, Number(actor.rhythm || 0));
+  if(actor.class === "blade_dancer" && rhythm > 0) {
+    trait.weaponDamageBonus = rhythm;
+    trait.hitBonus = Math.floor(rhythm / 2);
+    if(rhythm >= 3) trait.critThreshold = 18;
+  }
+  if(actor.class === "rune_elder" && Number(actor.runeCharge || 0) > 0) {
+    trait.spellDamageBonus = 5;
+    trait.statusDurationBonus = 1;
+  }
+  const danger = actor.maxHp ? (actor.hp || 0) / Math.max(1, actor.maxHp) : 1;
+  const presages = Math.min(6, Number(actor.presages || 0) + (danger <= 0.4 ? 2 : danger <= 0.65 ? 1 : 0));
+  if(actor.class === "doom_prophet" && presages > 0) {
+    trait.spellDamageBonus = presages;
+    trait.controlDurationBonus = presages >= 4 ? 1 : 0;
+  }
+  const bloodHeat = Math.min(5, Number(actor.bloodHeat || 0));
+  if(actor.class === "blood_alchemist" && bloodHeat > 0) {
+    trait.spellDamageBonus = bloodHeat;
+    trait.healBonus = Math.floor(bloodHeat / 2);
+  }
+  const mazeReads = Math.min(3, Number(actor.mazeReads || 0));
+  if(actor.class === "maze_keeper" && mazeReads > 0) {
+    trait.incomingDamageMultiplier = 1 - mazeReads * 0.04;
+    trait.controlDurationBonus = mazeReads >= 2 ? 1 : 0;
+  }
+  const coordinates = Math.min(5, Number(actor.coordinates || 0));
+  if(actor.class === "star_pilgrim" && coordinates > 0) {
+    trait.spellDamageBonus = Math.floor(coordinates / 2);
+    trait.initBonus = Math.min(2, Math.floor(coordinates / 3));
+  }
+  return trait;
+}
+function mergeCombatTraits(...traits) {
+  return traits.reduce((acc, trait={}) => ({
+    hitBonus:(acc.hitBonus||0)+(trait.hitBonus||0),
+    weaponDamageBonus:(acc.weaponDamageBonus||0)+(trait.weaponDamageBonus||0),
+    spellDamageBonus:(acc.spellDamageBonus||0)+(trait.spellDamageBonus||0),
+    healBonus:(acc.healBonus||0)+(trait.healBonus||0),
+    summonHpBonus:(acc.summonHpBonus||0)+(trait.summonHpBonus||0),
+    summonAtkBonus:(acc.summonAtkBonus||0)+(trait.summonAtkBonus||0),
+    statusDamageBonus:(acc.statusDamageBonus||0)+(trait.statusDamageBonus||0),
+    statusDurationBonus:(acc.statusDurationBonus||0)+(trait.statusDurationBonus||0),
+    controlDurationBonus:(acc.controlDurationBonus||0)+(trait.controlDurationBonus||0),
+    initBonus:(acc.initBonus||0)+(trait.initBonus||0),
+    incomingDamageMultiplier:Math.min(acc.incomingDamageMultiplier ?? 1, trait.incomingDamageMultiplier ?? 1),
+    critThreshold:Math.min(acc.critThreshold || 20, trait.critThreshold || 20),
+    statusOnHit:acc.statusOnHit || trait.statusOnHit || null,
+    statusOnSpell:acc.statusOnSpell || trait.statusOnSpell || null,
+  }), {});
+}
+function getCharacterCombatTrait(actor={}) {
+  return mergeCombatTraits(CLASS_COMBAT_TRAITS[actor.class], RACE_COMBAT_TRAITS[actor.race], CLASS_RACE_SYNERGIES[`${actor.class}:${actor.race}`]?.trait, actor.zodarPathTrait, getDynamicClassTrait(actor));
+}
+function getCharacterFeatureLines(actor={}) {
+  return [
+    CLASS_FEATURES[actor.class] && `${CLASS_FEATURES[actor.class].name}: ${CLASS_FEATURES[actor.class].desc}`,
+    RACE_FEATURES[actor.race] && `${RACE_FEATURES[actor.race].name}: ${RACE_FEATURES[actor.race].desc}`,
+  ].filter(Boolean);
+}
+function getClassRaceSynergy(actor={}) {
+  return CLASS_RACE_SYNERGIES[`${actor.class}:${actor.race}`] || null;
+}
+function getClassSpellBonus(classKey) {
+  return CLASS_SPELL_BONUSES[classKey] || null;
+}
+function reduceIncomingDamageForTraits(rawDamage, defender) {
+  const mult = getCharacterCombatTrait(defender).incomingDamageMultiplier ?? 1;
+  const reduced = Math.max(0, Math.floor((Number(rawDamage) || 0) * mult));
+  return { damage:reduced, reducedBy:Math.max(0, (Number(rawDamage)||0) - reduced) };
+}
+function classResourceSummary(actor={}) {
+  if(!actor) return null;
+  const info = CLASS_RESOURCE_INFO[actor.class];
+  if(!info) return null;
+  const value = Math.min(info.max, Number(actor[info.key] || 0));
+  return { ...info, value };
+}
+function applyClassKillRewards(combatants, attackerId, killCount=0) {
+  if(!killCount) return { combatants, lines:[] };
+  let lines = [];
+  const next = combatants.map(c => {
+    if(c.id !== attackerId) return c;
+    if(c.class === "echo_reaper") {
+      const value = Math.min(CLASS_RESOURCE_INFO.echo_reaper.max, (c.echoStacks || 0) + killCount);
+      lines.push(`☠️ **${c.name}** raccoglie **${killCount} Eco** (${value}/${CLASS_RESOURCE_INFO.echo_reaper.max}).`);
+      return { ...c, echoStacks:value };
+    }
+    if(c.class === "soul_forger") {
+      const value = Math.min(CLASS_RESOURCE_INFO.soul_forger.max, (c.soulCharges || 0) + killCount);
+      lines.push(`⚒️ **${c.name}** forgia **${killCount} carica d'anima** (${value}/${CLASS_RESOURCE_INFO.soul_forger.max}).`);
+      return { ...c, soulCharges:value };
+    }
+    if(c.class === "star_pilgrim") {
+      const value = Math.min(CLASS_RESOURCE_INFO.star_pilgrim.max, (c.coordinates || 0) + killCount);
+      lines.push(`⭐ **${c.name}** fissa nuove **Coordinate Stellari** (${value}/${CLASS_RESOURCE_INFO.star_pilgrim.max}).`);
+      return { ...c, coordinates:value };
+    }
+    return c;
+  });
+  return { combatants:next, lines };
+}
+function applyClassActionMomentum(combatants, actorId, actionType="attack", spell=null) {
+  let lines = [];
+  const next = combatants.map(c => {
+    if(c.id !== actorId) return c;
+    if(c.class === "blade_dancer" && actionType === "attack") {
+      const value = Math.min(CLASS_RESOURCE_INFO.blade_dancer.max, (c.rhythm || 0) + 1);
+      lines.push(`🗡️ **Ritmo di Lama**: ${value}/${CLASS_RESOURCE_INFO.blade_dancer.max}.`);
+      return { ...c, rhythm:value };
+    }
+    if(c.class === "rune_elder" && actionType === "spell" && (c.runeCharge || 0) > 0) {
+      lines.push(`ᚱ **Runa Preparata** consumata: la magia e' sovraccaricata.`);
+      return { ...c, runeCharge:0 };
+    }
+    if(c.class === "blood_alchemist" && actionType === "spell") {
+      const value = Math.min(CLASS_RESOURCE_INFO.blood_alchemist.max, (c.bloodHeat || 0) + (spell?.hpCost ? 2 : 1));
+      lines.push(`🧪 **Reazione Ematica**: ${value}/${CLASS_RESOURCE_INFO.blood_alchemist.max}.`);
+      return { ...c, bloodHeat:value };
+    }
+    if(c.class === "doom_prophet" && actionType === "spell") {
+      const danger = c.maxHp ? (c.hp || 0) / Math.max(1, c.maxHp) : 1;
+      const gain = danger <= 0.4 ? 2 : 1;
+      const value = Math.min(CLASS_RESOURCE_INFO.doom_prophet.max, (c.presages || 0) + gain);
+      lines.push(`⏳ **Presagi della Fine**: ${value}/${CLASS_RESOURCE_INFO.doom_prophet.max}.`);
+      return { ...c, presages:value };
+    }
+    if(c.class === "maze_keeper" && actionType === "spell" && spell?.type === "control") {
+      const value = Math.min(CLASS_RESOURCE_INFO.maze_keeper.max, (c.mazeReads || 0) + 1);
+      lines.push(`🧭 **Lettura del Labirinto**: ${value}/${CLASS_RESOURCE_INFO.maze_keeper.max}.`);
+      return { ...c, mazeReads:value };
+    }
+    return c;
+  });
+  return { combatants:next, lines };
+}
+function displayLevel(player) {
+  if (!player) return "1";
+  const cls = CLASSES[player.class || player.cls];
+  if (cls?._zodar) return "∞";
+  return String(player.level || 1);
+}
+
 function levelGainForClass(cls) {
   return CLASS_LEVEL_GAINS[cls || "warrior"] || CLASS_LEVEL_GAINS.warrior;
 }
@@ -1174,8 +1538,8 @@ function getProficiencyBonus(level=1) {
 }
 function spellcastingAbilityForClass(cls) {
   if(["mage"].includes(cls)) return "int";
-  if(["cleric","druid","ranger"].includes(cls)) return "wis";
-  if(["bard","sorcerer","warlock","paladin"].includes(cls)) return "cha";
+  if(["cleric","druid","ranger","ashen_oracle","doom_prophet","cursebreaker","star_pilgrim","maze_keeper"].includes(cls)) return "wis";
+  if(["bard","sorcerer","warlock","paladin","herald_zodar","echo_singer"].includes(cls)) return "cha";
   return "int";
 }
 function getAbilityScores(actor={}) {
@@ -1227,6 +1591,55 @@ function getRacePortraitPath(race, gender) {
 function getClassPortraitPath(cls, gender) {
   return `/assets/portraits/${cls}_${gender}.png`;
 }
+function keyToAssetSlug(key) {
+  return String(key || "").replaceAll("_", "-");
+}
+function getCharacterChoiceArt(kind, key, value, gender="male") {
+  if(kind === "classes" && value?._cardUnlock) return `/assets/cards/art/unlock/class-${keyToAssetSlug(key)}.png`;
+  if(kind === "races" && value?._cardUnlock) return `/assets/cards/art/unlock/race-${keyToAssetSlug(key)}.png`;
+  if(kind === "classes") return getClassPortraitPath(key, gender);
+  return getRacePortraitPath(key, gender);
+}
+function makeCharacterChoiceFallbackArt(kind, key, value) {
+  const isClass = kind === "classes";
+  const accent = value?.color || (isClass ? "#fbbf24" : "#a78bfa");
+  const accent2 = isClass ? "#ef4444" : "#60a5fa";
+  const icon = value?.emoji || (isClass ? "⚔️" : "⭐");
+  const symbol = isClass
+    ? `<path d="M256 122 L286 242 L260 360 L232 242 Z" fill="url(#metal)" opacity=".94"/><path d="M206 286 L306 286" stroke="${accent}" stroke-width="18" stroke-linecap="round" opacity=".82"/><circle cx="256" cy="382" r="26" fill="${accent}" opacity=".76"/>`
+    : `<path d="M142 360 C154 240 192 164 256 132 C320 164 358 240 370 360 C332 396 180 396 142 360Z" fill="url(#figure)" opacity=".88"/><ellipse cx="256" cy="186" rx="72" ry="86" fill="url(#skin)" opacity=".95"/><path d="M178 310 C216 338 296 338 334 310" fill="none" stroke="${accent}" stroke-width="10" stroke-linecap="round" opacity=".35"/>`;
+  return svgDataUrl(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 640">
+      <defs>
+        <radialGradient id="bg" cx="50%" cy="30%" r="76%">
+          <stop offset="0%" stop-color="${accent}" stop-opacity=".34"/>
+          <stop offset="46%" stop-color="#111827"/>
+          <stop offset="100%" stop-color="#020617"/>
+        </radialGradient>
+        <linearGradient id="figure" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${accent}"/>
+          <stop offset="100%" stop-color="#111827"/>
+        </linearGradient>
+        <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${accent2}"/>
+          <stop offset="100%" stop-color="${accent}"/>
+        </linearGradient>
+        <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="#f8fafc"/>
+          <stop offset="46%" stop-color="${accent}"/>
+          <stop offset="100%" stop-color="#1e293b"/>
+        </linearGradient>
+        <filter id="soft"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <rect width="512" height="640" fill="url(#bg)"/>
+      <circle cx="116" cy="110" r="64" fill="${accent}" opacity=".08"/>
+      <circle cx="408" cy="132" r="84" fill="${accent2}" opacity=".08"/>
+      <ellipse cx="256" cy="500" rx="150" ry="38" fill="#020617" opacity=".36"/>
+      <g filter="url(#soft)">${symbol}</g>
+      <text x="256" y="104" text-anchor="middle" font-family="Arial, sans-serif" font-size="54">${icon}</text>
+    </svg>
+  `);
+}
 function characterGenderKey(playerId) {
   return `eoz_character_gender_${playerId}`;
 }
@@ -1237,11 +1650,57 @@ function getStoredCharacterGender(playerId, fallback = "male") {
 function saveStoredCharacterGender(playerId, gender) {
   if(playerId) localStorage.setItem(characterGenderKey(playerId), gender || "male");
 }
-function getGeneratedPortrait(clsKey, raceKey, gender) {
+function getGeneratedPortrait(clsKey, raceKey, gender, faceVariant=1) {
   const cls = CLASSES[clsKey] || CLASSES.warrior;
   const race = RACES[raceKey] || RACES.human;
   const accent = cls.color || "#fbbf24";
-  const genderLabel = gender === "female" ? "Femmina" : "Maschio";
+  const raceId = String(raceKey || "human").toLowerCase();
+  const face = Math.max(1, Math.min(5, Number(faceVariant) || 1));
+  const skinTheme = {
+    human:["#d8aa7a","#7c4a2d"],
+    halfelf:["#e8d2aa","#6f4a2f"],
+    elf:["#e8d7b7","#7b5f3b"],
+    drow:["#8b7ab8","#35264f"],
+    dwarf:["#c98d5a","#6b3f24"],
+    halfling:["#e7b47f","#8a5a33"],
+    gnome:["#dfae82","#7c4a93"],
+    halforc:["#8bbf72","#3f5f38"],
+    tiefling:["#b86b8c","#7f1d1d"],
+    succubus:["#c86b9b","#7f1d1d"],
+    dragonborn:["#a27543","#b45309"],
+    ancient_draconid:["#9a6a3a","#7c2d12"],
+    primordial_draconian:["#b08345","#7c2d12"],
+    aasimar:["#f3dfb4","#b08b4f"],
+    angel:["#f5e7c3","#c6a45f"],
+    fallen_seraphite:["#c9b6d8","#4c1d95"],
+    forged:["#b8c0cc","#475569"],
+    golemide:["#cbd5e1","#64748b"],
+    living_mirror:["#dbeafe","#60a5fa"],
+    genasi:["#9fd7d9","#256d85"],
+    sirenide:["#95d5e8","#0f766e"],
+    atlantean:["#a7f3d0","#0f766e"],
+    minotaur:["#b08355","#5b341d"],
+    fae:["#e5c6ff","#7c3aed"],
+    echide:["#d1c4e9","#4c1d95"],
+    void_touched:["#9ca3af","#111827"],
+    shadow_awakened:["#9f8bc8","#1e1b4b"],
+    echo_born:["#a5b4fc","#1d4ed8"],
+    half_djinn:["#9ddcff","#2563eb"],
+    night_child:["#c4b5fd","#312e81"],
+    ancient_silvan:["#93c572","#365314"],
+    renegade_vampire:["#d6c5c5","#7f1d1d"],
+  }[raceId] || ["#d8aa7a","#7c4a2d"];
+  const [skin, shade] = skinTheme;
+  const isFemale = gender === "female";
+  const headRx = 72 + face * 2;
+  const headRy = 86 + face;
+  const eyeY = 228 + (face - 3);
+  const mouthY = 286 + face;
+  const isHorned = /tiefling|succubus|minotaur/.test(raceId);
+  const isLongEar = /elf|drow|fae|sirenide|atlantean|aasimar|angel|seraph|djinn|night/.test(raceId);
+  const isDraconic = /dragon|dracon/.test(raceId);
+  const isConstruct = /forged|golem|mirror|silvan/.test(raceId);
+  const isEthereal = /void|shadow|echo|echide/.test(raceId);
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
       <defs>
@@ -1254,13 +1713,34 @@ function getGeneratedPortrait(clsKey, raceKey, gender) {
           <feGaussianBlur stdDeviation="8" result="blur"/>
           <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
         </filter>
+        <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${skin}"/>
+          <stop offset="100%" stop-color="${shade}"/>
+        </linearGradient>
+        <radialGradient id="faceLight" cx="42%" cy="32%" r="64%">
+          <stop offset="0%" stop-color="#ffffff" stop-opacity="0.28"/>
+          <stop offset="100%" stop-color="#020617" stop-opacity="0.10"/>
+        </radialGradient>
       </defs>
       <rect width="512" height="512" fill="url(#bg)"/>
-      <circle cx="256" cy="214" r="116" fill="#0f172a" stroke="${accent}" stroke-width="10" filter="url(#glow)"/>
-      <text x="256" y="245" text-anchor="middle" font-size="96" font-family="Arial, sans-serif">${race.emoji || ""}</text>
-      <text x="256" y="342" text-anchor="middle" fill="#f8fafc" font-size="35" font-family="Georgia, serif" font-weight="700">${race.name}</text>
-      <text x="256" y="388" text-anchor="middle" fill="${accent}" font-size="32" font-family="Georgia, serif" font-weight="700">${cls.name}</text>
-      <text x="256" y="426" text-anchor="middle" fill="#cbd5e1" font-size="22" font-family="Arial, sans-serif">${genderLabel}</text>
+      <ellipse cx="256" cy="452" rx="130" ry="42" fill="#020617" opacity="0.34"/>
+      <path d="${isFemale ? "M174 352 C190 314 322 314 338 352 L322 448 C292 468 220 468 190 448 Z" : "M164 350 C186 310 326 310 348 350 L328 450 C294 470 218 470 184 450 Z"}" fill="url(#skin)" opacity="0.92"/>
+      ${isLongEar ? `<path d="M179 220 C128 196 118 246 177 260" fill="url(#skin)" stroke="${shade}" stroke-width="4"/><path d="M333 220 C384 196 394 246 335 260" fill="url(#skin)" stroke="${shade}" stroke-width="4"/>` : ""}
+      ${isHorned ? `<path d="M206 160 C180 108 193 72 226 130" fill="none" stroke="${shade}" stroke-width="18" stroke-linecap="round"/><path d="M306 160 C332 108 319 72 286 130" fill="none" stroke="${shade}" stroke-width="18" stroke-linecap="round"/>` : ""}
+      <ellipse cx="256" cy="246" rx="${headRx}" ry="${headRy}" fill="url(#skin)" stroke="${accent}" stroke-width="3" filter="url(#glow)"/>
+      <ellipse cx="256" cy="246" rx="${headRx}" ry="${headRy}" fill="url(#faceLight)"/>
+      ${isDraconic ? `<path d="M206 196 L226 176 L246 195 L266 174 L286 196 L306 178" fill="none" stroke="${accent}" stroke-width="8" stroke-linecap="round" opacity="0.42"/><path d="M203 277 C230 292 282 292 309 277" fill="none" stroke="${shade}" stroke-width="5" opacity="0.45"/>` : ""}
+      ${isConstruct ? `<path d="M202 214 L230 188 L262 203 L296 188 L318 216" fill="none" stroke="#f8fafc" stroke-width="7" opacity="0.34"/><circle cx="256" cy="252" r="18" fill="#f8fafc" opacity="0.22"/>` : ""}
+      ${isEthereal ? `<ellipse cx="256" cy="246" rx="${headRx + 12}" ry="${headRy + 12}" fill="none" stroke="${accent}" stroke-width="5" opacity="0.35"/><path d="M186 326 C232 360 280 360 326 326" fill="none" stroke="${accent}" stroke-width="5" opacity="0.22"/>` : ""}
+      <path d="M184 188 C206 142 306 142 328 188 C302 170 210 170 184 188Z" fill="#0f172a" opacity="${isConstruct ? 0.28 : 0.86}"/>
+      <ellipse cx="226" cy="${eyeY}" rx="12" ry="8" fill="${accent}"/>
+      <ellipse cx="286" cy="${eyeY}" rx="12" ry="8" fill="${accent}"/>
+      <circle cx="229" cy="${eyeY - 2}" r="3" fill="#ffffff" opacity="0.7"/>
+      <circle cx="289" cy="${eyeY - 2}" r="3" fill="#ffffff" opacity="0.7"/>
+      <path d="M256 244 C250 260 250 270 256 276" stroke="${shade}" stroke-width="5" stroke-linecap="round" fill="none" opacity="0.45"/>
+      <path d="M224 ${mouthY} C244 ${mouthY + 15} 268 ${mouthY + 15} 288 ${mouthY}" stroke="${shade}" stroke-width="6" stroke-linecap="round" fill="none" opacity="0.72"/>
+      <circle cx="144" cy="110" r="34" fill="#020617" opacity="0.32"/>
+      <circle cx="368" cy="110" r="34" fill="#020617" opacity="0.32"/>
     </svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
@@ -1288,6 +1768,117 @@ function getPrimaryDieSides(dice, fallback = 20) {
 function getSpellSlots(level) {
   const base = SPELL_SLOTS[level] || SPELL_SLOTS[1];
   return { ...base };
+}
+
+const CARD_UNLOCK_SPELLS = {
+  unlock_spell_zodar_gaze:{
+    id:"card_zodar_gaze", cardId:"unlock_spell_zodar_gaze", name:"Sguardo di Zodar", emoji:"👁️", dmg:"8d8", type:"control", slots:5, area:true,
+    desc:"Una scelta divina pesa tutto il campo: i nemici vengono feriti e disorientati dal giudizio di Zodar.",
+    compatibleClasses:["custode_equilibrio","herald_zodar","cleric","paladin","doom_prophet"],
+  },
+  unlock_spell_white_flame:{
+    id:"card_white_flame", cardId:"unlock_spell_white_flame", name:"Fiamma Bianca", emoji:"🔥", dmg:"5d8", type:"damage", slots:2, area:true,
+    desc:"Fuoco purificatore che brucia corruzione, non innocenti. Ottimo contro gruppi e creature maledette.",
+    compatibleClasses:["cleric","paladin","cursebreaker","ashen_oracle","herald_zodar"],
+  },
+  unlock_spell_black_tide:{
+    id:"card_black_tide", cardId:"unlock_spell_black_tide", name:"Marea Nera", emoji:"🌊", dmg:"7d8", type:"drain", drainPct:0.28, slots:3, area:true,
+    desc:"Un'onda d'ombra liquida trascina via scudi, illusioni e coraggio, drenando forza dai nemici.",
+    compatibleClasses:["warlock","void_sage","moon_reaver","echo_reaper","blood_cartographer"],
+  },
+  unlock_spell_echo_chain:{
+    id:"card_echo_chain", cardId:"unlock_spell_echo_chain", name:"Catena d'Eco", emoji:"🔊", dmg:"3d8", type:"damage", slots:1, area:true,
+    desc:"Un legame sonoro rimbalza tra bersagli vicini e amplifica ogni piccolo colpo.",
+    compatibleClasses:["bard","echo_singer","echo_knight","echo_reaper"],
+  },
+  unlock_spell_sigil_bloom:{
+    id:"card_sigil_bloom", cardId:"unlock_spell_sigil_bloom", name:"Fioritura del Sigillo", emoji:"✦", dmg:"-4d8", type:"heal", slots:2, area:true,
+    desc:"Un marchio difensivo sboccia in luce e richiude le ferite del party.",
+    compatibleClasses:["sigilwarden","seal_inquisitor","paladin","cleric","rune_elder"],
+  },
+  unlock_spell_memory_knife:{
+    id:"card_memory_knife", cardId:"unlock_spell_memory_knife", name:"Coltello della Memoria", emoji:"🗡️", dmg:"7d10", type:"damage", slots:3,
+    desc:"Una lama mentale ferisce soprattutto chi ha troppo da nascondere.",
+    compatibleClasses:["bard","warlock","maze_keeper","seal_inquisitor","blood_cartographer"],
+  },
+  unlock_spell_star_blood:{
+    id:"card_star_blood", cardId:"unlock_spell_star_blood", name:"Sangue Stellare", emoji:"⭐", dmg:"11d10", type:"damage", slots:5, area:true, hpCost:12,
+    desc:"Luce cosmica scorre nelle vene per pochi secondi: potere enorme, prezzo reale.",
+    compatibleClasses:["sorcerer","star_pilgrim","blood_alchemist","void_sage","doom_prophet"],
+  },
+  unlock_spell_dragon_oath:{
+    id:"card_dragon_oath", cardId:"unlock_spell_dragon_oath", name:"Giuramento Draconico", emoji:"🐉", dmg:"9d10", type:"damage", slots:4,
+    desc:"Un patto temporaneo con sangue draconico antico concentra il colpo su un bersaglio dominante.",
+    compatibleClasses:["paladin","oathblade","cursebreaker","herald_zodar","soul_forger"],
+  },
+  unlock_spell_thorn_hymn:{
+    id:"card_thorn_hymn", cardId:"unlock_spell_thorn_hymn", name:"Inno di Spine", emoji:"🌿", dmg:"4d8", type:"damage", slots:1, area:true,
+    desc:"Un canto verde ferisce chi interrompe la crescita selvaggia della natura.",
+    compatibleClasses:["druid","ranger","cursebreaker","echo_singer","maze_keeper"],
+  },
+  unlock_spell_silent_silver:{
+    id:"card_silent_silver", cardId:"unlock_spell_silent_silver", name:"Argento Muto", emoji:"🥈", dmg:"0", type:"control", slots:2, area:true,
+    desc:"Un velo metallico assorbe parole ostili e spezza il ritmo dei nemici.",
+    compatibleClasses:["mage","sigilwarden","seal_inquisitor","rune_elder","void_sage"],
+  },
+};
+
+function unlockedSpellCardIdsFromVault(vault) {
+  return new Set((vault?.cards || []).filter(card => card.kind === "unlock" && card.type === "spell").map(card => card.cardId).filter(Boolean));
+}
+
+const ZODAR_PATHS = {
+  unlock_path_divine_knowledge:{
+    id:"unlock_path_divine_knowledge",
+    name:"Via della Conoscenza",
+    icon:"📜",
+    short:"Preparazione +1",
+    desc:"Apre uno spazio mentale in piu: puoi preparare una magia aggiuntiva e le formule colpiscono con piu precisione.",
+    trait:{ spellDamageBonus:1, controlDurationBonus:1 },
+    preparedSpellBonus:1,
+  },
+  unlock_path_divine_power:{
+    id:"unlock_path_divine_power",
+    name:"Via del Potere",
+    icon:"⚔️",
+    short:"Danno +1",
+    desc:"Trasforma la Risonanza in forza grezza: attacchi e incantesimi fanno piu male e l'iniziativa e piu aggressiva.",
+    trait:{ hitBonus:1, weaponDamageBonus:1, spellDamageBonus:1, initBonus:1 },
+    preparedSpellBonus:0,
+  },
+  unlock_path_eternity:{
+    id:"unlock_path_eternity",
+    name:"Via dell'Eternita",
+    icon:"♾️",
+    short:"Riduzione e cure",
+    desc:"Rende il personaggio piu difficile da spezzare: subisce meno danni e cura meglio nei momenti critici.",
+    trait:{ incomingDamageMultiplier:0.96, healBonus:1, statusDurationBonus:1 },
+    preparedSpellBonus:0,
+  },
+};
+
+function unlockedZodarPathsFromVault(vault) {
+  return (vault?.cards || [])
+    .filter(card => card.kind === "unlock" && card.type === "path" && ZODAR_PATHS[card.cardId])
+    .map(card => ZODAR_PATHS[card.cardId]);
+}
+
+function getZodarPathCombatTrait(vault) {
+  return mergeCombatTraits(...unlockedZodarPathsFromVault(vault).map(path => path.trait));
+}
+
+function getZodarPathPreparedBonus(vault) {
+  return unlockedZodarPathsFromVault(vault).reduce((sum, path) => sum + (path.preparedSpellBonus || 0), 0);
+}
+
+function getZodarPathSummary(vault) {
+  return unlockedZodarPathsFromVault(vault).map(path => ({
+    id:path.id,
+    icon:path.icon,
+    name:path.name,
+    short:path.short,
+    desc:path.desc,
+  }));
 }
 
 const SPELL_NAME_EN = {
@@ -1327,16 +1918,27 @@ function spellDisplay(spell, lang = "it") {
   };
 }
 
-function availableSpellsFor(className, level) {
+function availableSpellsFor(className, level, vault=null) {
   if(className === 'custode_equilibrio') {
-    return (SPELLS.custode_equilibrio?.[0] || []).map(s => ({ ...s, slot: 0 }));
+    const zodarBase = (SPELLS.custode_equilibrio?.[0] || []).map(s => ({ ...s, slot: 0 }));
+    const unlockedCardSpells = Object.values(CARD_UNLOCK_SPELLS)
+      .filter(spell => unlockedSpellCardIdsFromVault(vault).has(spell.cardId) && spell.compatibleClasses.includes(className))
+      .map(spell => ({ ...spell, slot:Number(spell.slots || 0), fromCard:true }));
+    return [...zodarBase, ...unlockedCardSpells];
   }
   const packs = SPELLS[className] || {};
   const slotsForLevel = SPELL_SLOTS[level] || SPELL_SLOTS[1];
   const maxSlot = Math.max(...Object.entries(slotsForLevel).filter(([,v])=>v>0).map(([k])=>Number(k)), 1);
-  return Object.entries(packs)
+  const baseSpells = Object.entries(packs)
     .filter(([slot]) => Number(slot) <= maxSlot)
     .flatMap(([slot, spells]) => spells.map(s => ({ ...s, slot: Number(slot) })));
+  const unlockedCardSpells = Object.values(CARD_UNLOCK_SPELLS)
+    .filter(spell => unlockedSpellCardIdsFromVault(vault).has(spell.cardId))
+    .filter(spell => spell.compatibleClasses.includes(className))
+    .filter(spell => Number(spell.slots || 0) <= maxSlot)
+    .map(spell => ({ ...spell, slot:Number(spell.slots || 0), fromCard:true }));
+  const existingIds = new Set(baseSpells.map(spell => spell.id));
+  return [...baseSpells, ...unlockedCardSpells.filter(spell => !existingIds.has(spell.id))];
 }
 
 function totalSlots(slots) {
@@ -1466,7 +2068,7 @@ const QUEST_MONSTER_IMAGE_ALIASES = {
   "hydra-delle-profondita": "m180",
   "unicorno-oscuro": "m105",
   "satiro": "m175",
-  "centauro-ribelle": "m104",
+  "centauro-ribelle": "m105",
   "pixie-maligna": "m54",
   "folletto-dispettoso": "m54",
   "driade-corrotta": "m113",
@@ -1646,6 +2248,12 @@ const QUEST_MONSTER_IMAGE_ALIASES = {
   "volpe-incantata": "m54",
 };
 
+const QUEST_MONSTER_IMAGE_ASSETS = {
+  "centauro-ribelle": "/assets/monsters/quest-centauro-ribelle.png",
+  "folletto-dispettoso": "/assets/monsters/quest-folletto-dispettoso.png",
+  "pixie-maligna": "/assets/monsters/quest-folletto-dispettoso.png",
+};
+
 const QUEST_MONSTER_IMAGE_RULES = [
   [/kraken/, "m165"],
   [/beholder|sguardo/, "m173"],
@@ -1693,6 +2301,8 @@ function findMonsterImageById(id) {
 
 function getQuestMonsterImageByAlias(monster) {
   const slug = slugifyAssetName(monster?.name || "");
+  const customAsset = QUEST_MONSTER_IMAGE_ASSETS[slug];
+  if(customAsset) return customAsset;
   const exactId = QUEST_MONSTER_IMAGE_ALIASES[slug];
   if(exactId) return findMonsterImageById(exactId);
   for(const [pattern, id] of QUEST_MONSTER_IMAGE_RULES) {
@@ -1741,6 +2351,28 @@ function saveMeta(m)     { lsSet("eoz_meta", m); }
 const DEFAULT_ITEM_MAP = new Map(DEFAULT_ITEMS.map(item => [item.id, item]));
 const CARD_FEATURE_PASSWORD = "zodar_test";
 const CARD_RARITY_ORDER = { common:0, uncommon:1, rare:2, epic:3, legendary:4, mythic:5 };
+const CARD_RESONANCE_VALUE = { common:1, uncommon:2, rare:5, epic:15, legendary:50, mythic:200 };
+const ZODAR_RESONANCE_MILESTONES = [
+  { id:"zodar_gaze", value:500, name:"Sguardo di Zodar", type:"passive", reward:"Intervento divino una volta sola: se muori, torni a 1 HP." },
+  { id:"zodar_intervention", value:2000, name:"Intervento di Zodar", type:"charge", reward:"Una carica consumabile durante boss o battaglie epiche." },
+  { id:"legendary_echo", value:5000, name:"Eco Leggendaria", type:"cosmetic", reward:"Aura cittadina, titolo dorato e prestigio pubblico." },
+  { id:"supreme_echo", value:7777, name:"Eco Supremo di Zodar", type:"choice", reward:"Scegli una via: Conoscenza, Potere o Eternita." },
+];
+const HALL_OF_ECHOES_CODE = "__hall_of_echoes__";
+const CARD_COLLECTOR_LEADERBOARD_CODE = "__card_collectors__";
+const LEGACY_RELIC_MILESTONES = [
+  { id:"legacy_rare_7777", value:7777, rarity:"rare", title:"Eco Supremo di Zodar", reward:"Una Reliquia Legacy rara personalizzata." },
+  { id:"legacy_legendary_15000", value:15000, rarity:"legendary", title:"Custode degli Echi", reward:"Una Reliquia Legacy leggendaria personalizzata." },
+  { id:"legacy_mythic_25000", value:25000, rarity:"mythic", title:"Leggenda Vivente di Zodar", reward:"Una Reliquia Legacy mitica o Carta Mitica personale." },
+];
+const LEGACY_RELIC_TYPES = [
+  { id:"weapon", label:"Arma" },
+  { id:"armor", label:"Armatura" },
+  { id:"artifact", label:"Artefatto" },
+  { id:"potion", label:"Pozione" },
+  { id:"companion", label:"Carta Compagno" },
+  { id:"cosmetic", label:"Cosmetico" },
+];
 const CARD_RARITY_COLOR = {
   common:"#9ca3af",
   uncommon:"#34d399",
@@ -1756,6 +2388,69 @@ const CARD_RARITY_STYLE = {
   epic:{ main:"#a78bfa", edge:"#ddd6fe", dark:"#6d28d9", glow:"rgba(167,139,250,0.42)", plate:"#ede9fe", ink:"#1e1b4b" },
   legendary:{ main:"#fbbf24", edge:"#fde68a", dark:"#92400e", glow:"rgba(251,191,36,0.52)", plate:"#fef3c7", ink:"#451a03" },
   mythic:{ main:"#fb7185", edge:"#fecdd3", dark:"#9f1239", glow:"rgba(251,113,133,0.58)", plate:"#ffe4e6", ink:"#4c0519" },
+};
+const CARD_FRONT_TEMPLATE_ASSETS = {
+  common:"/assets/cards/templates/fronts/card-front-common.png",
+  uncommon:"/assets/cards/templates/fronts/card-front-uncommon.png",
+  rare:"/assets/cards/templates/fronts/card-front-rare.png",
+  epic:"/assets/cards/templates/fronts/card-front-epic.png",
+  legendary:"/assets/cards/templates/fronts/card-front-legendary.png",
+  mythic:"/assets/cards/templates/fronts/card-front-mythic.png",
+};
+const CARD_BACK_TEMPLATE_ASSETS = {
+  pack_recruit:"/assets/cards/templates/backs/card-back-recruit.png",
+  pack_vanguard:"/assets/cards/templates/backs/card-back-vanguard.png",
+  pack_oath:"/assets/cards/templates/backs/card-back-oath.png",
+  pack_epic:"/assets/cards/templates/backs/card-back-epic.png",
+  pack_legendary:"/assets/cards/templates/backs/card-back-legendary.png",
+  pack_mythic:"/assets/cards/templates/backs/card-back-mythic.png",
+  pack_zodar:"/assets/cards/templates/backs/card-back-mythic.png",
+};
+const CHARACTER_CARD_UNLOCKS = {
+  classes:{
+    echo_knight:"unlock_class_echo_knight",
+    void_sage:"unlock_class_void_sage",
+    sigilwarden:"unlock_class_sigilwarden",
+    ashen_oracle:"unlock_class_ashen_oracle",
+    blood_cartographer:"unlock_class_blood_cartographer",
+    moon_reaver:"unlock_class_moon_reaver",
+    herald_zodar:"unlock_class_herald_zodar",
+    relic_tamer:"unlock_class_relic_tamer",
+    oathblade:"unlock_class_oathblade",
+    echo_singer:"unlock_class_echo_singer",
+    echo_reaper:"unlock_class_echo_reaper",
+    seal_inquisitor:"unlock_class_seal_inquisitor",
+    blood_alchemist:"unlock_class_blood_alchemist",
+    rune_elder:"unlock_class_rune_elder",
+    blade_dancer:"unlock_class_blade_dancer",
+    cursebreaker:"unlock_class_cursebreaker",
+    star_pilgrim:"unlock_class_star_pilgrim",
+    soul_forger:"unlock_class_soul_forger",
+    doom_prophet:"unlock_class_doom_prophet",
+    maze_keeper:"unlock_class_maze_keeper",
+  },
+  races:{
+    aasimar:"unlock_race_aasimar",
+    drow:"unlock_race_drow",
+    forged:"unlock_race_forged",
+    renegade_vampire:"unlock_race_renegade_vampire",
+    sirenide:"unlock_race_sirenide",
+    echide:"unlock_race_echide",
+    genasi:"unlock_race_genasi",
+    ancient_draconid:"unlock_race_ancient_draconid",
+    shadow_awakened:"unlock_race_shadow_awakened",
+    fae:"unlock_race_fae",
+    echo_born:"unlock_race_echo_born",
+    half_djinn:"unlock_race_half_djinn",
+    golemide:"unlock_race_golemide",
+    void_touched:"unlock_race_void_touched",
+    fallen_seraphite:"unlock_race_fallen_seraphite",
+    primordial_draconian:"unlock_race_primordial_draconian",
+    night_child:"unlock_race_night_child",
+    ancient_silvan:"unlock_race_ancient_silvan",
+    atlantean:"unlock_race_atlantean",
+    living_mirror:"unlock_race_living_mirror",
+  },
 };
 const CARD_FRAGMENT_VALUE = { common:5, uncommon:12, rare:35, epic:120, legendary:420, mythic:1200 };
 const CARD_PITY_LIMITS = { legendary:60, mythic:150 };
@@ -1855,13 +2550,155 @@ const CARD_PACK_DEFS = [
     rates:{ common:15, uncommon:45, rare:40 },
   },
 ];
-const CARD_COSMETICS = [
+const BASE_CARD_COSMETICS = [
   { id:"title_adepto_zodar", name:"Adepto di Zodar", type:"title", rarity:"epic", exclusive:true, description:"Titolo scenico esclusivo dei pacchetti.", actionLabel:"Attiva titolo" },
   { id:"title_araldo_eclissi", name:"Araldo dell'Eclissi", type:"title", rarity:"legendary", exclusive:true, description:"Titolo da collezione per chi ha visto l'Eclissi aprirsi.", actionLabel:"Attiva titolo" },
   { id:"title_primo_adepto", name:"Primo Adepto di Zodar", type:"title", rarity:"mythic", exclusive:true, description:"Titolo mitico pensato per il reveal ai tester.", actionLabel:"Attiva titolo" },
   { id:"frame_sigil_antico", name:"Cornice Sigillo Antico", type:"frame", rarity:"epic", exclusive:true, description:"Cornice scenica per carte e profilo." },
   { id:"aura_eco_nero", name:"Aura Eco Nero", type:"aura", rarity:"legendary", exclusive:true, description:"Effetto scenico da equipaggiare in futuro." },
   { id:"back_reliquary", name:"Retro Reliquiario", type:"cardback", rarity:"rare", exclusive:true, description:"Retro carta esclusivo dei pacchetti." },
+];
+const COSMETIC_CARD_THEMES = [
+  ["Brumafonda","nebbia fredda delle paludi dimenticate"], ["Vetro Lunare","riflessi pallidi della luna piena"], ["Ruggine Sacra","metallo antico inciso dai pellegrini"], ["Cenere Fenice","faville rosse che non si spengono"], ["Ossidiana","luce nera delle forge profonde"],
+  ["Alba Spenta","oro tenue di un sole morente"], ["Ferrochiaro","acciaio lucido dei giuramenti antichi"], ["Nerocanto","ombre musicali dei bardi proibiti"], ["Sale Abissale","cristalli marini degli abissi"], ["Radice Antica","linfa viva degli alberi primordiali"],
+  ["Tuono Viola","scariche arcane di tempeste irreali"], ["Corona Spezzata","fasto rovinato di regni caduti"], ["Mithril Velato","filamenti leggeri e quasi invisibili"], ["Sangue Stellare","bagliori rossi caduti dal cielo"], ["Gelo Eterno","brina che non conosce estate"],
+  ["Smeraldo Vivo","energia verde delle foreste senzienti"], ["Sabbia del Tempo","granelli sospesi tra ieri e domani"], ["Fiamma Bianca","fuoco purificatore dei templi alti"], ["Spina Draconica","tracce di scaglie e artigli antichi"], ["Eclissi","ombra e luce fuse nello stesso sigillo"],
+  ["Argento Muto","metallo che assorbe ogni suono"], ["Corallo Nero","resti preziosi di mari scomparsi"], ["Vento Nomade","nastri leggeri delle carovane perdute"], ["Runa Azzurra","glifi quieti ma sempre vigili"], ["Soglia Dorata","luce che annuncia un passaggio sacro"],
+  ["Lama Rossa","riflessi da duello e sangue onorevole"], ["Pietra Cava","eco minerale delle montagne vuote"], ["Velo Astrale","polvere di stelle cucita nel tessuto"], ["Rosa Cremisi","eleganza feroce dei giardini proibiti"], ["Crepuscolo","viola profondo del giorno che muore"],
+  ["Tempesta Verde","fulmini intrisi di natura selvaggia"], ["Inchiostro Reale","nero lucido dei decreti imperiali"], ["Scaglia Celeste","frammenti azzurri di creature divine"], ["Nebbia Dorata","vapore caldo dei santuari solari"], ["Canto del Vuoto","silenzio cosmico intorno a Zodar"],
+  ["Oricalco","metallo mitico delle civilta sommerse"], ["Rugiada Fatata","gocce luminose raccolte all'alba"], ["Teschio Bianco","memoria asciutta dei campi di battaglia"], ["Marea Nera","onde cupe sotto cieli senza stelle"], ["Cristallo Vivo","schegge che pulsano come cuore"],
+  ["Drappo Imperiale","porpora e oro delle corti alte"], ["Luce di Tharn","bagliore delle scogliere al tramonto"], ["Occhio di Basilisco","verde pietrificante e ipnotico"], ["Rombo di Hydra","furia rigenerante delle teste antiche"], ["Lacrima di Djinn","azzurro impossibile dei desideri perduti"],
+  ["Sigillo Primo","marchio delle prime carte di Zodar"], ["Miele Ambrato","calore dolce delle feste antiche"], ["Notte di Korvane","ombre urbane, pioggia e lanterne"], ["Reliquia Perduta","frammenti di un culto dimenticato"], ["Zodar Cosmico","energia pura degli Echi del mondo"],
+];
+const COSMETIC_CARD_FAMILIES = [
+  { type:"hood", label:"Cappuccio", plural:"Cappucci", count:50, icon:"🧥" },
+  { type:"helmet", label:"Elmo", plural:"Elmi", count:30, icon:"⛑️" },
+  { type:"cloak", label:"Mantello", plural:"Mantelli", count:50, icon:"🦸" },
+  { type:"aura", label:"Aura", plural:"Aure", count:20, icon:"✨", minRarity:"rare" },
+  { type:"mascot", label:"Mascotte", plural:"Mascotte", count:30, icon:"🐾" },
+  { type:"weapon_skin", label:"Skin Arma", plural:"Skin Armi", count:50, icon:"🗡️" },
+  { type:"armor_skin", label:"Skin Armatura", plural:"Skin Armature", count:50, icon:"🛡️" },
+];
+function cosmeticGeneratedRarity(index, count, minRarity="common") {
+  const pct = (index + 1) / count;
+  let rarity = pct <= 0.4 ? "common" : pct <= 0.68 ? "uncommon" : pct <= 0.86 ? "rare" : pct <= 0.96 ? "epic" : "legendary";
+  if(minRarity === "rare" && (rarity === "common" || rarity === "uncommon")) rarity = index % 3 === 0 ? "rare" : "epic";
+  return rarity;
+}
+function buildGeneratedCosmetics() {
+  return COSMETIC_CARD_FAMILIES.flatMap(family =>
+    Array.from({ length:family.count }, (_, index) => {
+      const [theme, lore] = COSMETIC_CARD_THEMES[index % COSMETIC_CARD_THEMES.length];
+      const rarity = cosmeticGeneratedRarity(index, family.count, family.minRarity);
+      const serial = String(index + 1).padStart(2, "0");
+      return {
+        id:`cos_${family.type}_${serial}`,
+        name:`${family.label} ${theme}`,
+        type:family.type,
+        category:family.plural,
+        rarity,
+        exclusive:true,
+        description:`${family.label} cosmetico ispirato a ${lore}. Solo prestigio visivo: non aumenta le statistiche.`,
+        imagePrompt:`Square fantasy collectible card art, ${family.label.toLowerCase()} cosmetic item, theme ${theme}, ${lore}, premium dark fantasy, centered object, readable silhouette, no text, no logo, no watermark.`,
+      };
+    })
+  );
+}
+const GENERATED_CARD_COSMETICS = buildGeneratedCosmetics();
+const CARD_COSMETICS = [...BASE_CARD_COSMETICS, ...GENERATED_CARD_COSMETICS];
+const CARD_LORE_CARDS = [
+  { id:"lore_city_zodarion", name:"Zodarion, Citta degli Echi", type:"city", set:"Citta", rarity:"legendary", description:"Capitale sacra dove ogni campana conserva una memoria del mondo.", effectLines:["Set Citta: progresso Mercante Esperto.", "Carta prestigio: aumenta solo la Risonanza."], imagePrompt:"Square dark fantasy collectible card art, sacred city of bells and golden echo towers, no text, no logo." },
+  { id:"lore_city_korvane", name:"Korvane delle Lanterne", type:"city", set:"Citta", rarity:"rare", description:"Citta di pioggia, mercanti notturni e debiti scritti in inchiostro nero.", effectLines:["Set Citta: progresso Mercante Esperto.", "Carta prestigio: aumenta solo la Risonanza."], imagePrompt:"Square dark fantasy card art, rainy city with lantern bridges and black market alleys, no text." },
+  { id:"lore_city_tharn", name:"Tharn sulle Scogliere", type:"city", set:"Citta", rarity:"uncommon", description:"Porto alto scolpito nella roccia, dove le vele sembrano stelle cadute.", effectLines:["Set Citta: progresso Mercante Esperto.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_city_velkar", name:"Velkar di Ferrochiaro", type:"city", set:"Citta", rarity:"uncommon", description:"Citta-forgia che batte armi rituali per giuramenti e guerre lunghe.", effectLines:["Set Citta: progresso Mercante Esperto.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_city_mirel", name:"Mirel dei Giardini Rossi", type:"city", set:"Citta", rarity:"rare", description:"Citta nobile e feroce, dove la diplomazia profuma di rose e veleno.", effectLines:["Set Citta: progresso Mercante Esperto.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_city_aurel", name:"Aurel, Soglia Dorata", type:"city", set:"Citta", rarity:"epic", description:"Santuario-citta costruito intorno a una porta che nessun mortale apre due volte.", effectLines:["Set Citta: progresso Mercante Esperto.", "Carta prestigio: aumenta solo la Risonanza."] },
+
+  { id:"lore_deity_zodar", name:"Zodar, Custode dell'Equilibrio", type:"deity", set:"Divinita", rarity:"mythic", secretCard:true, image:"/assets/cards/art/lore/deity-zodar.png", description:"La presenza che ascolta gli Echi e pesa il destino dei mortali.", effectLines:["Set Divinita: progresso Benedizione Divina.", "Carta mitica segreta: appare solo dopo la scoperta."], imagePrompt:"Square mythic dark fantasy card art, cosmic divine judge made of echoes and golden scales, no text." },
+  { id:"lore_deity_xsa", name:"XSA, L'Ombra che Ricorda", type:"deity", set:"Divinita", rarity:"mythic", secretCard:true, description:"Entita proibita legata alle memorie cancellate e ai patti senza testimoni.", effectLines:["Set Divinita: progresso Benedizione Divina.", "Carta mitica segreta: appare solo dopo la scoperta."], imagePrompt:"Square mythic dark fantasy card art, shadow deity of forgotten memories, cosmic black halo, no text." },
+  { id:"lore_deity_elyra", name:"Elyra della Fiamma Bianca", type:"deity", set:"Divinita", rarity:"legendary", description:"Divinita della purificazione, invocata quando il mondo deve bruciare senza morire.", effectLines:["Set Divinita: progresso Benedizione Divina.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_deity_morvath", name:"Morvath dei Sepolcri", type:"deity", set:"Divinita", rarity:"epic", description:"Patrono dei giuramenti funebri e dei morti che rifiutano l'oblio.", effectLines:["Set Divinita: progresso Benedizione Divina.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_deity_seraphel", name:"Seraphel delle Maree", type:"deity", set:"Divinita", rarity:"rare", description:"Voce divina dei mari scomparsi, dei naufraghi e delle promesse sommerse.", effectLines:["Set Divinita: progresso Benedizione Divina.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_deity_thalara", name:"Thalara Radice Antica", type:"deity", set:"Divinita", rarity:"epic", description:"Madre delle foreste senzienti e dei nomi che crescono sotto la corteccia.", effectLines:["Set Divinita: progresso Benedizione Divina.", "Carta prestigio: aumenta solo la Risonanza."] },
+
+  { id:"lore_faction_sigil_watch", name:"Veglia del Sigillo", type:"faction", set:"Fazioni", rarity:"rare", description:"Ordine di guardiani che protegge le reliquie prima che diventino guerre.", effectLines:["Set Fazioni: progresso influenza politica.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_faction_black_quill", name:"Calamaio Nero", type:"faction", set:"Fazioni", rarity:"epic", description:"Rete di spie che compra segreti con nomi, ricordi e favori impossibili.", effectLines:["Set Fazioni: progresso influenza politica.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_faction_oathbound", name:"Giurati della Soglia", type:"faction", set:"Fazioni", rarity:"uncommon", description:"Pellegrini armati che scortano chi attraversa luoghi sacri e maledetti.", effectLines:["Set Fazioni: progresso influenza politica.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_faction_amber_market", name:"Mercato d'Ambra", type:"faction", set:"Fazioni", rarity:"uncommon", description:"Gilda mercantile che misura il valore di tutto, perfino degli eroi.", effectLines:["Set Fazioni: progresso influenza politica.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_faction_echo_bards", name:"Bardi di Nerocanto", type:"faction", set:"Fazioni", rarity:"rare", description:"Cantori proibiti capaci di far sanguinare una storia solo pronunciandola.", effectLines:["Set Fazioni: progresso influenza politica.", "Carta prestigio: aumenta solo la Risonanza."] },
+
+  { id:"lore_bestiary_basilisk", name:"Scheda Bestiario: Basilisco", type:"bestiary", set:"Bestiario", rarity:"common", description:"Appunto illustrato sullo sguardo pietrificante e sulle scaglie verdi vive.", effectLines:["Set Bestiario: progresso Conoscenza delle Creature.", "In futuro: puo sbloccare debolezze mostri."] },
+  { id:"lore_bestiary_hydra", name:"Scheda Bestiario: Hydra", type:"bestiary", set:"Bestiario", rarity:"rare", description:"Studio sulle teste rigeneranti e sul modo corretto di non morire due volte.", effectLines:["Set Bestiario: progresso Conoscenza delle Creature.", "In futuro: puo sbloccare debolezze mostri."] },
+  { id:"lore_bestiary_djinn", name:"Scheda Bestiario: Djinn", type:"bestiary", set:"Bestiario", rarity:"epic", description:"Trattato sui desideri legati male e sulle promesse che diventano tempeste.", effectLines:["Set Bestiario: progresso Conoscenza delle Creature.", "In futuro: puo sbloccare debolezze mostri."] },
+  { id:"lore_bestiary_wraith", name:"Scheda Bestiario: Spettro", type:"bestiary", set:"Bestiario", rarity:"common", description:"Nota da campo sulle creature che ricordano il dolore meglio del proprio nome.", effectLines:["Set Bestiario: progresso Conoscenza delle Creature.", "In futuro: puo sbloccare debolezze mostri."] },
+  { id:"lore_bestiary_golem", name:"Scheda Bestiario: Golem Runico", type:"bestiary", set:"Bestiario", rarity:"uncommon", description:"Schema inciso con punti deboli, rune motrici e pericoli da non toccare.", effectLines:["Set Bestiario: progresso Conoscenza delle Creature.", "In futuro: puo sbloccare debolezze mostri."] },
+
+  { id:"lore_dragon_ashkar", name:"Ashkar, Drago della Cenere", type:"ancient_dragon", set:"Draghi Antichi", rarity:"legendary", description:"Antico drago che dorme sotto vulcani freddi e sogna guerre gia finite.", effectLines:["Set Draghi Antichi: progresso Sangue Draconico.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_dragon_velnys", name:"Velnys, Drago di Vetro Lunare", type:"ancient_dragon", set:"Draghi Antichi", rarity:"legendary", description:"Drago traslucido visibile solo quando due lune si riflettono nello stesso lago.", effectLines:["Set Draghi Antichi: progresso Sangue Draconico.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_dragon_orun", name:"Orun, Drago d'Oricalco", type:"ancient_dragon", set:"Draghi Antichi", rarity:"epic", description:"Creatura delle civilta sommerse, corazzata di metallo mitico e silenzio.", effectLines:["Set Draghi Antichi: progresso Sangue Draconico.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_dragon_nyssara", name:"Nyssara, Drago della Marea Nera", type:"ancient_dragon", set:"Draghi Antichi", rarity:"mythic", secretCard:true, description:"Il suo battito muove mari senza stelle; chi la vede torna cambiato.", effectLines:["Set Draghi Antichi: progresso Sangue Draconico.", "Carta mitica segreta: appare solo dopo la scoperta."] },
+
+  { id:"lore_dungeon_hollow_crown", name:"Dungeon: Corona Cava", type:"dungeon", set:"Dungeon Storici", rarity:"rare", description:"Rovine regali dove il trono continua a giudicare anche senza sovrano.", effectLines:["Set Dungeon Storici: progresso memorie di esplorazione.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_dungeon_salt_abyss", name:"Dungeon: Abisso di Sale", type:"dungeon", set:"Dungeon Storici", rarity:"epic", description:"Catacomba marina asciutta dove il sale conserva i peccati dei naufraghi.", effectLines:["Set Dungeon Storici: progresso memorie di esplorazione.", "Carta prestigio: aumenta solo la Risonanza."] },
+  { id:"lore_dungeon_first_seal", name:"Dungeon: Sigillo Primo", type:"dungeon", set:"Dungeon Storici", rarity:"legendary", description:"Luogo impossibile dove furono chiuse le prime crepe degli Echi.", effectLines:["Set Dungeon Storici: progresso memorie di esplorazione.", "Carta prestigio: aumenta solo la Risonanza."] },
+];
+const CARD_UNLOCK_CARDS = [
+  { id:"unlock_class_echo_knight", name:"Classe: Cavaliere dell'Eco", type:"class", rarity:"legendary", image:"/assets/cards/art/unlock/class-echo-knight.png", description:"Sblocca in futuro una classe marziale che combatte insieme alla propria eco temporale.", effectLines:["Sblocco futuro: nuova classe.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_class_void_sage", name:"Classe: Sapiente del Vuoto", type:"class", rarity:"mythic", secretCard:true, image:"/assets/cards/art/unlock/class-void-sage.png", description:"Sblocca in futuro una classe segreta che legge cio che manca nel mondo.", effectLines:["Sblocco futuro: classe segreta.", "Carta mitica segreta: appare solo dopo la scoperta."] },
+  { id:"unlock_class_sigilwarden", name:"Classe: Custode dei Sigilli", type:"class", rarity:"epic", image:"/assets/cards/art/unlock/class-sigilwarden.png", description:"Sblocca in futuro una classe difensiva basata su barriere, marchi e giuramenti.", effectLines:["Sblocco futuro: nuova classe.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_class_ashen_oracle", name:"Classe: Oracolo della Cenere", type:"class", rarity:"epic", image:"/assets/cards/art/unlock/class-ashen-oracle.png", description:"Sblocca in futuro un incantatore che predice disastri leggendo braci divine.", effectLines:["Sblocco futuro: nuova classe.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_class_blood_cartographer", name:"Classe: Cartografo del Sangue", type:"class", rarity:"legendary", image:"/assets/cards/art/unlock/class-blood-cartographer.png", description:"Sblocca in futuro una classe rara che traccia mappe vive dentro battaglie e dungeon.", effectLines:["Sblocco futuro: nuova classe.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_class_moon_reaver", name:"Classe: Predone Lunare", type:"class", rarity:"rare", image:"/assets/cards/art/unlock/class-moon-reaver.png", description:"Sblocca in futuro una classe mobile legata a lame curve, ombre e fasi lunari.", effectLines:["Sblocco futuro: nuova classe.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_class_herald_zodar", name:"Classe: Araldo di Zodar", type:"class", rarity:"mythic", secretCard:true, image:"/assets/cards/art/unlock/class-herald-zodar.png", description:"Sblocca in futuro una classe milestone legata a equilibrio, interventi e sacrifici.", effectLines:["Sblocco futuro: classe mitica.", "Carta mitica segreta: appare solo dopo la scoperta."] },
+  { id:"unlock_class_relic_tamer", name:"Classe: Domatore di Reliquie", type:"class", rarity:"epic", image:"/assets/cards/art/unlock/class-relic-tamer.png", description:"Sblocca in futuro una classe che usa oggetti, carte e reliquie come fonti di potere.", effectLines:["Sblocco futuro: nuova classe.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_class_oathblade", name:"Classe: Lama del Giuramento", type:"class", rarity:"rare", image:"/assets/cards/art/unlock/class-oathblade.png", description:"Sblocca in futuro un combattente sacro oscuro che cresce mantenendo promesse difficili.", effectLines:["Sblocco futuro: nuova classe.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_class_echo_singer", name:"Classe: Cantore degli Echi", type:"class", rarity:"epic", image:"/assets/cards/art/unlock/class-echo-singer.png", description:"Sblocca in futuro un bardo superiore che manipola suono, memoria e Risonanza.", effectLines:["Sblocco futuro: nuova classe.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_class_echo_reaper", name:"Classe: Mietitore d'Echi", type:"class", rarity:"legendary", image:"/assets/cards/art/unlock/class-echo-reaper.png", description:"Sblocca in futuro una classe che raccoglie Echi dai nemici morti e diventa piu feroce nelle run lunghe.", effectLines:["Risorsa futura: Echi raccolti dai nemici caduti.", "Scaling: danno, critico, magia e resistenze crescono fino a fine dungeon.", "Rischio: se muore perde tutti gli Echi accumulati."] },
+  { id:"unlock_class_seal_inquisitor", name:"Classe: Inquisitore del Sigillo", type:"class", rarity:"rare", image:"/assets/cards/art/unlock/class-seal-inquisitor.png", description:"Sblocca in futuro un cacciatore di meccaniche ostili: sigilla magia, scudi, rigenerazione ed evocazioni.", effectLines:["Ruolo futuro: anti-meccanica e controllo boss.", "Rompe scudi, interrompe cariche e riduce effetti speciali.", "Deve restare utile anche contro nemici non magici."] },
+  { id:"unlock_class_blood_alchemist", name:"Classe: Alchimista del Sangue", type:"class", rarity:"epic", image:"/assets/cards/art/unlock/class-blood-alchemist.png", description:"Sblocca in futuro una classe estrema che trasforma HP in pozioni vive, mutazioni ed esplosioni biologiche.", effectLines:["Risorsa futura: HP convertiti in reazioni alchemiche.", "Crea pozioni al volo, mutazioni temporanee e detonazioni organiche.", "Rischio: potenza alta, margine d'errore basso."] },
+  { id:"unlock_class_rune_elder", name:"Classe: Vegliardo delle Rune", type:"class", rarity:"epic", image:"/assets/cards/art/unlock/class-rune-elder.png", description:"Sblocca in futuro una classe lenta ma potentissima che prepara rune prima dello scontro.", effectLines:["Sblocco futuro: nuova classe.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_class_blade_dancer", name:"Classe: Danzatore di Lame", type:"class", rarity:"rare", image:"/assets/cards/art/unlock/class-blade-dancer.png", description:"Sblocca in futuro un duellante fragile che mantiene il Ritmo cambiando azione ogni turno.", effectLines:["Meccanica futura: Danza/Ritmo.", "Alternare attacchi, schivate e tecniche mantiene combo e multi-colpo.", "Se ripete sempre la stessa azione perde ritmo."] },
+  { id:"unlock_class_cursebreaker", name:"Classe: Spezzamaledizioni", type:"class", rarity:"rare", image:"/assets/cards/art/unlock/class-cursebreaker.png", description:"Sblocca in futuro un supporto offensivo contro maledizioni, non morti e demoni.", effectLines:["Sblocco futuro: nuova classe.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_class_star_pilgrim", name:"Classe: Pellegrino Stellare", type:"class", rarity:"legendary", image:"/assets/cards/art/unlock/class-star-pilgrim.png", description:"Sblocca in futuro un viandante cosmico specializzato in varchi, eventi mondiali e spostamenti impossibili.", effectLines:["Risorsa futura: Coordinate Stellari.", "Teletrasporti brevi, bonus contro eventi dimensionali e posizionamento party.", "Piu forte in eventi mondiali, boss cosmici e dungeon anomali."] },
+  { id:"unlock_class_soul_forger", name:"Classe: Forgiatore d'Anime", type:"class", rarity:"legendary", image:"/assets/cards/art/unlock/class-soul-forger.png", description:"Sblocca in futuro una classe che sacrifica frammenti, carte e duplicati per forgiare armi spirituali temporanee.", effectLines:["Risorsa futura: frammenti e carte duplicate.", "Esempio: carte comuni creano armi spirituali minori.", "Doppioni leggendari possono generare buff enormi ma consumabili."] },
+  { id:"unlock_class_doom_prophet", name:"Classe: Profeta della Fine", type:"class", rarity:"legendary", image:"/assets/cards/art/unlock/class-doom-prophet.png", description:"Sblocca in futuro una classe che accumula Presagi e diventa piu potente quando il party e vicino alla rovina.", effectLines:["Risorsa futura: Presagi.", "Piu il party rischia la morte, piu cresce il potere del Profeta.", "Crea recuperi epici ma non deve premiare il suicidio tattico."] },
+  { id:"unlock_class_maze_keeper", name:"Classe: Custode del Labirinto", type:"class", rarity:"epic", image:"/assets/cards/art/unlock/class-maze-keeper.png", description:"Sblocca in futuro una classe esplorativa che legge, piega e riscrive piccole parti dei dungeon.", effectLines:["Ruolo futuro: esplorazione e controllo dungeon.", "Vede trappole, rivela stanze, trova scorciatoie e modifica incontri.", "Non punta al DPS: fa risparmiare risorse e cambia la run."] },
+
+  { id:"unlock_race_aasimar", name:"Razza: Aasimar", type:"race", rarity:"rare", image:"/assets/cards/art/unlock/race-aasimar.png", description:"Sblocca in futuro una stirpe celestiale mortale, luminosa ma meno assoluta dell'Angelo.", effectLines:["Sblocco futuro: nuova razza.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_race_drow", name:"Razza: Drow", type:"race", rarity:"rare", image:"/assets/cards/art/unlock/race-drow.png", description:"Sblocca in futuro elfi oscuri agili, furtivi e affini alla magia d'ombra.", effectLines:["Sblocco futuro: nuova razza.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_race_forged", name:"Razza: Forgiato", type:"race", rarity:"epic", image:"/assets/cards/art/unlock/race-forged.png", description:"Sblocca in futuro costrutti viventi resistenti, perfetti per Artefici e Reliquie.", effectLines:["Sblocco futuro: nuova razza.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_race_renegade_vampire", name:"Razza: Vampiro Rinnegato", type:"race", rarity:"epic", image:"/assets/cards/art/unlock/race-renegade-vampire.png", description:"Sblocca in futuro una creatura notturna che cerca liberta dal proprio sangue maledetto.", effectLines:["Sblocco futuro: nuova razza.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_race_sirenide", name:"Razza: Sirenide", type:"race", rarity:"rare", image:"/assets/cards/art/unlock/race-sirenide.png", description:"Sblocca in futuro una stirpe marina legata a charme, voce e magie d'abissi.", effectLines:["Sblocco futuro: nuova razza.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_race_echide", name:"Razza: Echide", type:"race", rarity:"mythic", secretCard:true, image:"/assets/cards/art/unlock/race-echide.png", description:"Sblocca in futuro una razza originale di Zodar, nata con frammenti degli Echi nel sangue.", effectLines:["Identita futura: razza mitica di Echoes of Zodar.", "Bonus probabile: maggiore affinità alla Risonanza e agli effetti Echo.", "Carta mitica segreta: appare solo dopo la scoperta."] },
+  { id:"unlock_race_genasi", name:"Razza: Genasi", type:"race", rarity:"rare", image:"/assets/cards/art/unlock/race-genasi.png", description:"Sblocca in futuro mortali elementali di fuoco, acqua, aria o terra.", effectLines:["Sblocco futuro: nuova razza.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_race_ancient_draconid", name:"Razza: Draconide Antico", type:"race", rarity:"legendary", image:"/assets/cards/art/unlock/race-ancient-draconid.png", description:"Sblocca in futuro una stirpe draconica piu vicina ai Draghi Antichi.", effectLines:["Sblocco futuro: nuova razza.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_race_shadow_awakened", name:"Razza: Ombra Risvegliata", type:"race", rarity:"epic", image:"/assets/cards/art/unlock/race-shadow-awakened.png", description:"Sblocca in futuro ex creature d'ombra diventate persone, fragili ma imprendibili.", effectLines:["Sblocco futuro: nuova razza.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_race_fae", name:"Razza: Fatato", type:"race", rarity:"uncommon", image:"/assets/cards/art/unlock/race-fae.png", description:"Sblocca in futuro creature piccole, rapide e maestre di fortuna e illusioni.", effectLines:["Sblocco futuro: nuova razza.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_race_echo_born", name:"Razza: Nato dall'Eco", type:"race", rarity:"legendary", image:"/assets/cards/art/unlock/race-echo-born.png", description:"Sblocca in futuro esseri generati da carte, memorie o picchi di Risonanza.", effectLines:["Identita futura: razza rarissima da collezionismo.", "Possibile bonus: interazione con Risonanza, carte alleato ed effetti Echo.", "Perfetta come sblocco da set o milestone."] },
+  { id:"unlock_race_half_djinn", name:"Razza: Mezzo-Djinn", type:"race", rarity:"epic", image:"/assets/cards/art/unlock/race-half-djinn.png", description:"Sblocca in futuro una stirpe di desideri perduti, fortuna e magia instabile.", effectLines:["Sblocco futuro: nuova razza.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_race_golemide", name:"Razza: Golemide", type:"race", rarity:"epic", image:"/assets/cards/art/unlock/race-golemide.png", description:"Sblocca in futuro anime vive dentro corpi artificiali incisi di rune.", effectLines:["Sblocco futuro: nuova razza.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_race_void_touched", name:"Razza: Toccato dal Vuoto", type:"race", rarity:"legendary", image:"/assets/cards/art/unlock/race-void-touched.png", description:"Sblocca in futuro mortali segnati dal vuoto cosmico: piu potere, piu rischio.", effectLines:["Identita futura: high risk, high reward.", "Bonus probabile: magia cosmica/oscura e resistenze anomale.", "Rischio: instabilita, corruzione o effetti riflessi."] },
+  { id:"unlock_race_fallen_seraphite", name:"Razza: Serafita Caduto", type:"race", rarity:"legendary", image:"/assets/cards/art/unlock/race-fallen-seraphite.png", description:"Sblocca in futuro discendenti spezzati tra luce celeste e caduta infernale.", effectLines:["Identita futura: ibrido luce/ombra molto visivo.", "Bonus probabile: cura e danno oscuro nello stesso kit.", "Perfetta per conflitti morali e cosmetiche rare."] },
+  { id:"unlock_race_primordial_draconian", name:"Razza: Draconiano Primordiale", type:"race", rarity:"mythic", secretCard:true, image:"/assets/cards/art/unlock/race-primordial-draconian.png", description:"Sblocca in futuro sangue draconico selvaggio, precedente a regni e giuramenti.", effectLines:["Identita futura: versione mitica del sangue draconico.", "Bonus probabile: scaling contro boss e sinergia Draghi Antichi.", "Carta mitica segreta: appare solo dopo la scoperta."] },
+  { id:"unlock_race_night_child", name:"Razza: Figlio della Notte", type:"race", rarity:"rare", image:"/assets/cards/art/unlock/race-night-child.png", description:"Sblocca in futuro una razza furtiva e notturna, meno maledetta di un vampiro.", effectLines:["Sblocco futuro: nuova razza.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_race_ancient_silvan", name:"Razza: Silvano Antico", type:"race", rarity:"epic", image:"/assets/cards/art/unlock/race-ancient-silvan.png", description:"Sblocca in futuro spiriti arborei incarnati, legati a cura naturale e radici vive.", effectLines:["Sblocco futuro: nuova razza.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_race_atlantean", name:"Razza: Atlanteo", type:"race", rarity:"rare", image:"/assets/cards/art/unlock/race-atlantean.png", description:"Sblocca in futuro eredi di un popolo sommerso e custodi di reliquie marine.", effectLines:["Sblocco futuro: nuova razza.", "Non aumenta le statistiche finche lo sblocco non e attivato."] },
+  { id:"unlock_race_living_mirror", name:"Razza: Specchio Vivente", type:"race", rarity:"mythic", secretCard:true, image:"/assets/cards/art/unlock/race-living-mirror.png", description:"Sblocca in futuro esseri riflettenti capaci di imitare frammenti di potere altrui.", effectLines:["Meccanica futura: copia piccole percentuali dai compagni o dal nemico dominante.", "Ogni party cambia il personaggio.", "Carta mitica segreta: appare solo dopo la scoperta."] },
+
+  { id:"unlock_spell_zodar_gaze", name:"Magia: Sguardo di Zodar", type:"spell", rarity:"legendary", description:"Formula che impone una scelta divina al destino per un solo istante.", effectLines:["Sblocca Sguardo di Zodar nello spellbook delle classi compatibili.", "Richiede slot 5."] },
+  { id:"unlock_spell_white_flame", name:"Magia: Fiamma Bianca", type:"spell", rarity:"rare", description:"Incantesimo di purificazione che brucia corruzione, non carne innocente.", effectLines:["Sblocca Fiamma Bianca nello spellbook delle classi compatibili.", "Richiede slot 2."] },
+  { id:"unlock_spell_black_tide", name:"Magia: Marea Nera", type:"spell", rarity:"epic", description:"Onda d'ombra liquida che trascina via scudi, illusioni e coraggio.", effectLines:["Sblocca Marea Nera nello spellbook delle classi compatibili.", "Richiede slot 3."] },
+  { id:"unlock_spell_echo_chain", name:"Magia: Catena d'Eco", type:"spell", rarity:"uncommon", description:"Legame sonoro che rimbalza tra nemici vicini e amplifica piccoli colpi.", effectLines:["Sblocca Catena d'Eco nello spellbook delle classi compatibili.", "Richiede slot 1."] },
+  { id:"unlock_spell_sigil_bloom", name:"Magia: Fioritura del Sigillo", type:"spell", rarity:"rare", description:"Un marchio difensivo sboccia in luce quando il bersaglio sta per cadere.", effectLines:["Sblocca Fioritura del Sigillo nello spellbook delle classi compatibili.", "Richiede slot 2."] },
+  { id:"unlock_spell_memory_knife", name:"Magia: Coltello della Memoria", type:"spell", rarity:"epic", description:"Lama mentale che ferisce soprattutto chi ha troppo da nascondere.", effectLines:["Sblocca Coltello della Memoria nello spellbook delle classi compatibili.", "Richiede slot 3."] },
+  { id:"unlock_spell_star_blood", name:"Magia: Sangue Stellare", type:"spell", rarity:"mythic", secretCard:true, description:"Incantesimo proibito che versa luce cosmica nelle vene per pochi secondi.", effectLines:["Sblocca Sangue Stellare nello spellbook delle classi compatibili.", "Richiede slot 5 e costa HP."] },
+  { id:"unlock_spell_dragon_oath", name:"Magia: Giuramento Draconico", type:"spell", rarity:"legendary", description:"Patto temporaneo con un antico drago: potere enorme, prezzo reale.", effectLines:["Sblocca Giuramento Draconico nello spellbook delle classi compatibili.", "Richiede slot 4."] },
+  { id:"unlock_spell_thorn_hymn", name:"Magia: Inno di Spine", type:"spell", rarity:"uncommon", description:"Canto verde che ferisce chi interrompe la crescita selvaggia della natura.", effectLines:["Sblocca Inno di Spine nello spellbook delle classi compatibili.", "Richiede slot 1."] },
+  { id:"unlock_spell_silent_silver", name:"Magia: Argento Muto", type:"spell", rarity:"rare", description:"Velo metallico che assorbe il primo incantesimo ostile pronunciato vicino.", effectLines:["Sblocca Argento Muto nello spellbook delle classi compatibili.", "Richiede slot 2."] },
+
+  { id:"unlock_path_divine_knowledge", name:"Via della Conoscenza", type:"path", rarity:"mythic", secretCard:true, description:"Sblocca una Via di Zodar dedicata a formule, studio e controllo del campo.", effectLines:["Via attiva: +1 magia preparabile.", "Bonus combattimento: +1 danni magia e +1 durata controllo."] },
+  { id:"unlock_path_divine_power", name:"Via del Potere", type:"path", rarity:"mythic", secretCard:true, description:"Sblocca una Via di Zodar dedicata a impatto, iniziativa e potere immediato.", effectLines:["Via attiva: +1 a colpire, danni arma, danni magia e iniziativa.", "Carta mitica segreta: appare solo dopo la scoperta."] },
+  { id:"unlock_path_eternity", name:"Via dell'Eternita", type:"path", rarity:"mythic", secretCard:true, description:"Sblocca una Via di Zodar dedicata a sopravvivenza, memoria e resistenza al destino.", effectLines:["Via attiva: -4% danni subiti, +1 cure e +1 durata stati.", "Carta mitica segreta: appare solo dopo la scoperta."] },
 ];
 const CARD_ALLY_RARITY_CONFIG = {
   common:{ count:80, hp:18, atk:4, def:1, mag:0, init:2, dmgDie:"1d6", roleHint:"soldati, mercenari, apprendisti, bestie semplici", power:"utili ma sacrificabili" },
@@ -1967,6 +2804,100 @@ function cardFeatureUnlockKey(playerId) {
 function cardGrantProcessedKey(playerId) {
   return `eoz_card_grants_processed_${playerId}`;
 }
+function characterCardUnlockKey(accountId) {
+  return `eoz_character_card_unlocks_${accountId || "local"}`;
+}
+const COSMETIC_EQUIP_SLOT_CONFIG = Object.freeze([
+  { key:"cos_head", label:"Testa", icon:"⛑️", types:["hood","helmet"], mannequinSlot:"head" },
+  { key:"cos_cloak", label:"Mantello", icon:"🧣", types:["cloak"], mannequinSlot:"cloak" },
+  { key:"cos_armor", label:"Armatura", icon:"🛡️", types:["armor_skin"], mannequinSlot:"chest" },
+  { key:"cos_weapon", label:"Arma", icon:"⚔️", types:["weapon_skin"], mannequinSlot:"weapon" },
+  { key:"cos_aura", label:"Aura", icon:"✨", types:["aura"], mannequinSlot:"cloak" },
+  { key:"cos_mascot", label:"Mascotte", icon:"⭐", types:["mascot"], mannequinSlot:"offhand" },
+]);
+const COSMETIC_EQUIP_SLOTS = Object.freeze(COSMETIC_EQUIP_SLOT_CONFIG.map(slot => slot.key));
+const COSMETIC_TYPE_TO_EQUIP_SLOT = Object.freeze(COSMETIC_EQUIP_SLOT_CONFIG.reduce((acc, slot) => {
+  slot.types.forEach(type => { acc[type] = slot.key; });
+  return acc;
+}, {}));
+function normalizeActiveCosmetics(value={}) {
+  const source = value && typeof value === "object" ? value : {};
+  return Object.fromEntries(COSMETIC_EQUIP_SLOTS.map(slot => [slot, source[slot] || null]));
+}
+function cosmeticEquipSlot(cosmetic) {
+  return COSMETIC_TYPE_TO_EQUIP_SLOT[cosmetic?.type] || null;
+}
+function cosmeticEquipSlotConfig(slot) {
+  return COSMETIC_EQUIP_SLOT_CONFIG.find(entry => entry.key === slot) || null;
+}
+function cosmeticEquipSlotLabel(slot) {
+  return cosmeticEquipSlotConfig(slot)?.label || "Estetica";
+}
+function activeCosmeticCardsFromVault(vault) {
+  const active = normalizeActiveCosmetics(vault?.activeCosmetics);
+  const ownedByCardId = new Map((vault?.cards || [])
+    .filter(card => card?.kind === "cosmetic")
+    .map(card => [card.cardId || card.uid, card]));
+  return Object.fromEntries(COSMETIC_EQUIP_SLOTS.map(slot => [slot, ownedByCardId.get(active[slot]) || null]));
+}
+function normalizeCharacterCardUnlocks(value={}) {
+  return {
+    classes:Array.from(new Set(value.classes || [])),
+    races:Array.from(new Set(value.races || [])),
+  };
+}
+function getStoredCharacterCardUnlocks(accountId) {
+  return normalizeCharacterCardUnlocks(lsGet(characterCardUnlockKey(accountId), { classes:[], races:[] }));
+}
+function saveStoredCharacterCardUnlocks(accountId, unlocks) {
+  lsSet(characterCardUnlockKey(accountId), normalizeCharacterCardUnlocks(unlocks));
+}
+function characterCardIdsFromVault(vault) {
+  return new Set((vault?.cards || []).map(card => card.cardId || card.uid).filter(Boolean));
+}
+function characterUnlocksFromCardIds(cardIds) {
+  const classes = Object.entries(CHARACTER_CARD_UNLOCKS.classes)
+    .filter(([, cardId]) => cardIds.has(cardId))
+    .map(([key]) => key);
+  const races = Object.entries(CHARACTER_CARD_UNLOCKS.races)
+    .filter(([, cardId]) => cardIds.has(cardId))
+    .map(([key]) => key);
+  return { classes, races };
+}
+function recentCharacterUnlocksFromVault(vault, maxAgeDays=14) {
+  const now = Date.now();
+  const maxAgeMs = maxAgeDays * 24 * 60 * 60 * 1000;
+  const freshCards = (vault?.cards || []).filter(card => {
+    if(card?.kind !== "unlock" || card?.duplicate) return false;
+    if(card.unlockStatus === "new_unlock") return true;
+    const acquired = Date.parse(card.acquiredAt || "");
+    return Number.isFinite(acquired) && now - acquired <= maxAgeMs;
+  });
+  return mergeCharacterCardUnlocks(...freshCards.map(card => {
+    const target = characterUnlockTargetFromCardId(card.cardId);
+    if(!target) return null;
+    return target.kind === "classes" ? { classes:[target.key], races:[] } : { classes:[], races:[target.key] };
+  }).filter(Boolean));
+}
+function characterUnlockTargetFromCardId(cardId) {
+  const classEntry = Object.entries(CHARACTER_CARD_UNLOCKS.classes).find(([, id]) => id === cardId);
+  if(classEntry) return { kind:"classes", key:classEntry[0], label:CLASSES[classEntry[0]]?.name || classEntry[0] };
+  const raceEntry = Object.entries(CHARACTER_CARD_UNLOCKS.races).find(([, id]) => id === cardId);
+  if(raceEntry) return { kind:"races", key:raceEntry[0], label:RACES[raceEntry[0]]?.name || raceEntry[0] };
+  return null;
+}
+function mergeCharacterCardUnlocks(...sources) {
+  return normalizeCharacterCardUnlocks({
+    classes:sources.flatMap(source => source?.classes || []),
+    races:sources.flatMap(source => source?.races || []),
+  });
+}
+function updateStoredCharacterCardUnlocks(accountId, vault) {
+  const fromCards = characterUnlocksFromCardIds(characterCardIdsFromVault(vault));
+  const merged = mergeCharacterCardUnlocks(getStoredCharacterCardUnlocks(accountId), fromCards);
+  saveStoredCharacterCardUnlocks(accountId, merged);
+  return merged;
+}
 function parseCardPackGrant(msg) {
   if(msg?.type !== "card_grant") return null;
   try {
@@ -1991,6 +2922,7 @@ function defaultCardVault() {
     packs:{ pack_recruit:3, pack_vanguard:1, pack_oath:1 },
     cards:[],
     activeTitle:null,
+    activeCosmetics:normalizeActiveCosmetics(),
     fragments:0,
     premiumBalance:0,
     premiumLedger:[],
@@ -2011,6 +2943,7 @@ function getStoredCardVault(playerId) {
     packs:{ ...defaultCardVault().packs, ...migratedPacks },
     pity:{ ...defaultCardVault().pity, ...(stored?.pity || {}) },
     cards:Array.isArray(stored?.cards) ? stored.cards : [],
+    activeCosmetics:normalizeActiveCosmetics(stored?.activeCosmetics),
     premiumBalance:Math.max(0, Number(stored?.premiumBalance) || 0),
     premiumLedger:Array.isArray(stored?.premiumLedger) ? stored.premiumLedger.slice(-80) : [],
   };
@@ -2031,6 +2964,219 @@ function makePremiumLedgerEntry(type, amount, label, meta={}) {
 function cardRarityLabel(rarity) {
   if(String(rarity).toLowerCase() === "mythic") return "Mitica";
   return itemRarityLabel(rarity);
+}
+function cardResonanceValue(card) {
+  return CARD_RESONANCE_VALUE[card?.rarity] || 0;
+}
+function cardCollectionStats(vault) {
+  const cards = Array.isArray(vault?.cards) ? vault.cards : [];
+  const uniqueCardIds = new Set(cards.map(card => card.cardId || card.uid).filter(Boolean));
+  const resonance = cards.reduce((sum, card) => sum + cardResonanceValue(card), 0);
+  const mythicCount = cards.filter(card => card.rarity === "mythic").length;
+  const characterUnlocks = characterUnlocksFromCardIds(uniqueCardIds);
+  const zodarPaths = getZodarPathSummary(vault);
+  const byRarity = cards.reduce((acc, card) => {
+    const rarity = card.rarity || "common";
+    acc[rarity] = (acc[rarity] || 0) + 1;
+    return acc;
+  }, {});
+  const unlockedMilestones = ZODAR_RESONANCE_MILESTONES.filter(milestone => resonance >= milestone.value);
+  const nextMilestone = ZODAR_RESONANCE_MILESTONES.find(milestone => resonance < milestone.value) || null;
+  return {
+    total:cards.length,
+    unique:uniqueCardIds.size,
+    resonance,
+    mythicCount,
+    characterUnlocks,
+    zodarPaths,
+    byRarity,
+    unlockedMilestones,
+    nextMilestone,
+  };
+}
+function cardCollectorSnapshot(player, vault) {
+  const stats = cardCollectionStats(vault);
+  const spellUnlocks = unlockedSpellCardIdsFromVault(vault);
+  return {
+    playerId:player?.id || null,
+    accountId:player?.accountId || player?.account_id || null,
+    name:player?.name || "Collezionista",
+    class:player?.class || "warrior",
+    race:player?.race || "human",
+    partyCode:player?.partyCode || player?.party_code || "-",
+    resonance:stats.resonance,
+    totalCards:stats.total,
+    uniqueCards:stats.unique,
+    mythicCards:stats.mythicCount,
+    unlockedClasses:stats.characterUnlocks.classes.length,
+    unlockedRaces:stats.characterUnlocks.races.length,
+    unlockedSpells:spellUnlocks.size,
+    unlockedPaths:stats.zodarPaths.length,
+    updatedAt:new Date().toISOString(),
+  };
+}
+function cardCollectorScore(entry) {
+  return (entry?.resonance || 0) * 100
+    + (entry?.uniqueCards || 0) * 15
+    + (entry?.mythicCards || 0) * 80
+    + (entry?.unlockedPaths || 0) * 120
+    + (entry?.unlockedClasses || 0) * 60
+    + (entry?.unlockedRaces || 0) * 45
+    + (entry?.unlockedSpells || 0) * 35;
+}
+function legacyRelicTypeLabel(typeId) {
+  return LEGACY_RELIC_TYPES.find(type => type.id === typeId)?.label || typeId || "Reliquia";
+}
+function cardCollectionBucket(card) {
+  if(card?.kind === "ally") return "ally";
+  if(card?.kind === "cosmetic") return "cosmetic";
+  if(card?.kind === "item" && card?.type === "material") return "material";
+  if(card?.kind === "item") return "item";
+  if(card?.kind === "lore") return "lore";
+  if(card?.kind === "unlock") return "unlock";
+  return "other";
+}
+const CARD_COLLECTION_BUCKETS = [
+  { id:"item", label:"Oggetti", icon:"🎒", desc:"Armi, armature, pozioni e artefatti ottenuti dai pacchetti." },
+  { id:"material", label:"Materiali", icon:"💎", desc:"Risorse da forgia e componenti rari per craft e progressione." },
+  { id:"ally", label:"Alleati", icon:"⚔️", desc:"Creature e compagni evocabili in battaglia." },
+  { id:"cosmetic", label:"Cosmetiche", icon:"✨", desc:"Titoli, aure, skin e personalizzazioni sceniche." },
+  { id:"lore", label:"Lore", icon:"📜", desc:"Citta, divinita, fazioni, bestiario e frammenti del mondo." },
+  { id:"unlock", label:"Sblocchi personaggio", icon:"🔓", desc:"Classi, razze, magie e vie speciali sbloccabili tramite carte." },
+  { id:"other", label:"Altro", icon:"🃏", desc:"Carte speciali non ancora catalogate." },
+];
+function cardPowerScore(card, item=null) {
+  if(card?.kind === "ally" && card?.ally) {
+    const ally = card.ally;
+    return (ally.hp || 0) + (ally.atk || 0) * 8 + (ally.def || 0) * 6 + (ally.mag || 0) * 7 + (ally.init || 0) * 3 + cardResonanceValue(card);
+  }
+  const source = item || card;
+  return (
+    (source?.price || 0) / 120 +
+    (source?.bonus_atk || source?.bonusAtk || 0) * 12 +
+    (source?.bonus_def || source?.bonusDef || 0) * 12 +
+    (source?.bonus_mag || source?.bonusMag || 0) * 12 +
+    (source?.bonus_hp || source?.bonusHp || 0) * 2 +
+    (source?.bonus_init || source?.bonusInit || 0) * 6 +
+    cardResonanceValue(card)
+  );
+}
+function cardTemplateSecrecy(rarity, explicitSecret=false) {
+  if(explicitSecret || rarity === "mythic") return "secret";
+  if(rarity === "epic" || rarity === "legendary") return "unknown";
+  return "known";
+}
+function itemToCollectionTemplate(item) {
+  const rarity = item?.rarity || "common";
+  return {
+    id:`item_${item.id}`,
+    cardId:`item_${item.id}`,
+    name:item.name,
+    rarity,
+    kind:"item",
+    type:item.type || "item",
+    bucket:item.type === "material" ? "material" : "item",
+    secrecy:cardTemplateSecrecy(rarity, item.secretCard || item.hiddenCard),
+    sortName:item.name || "",
+    power:cardPowerScore({ rarity, kind:"item", type:item.type }, item),
+  };
+}
+function allyToCollectionTemplate(ally) {
+  const rarity = ally?.rarity || "common";
+  return {
+    id:ally.id,
+    cardId:ally.id,
+    name:ally.name,
+    rarity,
+    kind:"ally",
+    type:"ally",
+    bucket:"ally",
+    secrecy:cardTemplateSecrecy(rarity, ally.secretCard),
+    sortName:ally.name || "",
+    power:cardPowerScore({ rarity, kind:"ally", ally }),
+  };
+}
+function cosmeticToCollectionTemplate(cosmetic) {
+  const rarity = cosmetic?.rarity || "common";
+  return {
+    id:cosmetic.id,
+    cardId:cosmetic.id,
+    name:cosmetic.name,
+    rarity,
+    kind:"cosmetic",
+    type:cosmetic.type,
+    bucket:"cosmetic",
+    secrecy:cardTemplateSecrecy(rarity, cosmetic.secretCard),
+    sortName:cosmetic.name || "",
+    power:cardResonanceValue({ rarity }),
+  };
+}
+function loreToCollectionTemplate(lore) {
+  const rarity = lore?.rarity || "common";
+  return {
+    id:lore.id,
+    cardId:lore.id,
+    name:lore.name,
+    rarity,
+    kind:"lore",
+    type:lore.type,
+    set:lore.set,
+    bucket:"lore",
+    secrecy:cardTemplateSecrecy(rarity, lore.secretCard || lore.hiddenCard),
+    sortName:lore.name || "",
+    power:cardResonanceValue({ rarity }),
+  };
+}
+function unlockToCollectionTemplate(unlock) {
+  const rarity = unlock?.rarity || "common";
+  return {
+    id:unlock.id,
+    cardId:unlock.id,
+    name:unlock.name,
+    rarity,
+    kind:"unlock",
+    type:unlock.type,
+    bucket:"unlock",
+    secrecy:cardTemplateSecrecy(rarity, unlock.secretCard || unlock.hiddenCard),
+    sortName:unlock.name || "",
+    power:cardResonanceValue({ rarity }),
+  };
+}
+function collectionTemplatesForBucket(bucketId, catalogItems=[], ownedCards=[]) {
+  const templates = [];
+  if(bucketId === "item" || bucketId === "material") {
+    templates.push(...(catalogItems || []).map(itemToCollectionTemplate).filter(template => template.bucket === bucketId));
+  } else if(bucketId === "ally") {
+    templates.push(...CARD_ALLIES.map(allyToCollectionTemplate));
+  } else if(bucketId === "cosmetic") {
+    templates.push(...CARD_COSMETICS.map(cosmeticToCollectionTemplate));
+  } else if(bucketId === "lore") {
+    templates.push(...CARD_LORE_CARDS.map(loreToCollectionTemplate));
+  } else if(bucketId === "unlock") {
+    templates.push(...CARD_UNLOCK_CARDS.map(unlockToCollectionTemplate));
+  }
+  const knownIds = new Set(templates.map(template => template.cardId));
+  for(const card of ownedCards) {
+    const bucket = cardCollectionBucket(card);
+    const cardId = card.cardId || card.uid;
+    if(bucket === bucketId && cardId && !knownIds.has(cardId)) {
+      templates.push({
+        id:cardId,
+        cardId,
+        name:card.name,
+        rarity:card.rarity || "common",
+        kind:card.kind,
+        type:card.type,
+        bucket:bucketId,
+        secrecy:"known",
+        sortName:card.name || "",
+        power:cardPowerScore(card),
+      });
+      knownIds.add(cardId);
+    }
+  }
+  const ownedIds = new Set(ownedCards.map(card => card.cardId || card.uid).filter(Boolean));
+  return templates.filter(template => template.secrecy !== "secret" || ownedIds.has(template.cardId));
 }
 function weightedCardRarity(rates) {
   const entries = Object.entries(rates || {});
@@ -2073,7 +3219,39 @@ function cosmeticToLootCard(cosmetic) {
     rarity:cosmetic.rarity,
     description:cosmetic.description,
     effectLines:cosmeticEffectLines(cosmetic),
+    image:getCosmeticImage(cosmetic),
+    imagePrompt:cosmetic.imagePrompt,
+    category:cosmetic.category,
     exclusive:!!cosmetic.exclusive,
+    acquiredAt:new Date().toISOString(),
+  };
+}
+function loreToLootCard(lore) {
+  return {
+    uid:`card_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+    cardId:lore.id,
+    kind:"lore",
+    type:lore.type,
+    name:lore.name,
+    rarity:lore.rarity,
+    description:lore.description,
+    effectLines:lore.effectLines || ["Carta lore: aumenta la Risonanza e il progresso del set."],
+    imagePrompt:lore.imagePrompt,
+    set:lore.set,
+    acquiredAt:new Date().toISOString(),
+  };
+}
+function unlockToLootCard(unlock) {
+  return {
+    uid:`card_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+    cardId:unlock.id,
+    kind:"unlock",
+    type:unlock.type,
+    name:unlock.name,
+    rarity:unlock.rarity,
+    description:unlock.description,
+    effectLines:unlock.effectLines || ["Carta sblocco: contenuto futuro non ancora attivo."],
+    imagePrompt:unlock.imagePrompt,
     acquiredAt:new Date().toISOString(),
   };
 }
@@ -2105,13 +3283,22 @@ function pickPackReward(packDef, catalogItems, slotIndex, forcedRarity=null) {
     ? packDef.guaranteed
     : rolled);
   const allyPool = CARD_ALLIES.filter(a => a.rarity === rarity);
-  const useAlly = allyPool.length && (rarity === "mythic" || Math.random() < 0.22);
+  const useAlly = allyPool.length && Math.random() < (rarity === "mythic" ? 0.42 : 0.22);
   if(useAlly) return allyToLootCard(allyPool[Math.floor(Math.random() * allyPool.length)]);
+  const loreUnlockPool = [
+    ...CARD_LORE_CARDS.filter(card => card.rarity === rarity),
+    ...CARD_UNLOCK_CARDS.filter(card => card.rarity === rarity),
+  ];
+  const useLoreUnlock = loreUnlockPool.length && Math.random() < (rarity === "mythic" ? 0.55 : 0.18);
+  if(useLoreUnlock) {
+    const picked = loreUnlockPool[Math.floor(Math.random() * loreUnlockPool.length)];
+    return picked.id.startsWith("unlock_") ? unlockToLootCard(picked) : loreToLootCard(picked);
+  }
   const cosmeticPool = CARD_COSMETICS.filter(c => c.rarity === rarity || (rarity === "mythic" && c.rarity === "legendary"));
   const useCosmetic = cosmeticPool.length && (rarity === "mythic" || rarity === "legendary" || Math.random() < 0.32);
   if(useCosmetic) return cosmeticToLootCard(cosmeticPool[Math.floor(Math.random() * cosmeticPool.length)]);
-  const itemPool = (catalogItems || DEFAULT_ITEMS).filter(item => item.rarity === rarity && item.type !== "material");
-  const fallbackPool = (catalogItems || DEFAULT_ITEMS).filter(item => item.type !== "material");
+  const itemPool = (catalogItems || DEFAULT_ITEMS).filter(item => item.rarity === rarity);
+  const fallbackPool = (catalogItems || DEFAULT_ITEMS);
   const item = (itemPool.length ? itemPool : fallbackPool)[Math.floor(Math.random() * Math.max(1, (itemPool.length ? itemPool : fallbackPool).length))];
   return item ? itemToLootCard(item, rarity) : cosmeticToLootCard(CARD_COSMETICS[0]);
 }
@@ -2130,11 +3317,19 @@ function packRarityPlan(packDef) {
 function pickCardRewardOfRarity(rarity, catalogItems) {
   const allyPool = CARD_ALLIES.filter(a => a.rarity === rarity);
   if(allyPool.length && Math.random() < 0.35) return allyToLootCard(allyPool[Math.floor(Math.random() * allyPool.length)]);
+  const loreUnlockPool = [
+    ...CARD_LORE_CARDS.filter(card => card.rarity === rarity),
+    ...CARD_UNLOCK_CARDS.filter(card => card.rarity === rarity),
+  ];
+  if(loreUnlockPool.length && Math.random() < 0.25) {
+    const picked = loreUnlockPool[Math.floor(Math.random() * loreUnlockPool.length)];
+    return picked.id.startsWith("unlock_") ? unlockToLootCard(picked) : loreToLootCard(picked);
+  }
   const cosmeticPool = CARD_COSMETICS.filter(c => c.rarity === rarity);
   if(cosmeticPool.length && (rarity === "legendary" || rarity === "mythic" || Math.random() < 0.5)) {
     return cosmeticToLootCard(cosmeticPool[Math.floor(Math.random() * cosmeticPool.length)]);
   }
-  const itemPool = (catalogItems || DEFAULT_ITEMS).filter(item => item.rarity === rarity && item.type !== "material");
+  const itemPool = (catalogItems || DEFAULT_ITEMS).filter(item => item.rarity === rarity);
   if(itemPool.length) return itemToLootCard(itemPool[Math.floor(Math.random() * itemPool.length)], rarity);
   return cosmeticToLootCard((cosmeticPool[0] || CARD_COSMETICS[0]));
 }
@@ -2156,6 +3351,76 @@ function applyPackPity(rewards, vault, catalogItems) {
     nextRewards = [forced, ...rewards.slice(1)];
   }
   return nextRewards.sort((a,b) => (CARD_RARITY_ORDER[a.rarity] || 0) - (CARD_RARITY_ORDER[b.rarity] || 0));
+}
+
+function cardPackDef(packId) {
+  return CARD_PACK_DEFS.find(pack => pack.id === packId) || null;
+}
+
+function mergeCardPackRewards(rewards=[]) {
+  const counts = {};
+  for(const reward of rewards) {
+    const packId = reward?.packId || reward?.id;
+    const quantity = Math.max(1, Number(reward?.quantity ?? reward?.qty) || 1);
+    if(packId && cardPackDef(packId)) counts[packId] = (counts[packId] || 0) + quantity;
+  }
+  return Object.entries(counts).map(([packId, quantity]) => ({ packId, quantity }));
+}
+
+function cardPackRewardSummary(rewards=[], lang="it") {
+  return mergeCardPackRewards(rewards)
+    .map(({ packId, quantity }) => {
+      const pack = cardPackDef(packId);
+      return pack ? `${quantity}x ${pack.name}` : "";
+    })
+    .filter(Boolean)
+    .join(lang === "en" ? ", " : ", ");
+}
+
+function cardPackRewardsForQuest(q) {
+  const diff = normalizeMissionDifficulty(q?.difficulty);
+  const stepCount = (q?.steps || []).length;
+  const combatCount = questCombatSteps(q).length;
+  const bossCount = questBossCount(q);
+  const isSpecial = !!q?.specialPassword || String(q?.difficulty || "").toLowerCase() === "speciale";
+  const longQuest = stepCount >= 7 || combatCount >= 3;
+  const veryLongQuest = stepCount >= 11 || combatCount >= 5 || bossCount >= 2;
+  if(diff === "epica" || isSpecial) return [{ packId:(veryLongQuest || bossCount > 0) ? "pack_legendary" : "pack_epic", quantity:1 }];
+  if(diff === "difficile") return [{ packId:(longQuest || bossCount > 0) ? "pack_epic" : "pack_oath", quantity:1 }];
+  if(diff === "medio" && (longQuest || bossCount > 0)) return [{ packId:"pack_oath", quantity:1 }];
+  if(diff === "facile" && longQuest) return [{ packId:"pack_vanguard", quantity:1 }];
+  return [];
+}
+
+function cardPackRewardsForDungeon(dungeon) {
+  const difficulty = String(dungeon?.difficulty || "normal").toLowerCase();
+  const roomCount = (dungeon?.rooms || []).length;
+  const bossRooms = (dungeon?.rooms || []).filter(room => room?.type === "boss" || room?.monsters?.some(m => m?.isBoss)).length;
+  const rewards = [];
+  if(difficulty === "deadly") rewards.push({ packId:"pack_legendary", quantity:1 });
+  else if(difficulty === "hard") rewards.push({ packId:"pack_epic", quantity:1 });
+  else if(difficulty === "normal") rewards.push({ packId:"pack_oath", quantity:1 });
+  else if(roomCount >= 5 || bossRooms > 0) rewards.push({ packId:"pack_vanguard", quantity:1 });
+  if((difficulty === "hard" || difficulty === "deadly") && roomCount >= 8) rewards.push({ packId:"pack_recruit", quantity:1 });
+  return mergeCardPackRewards(rewards);
+}
+
+function cardPackRewardsForStory(story) {
+  const diff = normalizeMissionDifficulty(story?.difficulty);
+  const sceneCount = Object.keys(story?.scenes || {}).length;
+  const chapterCount = (story?.chapters || []).length;
+  const longStory = sceneCount >= 10 || chapterCount >= 3;
+  const veryLongStory = sceneCount >= 16 || chapterCount >= 5;
+  if(diff === "epica") return [{ packId:veryLongStory ? "pack_legendary" : "pack_epic", quantity:1 }];
+  if(diff === "difficile" && longStory) return [{ packId:"pack_epic", quantity:1 }];
+  if(diff === "medio" && veryLongStory) return [{ packId:"pack_oath", quantity:1 }];
+  return [];
+}
+
+function cardPackRewardsForWorldEvent(event) {
+  if(!event?.beatenAt && event?.active !== false) return [];
+  const maxHp = Number(event?.maxHp || event?.hp || 0);
+  return [{ packId:maxHp >= 70000 ? "pack_mythic" : "pack_legendary", quantity:1 }];
 }
 
 function normalizeLegendaryInventoryItem(item) {
@@ -2245,6 +3510,7 @@ function spellEffectSummary(spell, lang = "it") {
   details.push(spell.slots === 0 ? (isEn ? "Free" : "Gratis") : `${isEn ? "Cost" : "Costo"}: slot ${spell.slots}`);
   if(spell.dmg && spell.dmg !== "0") details.push(spell.type === "heal" ? `${isEn ? "Heal" : "Cura"}: ${spell.dmg}` : `${isEn ? "Damage" : "Danno"}: ${spell.dmg}`);
   else details.push(`${isEn ? "Type" : "Tipo"}: ${spell.type || (isEn ? "special" : "speciale")}`);
+  if(spell.hpCost) details.push(`${isEn ? "HP cost" : "Costo HP"}: ${spell.hpCost}`);
   if(spell.area) details.push(isEn ? "Area" : "Area");
   if(spell.type === "summon") details.push(isEn ? "Summon" : "Evocazione");
   if(spell.type === "control") details.push(isEn ? "Control" : "Controllo");
@@ -2389,20 +3655,22 @@ function getCombatDamageDie(actor) {
 function getCombatAttackBonus(actor, weapon=null) {
   if(actor?.isPlayer) {
     const profile = weaponAttackProfile(weapon, actor);
-    return profile.mod + getProficiencyBonus(actor.level || 1) + (weapon?.bonus_atk || 0);
+    return profile.mod + getProficiencyBonus(actor.level || 1) + (weapon?.bonus_atk || 0) + (getCharacterCombatTrait(actor).hitBonus || 0);
   }
   return Math.max(1, Math.floor((actor?.atk || 0) / 3));
 }
 function resolveWeaponAttack(attacker, target, weaponDie) {
   const hitRoll = roll(20);
-  const isCrit = hitRoll === 20;
+  const trait = getCharacterCombatTrait(attacker);
+  const isCrit = hitRoll >= (trait.critThreshold || 20);
   const attackBonus = getCombatAttackBonus(attacker);
   const attackTotal = hitRoll + attackBonus;
   const targetCa = Math.max(8, target?.def || 10);
   const hit = hitRoll !== 1 && (isCrit || attackTotal >= targetCa);
   const damageRoll = hit ? rollDice(weaponDie || "1d6") : 0;
-  const damage = hit ? damageRoll + (isCrit ? damageRoll : 0) : 0;
-  return { hitRoll, isCrit, attackBonus, attackTotal, targetCa, hit, damageRoll, damage, weaponDie: weaponDie || "1d6" };
+  const damageMod = trait.weaponDamageBonus || 0;
+  const damage = hit ? damageRoll + damageMod + (isCrit ? damageRoll : 0) : 0;
+  return { hitRoll, isCrit, attackBonus, attackTotal, targetCa, hit, damageRoll, damageMod, damageAbility:trait.weaponDamageBonus ? "trait" : null, damage, weaponDie: weaponDie || "1d6" };
 }
 function formatWeaponAttackLog(attacker, target, resolved, weaponName, targetHpAfter, targetMaxHp, { resisted = false, statusApplied = null, lang = "it" } = {}) {
   const isEn = lang === "en";
@@ -2593,6 +3861,31 @@ function canTakeCombatTurn(combatant) {
 function hasActionablePlayerCombatants(combatants) {
   return (combatants || []).some(c => c?.isPlayer && !c?.dead && (((c?.hp || 0) > 0) || c?.dying));
 }
+function combatantKey(combatant, index=null) {
+  if(!combatant) return "";
+  return combatant.combatId || combatant.instanceId || combatant.cardUid || combatant.id || (index !== null ? `idx_${index}` : "");
+}
+function combatantSelectKey(combatant, index) {
+  if(!combatant) return "";
+  if(combatant.combatId || combatant.instanceId || combatant.cardUid) return combatantKey(combatant);
+  if(!combatant.isPlayer) return `enemy_${combatant.id || combatant.name || "npc"}_${index}`;
+  return combatant.id || `player_${index}`;
+}
+function findCombatantIndexBySelectKey(combatants, key, predicate=()=>true) {
+  return (combatants || []).findIndex((combatant, index) => predicate(combatant) && combatantSelectKey(combatant, index) === key);
+}
+function makeMonsterCombatant(monster, index=0, prefix="monster") {
+  const baseHp = monster?.maxHp || monster?.max_hp || monster?.hp || 10;
+  const sourceId = monster?.sourceMonsterId || monster?.id || `${prefix}_${index}`;
+  return {
+    ...monster,
+    sourceMonsterId:sourceId,
+    combatId:`${prefix}_${sourceId}_${index}_${Date.now()}_${Math.random().toString(36).slice(2,7)}`,
+    hp:baseHp,
+    maxHp:baseHp,
+    rollInit:(monster?.init || 0) + Math.floor(Math.random()*20),
+  };
+}
 function getNextCombatTurn(combatants, currentTurn, currentRound) {
   let nextTurn = currentTurn + 1;
   let nextRound = currentRound;
@@ -2721,22 +4014,65 @@ function itemEffectLines(item) {
 function cosmeticEffectLines(card) {
   if(!card) return [];
   if(card.type === "title") return ["Titolo scenico attivabile sul personaggio.", "Solo estetica: non aumenta le statistiche."];
-  if(card.type === "aura") return ["Effetto scenico per distinguersi in game.", "Solo estetica: non aumenta le statistiche."];
+  if(card.type === "aura") return ["Aura equipaggiabile sul manichino.", "Solo estetica: non aumenta le statistiche."];
+  if(card.type === "hood") return ["Cappuccio cosmetico indossabile sul manichino.", "Solo estetica: non aumenta le statistiche."];
+  if(card.type === "helmet") return ["Elmo cosmetico indossabile sul manichino.", "Solo estetica: non aumenta le statistiche."];
+  if(card.type === "cloak") return ["Mantello cosmetico indossabile sul manichino.", "Solo estetica: non aumenta le statistiche."];
+  if(card.type === "mascot") return ["Mascotte scenica mostrabile accanto al personaggio.", "Solo estetica: non aumenta le statistiche."];
+  if(card.type === "weapon_skin") return ["Skin arma cosmetica applicabile al manichino.", "Solo estetica: non aumenta le statistiche."];
+  if(card.type === "armor_skin") return ["Skin armatura cosmetica applicabile al manichino.", "Solo estetica: non aumenta le statistiche."];
   if(card.type === "frame" || card.type === "cardback") return ["Personalizzazione estetica della collezione.", "Solo estetica: non aumenta le statistiche."];
   return ["Ricompensa scenica da collezione.", "Solo estetica: non aumenta le statistiche."];
 }
 function cardEffectLines(card, item=null) {
   if(item) return itemEffectLines(item);
-  if(Array.isArray(card?.effectLines) && card.effectLines.length) return card.effectLines;
+  const extra = [];
+  if(card?.kind === "unlock" && card.type === "spell") {
+    const spellUnlock = CARD_UNLOCK_SPELLS[card.cardId];
+    if(spellUnlock) extra.push(`Magia attiva: appare nello spellbook di ${spellUnlock.compatibleClasses.length} classi compatibili dal livello slot ${spellUnlock.slots}.`);
+  }
+  if(card?.kind === "unlock" && card.type === "path") {
+    const path = ZODAR_PATHS[card.cardId];
+    if(path) extra.push(`Via attiva: ${path.short}.`);
+  }
+  if(card?.kind === "unlock" && card.unlockStatus === "new_unlock") extra.push(`Nuovo sblocco: ${card.unlockLabel || "contenuto personaggio"} ora disponibile in creazione.`);
+  if(card?.kind === "unlock" && card.unlockStatus === "already_unlocked") extra.push(`Gia sbloccata: doppione convertito in ${card.convertedFragments || 0} frammenti.`);
+  if(Array.isArray(card?.effectLines) && card.effectLines.length) return [...extra, ...card.effectLines];
   if(Array.isArray(card?.stats) && card.stats.length) return card.stats;
   if(card?.kind === "cosmetic") return cosmeticEffectLines(card);
-  return [];
+  return extra;
 }
 function cardTypeLine(card) {
   if(!card) return "Carta";
   if(card.kind === "ally") return "Alleato";
+  if(card.kind === "lore") {
+    return card.type === "city" ? "Scheda citta"
+      : card.type === "deity" ? "Scheda divinita"
+      : card.type === "faction" ? "Scheda fazione"
+      : card.type === "bestiary" ? "Scheda bestiario"
+      : card.type === "ancient_dragon" ? "Drago antico"
+      : card.type === "dungeon" ? "Dungeon storico"
+      : "Carta lore";
+  }
+  if(card.kind === "unlock") {
+    return card.type === "class" ? "Sblocco classe"
+      : card.type === "race" ? "Sblocco razza"
+      : card.type === "spell" ? "Sblocco magia"
+      : card.type === "path" ? "Via di Zodar"
+      : "Sblocco";
+  }
   if(card.kind === "cosmetic") {
-    return card.type === "title" ? "Titolo scenico" : card.type === "aura" ? "Aura scenica" : card.type === "frame" ? "Cornice" : card.type === "cardback" ? "Retro carta" : "Scenica";
+    return card.type === "title" ? "Titolo scenico"
+      : card.type === "aura" ? "Aura scenica"
+      : card.type === "hood" ? "Cappuccio"
+      : card.type === "helmet" ? "Elmo"
+      : card.type === "cloak" ? "Mantello"
+      : card.type === "mascot" ? "Mascotte"
+      : card.type === "weapon_skin" ? "Skin arma"
+      : card.type === "armor_skin" ? "Skin armatura"
+      : card.type === "frame" ? "Cornice"
+      : card.type === "cardback" ? "Retro carta"
+      : "Scenica";
   }
   return itemTypeLabel(card.type);
 }
@@ -2757,6 +4093,8 @@ function cardStatBadge(card) {
   if(heal) return heal.replace("🧪 ", "");
   if(magic) return magic.replace("✨ ", "MAG ");
   if(card.kind === "cosmetic") return "SCENA";
+  if(card.kind === "lore") return "LORE";
+  if(card.kind === "unlock") return "LOCK";
   return "";
 }
 function canUseBrowserNotifications() {
@@ -2828,6 +4166,23 @@ function makeArchetypeImage({ icon, title, accent="#fbbf24", accent2="#7c3aed", 
     </svg>
   `);
 }
+function svgSafeText(value) {
+  return String(value || "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+function itemRarityPalette(rarity) {
+  return ({
+    common:    { a:"#cbd5e1", b:"#64748b", glow:"rgba(148,163,184,0.32)" },
+    uncommon:  { a:"#34d399", b:"#0ea5e9", glow:"rgba(52,211,153,0.34)" },
+    rare:      { a:"#60a5fa", b:"#7c3aed", glow:"rgba(96,165,250,0.36)" },
+    epic:      { a:"#c084fc", b:"#f472b6", glow:"rgba(192,132,252,0.4)" },
+    legendary: { a:"#fbbf24", b:"#f97316", glow:"rgba(251,191,36,0.42)" },
+    mythic:    { a:"#f0abfc", b:"#fde68a", glow:"rgba(240,171,252,0.48)" },
+  })[String(rarity || "").toLowerCase()] || { a:"#fbbf24", b:"#7c3aed", glow:"rgba(251,191,36,0.34)" };
+}
 function itemImageTheme(item) {
   const key = `${item?.id || ""} ${item?.name || ""}`.toLowerCase();
   const rarityAccent = {
@@ -2878,16 +4233,125 @@ function itemImageTheme(item) {
     accessory:themed({ icon:"💍", title:"Accessorio", bg1:"#2a1d0a", bg2:"#140f09", border:"#b45309" }),
   }[item?.type] || themed({ icon:item?.emoji || "⭐", title:"Oggetto", bg1:"#172033", bg2:"#0b1120", border:"#334155" });
 }
+function getItemAssetBaseId(item) {
+  if(!item) return "";
+  const rawId = item.baseItemId || item.baseId || item.base_id || item.id;
+  return rawId ? getBaseItemId(String(rawId).replace(/[+\-]\d+$/, '')) : "";
+}
+const ITEM_ASSET_VERSION = "equip-v3";
+function makeItemIconImage(item, size=420) {
+  const theme = itemImageTheme(item);
+  const pal = itemRarityPalette(item?.rarity);
+  const label = svgSafeText(itemNameShort(item?.name || theme.title || itemTypeLabel(item?.type), 24));
+  const rarity = svgSafeText(itemRarityLabel(item?.rarity).toUpperCase());
+  const slot = svgSafeText(equipSlotLabel(itemSlot(item) || item?.slot || item?.type));
+  return svgDataUrl(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}">
+      <defs>
+        <radialGradient id="bg" cx="50%" cy="38%" r="72%">
+          <stop offset="0%" stop-color="#344154"/>
+          <stop offset="58%" stop-color="#172033"/>
+          <stop offset="100%" stop-color="#080b12"/>
+        </radialGradient>
+        <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stop-color="${pal.a}"/>
+          <stop offset="100%" stop-color="${pal.b}"/>
+        </linearGradient>
+        <filter id="glow"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <rect x="10" y="10" width="${size-20}" height="${size-20}" rx="34" fill="url(#bg)"/>
+      <rect x="16" y="16" width="${size-32}" height="${size-32}" rx="28" fill="none" stroke="url(#edge)" stroke-width="5"/>
+      <ellipse cx="${size/2}" cy="${size*0.43}" rx="${size*0.32}" ry="${size*0.28}" fill="${pal.a}" opacity="0.13"/>
+      <circle cx="${size/2}" cy="${size*0.42}" r="${size*0.24}" fill="${pal.b}" opacity="0.1" filter="url(#glow)"/>
+      <text x="${size/2}" y="${size*0.48}" text-anchor="middle" dominant-baseline="middle" font-size="${size*0.29}">${theme.icon || item?.emoji || "◆"}</text>
+      <text x="${size/2}" y="${size*0.76}" text-anchor="middle" fill="#f8fafc" font-size="${Math.max(22, size*0.058)}" font-family="Georgia,serif" font-weight="700">${label}</text>
+      <text x="${size/2}" y="${size*0.84}" text-anchor="middle" fill="${pal.a}" font-size="${Math.max(14, size*0.036)}" font-family="Arial,sans-serif" letter-spacing="2">${rarity}</text>
+      <text x="${size/2}" y="${size*0.91}" text-anchor="middle" fill="#94a3b8" font-size="${Math.max(13, size*0.033)}" font-family="Arial,sans-serif">${slot}</text>
+    </svg>
+  `);
+}
+function makeItemWearImage(item) {
+  const pal = itemRarityPalette(item?.rarity);
+  const slot = itemSlot(item);
+  const theme = itemImageTheme(item);
+  const common = `
+    <defs>
+      <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${pal.a}"/><stop offset="100%" stop-color="${pal.b}"/></linearGradient>
+      <filter id="soft"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    </defs>`;
+  const shape = ({
+    head:`<path d="M122 92 C132 56 188 56 198 92 L206 138 C177 126 143 126 114 138 Z" fill="url(#g)" opacity=".9"/><circle cx="160" cy="86" r="16" fill="#f8fafc" opacity=".2"/>`,
+    chest:`<path d="M98 178 C116 148 204 148 222 178 L206 326 C178 346 142 346 114 326 Z" fill="url(#g)" opacity=".82"/><path d="M132 168 L160 218 L188 168" fill="none" stroke="#f8fafc" stroke-width="5" opacity=".25"/>`,
+    legs:`<path d="M122 318 L154 318 L148 500 L112 500 Z M166 318 L198 318 L208 500 L172 500 Z" fill="url(#g)" opacity=".82"/>`,
+    boots:`<path d="M102 496 L150 496 L146 558 L82 558 C88 534 98 520 102 496 Z M170 496 L218 496 C222 520 232 534 238 558 L174 558 Z" fill="url(#g)" opacity=".9"/>`,
+    gloves:`<path d="M60 244 L104 262 L94 320 L48 306 Z M216 262 L260 244 L272 306 L226 320 Z" fill="url(#g)" opacity=".88"/>`,
+    cloak:`<path d="M96 122 C132 148 188 148 224 122 L256 548 C214 584 106 584 64 548 Z" fill="url(#g)" opacity=".48"/><path d="M96 122 C132 148 188 148 224 122" fill="none" stroke="${pal.a}" stroke-width="5" opacity=".7"/>`,
+    weapon:`<path d="M244 112 L262 104 L142 446 L124 454 Z" fill="url(#g)" opacity=".95"/><path d="M104 478 L160 424" stroke="${pal.a}" stroke-width="16" stroke-linecap="round"/><text x="248" y="118" font-size="34">${theme.icon || "⚔️"}</text>`,
+    offhand:`<path d="M230 214 C278 228 284 318 238 370 C194 318 188 228 230 214 Z" fill="url(#g)" opacity=".84"/><path d="M230 236 L230 342" stroke="#f8fafc" stroke-width="5" opacity=".25"/>`,
+    amulet:`<path d="M128 146 C142 176 178 176 192 146" fill="none" stroke="${pal.a}" stroke-width="7" opacity=".85"/><circle cx="160" cy="188" r="18" fill="url(#g)" opacity=".95"/>`,
+    ring1:`<circle cx="76" cy="282" r="14" fill="none" stroke="${pal.a}" stroke-width="7" opacity=".9"/>`,
+    ring2:`<circle cx="244" cy="282" r="14" fill="none" stroke="${pal.a}" stroke-width="7" opacity=".9"/>`,
+  })[slot] || `<text x="160" y="320" text-anchor="middle" font-size="72">${theme.icon || "◆"}</text>`;
+  return svgDataUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 640">${common}<g filter="url(#soft)">${shape}</g></svg>`);
+}
 function getItemImage(item) {
   if(!item) return "";
-  if(item.image) return item.image;
-  if(item.image_url) return item.image_url;
-  // Strip enhancement suffixes and try the base item PNG.
-  const rawId = item.baseItemId || item.baseId || item.base_id || item.id;
-  const baseId = rawId ? getBaseItemId(String(rawId).replace(/[+\-]\d+$/, '')) : null;
-  if(baseId) return `/assets/items/${baseId}.png`;
-  const theme = itemImageTheme(item);
-  return makeArchetypeImage({ ...theme, title:theme.title || itemTypeLabel(item.type), subtitle:itemRarityLabel(item.rarity) });
+  if(item.iconImage) return item.iconImage;
+  if(item.icon_image) return item.icon_image;
+  if(item.image && item.keepImage) return item.image;
+  if(item.image_url && item.keepImage) return item.image_url;
+  const baseId = getItemAssetBaseId(item);
+  if(baseId) return `/assets/items-v2/icons/${baseId}.svg?v=${ITEM_ASSET_VERSION}`;
+  return makeItemIconImage(item);
+}
+function getItemLargeImage(item) {
+  if(!item) return "";
+  return item.largeImage || item.large_image || getItemImage(item);
+}
+function getItemWearImage(item) {
+  if(!item) return "";
+  if(item.wearImage) return item.wearImage;
+  if(item.wear_image) return item.wear_image;
+  if(item.equipSprite) return `/assets/equip/${item.equipSprite}.png`;
+  const baseId = getItemAssetBaseId(item);
+  if(baseId) return `/assets/items-v2/wear/${baseId}.svg?v=${ITEM_ASSET_VERSION}`;
+  return makeItemWearImage(item);
+}
+function itemNameShort(name, max=22) {
+  const s = String(name || "");
+  return s.length > max ? `${s.slice(0, Math.max(0, max - 1))}…` : s;
+}
+function getCosmeticImage(cosmetic) {
+  if(!cosmetic) return "";
+  if(cosmetic.image) return cosmetic.image;
+  if(cosmetic.image_url) return cosmetic.image_url;
+  if(cosmetic.cardId) return `/assets/items-v2/cosmetics/icons/${cosmetic.cardId}.svg?v=${ITEM_ASSET_VERSION}`;
+  if(cosmetic.id) return `/assets/items-v2/cosmetics/icons/${cosmetic.id}.svg?v=${ITEM_ASSET_VERSION}`;
+  return "";
+}
+function makeCosmeticWearImage(cosmetic) {
+  const pal = itemRarityPalette(cosmetic?.rarity);
+  const shape = {
+    aura:`<ellipse cx="160" cy="318" rx="112" ry="238" fill="none" stroke="url(#g)" stroke-width="13" opacity=".52"/><ellipse cx="160" cy="318" rx="82" ry="190" fill="none" stroke="${pal.a}" stroke-width="5" opacity=".36"/><path d="M72 230 C112 168 208 168 248 230 M70 408 C116 478 204 478 250 408" fill="none" stroke="${pal.b}" stroke-width="8" opacity=".28"/>`,
+    mascot:`<g transform="translate(218 410)"><ellipse cx="28" cy="116" rx="34" ry="9" fill="#020617" opacity=".38"/><circle cx="28" cy="46" r="28" fill="url(#g)" opacity=".9"/><circle cx="18" cy="39" r="4" fill="#020617" opacity=".75"/><circle cx="38" cy="39" r="4" fill="#020617" opacity=".75"/><path d="M17 57 C24 65 34 65 41 57" fill="none" stroke="#020617" stroke-width="4" stroke-linecap="round" opacity=".58"/><path d="M0 46 C-22 30 -20 8 2 14" fill="none" stroke="${pal.a}" stroke-width="8" stroke-linecap="round" opacity=".72"/><path d="M56 46 C80 30 78 8 54 14" fill="none" stroke="${pal.b}" stroke-width="8" stroke-linecap="round" opacity=".72"/></g>`,
+    default:`<circle cx="160" cy="178" r="34" fill="url(#g)" opacity=".8"/><path d="M118 214 C142 242 178 242 202 214" fill="none" stroke="${pal.a}" stroke-width="8" opacity=".62"/>`,
+  }[cosmetic?.type] || `<circle cx="160" cy="178" r="34" fill="url(#g)" opacity=".8"/>`;
+  return svgDataUrl(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 640">
+      <defs>
+        <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${pal.a}"/><stop offset="100%" stop-color="${pal.b}"/></linearGradient>
+        <filter id="soft"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      </defs>
+      <g filter="url(#soft)">${shape}</g>
+    </svg>
+  `);
+}
+function getCosmeticWearImage(cosmetic) {
+  if(!cosmetic || !cosmeticEquipSlot(cosmetic)) return "";
+  if(cosmetic.wearImage) return cosmetic.wearImage;
+  if(cosmetic.wear_image) return cosmetic.wear_image;
+  const id = cosmetic.cardId || cosmetic.id;
+  return id ? `/assets/items-v2/cosmetics/wear/${id}.svg?v=${ITEM_ASSET_VERSION}` : makeCosmeticWearImage(cosmetic);
 }
 function ItemImg({ item, size=56, style={} }) {
   const [useFallback, setUseFallback] = React.useState(false);
@@ -3025,7 +4489,7 @@ function hasGeneratedAppearance(player) {
   if(!player?.portrait_face) return false;
   const cls = CLASSES[player.class || "warrior"];
   const race = RACES[player.race || "human"];
-  if(cls?._zodar || race?._zodar || race?._secret) return false;
+  if(cls?._zodar || race?._zodar) return false;
   return true;
 }
 
@@ -3090,12 +4554,56 @@ function CharacterScarOverlay({ variant = 0 }) {
   );
 }
 
-function CharacterPortrait({ player, race, gender, face=1, eyes=1, scar=0, size=160, radius="50%", style={}, contentStyle={} }) {
+function CharacterHairOverlay({ variant = 0, gender = "male" }) {
+  if(!variant) return null;
+  const colors = {
+    1:"#1f2937",
+    2:"#92400e",
+    3:"#facc15",
+  };
+  const color = colors[variant] || colors[1];
+  const isFemale = gender === "female";
+  return (
+    <svg viewBox="0 0 100 100" aria-hidden="true" style={{ position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none", opacity:0.78, mixBlendMode:"multiply" }}>
+      {isFemale ? (
+        <>
+          <path d="M26 42 C26 20 74 20 74 42 C77 58 69 74 61 82 C66 58 60 39 50 34 C40 39 34 58 39 82 C31 74 23 58 26 42Z" fill={color} opacity="0.82" />
+          <path d="M30 39 C38 22 63 22 70 39 C58 34 43 34 30 39Z" fill={color} />
+        </>
+      ) : (
+        <>
+          <path d="M29 39 C31 22 69 22 72 39 C62 32 42 32 29 39Z" fill={color} />
+          <path d="M31 38 C39 28 51 25 69 35 C58 33 47 34 37 41Z" fill="#000" opacity="0.18" />
+        </>
+      )}
+    </svg>
+  );
+}
+
+function CharacterBeardOverlay({ variant = 0 }) {
+  if(!variant) return null;
+  const colors = { 1:"#2f2418", 2:"#7c2d12" };
+  const color = colors[variant] || colors[1];
+  return (
+    <svg viewBox="0 0 100 100" aria-hidden="true" style={{ position:"absolute", inset:0, width:"100%", height:"100%", pointerEvents:"none", opacity:0.7, mixBlendMode:"multiply" }}>
+      {variant === 1 ? (
+        <path d="M39 58 C43 67 57 67 61 58 C61 73 54 81 50 83 C46 81 39 73 39 58Z" fill={color} />
+      ) : (
+        <path d="M35 56 C41 72 59 72 65 56 C65 77 55 88 50 90 C45 88 35 77 35 56Z" fill={color} />
+      )}
+    </svg>
+  );
+}
+
+function CharacterPortrait({ player, race, gender, cls, face=1, eyes=1, scar=0, hair=0, beard=0, size=160, radius="50%", style={}, contentStyle={} }) {
+  const finalClass = (player?.class || cls || "warrior").toLowerCase();
   const finalRace = (player?.race || race || "human").toLowerCase();
   const finalGender = player?.gender || gender || getStoredCharacterGender(player?.id, "male");
   const finalFace = Number(player?.portrait_face || face || 1);
   const finalEyes = Number(player?.portrait_eyes || eyes || 1);
   const finalScar = Number(player?.portrait_scar || scar || 0);
+  const finalHair = Number(player?.portrait_hair || hair || 0);
+  const finalBeard = finalGender === "male" ? Number(player?.portrait_beard || beard || 0) : 0;
   const baseSrc = `/assets/portraits/${finalRace}_${finalGender}_face_${finalFace}.png`;
   const generatedFaceMode = !player || hasGeneratedAppearance(player);
   return (
@@ -3113,11 +4621,16 @@ function CharacterPortrait({ player, race, gender, face=1, eyes=1, scar=0, size=
           src={player?.portrait || player?.image || baseSrc}
           alt={player?.name || "Ritratto"}
           onError={e=>{
-            e.currentTarget.onerror = null;
+            e.currentTarget.onerror = ev => {
+              ev.currentTarget.onerror = null;
+              ev.currentTarget.src = getGeneratedPortrait(finalClass, finalRace, finalGender, finalFace);
+            };
             e.currentTarget.src = getRacePortraitPath(finalRace, finalGender);
           }}
           style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", display:"block" }}
         />
+        {generatedFaceMode && !player?.portrait && !player?.image && <CharacterHairOverlay variant={finalHair} gender={finalGender} />}
+        {generatedFaceMode && !player?.portrait && !player?.image && <CharacterBeardOverlay variant={finalBeard} />}
         {generatedFaceMode && !player?.portrait && !player?.image && <CharacterEyesOverlay variant={finalEyes} />}
         {generatedFaceMode && !player?.portrait && !player?.image && <CharacterScarOverlay variant={finalScar} />}
       </div>
@@ -3164,9 +4677,34 @@ const MANNEQUIN_HEAD_FRAME = {
     female: { left:50, top:10.3, width:31.0, height:19.5, scale:1.35, y:9, radius:"42% 42% 48% 48%" },
   },
 };
+const MANNEQUIN_PROFILE_HEAD_FRAME = {
+  normal: MANNEQUIN_HEAD_FRAME.human,
+  slender: MANNEQUIN_HEAD_FRAME.elf,
+  stocky: MANNEQUIN_HEAD_FRAME.dwarf,
+  small: MANNEQUIN_HEAD_FRAME.gnome,
+  massive: {
+    male: { left:50, top:8.8, width:34.0, height:20.5, scale:1.34, y:8, radius:"44% 44% 46% 46%" },
+    female: { left:50, top:8.9, width:32.5, height:19.8, scale:1.36, y:8, radius:"44% 44% 46% 46%" },
+  },
+  draconic: MANNEQUIN_HEAD_FRAME.dragonborn,
+  horned: MANNEQUIN_HEAD_FRAME.tiefling,
+  winged: MANNEQUIN_HEAD_FRAME.elf,
+  aquatic: MANNEQUIN_HEAD_FRAME.elf,
+  ethereal: MANNEQUIN_HEAD_FRAME.elf,
+  construct: MANNEQUIN_HEAD_FRAME.human,
+};
 
 function getMannequinHeadFrame(race, gender) {
-  return MANNEQUIN_HEAD_FRAME[race]?.[gender] || MANNEQUIN_HEAD_FRAME[race]?.male || MANNEQUIN_HEAD_FRAME.default;
+  const key = String(race || "human").toLowerCase();
+  const baseRace = getEquipBaseRace(key);
+  const profile = getMannequinProfile(key);
+  return MANNEQUIN_HEAD_FRAME[key]?.[gender]
+    || MANNEQUIN_HEAD_FRAME[key]?.male
+    || MANNEQUIN_HEAD_FRAME[baseRace]?.[gender]
+    || MANNEQUIN_HEAD_FRAME[baseRace]?.male
+    || MANNEQUIN_PROFILE_HEAD_FRAME[profile]?.[gender]
+    || MANNEQUIN_PROFILE_HEAD_FRAME[profile]?.male
+    || MANNEQUIN_HEAD_FRAME.default;
 }
 
 function MannequinHeadOverlay({ me }) {
@@ -3184,7 +4722,7 @@ function MannequinHeadOverlay({ me }) {
       transform:"translate(-50%,-50%)",
       borderRadius:frame.radius,
       overflow:"hidden",
-      zIndex:2,
+      zIndex:MANNEQUIN_LAYER_ORDER.headWear - 1,
       pointerEvents:"none",
       filter:"brightness(1.08) contrast(1.03)",
       boxShadow:"0 0 0 1px rgba(0,0,0,0.12)",
@@ -3810,6 +5348,32 @@ async function dbSaveWorldEvent(event) {
   const { error } = await supabase.from("party_state").upsert({ party_code: WORLD_EVENT_CODE, combat: { event }, updated_at: new Date().toISOString() });
   if(error) throw error;
 }
+async function dbGetHallOfEchoes() {
+  const { data } = await supabase.from("party_state").select("combat").eq("party_code", HALL_OF_ECHOES_CODE).maybeSingle();
+  return data?.combat?.entries || [];
+}
+async function dbSaveHallOfEchoes(entries) {
+  const { error } = await supabase.from("party_state").upsert({ party_code: HALL_OF_ECHOES_CODE, combat: { entries }, updated_at: new Date().toISOString() });
+  if(error) throw error;
+}
+async function dbGetCardCollectorLeaderboard() {
+  const { data } = await supabase.from("party_state").select("combat").eq("party_code", CARD_COLLECTOR_LEADERBOARD_CODE).maybeSingle();
+  return data?.combat?.entries || [];
+}
+async function dbPublishCardCollectorSnapshot(snapshot) {
+  if(!snapshot?.playerId) return;
+  const fresh = await dbGetCardCollectorLeaderboard().catch(() => []);
+  const nextEntries = [
+    snapshot,
+    ...(fresh || []).filter(entry => entry?.playerId !== snapshot.playerId),
+  ].sort((a,b) => cardCollectorScore(b) - cardCollectorScore(a)).slice(0, 500);
+  const { error } = await supabase.from("party_state").upsert({
+    party_code:CARD_COLLECTOR_LEADERBOARD_CODE,
+    combat:{ entries:nextEntries, updatedAt:new Date().toISOString() },
+    updated_at:new Date().toISOString(),
+  }, { onConflict:"party_code" });
+  if(error) throw error;
+}
 async function dbGetGuildWarehouse(guildId) {
   const virtualId = "guild_" + guildId;
   const rows = await dbGetPlayerItems(virtualId);
@@ -4407,7 +5971,7 @@ function LandingHeroCard({ character, onPlay, onDelete }) {
       <div style={{ position:"relative", zIndex:1, padding:"1rem", display:"flex", flexDirection:"column", minHeight:310 }}>
         <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", gap:10, marginBottom:12 }}>
           <LandingStatPill tone={dead ? "red" : "gold"}>{status}</LandingStatPill>
-          <LandingStatPill tone="violet">Lv. {character.level || 1}</LandingStatPill>
+          <LandingStatPill tone="violet">Lv. {displayLevel(character)}</LandingStatPill>
         </div>
 
         <div style={{ display:"grid", placeItems:"center", margin:"0.2rem 0 0.9rem" }}>
@@ -4740,8 +6304,85 @@ function CreateZodar({ setScreen, goGame, authUser }) {
 /* ----------------------------------------------
    CREATE CHARACTER
 ---------------------------------------------- */
+function CharacterChoicePreview({ kind, itemKey, value, selected=false, unlocked=true, displayName, gender="male" }) {
+  if(!itemKey || !value) return null;
+  const isClass = kind === "classes";
+  const accent = value.color || "#a78bfa";
+  const art = getCharacterChoiceArt(kind, itemKey, value, gender);
+  const feature = isClass ? CLASS_FEATURES[itemKey] : RACE_FEATURES[itemKey];
+  const spellBonus = isClass ? getClassSpellBonus(itemKey) : null;
+  const stats = isClass
+    ? [
+      ["HP", value.hp],
+      ["ATK", value.atk],
+      ["DEF", value.def],
+      ["MAG", value.mag],
+      ["INIT", value.init],
+    ]
+    : [
+      ["HP", value.hpB],
+      ["ATK", value.atkB],
+      ["DEF", value.defB],
+      ["MAG", value.magB],
+      ["INIT", value.initB],
+    ];
+  return (
+    <aside style={{ position:"sticky", top:12, alignSelf:"start", minWidth:0, background:"linear-gradient(180deg,rgba(15,23,42,0.92),rgba(2,6,23,0.86))", border:`1px solid ${unlocked ? accent : "#334155"}`, borderRadius:10, overflow:"hidden", boxShadow:"0 24px 70px rgba(0,0,0,0.36)" }}>
+      <div style={{ position:"relative", aspectRatio:"4/5", background:"rgba(2,6,23,0.85)", overflow:"hidden" }}>
+        <img
+          src={art}
+          alt={displayName}
+          onError={e => {
+            e.currentTarget.onerror = null;
+            e.currentTarget.src = makeCharacterChoiceFallbackArt(kind, itemKey, value);
+          }}
+          style={{ width:"100%", height:"100%", objectFit:"cover", display:"block", filter:unlocked ? "none" : "grayscale(1) brightness(0.45)" }}
+        />
+        <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg,transparent 45%,rgba(2,6,23,0.92) 100%)" }} />
+        <div style={{ position:"absolute", left:14, right:14, bottom:12 }}>
+          <div style={{ color:accent, fontSize:"0.68rem", fontWeight:900, textTransform:"uppercase", letterSpacing:"0.1em" }}>{isClass ? "Classe" : "Razza"} {value._secret ? "segreta" : "base"}</div>
+          <div style={{ color:"#f8fafc", fontFamily:"'Cinzel Decorative',serif", fontWeight:800, fontSize:"1.18rem", lineHeight:1.15, textShadow:"0 2px 14px rgba(0,0,0,0.8)" }}>{value.emoji} {displayName}</div>
+        </div>
+      </div>
+      <div style={{ padding:"0.9rem", display:"grid", gap:10 }}>
+        <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+          <span style={{ color:selected ? "#fbbf24" : "#94a3b8", border:`1px solid ${selected ? "rgba(251,191,36,0.38)" : "rgba(148,163,184,0.2)"}`, background:selected ? "rgba(120,53,15,0.22)" : "rgba(15,23,42,0.72)", borderRadius:999, padding:"3px 9px", fontSize:"0.68rem", fontWeight:800 }}>{selected ? "Selezionata" : "Anteprima"}</span>
+          <span style={{ color:unlocked ? "#86efac" : "#fcd34d", border:`1px solid ${unlocked ? "rgba(134,239,172,0.32)" : "rgba(252,211,77,0.32)"}`, background:unlocked ? "rgba(20,83,45,0.18)" : "rgba(120,53,15,0.18)", borderRadius:999, padding:"3px 9px", fontSize:"0.68rem", fontWeight:800 }}>{unlocked ? "Sbloccata" : "Bloccata"}</span>
+        </div>
+        <p style={{ color:"#cbd5e1", margin:0, fontSize:"0.82rem", lineHeight:1.55 }}>{value.desc || "Una scelta di personaggio del mondo di Zodar."}</p>
+        <div style={{ display:"grid", gridTemplateColumns:"repeat(5,1fr)", gap:6 }}>
+          {stats.map(([label, stat]) => (
+            <div key={label} style={{ textAlign:"center", border:"1px solid rgba(148,163,184,0.16)", background:"rgba(2,6,23,0.58)", borderRadius:7, padding:"0.45rem 0.25rem" }}>
+              <div style={{ color:"#64748b", fontSize:"0.58rem", fontWeight:900 }}>{label}</div>
+              <div style={{ color:Number(stat) < 0 ? "#fca5a5" : "#e2e8f0", fontSize:"0.78rem", fontWeight:900 }}>{Number(stat) > 0 && !isClass ? "+" : ""}{stat || 0}</div>
+            </div>
+          ))}
+        </div>
+        {feature && (
+          <div style={{ border:"1px solid rgba(167,139,250,0.28)", background:"rgba(76,29,149,0.16)", borderRadius:8, padding:"0.7rem" }}>
+            <div style={{ color:"#c4b5fd", fontFamily:"'Cinzel',serif", fontWeight:900, fontSize:"0.78rem" }}>{feature.name}</div>
+            <div style={{ color:"#cbd5e1", fontSize:"0.74rem", lineHeight:1.45, marginTop:3 }}>{feature.desc}</div>
+          </div>
+        )}
+        {spellBonus && (
+          <div style={{ border:"1px solid rgba(251,191,36,0.28)", background:"rgba(120,53,15,0.16)", borderRadius:8, padding:"0.7rem" }}>
+            <div style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontWeight:900, fontSize:"0.78rem" }}>{spellBonus.title}</div>
+            <div style={{ color:"#fde68a", fontSize:"0.74rem", lineHeight:1.45, marginTop:3 }}>{spellBonus.lines[0]}</div>
+          </div>
+        )}
+        {!unlocked && (
+          <div style={{ color:"#fcd34d", fontSize:"0.74rem", lineHeight:1.45, border:"1px dashed rgba(252,211,77,0.28)", borderRadius:8, padding:"0.65rem", background:"rgba(120,53,15,0.12)" }}>
+            Richiede carta sblocco o password evento/test.
+          </div>
+        )}
+      </div>
+    </aside>
+  );
+}
+
 function CreateChar({ setScreen, goGame, authUser }) {
   const { t, className, raceName } = useI18n();
+  const isMobile = useMobile();
   const [name, setName] = useState("");
   const [realPlayerName, setRealPlayerName] = useState("");
   const [cls,  setCls]  = useState("warrior");
@@ -4753,10 +6394,55 @@ function CreateChar({ setScreen, goGame, authUser }) {
   const [secretInput, setSecretInput] = useState("");
   const [secretUnlocked, setSecretUnlocked] = useState(() => localStorage.getItem(SECRET_UNLOCK_KEY) === "1");
   const [secretError, setSecretError] = useState(false);
+  const [cardUnlocks, setCardUnlocks] = useState(() => getStoredCharacterCardUnlocks(authUser?.id));
+  const [recentCardUnlocks, setRecentCardUnlocks] = useState(() => recentCharacterUnlocksFromVault(getStoredCardVault(authUser?.id)));
+  const [classPreviewKey, setClassPreviewKey] = useState("warrior");
+  const [racePreviewKey, setRacePreviewKey] = useState("human");
   const [faceVariant, setFaceVariant] = useState(1);
+  const [hairVariant, setHairVariant] = useState(1);
   const [eyesVariant, setEyesVariant] = useState(1);
   const [scarVariant, setScarVariant] = useState(0); // 0 = nessuna
+  const [beardVariant, setBeardVariant] = useState(0);
   const c = CLASSES[cls]; const r = RACES[race];
+
+  useEffect(() => {
+    let cancelled = false;
+    async function loadCardUnlocks() {
+      let merged = getStoredCharacterCardUnlocks(authUser?.id);
+      let recent = recentCharacterUnlocksFromVault(getStoredCardVault(authUser?.id));
+      if(authUser?.id) {
+        try {
+          const characters = await dbGetAccountCharacters(authUser.id);
+          for(const character of characters || []) {
+            const characterVault = getStoredCardVault(character.id);
+            merged = mergeCharacterCardUnlocks(merged, characterUnlocksFromCardIds(characterCardIdsFromVault(characterVault)));
+            recent = mergeCharacterCardUnlocks(recent, recentCharacterUnlocksFromVault(characterVault));
+          }
+          saveStoredCharacterCardUnlocks(authUser.id, merged);
+        } catch(e) {
+          console.warn("Impossibile sincronizzare sblocchi carte account:", e);
+        }
+      }
+      if(!cancelled) {
+        setCardUnlocks(merged);
+        setRecentCardUnlocks(recent);
+      }
+    }
+    loadCardUnlocks();
+    return () => { cancelled = true; };
+  }, [authUser?.id]);
+
+  function isCharacterOptionUnlocked(kind, key, value) {
+    if(!value?._secret) return true;
+    if(value._cardUnlock) return secretUnlocked || (cardUnlocks[kind] || []).includes(key);
+    return secretUnlocked;
+  }
+
+  function availableCharacterEntries(source, kind) {
+    return Object.entries(source)
+      .filter(([, value]) => !value._zodar)
+      .map(([key, value]) => ({ key, value, unlocked:isCharacterOptionUnlocked(kind, key, value) }));
+  }
 
   function tryUnlock() {
     if (secretInput.trim().toLowerCase() === SECRET_PASSWORD) {
@@ -4772,6 +6458,10 @@ function CreateChar({ setScreen, goGame, authUser }) {
 
   async function create() {
     if(!name.trim() || !realPlayerName.trim() || loading) return;
+    if(!isCharacterOptionUnlocked("classes", cls, c) || !isCharacterOptionUnlocked("races", race, r)) {
+      alert("Questa classe o razza richiede prima la relativa carta sblocco oppure la password evento/test.");
+      return;
+    }
     setLoading(true);
     try {
       debugCharacterFlow("create_start", { accountId: authUser?.id || null, name: name.trim(), realPlayerName: realPlayerName.trim(), class: cls, race });
@@ -4785,10 +6475,10 @@ function CreateChar({ setScreen, goGame, authUser }) {
         mag:c.mag+r.magB, init:c.init+r.initB,
         xp:0, level:1, gold:20, dead:false,
         portrait_face: faceVariant,
-        portrait_hair: 0,
+        portrait_hair: hairVariant,
         portrait_eyes: eyesVariant,
         portrait_scar: scarVariant,
-        portrait_beard: 0,
+        portrait_beard: gender === "male" ? beardVariant : 0,
       };
       debugCharacterFlow("create_player_generated", player);
       debugCharacterFlow("save_attempt", { id: player.id, accountId: player.accountId, partyCode: player.partyCode });
@@ -4836,8 +6526,12 @@ function CreateChar({ setScreen, goGame, authUser }) {
 
   const canContinueFromName = name.trim() && realPlayerName.trim();
   const steps = [t("create.steps.names"),t("create.steps.class"),t("create.steps.raceGender"),t("create.steps.appearance"),t("create.steps.party")];
+  const classPreviewValue = CLASSES[classPreviewKey] || CLASSES[cls] || CLASSES.warrior;
+  const racePreviewValue = RACES[racePreviewKey] || RACES[race] || RACES.human;
+  const classPreviewUnlocked = isCharacterOptionUnlocked("classes", classPreviewKey, classPreviewValue);
+  const racePreviewUnlocked = isCharacterOptionUnlocked("races", racePreviewKey, racePreviewValue);
   return (
-    <div style={{ position:"relative", zIndex:1, maxWidth:620, margin:"0 auto", padding:"1.5rem 1rem", minHeight:"100vh" }}>
+    <div style={{ position:"relative", zIndex:1, maxWidth:(step === 1 || step === 2) ? 1160 : 620, margin:"0 auto", padding:"1.5rem 1rem", minHeight:"100vh" }}>
       <div style={{ display:"flex", alignItems:"center", gap:8, marginBottom:"1.5rem" }}>
         <button onClick={()=>setScreen("landing")} style={backBtnStyle}>← {t("common.back")}</button>
         <h2 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.2rem", margin:0 }}>{t("create.title")}</h2>
@@ -4864,15 +6558,33 @@ function CreateChar({ setScreen, goGame, authUser }) {
       )}
       {step===1 && (
         <Card title={`⚔️ ${t("create.classTitle")}`}>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))", gap:8 }}>
-            {Object.entries(CLASSES).filter(([,v]) => !v._zodar && (!v._secret || secretUnlocked)).map(([k,v])=>(
-              <button key={k} onClick={()=>setCls(k)} style={{ padding:"0.8rem 0.5rem", background:cls===k?`${v.color}30`:"rgba(255,255,255,0.03)", border:`2px solid ${cls===k?v.color:v._secret?"#4b0082":"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:4, position:"relative" }}>
-                {v._secret && <span style={{ position:"absolute", top:4, right:4, fontSize:"0.5rem", color:"#a78bfa", fontFamily:"'Cinzel',serif", letterSpacing:"0.05em" }}>✦ {t("create.secret")}</span>}
-                <span style={{ fontSize:"1.8rem", filter:v._secret?"drop-shadow(0 0 6px #a78bfa)":"none" }}>{v.emoji}</span>
-                <strong style={{ fontFamily:"'Cinzel',serif", color:cls===k?v.color:v._secret?"#c4b5fd":"#d1d5db", fontSize:"0.82rem" }}>{className(k, v.name)}</strong>
-                {cls===k && <div style={{ fontSize:"0.62rem", color:"#9ca3af", textAlign:"center" }}>❤️{v.hp} ⚔️{v.atk} 🛡️{v.def} ✨{v.mag}</div>}
-              </button>
-            ))}
+          <div style={{ display:"grid", gridTemplateColumns:isMobile ? "1fr" : "minmax(0,1fr) minmax(280px,340px)", gap:14, alignItems:"start" }}>
+            <div>
+              <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(140px,1fr))", gap:8 }}>
+                {availableCharacterEntries(CLASSES, "classes").map(({ key:k, value:v, unlocked })=>{
+                  const freshUnlock = unlocked && (recentCardUnlocks.classes || []).includes(k);
+                  return (
+                  <button key={k} onClick={()=>{ setClassPreviewKey(k); if(unlocked) setCls(k); }} style={{ padding:"0.8rem 0.5rem", background:cls===k?`${v.color}30`:classPreviewKey===k?"rgba(167,139,250,0.12)":freshUnlock?"rgba(251,191,36,0.12)":unlocked?"rgba(255,255,255,0.03)":"rgba(2,6,23,0.55)", border:`2px solid ${cls===k?v.color:classPreviewKey===k?"#a78bfa":freshUnlock?"#fbbf24":v._cardUnlock&&!unlocked?"#334155":v._secret?"#4b0082":"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:4, position:"relative", opacity:unlocked?1:0.72, overflow:"hidden", boxShadow:freshUnlock?"0 0 18px rgba(251,191,36,0.22)":"none" }}>
+                    {v._secret && <span style={{ position:"absolute", top:4, right:4, fontSize:"0.5rem", color:unlocked?"#a78bfa":"#64748b", fontFamily:"'Cinzel',serif", letterSpacing:"0.05em" }}>{v._cardUnlock&&!unlocked?"🔒 CARTA/PASS":`✦ ${t("create.secret")}`}</span>}
+                    {freshUnlock && <span style={{ position:"absolute", top:4, left:4, fontSize:"0.5rem", color:"#fbbf24", fontFamily:"'Cinzel',serif", fontWeight:900, letterSpacing:"0.05em" }}>NUOVA</span>}
+                    <span style={{ fontSize:"1.8rem", filter:unlocked&&v._secret?"drop-shadow(0 0 6px #a78bfa)":!unlocked?"grayscale(1) brightness(0.45)":"none" }}>{unlocked ? v.emoji : "🔒"}</span>
+                    <strong style={{ fontFamily:"'Cinzel',serif", color:unlocked?(cls===k?v.color:v._secret?"#c4b5fd":"#d1d5db"):"#64748b", fontSize:"0.82rem" }}>{className(k, v.name)}</strong>
+                    {unlocked && cls===k && <div style={{ fontSize:"0.62rem", color:"#9ca3af", textAlign:"center" }}>❤️{v.hp} ⚔️{v.atk} 🛡️{v.def} ✨{v.mag}</div>}
+                    {unlocked && cls===k && CLASS_FEATURES[k] && <div style={{ fontSize:"0.58rem", color:"#c4b5fd", textAlign:"center", lineHeight:1.25 }}>{CLASS_FEATURES[k].name}</div>}
+                    {!unlocked && v._cardUnlock && <div style={{ fontSize:"0.58rem", color:"#94a3b8", textAlign:"center", lineHeight:1.25 }}>Carta sblocco o password</div>}
+                  </button>
+                )})}
+              </div>
+            </div>
+            <CharacterChoicePreview
+              kind="classes"
+              itemKey={classPreviewKey}
+              value={classPreviewValue}
+              selected={cls === classPreviewKey}
+              unlocked={classPreviewUnlocked}
+              displayName={className(classPreviewKey, classPreviewValue.name)}
+              gender={gender}
+            />
           </div>
           {!secretUnlocked && (
             <div style={{ marginTop:"1rem", padding:"0.8rem", background:"rgba(109,40,217,0.08)", border:"1px solid #3b1f6e", borderRadius:8 }}>
@@ -4893,8 +6605,11 @@ function CreateChar({ setScreen, goGame, authUser }) {
             </div>
           )}
           {secretUnlocked && (
-            <div style={{ marginTop:"0.5rem", color:"#a78bfa", fontSize:"0.7rem", fontFamily:"'Cinzel',serif" }}>✦ {t("create.secretUnlocked")}</div>
+            <div style={{ marginTop:"0.5rem", color:"#a78bfa", fontSize:"0.7rem", fontFamily:"'Cinzel',serif" }}>✦ {t("create.secretUnlocked")} · classi e razze da carta abilitate per test/eventi</div>
           )}
+          <div style={{ marginTop:"0.5rem", color:"#94a3b8", fontSize:"0.7rem", lineHeight:1.45 }}>
+            Classi da carte sbloccate: {(cardUnlocks.classes || []).length}/{Object.keys(CHARACTER_CARD_UNLOCKS.classes).length}
+          </div>
           <div style={{ display:"flex", gap:8, marginTop:"1rem" }}>
             <SmallBtn onClick={()=>setStep(0)}>← {t("common.back")}</SmallBtn>
             <BigBtn onClick={()=>setStep(2)} gold>{t("common.next")} →</BigBtn>
@@ -4913,18 +6628,37 @@ function CreateChar({ setScreen, goGame, authUser }) {
               <button onClick={()=>setGender("female")} style={{ flex:1, padding:"0.8rem", background:gender==="female"?"rgba(236,72,153,0.3)":"rgba(255,255,255,0.03)", border:`2px solid ${gender==="female"?"#f472b6":"#1f2937"}`, borderRadius:6, cursor:"pointer", color:gender==="female"?"#fbcfe8":"#9ca3af", fontFamily:"'Cinzel',serif" }}>♀️ {t("create.female")}</button>
             </div>
           )}
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))", gap:8 }}>
-            {Object.entries(RACES).filter(([,v]) => !v._zodar && (!v._secret || secretUnlocked)).map(([k,v])=>(
-              <button key={k} onClick={()=>{ setRace(k); if(v._femaleOnly) setGender("female"); }} style={{ padding:"0.7rem 0.4rem", background:race===k?`rgba(109,40,217,0.3)`:"rgba(255,255,255,0.03)", border:`2px solid ${race===k?"#a78bfa":v._secret?"#4b0082":"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:3, position:"relative" }}>
-                {v._secret && <span style={{ position:"absolute", top:3, right:3, fontSize:"0.45rem", color:"#a78bfa", fontFamily:"'Cinzel',serif" }}>✦</span>}
-                {v._femaleOnly && <span style={{ position:"absolute", top:3, left:3, fontSize:"0.45rem", color:"#f472b6" }}>♀</span>}
-                <span style={{ fontSize:"1.5rem", filter:v._secret?"drop-shadow(0 0 5px #a78bfa)":"none" }}>{v.emoji}</span>
-                <strong style={{ fontFamily:"'Cinzel',serif", color:v._secret?"#c4b5fd":"#d1d5db", fontSize:"0.78rem" }}>{raceName(k, v.name)}</strong>
-                {race===k && <small style={{ fontSize:"0.6rem", color:"#a78bfa", textAlign:"center", lineHeight:1.3 }}>
-                  {[v.hpB&&`+${v.hpB}HP`,v.atkB&&`+${v.atkB}ATK`,v.defB&&`+${v.defB}DEF`,v.magB&&`+${v.magB}MAG`].filter(Boolean).join(" ")||t("create.versatile")}
-                </small>}
-              </button>
-            ))}
+          <div style={{ display:"grid", gridTemplateColumns:isMobile ? "1fr" : "minmax(0,1fr) minmax(280px,340px)", gap:14, alignItems:"start" }}>
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(120px,1fr))", gap:8 }}>
+              {availableCharacterEntries(RACES, "races").map(({ key:k, value:v, unlocked })=>{
+                const freshUnlock = unlocked && (recentCardUnlocks.races || []).includes(k);
+                return (
+                <button key={k} onClick={()=>{ setRacePreviewKey(k); if(!unlocked) return; setRace(k); if(v._femaleOnly) setGender("female"); }} style={{ padding:"0.7rem 0.4rem", background:race===k?`rgba(109,40,217,0.3)`:racePreviewKey===k?"rgba(167,139,250,0.12)":freshUnlock?"rgba(251,191,36,0.12)":unlocked?"rgba(255,255,255,0.03)":"rgba(2,6,23,0.55)", border:`2px solid ${race===k?"#a78bfa":racePreviewKey===k?"#c4b5fd":freshUnlock?"#fbbf24":v._cardUnlock&&!unlocked?"#334155":v._secret?"#4b0082":"#1f2937"}`, borderRadius:6, cursor:"pointer", fontFamily:"inherit", display:"flex", flexDirection:"column", alignItems:"center", gap:3, position:"relative", opacity:unlocked?1:0.72, overflow:"hidden", boxShadow:freshUnlock?"0 0 18px rgba(251,191,36,0.22)":"none" }}>
+                  {v._secret && <span style={{ position:"absolute", top:3, right:3, fontSize:"0.45rem", color:unlocked?"#a78bfa":"#64748b", fontFamily:"'Cinzel',serif" }}>{v._cardUnlock&&!unlocked?"🔒 PASS":"✦"}</span>}
+                  {freshUnlock && <span style={{ position:"absolute", top:3, left:3, fontSize:"0.45rem", color:"#fbbf24", fontFamily:"'Cinzel',serif", fontWeight:900 }}>NUOVA</span>}
+                  {v._femaleOnly && <span style={{ position:"absolute", top:freshUnlock ? 18 : 3, left:3, fontSize:"0.45rem", color:"#f472b6" }}>♀</span>}
+                  <span style={{ fontSize:"1.5rem", filter:unlocked&&v._secret?"drop-shadow(0 0 5px #a78bfa)":!unlocked?"grayscale(1) brightness(0.45)":"none" }}>{unlocked ? v.emoji : "🔒"}</span>
+                  <strong style={{ fontFamily:"'Cinzel',serif", color:unlocked?(v._secret?"#c4b5fd":"#d1d5db"):"#64748b", fontSize:"0.78rem" }}>{raceName(k, v.name)}</strong>
+                  {unlocked && race===k && <small style={{ fontSize:"0.6rem", color:"#a78bfa", textAlign:"center", lineHeight:1.3 }}>
+                    {[v.hpB&&`+${v.hpB}HP`,v.atkB&&`+${v.atkB}ATK`,v.defB&&`+${v.defB}DEF`,v.magB&&`+${v.magB}MAG`].filter(Boolean).join(" ")||t("create.versatile")}
+                  </small>}
+                  {unlocked && race===k && RACE_FEATURES[k] && <small style={{ fontSize:"0.56rem", color:"#c4b5fd", textAlign:"center", lineHeight:1.2 }}>{RACE_FEATURES[k].name}</small>}
+                  {!unlocked && v._cardUnlock && <small style={{ fontSize:"0.56rem", color:"#94a3b8", textAlign:"center", lineHeight:1.2 }}>Carta o password</small>}
+                </button>
+              )})}
+            </div>
+            <CharacterChoicePreview
+              kind="races"
+              itemKey={racePreviewKey}
+              value={racePreviewValue}
+              selected={race === racePreviewKey}
+              unlocked={racePreviewUnlocked}
+              displayName={raceName(racePreviewKey, racePreviewValue.name)}
+              gender={gender}
+            />
+          </div>
+          <div style={{ marginTop:"0.65rem", color:"#94a3b8", fontSize:"0.7rem", lineHeight:1.45 }}>
+            Razze da carte sbloccate: {(cardUnlocks.races || []).length}/{Object.keys(CHARACTER_CARD_UNLOCKS.races).length}
           </div>
           <div style={{ display:"flex", gap:8, marginTop:"1rem" }}>
             <SmallBtn onClick={()=>setStep(1)}>🔙 {t("common.back")}</SmallBtn>
@@ -4937,11 +6671,14 @@ function CreateChar({ setScreen, goGame, authUser }) {
           {/* Anteprima ritratto */}
           <div style={{ display:"flex", justifyContent:"center", marginBottom:"1rem" }}>
             <CharacterPortrait
+              cls={cls}
               race={race}
               gender={gender}
               face={faceVariant}
+              hair={hairVariant}
               eyes={eyesVariant}
               scar={scarVariant}
+              beard={beardVariant}
               size={160}
               radius="50%"
               style={{ border:"3px solid #a78bfa", boxShadow:"0 0 20px rgba(167,139,250,0.3)" }}
@@ -4954,7 +6691,19 @@ function CreateChar({ setScreen, goGame, authUser }) {
             <div style={{ display:"flex", gap:8 }}>
               {[1,2,3,4,5].map(i => (
                 <button key={i} onClick={()=>setFaceVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${faceVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0 }}>
-                  <img src={`/assets/portraits/${race}_${gender}_face_${i}.png`} onError={e=>e.currentTarget.style.display="none"} style={{ width:"100%", height:"100%", objectFit:"cover" }} alt={`${t("create.face")} ${i}`} />
+                  <CharacterPortrait cls={cls} race={race} gender={gender} face={i} hair={hairVariant} eyes={eyesVariant} scar={scarVariant} beard={beardVariant} size="100%" radius={0} />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div style={{ marginBottom:"1rem" }}>
+            <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>💇 Capelli</div>
+            <div style={{ display:"flex", gap:8 }}>
+              {[0,1,2,3].map(i => (
+                <button key={i} onClick={()=>setHairVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${hairVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                  {i===0 ? <span style={{ color:"#475569", fontSize:"0.65rem", fontFamily:"'Cinzel',serif" }}>{t("create.none")}</span> :
+                    <CharacterPortrait cls={cls} race={race} gender={gender} face={faceVariant} hair={i} eyes={eyesVariant} scar={scarVariant} beard={beardVariant} size="100%" radius={0} />}
                 </button>
               ))}
             </div>
@@ -4966,7 +6715,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
             <div style={{ display:"flex", gap:8 }}>
               {[1,2,3].map(i => (
                 <button key={i} onClick={()=>setEyesVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${eyesVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0 }}>
-                  <CharacterPortrait race={race} gender={gender} face={faceVariant} eyes={i} scar={scarVariant} size="100%" radius={0} />
+                  <CharacterPortrait cls={cls} race={race} gender={gender} face={faceVariant} hair={hairVariant} eyes={i} scar={scarVariant} beard={beardVariant} size="100%" radius={0} />
                 </button>
               ))}
             </div>
@@ -4979,11 +6728,25 @@ function CreateChar({ setScreen, goGame, authUser }) {
               {[0,1,2].map(i => (
                 <button key={i} onClick={()=>setScarVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${scarVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
                   {i===0 ? <span style={{ color:"#475569", fontSize:"0.65rem", fontFamily:"'Cinzel',serif" }}>{t("create.none")}</span> :
-                    <CharacterPortrait race={race} gender={gender} face={faceVariant} eyes={eyesVariant} scar={i} size="100%" radius={0} />}
+                    <CharacterPortrait cls={cls} race={race} gender={gender} face={faceVariant} hair={hairVariant} eyes={eyesVariant} scar={i} beard={beardVariant} size="100%" radius={0} />}
                 </button>
               ))}
             </div>
           </div>
+
+          {gender === "male" && (
+            <div style={{ marginBottom:"1rem" }}>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>🧔 Barba</div>
+              <div style={{ display:"flex", gap:8 }}>
+                {[0,1,2].map(i => (
+                  <button key={i} onClick={()=>setBeardVariant(i)} style={{ flex:1, aspectRatio:"1", borderRadius:8, overflow:"hidden", border:`2px solid ${beardVariant===i?"#a78bfa":"rgba(255,255,255,0.1)"}`, background:"#0a0e17", cursor:"pointer", padding:0, display:"flex", alignItems:"center", justifyContent:"center" }}>
+                    {i===0 ? <span style={{ color:"#475569", fontSize:"0.65rem", fontFamily:"'Cinzel',serif" }}>{t("create.none")}</span> :
+                      <CharacterPortrait cls={cls} race={race} gender={gender} face={faceVariant} hair={hairVariant} eyes={eyesVariant} scar={scarVariant} beard={i} size="100%" radius={0} />}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div style={{ display:"flex", gap:8, marginTop:"1rem" }}>
             <SmallBtn onClick={()=>setStep(2)}>🔙 {t("common.back")}</SmallBtn>
@@ -4995,11 +6758,14 @@ function CreateChar({ setScreen, goGame, authUser }) {
         <Card title={`👥 ${t("create.confirmTitle")}`}>
           <div style={{ background:"rgba(10,14,23,0.8)", border:"1px solid #374151", borderRadius:6, padding:"1.2rem", marginBottom:"1rem", display:"flex", flexDirection:"column", alignItems:"center", gap:15 }}>
             <CharacterPortrait
+              cls={cls}
               race={race}
               gender={gender}
               face={faceVariant}
+              hair={hairVariant}
               eyes={eyesVariant}
               scar={scarVariant}
+              beard={beardVariant}
               size={140}
               radius="50%"
               style={{ border:'3px solid #fbbf24', boxShadow:'0 0 20px rgba(251,191,36,0.3)' }}
@@ -5008,6 +6774,18 @@ function CreateChar({ setScreen, goGame, authUser }) {
               <div style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontSize: "1.4rem", fontWeight:700 }}>{name||t("create.unnamed")}</div>
               <div style={{ color:"#cbd5e1", fontSize:"0.9rem", margin: '4px 0' }}>{RACES[race].emoji} {raceName(race, RACES[race].name)} • {c.emoji} {className(cls, c.name)}</div>
               <div style={{ color:"#94a3b8", fontSize:"0.8rem" }}>❤️{c.hp+r.hpB} ⚔️{c.atk+r.atkB} 🛡️{c.def+r.defB} ✨{c.mag+r.magB}</div>
+              {getCharacterFeatureLines({ class:cls, race }).length > 0 && (
+                <div style={{ marginTop:8, display:"grid", gap:4 }}>
+                  {getCharacterFeatureLines({ class:cls, race }).map(line => (
+                    <div key={line} style={{ color:"#c4b5fd", fontSize:"0.72rem", lineHeight:1.35 }}>{line}</div>
+                  ))}
+                  {getClassRaceSynergy({ class:cls, race }) && (
+                    <div style={{ marginTop:4, color:"#fcd34d", fontSize:"0.72rem", lineHeight:1.35, border:"1px solid rgba(251,191,36,0.24)", borderRadius:6, padding:"0.45rem 0.55rem", background:"rgba(120,53,15,0.18)" }}>
+                      ✨ Sinergia attiva: <strong>{getClassRaceSynergy({ class:cls, race }).name}</strong>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
           <label style={labelStyle}>{t("create.partyCode")}</label>
@@ -6518,7 +8296,7 @@ function PlayersView({ authUser }) {
                 <div style={{ flex:1 }}>
                   <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, fontSize:"0.95rem" }}>{p?.name}</div>
                   {masterMeta.realPlayerName && <div style={{ color:"#fbbf24", fontSize:"0.72rem", marginTop:2 }}>Giocatore: {masterMeta.realPlayerName}</div>}
-                  <div style={{ color:"#94a3b8", fontSize:"0.7rem" }}>{race.emoji} {race.name} · {cls.name} · Lv.{p?.level||1}</div>
+                  <div style={{ color:"#94a3b8", fontSize:"0.7rem" }}>{race.emoji} {race.name} · {cls.name} · Lv.{displayLevel(p)}</div>
                   <div style={{ color:"#94a3b8", fontSize:"0.68rem", marginTop:2 }}>❤️ {p?.hp||0}/{p?.max_hp||0} · 💰 {p?.gold||0} · ⭐ {p?.xp||0} XP</div>
                   <div style={{ display:"flex", alignItems:"center", gap:4, marginTop:3 }}>
                     <span style={{ color:"#4b5563", fontSize:"0.6rem", fontFamily:"monospace" }}>ID: {p?.id}</span>
@@ -7059,7 +8837,7 @@ function PartiesView({ authUser }) {
                       {p.name}
                       {playerMeta[p.id]?.realPlayerName && <span style={{ display:"block", color:"#fbbf24", fontSize:"0.68rem", marginTop:2 }}>Giocatore: {playerMeta[p.id].realPlayerName}</span>}
                     </span>
-                    <span style={{ fontSize:"0.68rem", color:"#64748b" }}>Lv.{p.level||1}</span>
+                    <span style={{ fontSize:"0.68rem", color:"#64748b" }}>Lv.{displayLevel(p)}</span>
                     <span style={{ fontSize:"0.68rem", color:(p.hp||0)/(p.max_hp||1)>0.5?"#4ade80":"#fca5a5" }}>{p.hp||0}/{p.max_hp||0} HP</span>
                   </div>
                 ))}
@@ -7226,7 +9004,7 @@ function UsersView({ authUser }) {
                     <span style={{ color:"#fbbf24", fontSize:"0.72rem", fontFamily:"monospace" }}>{ch.party_code || "NO PARTY"}</span>
                   </div>
                   <div style={{ color:"#94a3b8", fontSize:"0.72rem", marginTop:2 }}>
-                    {(RACES[ch.race]?.name || ch.race || "Razza")} - {(CLASSES[ch.class]?.name || ch.class || "Classe")} - Lv.{ch.level || 1}
+                    {(RACES[ch.race]?.name || ch.race || "Razza")} - {(CLASSES[ch.class]?.name || ch.class || "Classe")} - Lv.{displayLevel(ch)}
                     {ch.realPlayerName ? ` - Giocatore: ${ch.realPlayerName}` : ""}
                     {ch.dead ? " - MORTO" : ""}
                   </div>
@@ -7657,7 +9435,7 @@ function MarketView() {
                   <div style={{...rowBase}} onClick={()=>{ setExpandedPlayer(isOpen ? null : p.id); setDonateItemId(""); setDonateStatus(""); setDonateItemSearch(""); }}>
                     <span style={{ fontSize:"1rem" }}>{cls?.emoji||"⚔️"}</span>
                     <span style={{ flex:1, fontSize:"0.85rem", color:"#e2d9c5", fontWeight:600 }}>{p.name}</span>
-                    <span style={{ fontSize:"0.68rem", color:"#94a3b8" }}>Lv.{p.level||1}</span>
+                    <span style={{ fontSize:"0.68rem", color:"#94a3b8" }}>Lv.{displayLevel(p)}</span>
                     {p.party_code && <span style={{ fontSize:"0.62rem", color:"#475569", background:"rgba(255,255,255,0.05)", padding:"1px 5px", borderRadius:4 }}>{p.party_code}</span>}
                     <span style={{ fontSize:"0.75rem", color:"#475569", marginLeft:4 }}>{isOpen?"▲":"▼"}</span>
                   </div>
@@ -8554,16 +10332,18 @@ const SLOT_CONFIG = [
   { key:"cloak",   label:"Mantello", icon:"🧣",  pos:"right2" },
 ];
 
-function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick }) {
+function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick, compact=false }) {
   const { itemName } = useI18n();
   const isEmpty = !item;
   const rarityColors = { common:"#94a3b8", uncommon:"#22c55e", rare:"#3b82f6", epic:"#a855f7", legendary:"#f59e0b" };
   const borderColor = isEmpty ? "rgba(255,255,255,0.1)" : (rarityColors[item?.rarity] || "#94a3b8");
+  const boxSize = compact ? 62 : 96;
+  const artSize = compact ? 40 : 68;
   return (
     <div
       onClick={() => onPick ? onPick(slotCfg.key) : (isEmpty ? null : onSelect(slotCfg.key))}
       style={{
-        width:96, height:96, borderRadius:12,
+        width:boxSize, height:boxSize, borderRadius:compact ? 9 : 12,
         background: isEmpty ? "rgba(0,0,0,0.35)" : "rgba(15,23,42,0.9)",
         border: `2px solid ${isSelected ? "#fbbf24" : borderColor}`,
         display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
@@ -8577,26 +10357,399 @@ function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick }
     >
       {isEmpty ? (
         <>
-          <span style={{ fontSize:"1.8rem", opacity:0.3 }}>{slotCfg.icon}</span>
-          <span style={{ fontSize:"0.58rem", color:"#64748b", marginTop:3, fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>{slotCfg.label}</span>
+          <span style={{ fontSize:compact ? "1.15rem" : "1.8rem", opacity:0.3 }}>{slotCfg.icon}</span>
+          <span style={{ fontSize:compact ? "0.44rem" : "0.58rem", color:"#64748b", marginTop:3, fontFamily:"'Cinzel',serif", letterSpacing:"0.04em", maxWidth:boxSize-8, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{slotCfg.label}</span>
         </>
       ) : (
         <>
-          <ArtThumb src={getItemImage(item)} alt={itemName(item)} size={68} radius={6} />
-          <span style={{ fontSize:"0.44rem", color: rarityColors[item.rarity] || "#94a3b8", marginTop:1, fontFamily:"'Cinzel',serif", maxWidth:84, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{itemName(item)}</span>
-          <span style={{ fontSize:"0.5rem", color:"#475569", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>{slotCfg.label}</span>
+          <ArtThumb src={getItemImage(item)} alt={itemName(item)} size={artSize} radius={6} />
+          <span style={{ fontSize:compact ? "0.38rem" : "0.44rem", color: rarityColors[item.rarity] || "#94a3b8", marginTop:1, fontFamily:"'Cinzel',serif", maxWidth:boxSize-10, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{itemName(item)}</span>
+          {!compact && <span style={{ fontSize:"0.5rem", color:"#475569", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>{slotCfg.label}</span>}
         </>
       )}
     </div>
   );
 }
+function CosmeticSlotBox({ slotCfg, card, onUnequip, onSelect, isSelected, compact=false }) {
+  const isEmpty = !card;
+  const color = isEmpty ? "rgba(255,255,255,0.12)" : (CARD_RARITY_COLOR[card.rarity] || "#a78bfa");
+  const boxSize = compact ? 46 : 58;
+  const artSize = compact ? 34 : 44;
+  return (
+    <div
+      onClick={()=>onSelect?.(slotCfg.key)}
+      title={isEmpty ? slotCfg.label : `${slotCfg.label}: ${card.name}`}
+      style={{
+        width:boxSize,
+        height:boxSize,
+        borderRadius:10,
+        border:`1.5px solid ${isSelected ? "#fbbf24" : color}`,
+        background:isEmpty ? "rgba(2,6,23,0.42)" : "rgba(15,23,42,0.92)",
+        display:"flex",
+        alignItems:"center",
+        justifyContent:"center",
+        position:"relative",
+        overflow:"hidden",
+        boxShadow:isSelected ? "0 0 14px rgba(251,191,36,0.45)" : isEmpty ? "none" : `0 0 12px ${color}44`,
+        flexShrink:0,
+        cursor:"pointer",
+        transform:isSelected ? "translateY(-1px)" : "none",
+      }}
+    >
+      {isEmpty ? (
+        <span style={{ fontSize:compact ? "1rem" : "1.3rem", opacity:0.38 }}>{slotCfg.icon}</span>
+      ) : (
+        <>
+          <ArtThumb src={getCosmeticImage(card)} alt={card.name} size={artSize} radius={7} />
+          <button
+            onClick={(e)=>{ e.stopPropagation(); onUnequip?.(slotCfg.key); }}
+            title="Rimuovi"
+            style={{ position:"absolute", top:2, right:2, width:compact ? 15 : 18, height:compact ? 15 : 18, borderRadius:999, border:"1px solid rgba(15,23,42,0.9)", background:"rgba(2,6,23,0.82)", color:"#cbd5e1", cursor:"pointer", fontSize:compact ? "0.58rem" : "0.7rem", lineHeight:compact ? "11px" : "14px", padding:0 }}
+          >
+            x
+          </button>
+        </>
+      )}
+      <span style={{ position:"absolute", left:3, bottom:2, right:3, color:isEmpty ? "#64748b" : color, fontSize:compact ? "0.38rem" : "0.47rem", fontFamily:"'Cinzel',serif", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", textAlign:"center" }}>{slotCfg.label}</span>
+    </div>
+  );
+}
 
-function CharacterViewer({ me, equippedItems, size, fillContainer }) {
+function getEquipBaseRace(race) {
+  const key = String(race || "human").toLowerCase();
+  if(["human","elf","dwarf","halfling","gnome","halfelf","halforc","dragonborn","tiefling"].includes(key)) return key;
+  if(/drow|aasimar|vampire|seraph|night|siren|djinn|atlante/.test(key)) return "elf";
+  if(/dracon|dragon/.test(key)) return "dragonborn";
+  if(/forged|golem|mirror|echo|void/.test(key)) return "human";
+  if(/silvan|fae|echide/.test(key)) return "elf";
+  return "human";
+}
+const MANNEQUIN_BODY_PROFILE_BY_RACE = {
+  human:"normal",
+  halfelf:"normal",
+  dwarf:"stocky",
+  halfling:"small",
+  gnome:"small",
+  fae:"small",
+  minotaur:"massive",
+  golemide:"massive",
+  primordial_draconian:"massive",
+  dragonborn:"draconic",
+  ancient_draconid:"draconic",
+  tiefling:"horned",
+  succubus:"horned",
+  angel:"winged",
+  aasimar:"winged",
+  fallen_seraphite:"winged",
+  sirenide:"aquatic",
+  atlantean:"aquatic",
+  drow:"slender",
+  elf:"slender",
+  renegade_vampire:"slender",
+  shadow_awakened:"ethereal",
+  void_touched:"ethereal",
+  echo_born:"ethereal",
+  echide:"ethereal",
+  living_mirror:"ethereal",
+  forged:"construct",
+  ancient_silvan:"construct",
+  half_djinn:"slender",
+  night_child:"slender",
+};
+const MANNEQUIN_BODY_ARCHETYPE_BY_PROFILE = {
+  normal:"humanoid_standard",
+  slender:"humanoid_slender",
+  stocky:"humanoid_stocky",
+  small:"humanoid_small",
+  massive:"humanoid_massive",
+  draconic:"draconic",
+  horned:"horned_humanoid",
+  winged:"winged_humanoid",
+  aquatic:"aquatic_humanoid",
+  ethereal:"ethereal_humanoid",
+  construct:"construct_humanoid",
+};
+const MANNEQUIN_PROFILE_SLOT_FIT = {
+  normal: {
+    cloak:{ scale:1, x:0, y:0 },
+    chest:{ scale:1, x:0, y:0 },
+    legs:{ scale:1, x:0, y:0 },
+    boots:{ scale:1, x:0, y:0 },
+    gloves:{ scale:1, x:0, y:0 },
+    head:{ scale:1, x:0, y:0 },
+    weapon:{ scale:1, x:0, y:0 },
+    offhand:{ scale:1, x:0, y:0 },
+    amulet:{ scale:1, x:0, y:0 },
+    ring1:{ scale:1, x:0, y:0 },
+    ring2:{ scale:1, x:0, y:0 },
+  },
+  slender: {
+    cloak:{ scale:0.96, x:0, y:0 },
+    chest:{ scale:0.94, x:0, y:0 },
+    legs:{ scale:0.94, x:0, y:2 },
+    boots:{ scale:0.94, x:0, y:3 },
+    gloves:{ scale:0.92, x:0, y:0 },
+    head:{ scale:0.92, x:0, y:-1 },
+    weapon:{ scale:0.96, x:2, y:0 },
+    offhand:{ scale:0.94, x:-2, y:0 },
+    amulet:{ scale:0.9, x:0, y:-1 },
+    ring1:{ scale:0.88, x:2, y:0 },
+    ring2:{ scale:0.88, x:-2, y:0 },
+  },
+  small: {
+    cloak:{ scale:0.74, x:0, y:8 },
+    chest:{ scale:0.72, x:0, y:8 },
+    legs:{ scale:0.72, x:0, y:12 },
+    boots:{ scale:0.7, x:0, y:15 },
+    gloves:{ scale:0.68, x:0, y:7 },
+    head:{ scale:0.72, x:0, y:0 },
+    weapon:{ scale:0.76, x:5, y:6 },
+    offhand:{ scale:0.72, x:-4, y:7 },
+    amulet:{ scale:0.68, x:0, y:5 },
+    ring1:{ scale:0.62, x:4, y:7 },
+    ring2:{ scale:0.62, x:-4, y:7 },
+  },
+  stocky: {
+    cloak:{ scale:0.9, x:0, y:6 },
+    chest:{ scale:1.06, x:0, y:3 },
+    legs:{ scale:0.92, x:0, y:11 },
+    boots:{ scale:0.92, x:0, y:14 },
+    gloves:{ scale:1.05, x:0, y:4 },
+    head:{ scale:0.96, x:0, y:1 },
+    weapon:{ scale:0.98, x:3, y:4 },
+    offhand:{ scale:1.02, x:-3, y:4 },
+    amulet:{ scale:0.92, x:0, y:3 },
+    ring1:{ scale:0.9, x:4, y:5 },
+    ring2:{ scale:0.9, x:-4, y:5 },
+  },
+  massive: {
+    cloak:{ scale:1.18, x:0, y:-1 },
+    chest:{ scale:1.24, x:0, y:-1 },
+    legs:{ scale:1.16, x:0, y:0 },
+    boots:{ scale:1.12, x:0, y:1 },
+    gloves:{ scale:1.22, x:0, y:-1 },
+    head:{ scale:1.18, x:0, y:-5 },
+    weapon:{ scale:1.18, x:5, y:-1 },
+    offhand:{ scale:1.18, x:-5, y:-1 },
+    amulet:{ scale:1.05, x:0, y:-2 },
+    ring1:{ scale:1.08, x:7, y:-1 },
+    ring2:{ scale:1.08, x:-7, y:-1 },
+  },
+  draconic: {
+    cloak:{ scale:1.1, x:0, y:0 },
+    chest:{ scale:1.12, x:0, y:0 },
+    legs:{ scale:1.08, x:0, y:1 },
+    boots:{ scale:1.02, x:0, y:2 },
+    gloves:{ scale:1.1, x:0, y:0 },
+    head:{ scale:1.1, x:0, y:-5 },
+    weapon:{ scale:1.12, x:4, y:0 },
+    offhand:{ scale:1.08, x:-4, y:0 },
+    amulet:{ scale:1, x:0, y:-1 },
+    ring1:{ scale:1.02, x:5, y:0 },
+    ring2:{ scale:1.02, x:-5, y:0 },
+  },
+  horned: {
+    cloak:{ scale:1.02, x:0, y:0 },
+    chest:{ scale:1, x:0, y:0 },
+    legs:{ scale:1, x:0, y:0 },
+    boots:{ scale:1, x:0, y:0 },
+    gloves:{ scale:1, x:0, y:0 },
+    head:{ scale:0.92, x:0, y:3 },
+    weapon:{ scale:1, x:3, y:0 },
+    offhand:{ scale:1, x:-3, y:0 },
+    amulet:{ scale:0.94, x:0, y:0 },
+    ring1:{ scale:0.96, x:3, y:0 },
+    ring2:{ scale:0.96, x:-3, y:0 },
+  },
+  winged: {
+    cloak:{ scale:1.02, x:0, y:2 },
+    chest:{ scale:0.98, x:0, y:0 },
+    legs:{ scale:0.98, x:0, y:0 },
+    boots:{ scale:0.98, x:0, y:0 },
+    gloves:{ scale:0.98, x:0, y:0 },
+    head:{ scale:0.96, x:0, y:-2 },
+    weapon:{ scale:1, x:3, y:0 },
+    offhand:{ scale:0.98, x:-3, y:0 },
+    amulet:{ scale:0.92, x:0, y:-1 },
+    ring1:{ scale:0.94, x:3, y:0 },
+    ring2:{ scale:0.94, x:-3, y:0 },
+  },
+  aquatic: {
+    cloak:{ scale:0.98, x:0, y:0 },
+    chest:{ scale:0.96, x:0, y:0 },
+    legs:{ scale:0.98, x:0, y:1 },
+    boots:{ scale:0.96, x:0, y:2 },
+    gloves:{ scale:0.94, x:0, y:0 },
+    head:{ scale:0.94, x:0, y:-1 },
+    weapon:{ scale:0.98, x:3, y:0 },
+    offhand:{ scale:0.96, x:-3, y:0 },
+    amulet:{ scale:0.9, x:0, y:-1 },
+    ring1:{ scale:0.9, x:3, y:0 },
+    ring2:{ scale:0.9, x:-3, y:0 },
+  },
+  ethereal: {
+    cloak:{ scale:0.98, x:0, y:0 },
+    chest:{ scale:0.95, x:0, y:0 },
+    legs:{ scale:0.95, x:0, y:1 },
+    boots:{ scale:0.94, x:0, y:2 },
+    gloves:{ scale:0.92, x:0, y:0 },
+    head:{ scale:0.94, x:0, y:-1 },
+    weapon:{ scale:0.98, x:3, y:0 },
+    offhand:{ scale:0.94, x:-3, y:0 },
+    amulet:{ scale:0.9, x:0, y:-1 },
+    ring1:{ scale:0.88, x:3, y:0 },
+    ring2:{ scale:0.88, x:-3, y:0 },
+  },
+  construct: {
+    cloak:{ scale:1.08, x:0, y:0 },
+    chest:{ scale:1.12, x:0, y:0 },
+    legs:{ scale:1.08, x:0, y:1 },
+    boots:{ scale:1.06, x:0, y:2 },
+    gloves:{ scale:1.1, x:0, y:0 },
+    head:{ scale:1.02, x:0, y:-2 },
+    weapon:{ scale:1.08, x:4, y:0 },
+    offhand:{ scale:1.08, x:-4, y:0 },
+    amulet:{ scale:0.98, x:0, y:-1 },
+    ring1:{ scale:1, x:5, y:0 },
+    ring2:{ scale:1, x:-5, y:0 },
+  },
+};
+const MANNEQUIN_LAYER_ORDER = {
+  backEffect: 4,
+  backEquipment: 8,
+  body: 20,
+  lowerWear: 30,
+  upperWear: 40,
+  handWear: 48,
+  accessory: 54,
+  heldItem: 62,
+  headWear: 72,
+  frontEffect: 84,
+};
+const MANNEQUIN_SLOT_LAYER = {
+  cloak: MANNEQUIN_LAYER_ORDER.backEquipment,
+  legs: MANNEQUIN_LAYER_ORDER.lowerWear,
+  boots: MANNEQUIN_LAYER_ORDER.lowerWear + 6,
+  chest: MANNEQUIN_LAYER_ORDER.upperWear,
+  gloves: MANNEQUIN_LAYER_ORDER.handWear,
+  amulet: MANNEQUIN_LAYER_ORDER.accessory,
+  ring1: MANNEQUIN_LAYER_ORDER.accessory + 1,
+  ring2: MANNEQUIN_LAYER_ORDER.accessory + 1,
+  offhand: MANNEQUIN_LAYER_ORDER.heldItem - 4,
+  weapon: MANNEQUIN_LAYER_ORDER.heldItem,
+  head: MANNEQUIN_LAYER_ORDER.headWear,
+};
+const MANNEQUIN_COSMETIC_SLOT_LAYER = {
+  cos_aura: MANNEQUIN_LAYER_ORDER.backEffect,
+  cos_cloak: MANNEQUIN_LAYER_ORDER.backEquipment + 1,
+  cos_armor: MANNEQUIN_LAYER_ORDER.upperWear + 2,
+  cos_weapon: MANNEQUIN_LAYER_ORDER.heldItem + 2,
+  cos_head: MANNEQUIN_LAYER_ORDER.headWear + 2,
+  cos_mascot: MANNEQUIN_LAYER_ORDER.frontEffect,
+};
+const MANNEQUIN_EQUIPMENT_SLOTS = Object.freeze([
+  "cloak",
+  "legs",
+  "boots",
+  "chest",
+  "gloves",
+  "amulet",
+  "ring1",
+  "ring2",
+  "offhand",
+  "weapon",
+  "head",
+]);
+function getMannequinProfile(race) {
+  return MANNEQUIN_BODY_PROFILE_BY_RACE[String(race || "").toLowerCase()] || "normal";
+}
+function getMannequinBodyArchetype(race) {
+  return MANNEQUIN_BODY_ARCHETYPE_BY_PROFILE[getMannequinProfile(race)] || MANNEQUIN_BODY_ARCHETYPE_BY_PROFILE.normal;
+}
+function getMannequinSlotFit(race, slot) {
+  const profile = getMannequinProfile(race);
+  return {
+    ...(MANNEQUIN_PROFILE_SLOT_FIT.normal[slot] || { scale:1, x:0, y:0 }),
+    ...(MANNEQUIN_PROFILE_SLOT_FIT[profile]?.[slot] || {}),
+  };
+}
+function getMannequinSlotLayer(slot) {
+  return MANNEQUIN_SLOT_LAYER[slot] || MANNEQUIN_LAYER_ORDER.upperWear;
+}
+function getMannequinCosmeticSlotLayer(slot) {
+  return MANNEQUIN_COSMETIC_SLOT_LAYER[slot] || MANNEQUIN_LAYER_ORDER.frontEffect;
+}
+function getMannequinCosmeticFitSlot(slot) {
+  return cosmeticEquipSlotConfig(slot)?.mannequinSlot || "chest";
+}
+const SHOW_PROCEDURAL_EQUIPMENT_OVERLAYS = false;
+function mannequinOverlayStyle(race, slot, zIndex = getMannequinSlotLayer(slot)) {
+  const fit = getMannequinSlotFit(race, slot);
+  return {
+    position:"absolute",
+    inset:0,
+    width:"100%",
+    height:"100%",
+    objectFit:"contain",
+    userSelect:"none",
+    pointerEvents:"none",
+    zIndex,
+    transform:`translate(${fit.x || 0}%, ${fit.y || 0}%) scale(${fit.scale || 1})`,
+    transformOrigin:"50% 50%",
+  };
+}
+function makeMannequinBaseImage(race, gender) {
+  const pal = {
+    human:["#d8aa7a","#7c4a2d"],
+    elf:["#e8d7b7","#3f6f58"],
+    dwarf:["#c98d5a","#6b3f24"],
+    halfling:["#e7b47f","#8a5a33"],
+    gnome:["#dfae82","#7c4a93"],
+    halfelf:["#ead0aa","#4d6d50"],
+    halforc:["#8bbf72","#3f5f38"],
+    dragonborn:["#a27543","#b45309"],
+    tiefling:["#b86b8c","#7f1d1d"],
+  }[getEquipBaseRace(race)] || ["#d8aa7a","#7c4a2d"];
+  const isFemale = gender === "female";
+  return svgDataUrl(`
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 640">
+      <defs>
+        <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${pal[0]}"/><stop offset="100%" stop-color="${pal[1]}"/></linearGradient>
+        <radialGradient id="shade" cx="50%" cy="42%" r="62%"><stop offset="0%" stop-color="#f8fafc" stop-opacity=".16"/><stop offset="100%" stop-color="#020617" stop-opacity=".18"/></radialGradient>
+      </defs>
+      <ellipse cx="160" cy="610" rx="72" ry="16" fill="#020617" opacity=".35"/>
+      <circle cx="160" cy="86" r="42" fill="url(#skin)"/>
+      <path d="${isFemale ? "M108 166 C126 132 194 132 212 166 L200 322 C176 340 144 340 120 322 Z" : "M96 164 C116 130 204 130 224 164 L208 324 C180 342 140 342 112 324 Z"}" fill="url(#skin)"/>
+      <path d="M104 180 L62 306" stroke="url(#skin)" stroke-width="28" stroke-linecap="round"/>
+      <path d="M216 180 L258 306" stroke="url(#skin)" stroke-width="28" stroke-linecap="round"/>
+      <path d="M132 318 L118 520" stroke="url(#skin)" stroke-width="32" stroke-linecap="round"/>
+      <path d="M188 318 L202 520" stroke="url(#skin)" stroke-width="32" stroke-linecap="round"/>
+      <path d="M124 128 C146 142 174 142 196 128" fill="none" stroke="#f8fafc" stroke-width="4" opacity=".2"/>
+      <rect width="320" height="640" fill="url(#shade)"/>
+    </svg>
+  `);
+}
+function CharacterViewer({ me, equippedItems, activeCosmetics, size, fillContainer }) {
   const { itemName } = useI18n();
-  const race = me?.race || "human";
+  const rawRace = String(me?.race || "human").toLowerCase();
+  const race = getEquipBaseRace(rawRace);
+  const bodyArchetype = getMannequinBodyArchetype(rawRace);
   const gender = me?.gender || "male";
-  const baseSprite = `/assets/equip/base_${race}_${gender}.png`;
-  const overlaySlots = ["chest","legs","boots","gloves","head","weapon","offhand","cloak","amulet"];
+  const baseSprite = `/assets/equip/base_${rawRace}_${gender}.png`;
+  const raceFallbackSprite = `/assets/equip/base_${race}_${gender}.png`;
+  const dedicatedSvgSprite = `/assets/equip/base_${rawRace}_${gender}.svg`;
+  const archetypeSprite = `/assets/equip/base_${bodyArchetype}_${gender}.png`;
+  const archetypeSvgSprite = `/assets/equip/base_${bodyArchetype}_${gender}.svg`;
+  const equippedLayers = [
+    ...(SHOW_PROCEDURAL_EQUIPMENT_OVERLAYS
+      ? MANNEQUIN_EQUIPMENT_SLOTS
+        .map((slot, order) => ({ key:`item_${slot}`, fitSlot:slot, order, item: equippedItems?.[slot], layer: getMannequinSlotLayer(slot), kind:"item" }))
+      : []),
+    ...COSMETIC_EQUIP_SLOTS
+      .map((slot, order) => ({ key:`cos_${slot}`, fitSlot:getMannequinCosmeticFitSlot(slot), order:MANNEQUIN_EQUIPMENT_SLOTS.length + order, item:activeCosmetics?.[slot], layer:getMannequinCosmeticSlotLayer(slot), kind:"cosmetic" })),
+  ]
+    .filter(entry => entry.item)
+    .sort((a, b) => a.layer - b.layer || a.order - b.order);
   const containerStyle = fillContainer
     ? { position:"absolute", inset:0 }
     : { position:"relative", width: size||240, height: size ? size*2 : 480, margin:"0 auto", flexShrink:0 };
@@ -8606,20 +10759,50 @@ function CharacterViewer({ me, equippedItems, size, fillContainer }) {
       <img
         src={baseSprite}
         alt="personaggio"
-        onError={e => { e.currentTarget.style.display="none"; }}
-        style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none", filter:"brightness(1.25) contrast(1.05)", zIndex:1 }}
+        onError={e => {
+          const img = e.currentTarget;
+          if(!img.dataset.triedSvg) {
+            img.dataset.triedSvg = "1";
+            img.src = dedicatedSvgSprite;
+            return;
+          }
+          if(!img.dataset.triedArchetype) {
+            img.dataset.triedArchetype = "1";
+            img.src = archetypeSprite;
+            return;
+          }
+          if(!img.dataset.triedArchetypeSvg) {
+            img.dataset.triedArchetypeSvg = "1";
+            img.src = archetypeSvgSprite;
+            return;
+          }
+          if(!img.dataset.triedFallback) {
+            img.dataset.triedFallback = "1";
+            img.src = raceFallbackSprite;
+            return;
+          }
+          img.onerror = null;
+          img.src = makeMannequinBaseImage(rawRace || race, gender);
+        }}
+        style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none", filter:"brightness(1.25) contrast(1.05)", zIndex:MANNEQUIN_LAYER_ORDER.body }}
       />
+      <MannequinHeadOverlay me={me} />
       {/* Equipment overlays */}
-      {overlaySlots.map(slot => {
-        const item = equippedItems[slot];
-        if(!item?.equipSprite) return null;
+      {equippedLayers.map(({ key, fitSlot, item, layer, kind }) => {
         return (
           <img
-            key={slot}
-            src={`/assets/equip/${item.equipSprite}.png`}
-            alt={itemName(item)}
-            onError={e => { e.currentTarget.style.display="none"; }}
-            style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none", pointerEvents:"none", zIndex:slot === "head" ? 5 : 3 }}
+            key={key}
+            src={kind === "cosmetic" ? getCosmeticWearImage(item) : getItemWearImage(item)}
+            alt={kind === "cosmetic" ? item.name : itemName(item)}
+            onError={e => {
+              if(kind === "cosmetic" && !e.currentTarget.dataset.triedFallback) {
+                e.currentTarget.dataset.triedFallback = "1";
+                e.currentTarget.src = makeCosmeticWearImage(item);
+                return;
+              }
+              e.currentTarget.style.display="none";
+            }}
+            style={mannequinOverlayStyle(rawRace, fitSlot, layer)}
           />
         );
       })}
@@ -9393,7 +11576,7 @@ function OsservatorioView({ me, myId, code, supabase, partyPresenceMeta = {}, on
                     <span style={{ fontSize:"0.9rem", opacity: online ? 1 : 0.4 }}>{CLASSES[p.class]?.emoji || "⚔️"}</span>
                     <div style={{ flex:1, minWidth:0 }}>
                       <div style={{ fontSize:"0.75rem", color: online ? "#e2e8f0" : "#4b5563", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
-                        {p.name} <span style={{ color:"#4b5563", fontSize:"0.6rem" }}>Lv.{p.level || 1}</span>
+                        {p.name} <span style={{ color:"#4b5563", fontSize:"0.6rem" }}>Lv.{displayLevel(p)}</span>
                       </div>
                       <div style={{ height:3, background:"#0f172a", borderRadius:2, overflow:"hidden", marginTop:2 }}>
                         <div style={{ height:"100%", width:`${hpPct}%`, background: hpPct > 50 ? "#22c55e" : hpPct > 25 ? "#f59e0b" : "#ef4444" }} />
@@ -9670,10 +11853,16 @@ function MapView({ me, onNavigate }) {
   );
 }
 
-function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, inventoryGroups, onSell, onUse, canUseConsumables, isMobile }) {
+function EquipmentView({ me, equippedItems, equippedWeapon, activeCosmetics, ownedCosmetics=[], onUnequip, onEquip, onEquipCosmetic, onUnequipCosmetic, inventoryGroups, onSell, onUse, canUseConsumables, isMobile }) {
   const { itemName, itemDescription } = useI18n();
   const [activeSlot, setActiveSlot] = useState(null);
+  const [rightMode, setRightMode] = useState("items");
+  const [activeCosmeticSlot, setActiveCosmeticSlot] = useState(COSMETIC_EQUIP_SLOT_CONFIG[0]?.key || "cos_head");
+  const [selectedEquippedSlot, setSelectedEquippedSlot] = useState(null);
   const [hoveredItem, setHoveredItem] = useState(null);
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [hoveredCosmetic, setHoveredCosmetic] = useState(null);
+  const [selectedCosmetic, setSelectedCosmetic] = useState(null);
   const [sortBy, setSortBy] = useState("type"); // type | rarity | price | name
   const rarityColors = { common:"#94a3b8", uncommon:"#22c55e", rare:"#3b82f6", epic:"#a855f7", legendary:"#f59e0b" };
 
@@ -9695,15 +11884,57 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
   });
 
   const equippableTypes = new Set(["weapon","armor","shield","head","legs","boots","gloves","cloak","accessory"]);
+  const selectedEquippedItem = rightMode === "items" && selectedEquippedSlot ? equippedItems?.[selectedEquippedSlot] : null;
+  const selectedEquippedInventoryGroup = selectedEquippedItem
+    ? (inventoryGroups || []).find(g => g?.item?.id === selectedEquippedItem.id)
+    : null;
+  const equippedDetailGroup = selectedEquippedItem
+    ? { item:selectedEquippedItem, entries:selectedEquippedInventoryGroup?.entries || [], quantity:selectedEquippedInventoryGroup?.quantity || 0, equippedSlot:selectedEquippedSlot }
+    : null;
+  const detailGroup = hoveredItem || selectedItem || equippedDetailGroup;
+  const detailItem = detailGroup?.item || null;
+  const detailSlot = detailItem ? itemSlot(detailItem) : null;
+  const detailEquippedSlot = detailItem
+    ? SLOT_CONFIG.find(slot => equippedItems?.[slot.key]?.id === detailItem.id)?.key
+    : null;
+  const detailEquipped = !!detailEquippedSlot;
+  const detailHasInventoryEntry = !!detailGroup?.entries?.length;
+  const activeCosmeticSlotCfg = cosmeticEquipSlotConfig(activeCosmeticSlot) || COSMETIC_EQUIP_SLOT_CONFIG[0];
+  const compatibleCosmetics = (ownedCosmetics || [])
+    .filter(card => card?.kind === "cosmetic" && cosmeticEquipSlot(card) === activeCosmeticSlot)
+    .sort((a,b) => (CARD_RARITY_ORDER[b.rarity] || 0) - (CARD_RARITY_ORDER[a.rarity] || 0) || String(a.name || "").localeCompare(String(b.name || "")));
+  const activeCosmeticCard = activeCosmetics?.[activeCosmeticSlot] || null;
+  const selectedCosmeticCard = (hoveredCosmetic && cosmeticEquipSlot(hoveredCosmetic) === activeCosmeticSlot ? hoveredCosmetic : null)
+    || (selectedCosmetic && cosmeticEquipSlot(selectedCosmetic) === activeCosmeticSlot ? selectedCosmetic : null)
+    || activeCosmeticCard
+    || compatibleCosmetics[0]
+    || null;
+  const selectedCosmeticEquipped = !!selectedCosmeticCard && activeCosmeticCard?.cardId === selectedCosmeticCard.cardId;
+  const selectedCosmeticColor = selectedCosmeticCard ? (CARD_RARITY_COLOR[selectedCosmeticCard.rarity] || "#a78bfa") : "#334155";
+  function pickItemSlot(slot) {
+    setRightMode("items");
+    setActiveSlot(slot);
+    setSelectedEquippedSlot(equippedItems?.[slot] ? slot : null);
+    setSelectedItem(null);
+    setHoveredItem(null);
+  }
+  function pickCosmeticSlot(slot) {
+    setRightMode("cosmetics");
+    setActiveCosmeticSlot(slot);
+    setActiveSlot(null);
+    setSelectedEquippedSlot(null);
+    setSelectedCosmetic(null);
+    setHoveredCosmetic(null);
+  }
 
   return (
-    <div style={{ flex:1, display:"flex", overflow:"hidden", height:"100%" }}>
+    <div style={{ flex:1, display:"flex", flexDirection:isMobile ? "column" : "row", overflow:isMobile ? "auto" : "hidden", height:"100%", minHeight:0 }}>
 
       {/* ══ LEFT — mannequin + slots ══ */}
-      <div style={{ width: isMobile ? "100%" : "50%", flexShrink:0, display:"flex", flexDirection:"column", borderRight:"1px solid rgba(255,255,255,0.07)", background:"rgba(5,8,18,0.6)" }}>
+      <div style={{ width: isMobile ? "100%" : "50%", flexShrink:0, display:"flex", flexDirection:"column", borderRight:isMobile ? "none" : "1px solid rgba(255,255,255,0.07)", borderBottom:isMobile ? "1px solid rgba(255,255,255,0.07)" : "none", background:"rgba(5,8,18,0.6)", minHeight:isMobile ? 500 : 0 }}>
 
         {/* Stats bar */}
-        <div style={{ display:"flex", gap:12, padding:"0.6rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.06)", flexWrap:"wrap" }}>
+        <div style={{ display:"flex", gap:isMobile ? 8 : 12, padding:isMobile ? "0.5rem 0.7rem" : "0.6rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.06)", flexWrap:"wrap", justifyContent:isMobile ? "center" : "flex-start" }}>
           {[["⚔️",me.atk],["🛡️",me.def],["✨",me.mag],["🦶",me.init],["❤️",me.maxHp],["🎲",equippedWeapon.weapon_die]].map(([icon,val],i)=>(
             <div key={i} style={{ display:"flex", alignItems:"center", gap:4, fontSize:"0.78rem" }}>
               <span>{icon}</span><span style={{ color:"#e2d9c5", fontWeight:700 }}>{val}</span>
@@ -9712,112 +11943,210 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
         </div>
 
         {/* Doll area */}
-        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:14, padding:"0.75rem", overflow:"hidden" }}>
+        <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center", gap:isMobile ? 6 : 14, padding:isMobile ? "0.6rem 0.35rem" : "0.75rem", overflow:"hidden", minHeight:isMobile ? 365 : 0 }}>
           {/* Left slots */}
-          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:isMobile ? 6 : 8 }}>
             {leftSlots.map(k => {
               const cfg = SLOT_CONFIG.find(s => s.key === k);
-              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={activeSlot===k} onSelect={setActiveSlot} onPick={setActiveSlot} />;
+              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={rightMode==="items"&&activeSlot===k} onSelect={pickItemSlot} onPick={pickItemSlot} compact={isMobile} />;
             })}
           </div>
 
           {/* Character */}
-          <div style={{ flex:1, alignSelf:"stretch", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:8, minWidth:0, overflow:"hidden" }}>
-            <div style={{ flex:1, width:"100%", minHeight:0, position:"relative", borderRadius:12 }}>
-              <CharacterViewer me={me} equippedItems={equippedItems} fillContainer />
+          <div style={{ flex:1, alignSelf:"stretch", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:isMobile ? 6 : 8, minWidth:isMobile ? 112 : 0, overflow:"hidden" }}>
+            <div style={{ flex:1, width:"100%", minHeight:isMobile ? 235 : 0, position:"relative", borderRadius:12 }}>
+              <CharacterViewer me={me} equippedItems={equippedItems} activeCosmetics={activeCosmetics} fillContainer />
             </div>
-            <div style={{ display:"flex", gap:8, flexShrink:0 }}>
+            <div style={{ display:"flex", gap:isMobile ? 6 : 8, flexShrink:0 }}>
               {bottomSlots.map(k => {
                 const cfg = SLOT_CONFIG.find(s => s.key === k);
-                return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={activeSlot===k} onSelect={setActiveSlot} onPick={setActiveSlot} />;
+                return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={rightMode==="items"&&activeSlot===k} onSelect={pickItemSlot} onPick={pickItemSlot} compact={isMobile} />;
               })}
+            </div>
+            <div style={{ display:"flex", gap:isMobile ? 4 : 6, flexWrap:"wrap", justifyContent:"center", flexShrink:0, maxWidth:"100%", paddingTop:2 }}>
+              {COSMETIC_EQUIP_SLOT_CONFIG.map(cfg => (
+                <CosmeticSlotBox key={cfg.key} slotCfg={cfg} card={activeCosmetics?.[cfg.key]} onUnequip={onUnequipCosmetic} onSelect={pickCosmeticSlot} isSelected={rightMode==="cosmetics"&&activeCosmeticSlot===cfg.key} compact={isMobile} />
+              ))}
             </div>
           </div>
 
           {/* Right slots */}
-          <div style={{ display:"flex", flexDirection:"column", gap:8 }}>
+          <div style={{ display:"flex", flexDirection:"column", gap:isMobile ? 6 : 8 }}>
             {rightSlots.map(k => {
               const cfg = SLOT_CONFIG.find(s => s.key === k);
-              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={activeSlot===k} onSelect={setActiveSlot} onPick={setActiveSlot} />;
+              return <EquipSlotBox key={k} slotCfg={cfg} item={equippedItems[k]} onUnequip={onUnequip} isSelected={rightMode==="items"&&activeSlot===k} onSelect={pickItemSlot} onPick={pickItemSlot} compact={isMobile} />;
             })}
           </div>
         </div>
 
         {/* Active slot label */}
-        {activeSlot && (
-          <div style={{ padding:"0.5rem 1rem", borderTop:"1px solid rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
+        {rightMode==="items" && activeSlot && (
+          <div style={{ padding:isMobile ? "0.5rem 0.7rem" : "0.5rem 1rem", borderTop:"1px solid rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
             <span style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa" }}>
               {activeSlotCfg?.icon} {activeSlotCfg?.label} — mostra compatibili
             </span>
             <button onClick={()=>setActiveSlot(null)} style={{ background:"none", border:"none", color:"#475569", cursor:"pointer", fontSize:"0.75rem" }}>Mostra tutti ✕</button>
           </div>
         )}
+        {rightMode==="cosmetics" && activeCosmeticSlotCfg && (
+          <div style={{ padding:isMobile ? "0.5rem 0.7rem" : "0.5rem 1rem", borderTop:"1px solid rgba(255,255,255,0.06)", display:"flex", alignItems:"center", justifyContent:"space-between", gap:8 }}>
+            <span style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#c4b5fd" }}>
+              {activeCosmeticSlotCfg.icon} {activeCosmeticSlotCfg.label} — {compatibleCosmetics.length} disponibili
+            </span>
+            <button onClick={()=>setRightMode("items")} style={{ background:"none", border:"none", color:"#475569", cursor:"pointer", fontSize:"0.75rem" }}>Oggetti ✕</button>
+          </div>
+        )}
       </div>
 
       {/* ══ RIGHT — inventory grid ══ */}
-      <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:"hidden" }}>
+      <div style={{ flex:isMobile ? "0 0 auto" : 1, display:"flex", flexDirection:"column", overflow:isMobile ? "visible" : "hidden", minHeight:isMobile ? 520 : 0 }}>
 
-        {/* Item detail panel — fixed height, always visible */}
-        <div style={{ height:120, flexShrink:0, display:"flex", gap:12, padding:"0.75rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.07)", background:"rgba(15,23,42,0.9)", alignItems:"flex-start", overflow:"hidden" }}>
-          {hoveredItem ? (<>
-            <ArtThumb src={getItemImage(hoveredItem.item)} alt={itemName(hoveredItem.item)} size={80} radius={8} />
-            <div style={{ flex:1, minWidth:0 }}>
-              <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.88rem", color: rarityColors[hoveredItem.item.rarity]||"#e2d9c5", fontWeight:700 }}>{itemName(hoveredItem.item)}</div>
-              <div style={{ fontSize:"0.68rem", color:"#64748b", marginBottom:4 }}>{itemRarityLabel(hoveredItem.item.rarity)} · {itemTypeLabel(hoveredItem.item.type)}</div>
-              <div style={{ fontSize:"0.72rem", color:"#94a3b8", lineHeight:1.5, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical" }}>{itemDescription(hoveredItem.item)}</div>
-              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:4 }}>
-                {itemStatSummary(hoveredItem.item).map(s=>(
-                  <span key={s} style={{ fontSize:"0.68rem", background:"rgba(255,255,255,0.05)", border:"1px solid #1f2937", borderRadius:999, padding:"1px 7px", color:"#d1d5db" }}>{s}</span>
+        {/* Item detail panel */}
+        <div style={{ minHeight: isMobile ? 0 : 236, flexShrink:0, display:"grid", gridTemplateColumns: isMobile ? "96px minmax(0,1fr)" : "152px minmax(0,1fr) auto", gap:isMobile ? 10 : 14, padding:isMobile ? "0.75rem" : "0.9rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.07)", background:"linear-gradient(135deg, rgba(15,23,42,0.95), rgba(20,14,35,0.92))", alignItems:"stretch", overflow:"hidden" }}>
+          {rightMode==="cosmetics" ? (
+            selectedCosmeticCard ? (<>
+              <div style={{ alignSelf:"stretch", borderRadius:10, border:`1px solid ${selectedCosmeticColor}`, background:"rgba(2,6,23,0.45)", display:"flex", alignItems:"center", justifyContent:"center", padding:8, boxShadow:`0 0 24px ${selectedCosmeticColor}22` }}>
+                <ArtThumb src={getCosmeticImage(selectedCosmeticCard)} alt={selectedCosmeticCard.name} size={isMobile ? 80 : 132} radius={8} />
+              </div>
+              <div style={{ minWidth:0, display:"flex", flexDirection:"column", gap:7 }}>
+                <div style={{ fontFamily:"'Cinzel',serif", fontSize:isMobile ? "0.9rem" : "1.05rem", color:selectedCosmeticColor, fontWeight:800, lineHeight:1.15 }}>{selectedCosmeticCard.name}</div>
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                  <span style={{ fontSize:"0.68rem", color:"#0f172a", background:selectedCosmeticColor, borderRadius:999, padding:"2px 8px", fontWeight:800 }}>{cardRarityLabel(selectedCosmeticCard.rarity)}</span>
+                  <span style={{ fontSize:"0.68rem", color:"#ddd6fe", background:"rgba(124,58,237,0.18)", border:"1px solid rgba(167,139,250,0.35)", borderRadius:999, padding:"2px 8px" }}>{activeCosmeticSlotCfg?.label}</span>
+                  {selectedCosmeticEquipped && <span style={{ fontSize:"0.68rem", color:"#fbbf24", background:"rgba(120,53,15,0.18)", border:"1px solid rgba(251,191,36,0.3)", borderRadius:999, padding:"2px 8px", fontWeight:800 }}>Indossata</span>}
+                </div>
+                <div style={{ fontSize:"0.75rem", color:"#b6c2d1", lineHeight:1.5, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:isMobile ? 2 : 3, WebkitBoxOrient:"vertical" }}>{selectedCosmeticCard.description || "Cosmetica da collezione."}</div>
+                {!isMobile && (
+                  <div style={{ display:"grid", gap:3, marginTop:"auto" }}>
+                    {cosmeticEffectLines(selectedCosmeticCard).slice(0, 4).map(line => (
+                      <div key={line} style={{ color:"#94a3b8", fontSize:"0.69rem", lineHeight:1.35 }}>✦ {line}</div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              <div style={{ display:"flex", flexDirection:isMobile ? "row" : "column", gap:7, flexShrink:0, alignItems:"stretch", gridColumn:isMobile ? "1 / -1" : "auto" }}>
+                <BigBtn onClick={()=> selectedCosmeticEquipped ? onUnequipCosmetic?.(activeCosmeticSlot) : onEquipCosmetic?.(selectedCosmeticCard)} gold>
+                  {selectedCosmeticEquipped ? "Rimuovi" : "Indossa"}
+                </BigBtn>
+                {activeCosmeticCard && !selectedCosmeticEquipped && <SmallBtn onClick={()=>onUnequipCosmetic?.(activeCosmeticSlot)}>Svuota slot</SmallBtn>}
+              </div>
+            </>) : (
+              <div style={{ gridColumn:"1 / -1", flex:1, display:"flex", alignItems:"center", justifyContent:"center", textAlign:"center" }}>
+                <span style={{ fontSize:"0.78rem", color:"#64748b" }}>Nessuna cosmetica compatibile posseduta per questo slot.</span>
+              </div>
+            )
+          ) : detailItem ? (<>
+            <div style={{ alignSelf:"stretch", borderRadius:10, border:`1px solid ${rarityColors[detailItem.rarity] || "#334155"}`, background:"rgba(2,6,23,0.45)", display:"flex", alignItems:"center", justifyContent:"center", padding:8, boxShadow:`0 0 24px ${(rarityColors[detailItem.rarity] || "#334155")}22` }}>
+              <ArtThumb src={getItemLargeImage(detailItem)} alt={itemName(detailItem)} size={isMobile ? 80 : 132} radius={8} />
+            </div>
+            <div style={{ minWidth:0, display:"flex", flexDirection:"column", gap:7 }}>
+              <div style={{ fontFamily:"'Cinzel',serif", fontSize:isMobile ? "0.9rem" : "1.05rem", color: rarityColors[detailItem.rarity]||"#e2d9c5", fontWeight:800, lineHeight:1.15 }}>{itemName(detailItem)}</div>
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                <span style={{ fontSize:"0.68rem", color:"#0f172a", background:rarityColors[detailItem.rarity] || "#94a3b8", borderRadius:999, padding:"2px 8px", fontWeight:800 }}>{itemRarityLabel(detailItem.rarity)}</span>
+                <span style={{ fontSize:"0.68rem", color:"#cbd5e1", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(148,163,184,0.18)", borderRadius:999, padding:"2px 8px" }}>{itemTypeLabel(detailItem.type)}</span>
+                {detailSlot && <span style={{ fontSize:"0.68rem", color:"#ddd6fe", background:"rgba(124,58,237,0.18)", border:"1px solid rgba(167,139,250,0.35)", borderRadius:999, padding:"2px 8px" }}>{equipSlotLabel(detailSlot)}</span>}
+                {detailEquipped && <span style={{ fontSize:"0.68rem", color:"#fbbf24", background:"rgba(120,53,15,0.18)", border:"1px solid rgba(251,191,36,0.3)", borderRadius:999, padding:"2px 8px", fontWeight:800 }}>Indossato</span>}
+                <span style={{ fontSize:"0.68rem", color:"#fde68a", background:"rgba(180,83,9,0.18)", border:"1px solid rgba(251,191,36,0.3)", borderRadius:999, padding:"2px 8px" }}>💰 {detailItem.price || 0}</span>
+              </div>
+              <div style={{ fontSize:"0.75rem", color:"#b6c2d1", lineHeight:1.5, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:isMobile ? 2 : 3, WebkitBoxOrient:"vertical" }}>{itemDescription(detailItem)}</div>
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
+                {itemStatSummary(detailItem).map(s=>(
+                  <span key={s} style={{ fontSize:"0.68rem", background:"rgba(255,255,255,0.06)", border:"1px solid #1f2937", borderRadius:999, padding:"2px 8px", color:"#e5e7eb" }}>{s}</span>
                 ))}
               </div>
+              {!isMobile && (
+                <div style={{ display:"grid", gap:3, marginTop:"auto" }}>
+                  {itemEffectLines(detailItem).slice(0, 4).map(line => (
+                    <div key={line} style={{ color:"#94a3b8", fontSize:"0.69rem", lineHeight:1.35 }}>✦ {line}</div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div style={{ display:"flex", flexDirection:"column", gap:6, flexShrink:0 }}>
-              {equippableTypes.has(hoveredItem.item.type) && (
-                <BigBtn onClick={()=>onEquip(hoveredItem.entries[0])} gold
-                  disabled={Object.values(equippedItems).some(i=>i?.id===hoveredItem.item.id)}>
-                  {Object.values(equippedItems).some(i=>i?.id===hoveredItem.item.id) ? "Equipaggiato" : "Equipaggia"}
+            <div style={{ display:"flex", flexDirection:isMobile ? "row" : "column", gap:7, flexShrink:0, alignItems:"stretch", gridColumn:isMobile ? "1 / -1" : "auto" }}>
+              {detailEquipped && (
+                <BigBtn onClick={()=>onUnequip?.(detailEquippedSlot)} gold>
+                  Rimuovi
                 </BigBtn>
               )}
-              {hoveredItem.item.type==="potion" && canUseConsumables && (
-                <BigBtn onClick={()=>onUse(hoveredItem.entries[0])} gold icon="🧪">Usa</BigBtn>
+              {isEquippableItem(detailItem) && !detailEquipped && detailHasInventoryEntry && (
+                <BigBtn onClick={()=>onEquip(detailGroup.entries[0])} gold>
+                  Equipaggia
+                </BigBtn>
               )}
-              <SmallBtn onClick={()=>onSell(hoveredItem)}>Vendi</SmallBtn>
+              {detailItem.type==="potion" && canUseConsumables && (
+                <BigBtn onClick={()=>onUse(detailGroup.entries[0])} gold icon="🧪">Usa</BigBtn>
+              )}
+              {detailHasInventoryEntry && <SmallBtn onClick={()=>onSell(detailGroup)}>Vendi</SmallBtn>}
             </div>
           </>) : (
-            <div style={{ flex:1, display:"flex", alignItems:"center", justifyContent:"center" }}>
-              <span style={{ fontSize:"0.75rem", color:"#1e293b" }}>Passa il mouse su un item per vedere i dettagli</span>
+            <div style={{ gridColumn:"1 / -1", flex:1, display:"flex", alignItems:"center", justifyContent:"center", textAlign:"center" }}>
+              <span style={{ fontSize:"0.78rem", color:"#64748b" }}>Seleziona un oggetto per aprire la scheda con immagine grande, bonus, rarita e valore.</span>
             </div>
           )}
         </div>
 
         {/* Sort bar */}
-        <div style={{ display:"flex", gap:6, padding:"0.5rem 0.75rem", borderBottom:"1px solid rgba(255,255,255,0.06)", flexShrink:0 }}>
-          <span style={{ fontSize:"0.68rem", color:"#475569", alignSelf:"center", marginRight:4 }}>Ordina:</span>
-          {[["type","📦 Tipo"],["rarity","💎 Rarità"],["price","💰 Prezzo"],["name","🔤 Nome"]].map(([k,l])=>(
-            <button key={k} onClick={()=>setSortBy(k)}
-              style={{ padding:"2px 10px", fontSize:"0.68rem", borderRadius:6, cursor:"pointer", fontFamily:"'Cinzel',serif",
-                background: sortBy===k ? "rgba(124,58,237,0.35)" : "rgba(15,23,42,0.6)",
-                border: `1px solid ${sortBy===k?"#7c3aed":"#334155"}`,
-                color: sortBy===k ? "#c4b5fd" : "#64748b" }}>
-              {l}
-            </button>
-          ))}
+        <div style={{ display:"flex", gap:6, padding:"0.5rem 0.75rem", borderBottom:"1px solid rgba(255,255,255,0.06)", flexShrink:0, flexWrap:isMobile ? "nowrap" : "wrap", overflowX:isMobile ? "auto" : "visible" }}>
+          {rightMode==="cosmetics" ? (<>
+            <span style={{ fontSize:"0.68rem", color:"#475569", alignSelf:"center", marginRight:4 }}>Slot:</span>
+            {COSMETIC_EQUIP_SLOT_CONFIG.map(cfg => (
+              <button key={cfg.key} onClick={()=>pickCosmeticSlot(cfg.key)}
+                style={{ padding:"2px 9px", fontSize:"0.68rem", borderRadius:6, cursor:"pointer", fontFamily:"'Cinzel',serif",
+                  background: activeCosmeticSlot===cfg.key ? "rgba(124,58,237,0.35)" : "rgba(15,23,42,0.6)",
+                  border:`1px solid ${activeCosmeticSlot===cfg.key ? "#7c3aed" : "#334155"}`,
+                  color:activeCosmeticSlot===cfg.key ? "#c4b5fd" : "#64748b" }}>
+                {cfg.icon} {cfg.label}
+              </button>
+            ))}
+          </>) : (<>
+            <span style={{ fontSize:"0.68rem", color:"#475569", alignSelf:"center", marginRight:4 }}>Ordina:</span>
+            {[["type","📦 Tipo"],["rarity","💎 Rarità"],["price","💰 Prezzo"],["name","🔤 Nome"]].map(([k,l])=>(
+              <button key={k} onClick={()=>setSortBy(k)}
+                style={{ padding:"2px 10px", fontSize:"0.68rem", borderRadius:6, cursor:"pointer", fontFamily:"'Cinzel',serif",
+                  background: sortBy===k ? "rgba(124,58,237,0.35)" : "rgba(15,23,42,0.6)",
+                  border: `1px solid ${sortBy===k?"#7c3aed":"#334155"}`,
+                  color: sortBy===k ? "#c4b5fd" : "#64748b" }}>
+                {l}
+              </button>
+            ))}
+          </>)}
         </div>
 
         {/* Grid */}
-        <div style={{ flex:1, overflowY:"auto", padding:"0.75rem" }}>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill, minmax(80px, 1fr))", gap:8 }}>
-            {filteredGroups.map(g => {
+        <div style={{ flex:1, overflowY:isMobile ? "visible" : "auto", padding:"0.75rem" }}>
+          <div style={{ display:"grid", gridTemplateColumns:isMobile ? "repeat(auto-fill, minmax(72px, 1fr))" : "repeat(auto-fill, minmax(80px, 1fr))", gap:8 }}>
+            {rightMode==="cosmetics" ? compatibleCosmetics.map(card => {
+              const rc = CARD_RARITY_COLOR[card.rarity] || "#a78bfa";
+              const isEquipped = activeCosmeticCard?.cardId === card.cardId;
+              const isActive = selectedCosmeticCard?.cardId === card.cardId;
+              return (
+                <div key={card.uid || card.cardId}
+                  onMouseEnter={()=>setHoveredCosmetic(card)}
+                  onMouseLeave={()=>setHoveredCosmetic(null)}
+                  onClick={()=>setSelectedCosmetic(card)}
+                  style={{
+                    background:isEquipped ? "rgba(251,191,36,0.12)" : isActive ? "rgba(99,102,241,0.18)" : "rgba(30,20,60,0.85)",
+                    border:`2px solid ${isEquipped ? "#fbbf24" : isActive ? rc : "rgba(255,255,255,0.08)"}`,
+                    borderRadius:10, padding:"0.4rem 0.3rem", cursor:"pointer", textAlign:"center",
+                    transition:"border-color 0.15s, background 0.15s", position:"relative",
+                    display:"flex", flexDirection:"column", alignItems:"center",
+                  }}>
+                  {isEquipped && <div style={{ position:"absolute", top:3, right:4, fontSize:"0.5rem", color:"#fbbf24" }}>★</div>}
+                  <ArtThumb src={getCosmeticImage(card)} alt={card.name} size={64} radius={6} />
+                  <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.56rem", color:rc, marginTop:3, lineHeight:1.2, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", width:"100%" }}>{card.name}</div>
+                </div>
+              );
+            }) : filteredGroups.map(g => {
               const item = g.item;
               if(!item) return null;
               const rc = rarityColors[item.rarity] || "#94a3b8";
               const isEquipped = Object.values(equippedItems).some(i=>i?.id===item.id);
-              const isHovered = hoveredItem?.item.id === item.id;
+              const isHovered = hoveredItem?.item.id === item.id || selectedItem?.item.id === item.id;
               return (
                 <div key={item.id}
                   onMouseEnter={()=>setHoveredItem(g)}
                   onMouseLeave={()=>setHoveredItem(null)}
-                  onClick={()=>{ if(equippableTypes.has(item.type)) onEquip(g.entries[0]); else if(item.type==="potion"&&canUseConsumables) onUse(g.entries[0]); }}
+                  onClick={()=>{ setSelectedItem(g); setSelectedEquippedSlot(null); }}
                   style={{
                     background: isEquipped?"rgba(251,191,36,0.12)": isHovered?"rgba(99,102,241,0.18)":"rgba(30,20,60,0.85)",
                     border:`2px solid ${isEquipped?"#fbbf24": isHovered?rc:"rgba(255,255,255,0.08)"}`,
@@ -9839,8 +12168,9 @@ function EquipmentView({ me, equippedItems, equippedWeapon, onUnequip, onEquip, 
   );
 }
 
-function SpellbookView({ spellsByLevel, preparedSpellIds, preparedCount, maxPrepared, onTogglePrepared }) {
+function SpellbookView({ spellsByLevel, preparedSpellIds, preparedCount, maxPrepared, onTogglePrepared, classKey, zodarPaths=[] }) {
   const { lang } = useI18n();
+  const classSpellBonus = getClassSpellBonus(classKey);
   return (
     <div style={{ flex:1, overflowY:"auto", padding:"1rem" }}>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:12, marginBottom:"1rem", flexWrap:"wrap" }}>
@@ -9852,6 +12182,30 @@ function SpellbookView({ spellsByLevel, preparedSpellIds, preparedCount, maxPrep
           </span>
         </div>
       </div>
+      {classSpellBonus && (
+        <div style={{ background:"rgba(30,41,59,0.72)", border:"1px solid rgba(167,139,250,0.45)", borderRadius:6, padding:"0.85rem 1rem", marginBottom:"1rem" }}>
+          <div style={{ color:"#ddd6fe", fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:"0.88rem", marginBottom:6 }}>
+            {classSpellBonus.title}
+          </div>
+          <div style={{ display:"grid", gap:4 }}>
+            {classSpellBonus.lines.map(line => (
+              <div key={line} style={{ color:"#cbd5e1", fontSize:"0.78rem", lineHeight:1.45 }}>✦ {line}</div>
+            ))}
+          </div>
+        </div>
+      )}
+      {!!zodarPaths.length && (
+        <div style={{ background:"rgba(120,53,15,0.18)", border:"1px solid rgba(251,191,36,0.34)", borderRadius:6, padding:"0.85rem 1rem", marginBottom:"1rem" }}>
+          <div style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:"0.88rem", marginBottom:6 }}>
+            Vie di Zodar attive
+          </div>
+          <div style={{ display:"grid", gap:4 }}>
+            {zodarPaths.map(path => (
+              <div key={path.id} style={{ color:"#fde68a", fontSize:"0.78rem", lineHeight:1.45 }}>{path.icon} <strong>{path.name}</strong> — {path.short}</div>
+            ))}
+          </div>
+        </div>
+      )}
       <div style={{ display:"grid", gap:"1rem" }}>
         {Object.keys(spellsByLevel).map(levelKey => {
           const level = Number(levelKey);
@@ -10011,6 +12365,45 @@ function PlayerWorldEventView({ me, myId }) {
     dbGetWorldEvent().then(e => { setEvent(e); setLoading(false); });
   }, []);
 
+  async function grantWorldEventCardPacks(worldEvent) {
+    const contributorIds = Object.keys(worldEvent?.contributors || {});
+    const rewards = mergeCardPackRewards(cardPackRewardsForWorldEvent(worldEvent));
+    if(!contributorIds.length || !rewards.length) return;
+    const { data: rows } = await supabase.from("players").select("id,name,party_code").in("id", contributorIds);
+    const players = rows || [];
+    const summary = cardPackRewardSummary(rewards, "it");
+    const now = Date.now();
+    for(const player of players) {
+      if(!player?.party_code) continue;
+      for(const reward of rewards) {
+        await dbSendMessage({
+          party_code:player.party_code,
+          author:"Sistema",
+          type:"card_grant",
+          content:JSON.stringify({
+            kind:"card_pack_grant",
+            grantId:`world_event_${worldEvent.id}_${player.id}_${reward.packId}_${now}_${Math.random().toString(36).slice(2,8)}`,
+            targetPlayerId:player.id,
+            playerName:player.name,
+            packId:reward.packId,
+            quantity:reward.quantity,
+            note:`Evento mondiale: ${worldEvent.name}`,
+            createdAt:new Date().toISOString(),
+          }),
+        });
+      }
+    }
+    const parties = [...new Set(players.map(player => player.party_code).filter(Boolean))];
+    for(const partyCode of parties) {
+      await dbSendMessage({
+        party_code:partyCode,
+        author:"Sistema",
+        type:"victory",
+        content:`📦 **Ricompensa evento mondiale:** ${summary} per ogni eroe partecipante.`,
+      });
+    }
+  }
+
   async function attackBoss() {
     if(!event?.active || !me) return;
     setAttacking(true);
@@ -10025,8 +12418,9 @@ function PlayerWorldEventView({ me, myId }) {
     const newContribs = { ...fresh.contributors, [myId]: { name: me.name, dmg: prevContrib.dmg + dmg, hits: prevContrib.hits + 1 } };
     const newHp = Math.max(0, fresh.hp - dmg);
     const beaten = newHp <= 0;
-    const updated = { ...fresh, hp: newHp, contributors: newContribs, active: !beaten, beatenAt: beaten ? new Date().toISOString() : undefined };
+    const updated = { ...fresh, hp: newHp, contributors: newContribs, active: !beaten, beatenAt: beaten ? new Date().toISOString() : undefined, ...(beaten ? { cardPackRewardsGrantedAt:new Date().toISOString() } : {}) };
     await dbSaveWorldEvent(updated);
+    if(beaten && !fresh.cardPackRewardsGrantedAt) await grantWorldEventCardPacks(updated);
     setEvent(updated);
     setLastHit(dmg);
     setAttacking(false);
@@ -10241,16 +12635,19 @@ function MasterWorldEventView() {
 function GlobalLeaderboardView({ myId, partyCode }) {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [cat, setCat] = useState("xp"); // xp | quests | monsters | gold | damage
+  const [cat, setCat] = useState("xp"); // xp | quests | monsters | gold | damage | cards
 
   useEffect(() => {
     let alive = true;
     async function load() {
       setLoading(true);
-      const { data: players } = await supabase
-        .from("players")
-        .select("id,name,class,race,level,xp,gold,party_code,avatar_config")
-        .order("xp", { ascending: false });
+      const [{ data: players }, cardCollectors] = await Promise.all([
+        supabase
+          .from("players")
+          .select("id,name,class,race,level,xp,gold,party_code,avatar_config")
+          .order("xp", { ascending: false }),
+        dbGetCardCollectorLeaderboard().catch(() => []),
+      ]);
       if (!alive) return;
 
       // Aggregate by party
@@ -10269,7 +12666,24 @@ function GlobalLeaderboardView({ myId, partyCode }) {
         if ((p.level || 1) > g.topLevel) g.topLevel = p.level || 1;
       }
 
-      setData({ players: players || [], parties: Object.values(byParty) });
+      const cardParties = {};
+      for(const entry of cardCollectors || []) {
+        const pc = entry.partyCode || "-";
+        if(!cardParties[pc]) cardParties[pc] = { party_code:pc, players:[], resonance:0, totalCards:0, uniqueCards:0, mythicCards:0, unlockedClasses:0, unlockedRaces:0, unlockedSpells:0, unlockedPaths:0, score:0 };
+        const g = cardParties[pc];
+        g.players.push(entry);
+        g.resonance += entry.resonance || 0;
+        g.totalCards += entry.totalCards || 0;
+        g.uniqueCards += entry.uniqueCards || 0;
+        g.mythicCards += entry.mythicCards || 0;
+        g.unlockedClasses += entry.unlockedClasses || 0;
+        g.unlockedRaces += entry.unlockedRaces || 0;
+        g.unlockedSpells += entry.unlockedSpells || 0;
+        g.unlockedPaths += entry.unlockedPaths || 0;
+        g.score += cardCollectorScore(entry);
+      }
+
+      setData({ players: players || [], parties: Object.values(byParty), cardCollectors:cardCollectors || [], cardParties:Object.values(cardParties) });
       setLoading(false);
     }
     load();
@@ -10282,14 +12696,15 @@ function GlobalLeaderboardView({ myId, partyCode }) {
     { k: "monsters", l: "💀 Mostri",         pKey: null,           gKey: "totalMonsters", fmt: v => `${v} uccisi`, pFn: p => ((p.avatar_config&&typeof p.avatar_config==='object')?p.avatar_config.stats||{}:{}).monstersKilled||0 },
     { k: "gold",     l: "💰 Oro",            pKey: "gold",         gKey: "totalGold",     fmt: v => `${v.toLocaleString("it-IT")} 💰` },
     { k: "damage",   l: "🔥 Danno",          pKey: null,           gKey: "totalDamage",   fmt: v => `${v.toLocaleString("it-IT")} dmg`, pFn: p => ((p.avatar_config&&typeof p.avatar_config==='object')?p.avatar_config.stats||{}:{}).totalDamage||0 },
+    { k: "cards",    l: "🃏 Collezione",     pKey: null,           gKey: "resonance",     fmt: v => `${Math.round(v).toLocaleString("it-IT")} Risonanza`, pFn: p => p.resonance || 0, isCards:true },
   ];
   const catCfg = CATS.find(c => c.k === cat);
 
   const getPlayerVal = p => catCfg.pFn ? catCfg.pFn(p) : (p[catCfg.pKey] || 0);
   const getPartyVal  = g => g[catCfg.gKey] || 0;
 
-  const sortedPlayers = data ? [...data.players].sort((a, b) => getPlayerVal(b) - getPlayerVal(a)).slice(0, 50) : [];
-  const sortedParties = data ? [...data.parties].sort((a, b) => getPartyVal(b) - getPartyVal(a)).slice(0, 20) : [];
+  const sortedPlayers = data ? [...(catCfg.isCards ? data.cardCollectors : data.players)].sort((a, b) => getPlayerVal(b) - getPlayerVal(a)).slice(0, 50) : [];
+  const sortedParties = data ? [...(catCfg.isCards ? data.cardParties : data.parties)].sort((a, b) => getPartyVal(b) - getPartyVal(a)).slice(0, 20) : [];
 
   const MEDAL = ["🥇","🥈","🥉"];
   const ROW_BASE = { display:"flex", alignItems:"center", gap:10, padding:"0.6rem 0.9rem", borderBottom:"1px solid rgba(255,255,255,0.05)", borderRadius:6, marginBottom:4 };
@@ -10331,7 +12746,11 @@ function GlobalLeaderboardView({ myId, partyCode }) {
                       {g.party_code}
                       {isMyParty && <span style={{ fontSize:"0.62rem", color:"#a78bfa", background:"rgba(109,40,217,0.25)", padding:"1px 6px", borderRadius:8 }}>il tuo party</span>}
                     </div>
-                    <div style={{ color:"#6b7280", fontSize:"0.68rem", marginTop:1 }}>{g.players.length} avventurieri · Lv.{g.topLevel} max</div>
+                    <div style={{ color:"#6b7280", fontSize:"0.68rem", marginTop:1 }}>
+                      {catCfg.isCards
+                        ? `${g.players.length} collezionisti · ${g.resonance.toLocaleString("it-IT")} Risonanza · ${g.uniqueCards} uniche · ${g.mythicCards} mitiche`
+                        : `${g.players.length} avventurieri · Lv.${g.topLevel} max`}
+                    </div>
                   </div>
                   <div style={{ color:"#fbbf24", fontSize:"0.78rem", fontWeight:700, flexShrink:0, textAlign:"right" }}>
                     {catCfg.fmt(val)}
@@ -10348,11 +12767,12 @@ function GlobalLeaderboardView({ myId, partyCode }) {
               ⚔️ Classifiche Individuali
             </div>
             {sortedPlayers.map((p, i) => {
-              const isMe = p.id === myId;
+              const rowId = p.id || p.playerId;
+              const isMe = rowId === myId;
               const val = getPlayerVal(p);
               const cls = CLASSES[p.class || "warrior"];
               return (
-                <div key={p.id} style={{ ...ROW_BASE, ...(isMe ? ME_STYLE : {}), background: isMe ? "rgba(109,40,217,0.18)" : i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
+                <div key={rowId || i} style={{ ...ROW_BASE, ...(isMe ? ME_STYLE : {}), background: isMe ? "rgba(109,40,217,0.18)" : i % 2 === 0 ? "rgba(255,255,255,0.02)" : "transparent" }}>
                   <span style={{ width:24, textAlign:"center", fontSize: i < 3 ? "1.1rem" : "0.8rem", color:"#6b7280", fontWeight:700, flexShrink:0 }}>{MEDAL[i] || `#${i+1}`}</span>
                   <span style={{ fontSize:"1rem", flexShrink:0 }}>{cls?.emoji || "⚔️"}</span>
                   <div style={{ flex:1, minWidth:0 }}>
@@ -10360,9 +12780,20 @@ function GlobalLeaderboardView({ myId, partyCode }) {
                       {p.name}
                       {isMe && <span style={{ fontSize:"0.6rem", color:"#a78bfa", background:"rgba(109,40,217,0.25)", padding:"1px 5px", borderRadius:8, flexShrink:0 }}>tu</span>}
                     </div>
-                    <div style={{ color:"#6b7280", fontSize:"0.67rem", marginTop:1 }}>
-                      {RACES[p.race||"human"]?.name} {cls?.name} · Lv.{p.level||1} · {p.party_code||"—"}
-                    </div>
+                    {catCfg.isCards ? (
+                      <div style={{ color:"#6b7280", fontSize:"0.67rem", marginTop:1 }}>
+                        {RACES[p.race||"human"]?.name} {cls?.name} · {p.partyCode||"—"} · {p.resonance?.toLocaleString("it-IT") || 0} Ris · {p.totalCards || 0} carte · {p.uniqueCards || 0} uniche · {p.mythicCards || 0} mitiche
+                      </div>
+                    ) : (
+                      <div style={{ color:"#6b7280", fontSize:"0.67rem", marginTop:1 }}>
+                        {RACES[p.race||"human"]?.name} {cls?.name} · Lv.{displayLevel(p)} · {p.party_code||"—"}
+                      </div>
+                    )}
+                    {catCfg.isCards && (
+                      <div style={{ color:"#475569", fontSize:"0.62rem", marginTop:2 }}>
+                        Sblocchi: {p.unlockedPaths || 0} vie · {p.unlockedClasses || 0} classi · {p.unlockedRaces || 0} razze · {p.unlockedSpells || 0} magie
+                      </div>
+                    )}
                   </div>
                   <div style={{ color:"#fbbf24", fontSize:"0.78rem", fontWeight:700, flexShrink:0, textAlign:"right" }}>
                     {catCfg.fmt(val)}
@@ -10374,6 +12805,165 @@ function GlobalLeaderboardView({ myId, partyCode }) {
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function HallOfEchoesView({ me, cardVault, isMobile=false }) {
+  const [entries, setEntries] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const collectionStats = cardCollectionStats(cardVault);
+  const availableMilestones = LEGACY_RELIC_MILESTONES.filter(milestone => collectionStats.resonance >= milestone.value);
+  const claimedIds = new Set(entries.filter(entry => entry.playerId === me?.id).map(entry => entry.milestoneId));
+  const claimableMilestones = availableMilestones.filter(milestone => !claimedIds.has(milestone.id));
+  const [selectedMilestoneId, setSelectedMilestoneId] = useState("");
+  const selectedMilestone = LEGACY_RELIC_MILESTONES.find(milestone => milestone.id === (selectedMilestoneId || claimableMilestones[0]?.id));
+  const [relicType, setRelicType] = useState("weapon");
+  const [relicName, setRelicName] = useState("");
+  const [relicLore, setRelicLore] = useState("");
+  const [error, setError] = useState("");
+
+  async function reload() {
+    setLoading(true);
+    const rows = await dbGetHallOfEchoes().catch(() => []);
+    setEntries((rows || []).sort((a,b) => (b.resonance || 0) - (a.resonance || 0)));
+    setLoading(false);
+  }
+
+  useEffect(() => { reload(); }, []);
+
+  async function createLegacyRelic() {
+    const milestone = selectedMilestone;
+    const name = relicName.trim();
+    const lore = relicLore.trim();
+    if(!me?.id || !milestone) return;
+    if(collectionStats.resonance < milestone.value) { setError("Risonanza insufficiente."); return; }
+    if(claimedIds.has(milestone.id)) { setError("Hai gia lasciato una reliquia per questa milestone."); return; }
+    if(name.length < 3) { setError("Dai un nome alla reliquia."); return; }
+    if(lore.length < 12) { setError("Scrivi almeno una breve storia della reliquia."); return; }
+    setSaving(true);
+    setError("");
+    try {
+      const fresh = await dbGetHallOfEchoes().catch(() => []);
+      if((fresh || []).some(entry => entry.playerId === me.id && entry.milestoneId === milestone.id)) {
+        setError("Questa reliquia e gia stata registrata.");
+        return;
+      }
+      const entry = {
+        id:`legacy_${Date.now()}_${Math.random().toString(36).slice(2,8)}`,
+        playerId:me.id,
+        playerName:me.name,
+        title:milestone.title,
+        achievement:`${me.name} ha raggiunto ${milestone.value} Risonanza di Zodar.`,
+        resonance:collectionStats.resonance,
+        milestoneValue:milestone.value,
+        milestoneId:milestone.id,
+        unlockedAt:new Date().toISOString(),
+        relic:{
+          name,
+          type:relicType,
+          typeLabel:legacyRelicTypeLabel(relicType),
+          rarity:milestone.rarity,
+          lore,
+          creatorName:me.name,
+          createdAt:new Date().toISOString(),
+          historicalAchievement:milestone.reward,
+        },
+      };
+      const nextEntries = [entry, ...(fresh || [])].sort((a,b) => (b.resonance || 0) - (a.resonance || 0)).slice(0, 300);
+      await dbSaveHallOfEchoes(nextEntries);
+      setEntries(nextEntries);
+      setRelicName("");
+      setRelicLore("");
+    } finally {
+      setSaving(false);
+    }
+  }
+
+  const rarityTone = (rarity) => CARD_RARITY_COLOR[rarity] || "#fbbf24";
+  const panel = { background:"rgba(15,23,42,0.78)", border:"1px solid rgba(148,163,184,0.14)", borderRadius:8, padding:"1rem" };
+
+  return (
+    <div style={{ flex:1, overflowY:"auto", padding:"1rem", background:"rgba(3,7,18,0.58)" }}>
+      <div style={{ maxWidth:1100, margin:"0 auto", display:"grid", gap:"1rem" }}>
+        <div style={{ textAlign:"center", padding:"1rem 0 0.4rem" }}>
+          <h2 style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.25rem", margin:"0 0 0.35rem", letterSpacing:"0.08em" }}>🏛️ Hall of Echoes</h2>
+          <div style={{ color:"#94a3b8", fontSize:"0.82rem", lineHeight:1.55 }}>Power fades. Legends remain.</div>
+        </div>
+
+        <div style={{ display:"grid", gridTemplateColumns:isMobile ? "1fr" : "minmax(280px,0.9fr) minmax(360px,1.1fr)", gap:"1rem" }}>
+          <div style={{ ...panel, border:"1px solid rgba(251,191,36,0.22)", background:"linear-gradient(135deg,rgba(120,53,15,0.2),rgba(15,23,42,0.82))" }}>
+            <div style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontWeight:800, fontSize:"0.95rem" }}>La tua Eredita</div>
+            <div style={{ color:"#e2e8f0", fontSize:"2rem", fontWeight:900, marginTop:4 }}>{collectionStats.resonance}</div>
+            <div style={{ color:"#94a3b8", fontSize:"0.74rem" }}>Risonanza attuale · {collectionStats.total} carte · {collectionStats.mythicCount} mitiche</div>
+            <div style={{ display:"grid", gap:7, marginTop:"0.9rem" }}>
+              {LEGACY_RELIC_MILESTONES.map(milestone => {
+                const unlocked = collectionStats.resonance >= milestone.value;
+                const claimed = claimedIds.has(milestone.id);
+                return (
+                  <div key={milestone.id} style={{ display:"grid", gridTemplateColumns:"72px 1fr", gap:8, padding:"0.55rem 0.65rem", borderRadius:7, background:unlocked ? "rgba(251,191,36,0.12)" : "rgba(2,6,23,0.42)", border:`1px solid ${unlocked ? "rgba(251,191,36,0.32)" : "rgba(51,65,85,0.7)"}` }}>
+                    <div style={{ color:unlocked ? "#fbbf24" : "#64748b", fontWeight:900 }}>{milestone.value}</div>
+                    <div>
+                      <div style={{ color:unlocked ? "#fde68a" : "#cbd5e1", fontFamily:"'Cinzel',serif", fontWeight:800, fontSize:"0.78rem" }}>{claimed ? "✓ " : unlocked ? "★ " : ""}{milestone.title}</div>
+                      <div style={{ color:rarityTone(milestone.rarity), fontSize:"0.68rem", lineHeight:1.35 }}>{milestone.reward}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          <div style={panel}>
+            <div style={{ color:"#a78bfa", fontFamily:"'Cinzel',serif", fontWeight:800, marginBottom:8 }}>Crea Reliquia Legacy</div>
+            {claimableMilestones.length ? (
+              <div style={{ display:"grid", gap:10 }}>
+                <select value={selectedMilestone?.id || ""} onChange={e=>setSelectedMilestoneId(e.target.value)} style={{ padding:"0.55rem 0.7rem", background:"rgba(2,6,23,0.72)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0" }}>
+                  {claimableMilestones.map(milestone => <option key={milestone.id} value={milestone.id}>{milestone.value} · {milestone.title} · {cardRarityLabel(milestone.rarity)}</option>)}
+                </select>
+                <select value={relicType} onChange={e=>setRelicType(e.target.value)} style={{ padding:"0.55rem 0.7rem", background:"rgba(2,6,23,0.72)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0" }}>
+                  {LEGACY_RELIC_TYPES.map(type => <option key={type.id} value={type.id}>{type.label}</option>)}
+                </select>
+                <input value={relicName} onChange={e=>setRelicName(e.target.value)} placeholder="Nome reliquia, es. Spada degli Echi Perduti" style={{ padding:"0.62rem 0.75rem", background:"rgba(2,6,23,0.72)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0" }} />
+                <textarea value={relicLore} onChange={e=>setRelicLore(e.target.value)} placeholder="Testo lore. Racconta perche questa reliquia deve restare nella storia." style={{ padding:"0.62rem 0.75rem", minHeight:88, resize:"vertical", background:"rgba(2,6,23,0.72)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontFamily:"inherit" }} />
+                {error && <div style={{ color:"#f87171", fontSize:"0.76rem" }}>{error}</div>}
+                <BigBtn onClick={createLegacyRelic} gold disabled={saving}>{saving ? "Incisione..." : "Incidi nella Hall"}</BigBtn>
+                <div style={{ color:"#64748b", fontSize:"0.72rem", lineHeight:1.45 }}>Le Reliquie Legacy sono prestigio e memoria storica: non sono pensate per essere gli oggetti piu forti del gioco.</div>
+              </div>
+            ) : (
+              <div style={{ color:"#64748b", fontSize:"0.82rem", lineHeight:1.55 }}>Raggiungi 7777 Risonanza per incidere la tua prima Reliquia Legacy nella Hall of Echoes.</div>
+            )}
+          </div>
+        </div>
+
+        <div style={panel}>
+          <div style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontWeight:800, marginBottom:"0.75rem" }}>Echi Incisi</div>
+          {loading ? (
+            <div style={{ color:"#64748b", padding:"2rem", textAlign:"center" }}>Caricamento Hall...</div>
+          ) : entries.length ? (
+            <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(260px,1fr))", gap:10 }}>
+              {entries.map(entry => (
+                <div key={entry.id} style={{ background:"linear-gradient(180deg,rgba(2,6,23,0.78),rgba(15,23,42,0.72))", border:`1px solid ${rarityTone(entry.relic?.rarity)}55`, borderRadius:8, padding:"0.9rem" }}>
+                  <div style={{ color:"#e2e8f0", fontFamily:"'Cinzel',serif", fontWeight:900, fontSize:"0.98rem" }}>{entry.playerName}</div>
+                  <div style={{ color:"#fbbf24", fontSize:"0.72rem", marginTop:2 }}>{entry.title}</div>
+                  <div style={{ color:"#94a3b8", fontSize:"0.72rem", marginTop:8 }}>{entry.achievement}</div>
+                  <div style={{ marginTop:"0.8rem", padding:"0.7rem", borderRadius:7, background:"rgba(15,23,42,0.76)", border:`1px solid ${rarityTone(entry.relic?.rarity)}33` }}>
+                    <div style={{ color:rarityTone(entry.relic?.rarity), fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.08em" }}>{cardRarityLabel(entry.relic?.rarity)} · {entry.relic?.typeLabel || legacyRelicTypeLabel(entry.relic?.type)}</div>
+                    <div style={{ color:"#e2e8f0", fontFamily:"'Cinzel',serif", fontWeight:800, marginTop:3 }}>{entry.relic?.name}</div>
+                    <div style={{ color:"#94a3b8", fontSize:"0.76rem", lineHeight:1.45, marginTop:6, fontStyle:"italic" }}>{entry.relic?.lore}</div>
+                  </div>
+                  <div style={{ display:"flex", justifyContent:"space-between", gap:8, marginTop:"0.7rem", color:"#64748b", fontSize:"0.66rem" }}>
+                    <span>{entry.resonance?.toLocaleString("it-IT")} Risonanza</span>
+                    <span>{entry.unlockedAt ? new Date(entry.unlockedAt).toLocaleDateString("it-IT") : ""}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div style={{ color:"#64748b", padding:"2rem", textAlign:"center", border:"1px dashed #334155", borderRadius:8 }}>Nessuna leggenda incisa ancora. La Hall attende il primo nome.</div>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
@@ -10417,6 +13007,22 @@ function SecretCardsGate({ onUnlock }) {
 function ZodarCardBack({ pack=null, compact=false }) {
   const accent = pack?.accent || "#8b5cf6";
   const art = pack?.art;
+  const templateAsset = CARD_BACK_TEMPLATE_ASSETS[pack?.id];
+  if(templateAsset) {
+    return (
+      <div style={{
+        flex:1,
+        minHeight:0,
+        borderRadius:compact ? 7 : 9,
+        position:"relative",
+        overflow:"hidden",
+        background:`linear-gradient(145deg,rgba(3,7,18,0.8),${accent}22), url(${templateAsset}) center / cover no-repeat`,
+        boxShadow:`inset 0 0 0 ${compact ? 1 : 2}px rgba(255,255,255,0.12), inset 0 0 34px rgba(0,0,0,0.42), 0 0 ${compact ? 14 : 24}px ${accent}55`,
+      }}>
+        <div style={{ position:"absolute", inset:0, background:`radial-gradient(circle at 50% 38%,transparent 38%,rgba(2,6,23,0.18) 72%), linear-gradient(115deg,rgba(255,255,255,0.12),transparent 25%,transparent 70%,rgba(255,255,255,0.08))` }} />
+      </div>
+    );
+  }
   return (
     <div style={{
       flex:1,
@@ -10450,6 +13056,7 @@ function ZodarCardBack({ pack=null, compact=false }) {
 function ZodarLootCard({ card, revealed=true, onClick, compact=false, backPack=null }) {
   const color = CARD_RARITY_COLOR[card?.rarity] || "#94a3b8";
   const rarityStyle = CARD_RARITY_STYLE[card?.rarity] || CARD_RARITY_STYLE.common;
+  const frontTemplate = CARD_FRONT_TEMPLATE_ASSETS[card?.rarity];
   const backAccent = backPack?.accent || "#4c1d95";
   const effectLines = cardEffectLines(card);
   const typeLine = cardTypeLine(card);
@@ -10483,6 +13090,16 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false, backPack=n
         overflow:"hidden",
         position:"relative",
       }}>
+        {revealed && frontTemplate && (
+          <div style={{
+            position:"absolute",
+            inset:0,
+            background:`url(${frontTemplate}) center / cover no-repeat`,
+            opacity:compact ? 0.22 : 0.28,
+            mixBlendMode:"screen",
+            pointerEvents:"none",
+          }} />
+        )}
         {!revealed ? (
           <ZodarCardBack pack={backPack} compact={compact} />
         ) : (
@@ -10513,6 +13130,8 @@ function ZodarLootCard({ card, revealed=true, onClick, compact=false, backPack=n
             <div style={{ minHeight:compact ? 18 : 24, display:"flex", alignItems:"center", gap:5, justifyContent:"space-between" }}>
               <div style={{ display:"flex", gap:4, minWidth:0, overflow:"hidden" }}>
                 {card.exclusive && <span style={{ color:"#fbbf24", border:"1px solid rgba(251,191,36,0.35)", background:"rgba(2,6,23,0.55)", borderRadius:4, padding:"1px 5px", fontSize:compact ? "0.48rem" : "0.56rem", whiteSpace:"nowrap" }}>SOLO PACK</span>}
+                {card.kind === "unlock" && card.unlockStatus === "new_unlock" && <span style={{ color:"#86efac", border:"1px solid rgba(134,239,172,0.38)", background:"rgba(20,83,45,0.45)", borderRadius:4, padding:"1px 5px", fontSize:compact ? "0.48rem" : "0.56rem", whiteSpace:"nowrap" }}>NUOVO</span>}
+                {card.kind === "unlock" && card.unlockStatus === "already_unlocked" && <span style={{ color:"#fcd34d", border:"1px solid rgba(252,211,77,0.36)", background:"rgba(120,53,15,0.45)", borderRadius:4, padding:"1px 5px", fontSize:compact ? "0.48rem" : "0.56rem", whiteSpace:"nowrap" }}>GIA</span>}
                 {card.duplicate && <span style={{ color:"#c4b5fd", border:"1px solid rgba(196,181,253,0.32)", background:"rgba(2,6,23,0.55)", borderRadius:4, padding:"1px 5px", fontSize:compact ? "0.48rem" : "0.56rem", whiteSpace:"nowrap" }}>+{card.convertedFragments || 0}</span>}
               </div>
               {statBadge && <div style={{ marginLeft:"auto", minWidth:compact ? 34 : 48, minHeight:compact ? 18 : 25, borderRadius:6, background:rarityStyle.plate, border:`2px solid ${rarityStyle.dark}`, color:rarityStyle.ink, display:"flex", alignItems:"center", justifyContent:"center", padding:"0 0.35rem", fontFamily:"'Cinzel',serif", fontWeight:900, fontSize:compact ? "0.58rem" : "0.74rem", whiteSpace:"nowrap", boxShadow:`0 0 12px ${rarityStyle.glow}` }}>{statBadge}</div>}
@@ -10595,6 +13214,7 @@ function ZodarPackArtwork({ pack, large=false, opening=false }) {
 function ZodarPackTearAnimation({ pack }) {
   const accent = pack?.accent || "#a78bfa";
   const packArt = pack?.art;
+  const backTemplate = CARD_BACK_TEMPLATE_ASSETS[pack?.id];
   const cardOffsets = [
     { dx:"clamp(-205px,-31vw,-96px)", dy:-66, rot:-11 },
     { dx:"clamp(-122px,-18vw,-58px)", dy:-92, rot:-5 },
@@ -10623,7 +13243,9 @@ function ZodarPackTearAnimation({ pack }) {
           width:"clamp(70px,10vw,104px)",
           aspectRatio:"2.5 / 3.5",
           borderRadius:8,
-          background:`linear-gradient(135deg,${accent},rgba(15,23,42,0.98) 28%,rgba(2,6,23,1) 70%,${accent}), radial-gradient(circle at 50% 34%,${accent}66,transparent 40%)`,
+          background:backTemplate
+            ? `linear-gradient(135deg,rgba(2,6,23,0.12),${accent}22), url(${backTemplate}) center / cover no-repeat`
+            : `linear-gradient(135deg,${accent},rgba(15,23,42,0.98) 28%,rgba(2,6,23,1) 70%,${accent}), radial-gradient(circle at 50% 34%,${accent}66,transparent 40%)`,
           border:`3px solid ${accent}cc`,
           boxShadow:`0 18px 34px rgba(0,0,0,0.58), 0 0 24px ${accent}66, inset 0 0 0 2px rgba(255,255,255,0.16)`,
           "--dx":card.dx,
@@ -10631,8 +13253,8 @@ function ZodarPackTearAnimation({ pack }) {
           "--rot":`${card.rot}deg`,
           animation:`packCardSlide 1.85s cubic-bezier(.16,.86,.22,1) ${idx * 0.07}s forwards`,
         }}>
-          <div style={{ position:"absolute", inset:"8%", borderRadius:6, border:`1px solid ${accent}88`, boxShadow:`inset 0 0 22px ${accent}44` }} />
-          <div style={{ position:"absolute", left:"50%", top:"50%", width:"44%", aspectRatio:"1", borderRadius:"50%", transform:"translate(-50%,-50%)", border:`2px solid ${accent}99`, boxShadow:`0 0 18px ${accent}66` }} />
+          {!backTemplate && <div style={{ position:"absolute", inset:"8%", borderRadius:6, border:`1px solid ${accent}88`, boxShadow:`inset 0 0 22px ${accent}44` }} />}
+          {!backTemplate && <div style={{ position:"absolute", left:"50%", top:"50%", width:"44%", aspectRatio:"1", borderRadius:"50%", transform:"translate(-50%,-50%)", border:`2px solid ${accent}99`, boxShadow:`0 0 18px ${accent}66` }} />}
           <div style={{ position:"absolute", inset:0, background:"linear-gradient(110deg,rgba(255,255,255,.18),transparent 24%,transparent 70%,rgba(255,255,255,.1))", borderRadius:6 }} />
         </div>
       ))}
@@ -10687,20 +13309,31 @@ function ZodarPackTearAnimation({ pack }) {
   );
 }
 
-function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWithPremium, onBuyPremiumCurrency, onGrantDevPack }) {
+function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWithPremium, onBuyPremiumCurrency, onGrantDevPack, isMobile=false }) {
   const [opening, setOpening] = useState(null); // { pack, rewards, revealed, phase }
   const [busy, setBusy] = useState(false);
   const [spotlight, setSpotlight] = useState(null);
+  const [activeRevealIndex, setActiveRevealIndex] = useState(0);
   async function openPack(pack) {
     if(busy) return;
     setBusy(true);
     try {
       const rewards = await onOpenPack(pack.id);
-      if(rewards?.length) setOpening({ pack, rewards, revealed:Array(rewards.length).fill(false), phase:"sealed" });
+      if(rewards?.length) {
+        setActiveRevealIndex(0);
+        setOpening({ pack, rewards, revealed:Array(rewards.length).fill(false), phase:"sealed" });
+      }
     } finally {
       setBusy(false);
     }
   }
+  useEffect(() => {
+    if(!opening?.rewards?.length) {
+      setActiveRevealIndex(0);
+      return;
+    }
+    setActiveRevealIndex(idx => Math.min(Math.max(0, idx), opening.rewards.length - 1));
+  }, [opening?.rewards?.length]);
   function startPackReveal() {
     setOpening(prev => prev ? { ...prev, phase:"opening" } : prev);
     window.setTimeout(() => {
@@ -10724,6 +13357,12 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
         setSpotlight(card);
       }
       return { ...prev, revealed:prev.revealed.map((v,i)=>i===idx ? true : v) };
+    });
+  }
+  function moveReveal(delta) {
+    setActiveRevealIndex(idx => {
+      const total = opening?.rewards?.length || 1;
+      return (idx + delta + total) % total;
     });
   }
   return (
@@ -10824,11 +13463,11 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
         })}
       </div>
       {opening && (
-        <div style={{ position:"fixed", inset:0, zIndex:99996, background:"rgba(2,6,23,0.92)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", padding:"1rem" }}>
-          <div style={{ width:"min(1240px,100%)", textAlign:"center" }}>
-            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:opening.pack.accent, fontSize:"1.35rem", marginBottom:"0.3rem" }}>{opening.pack.name}</div>
+        <div style={{ position:"fixed", inset:0, zIndex:99996, background:"rgba(2,6,23,0.92)", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:isMobile ? "flex-start" : "center", padding:isMobile ? "0.7rem" : "1rem", overflowY:"auto", overscrollBehavior:"contain" }}>
+          <div style={{ width:isMobile ? "100%" : "min(1240px,100%)", textAlign:"center", minHeight:isMobile ? "100%" : "auto", display:"flex", flexDirection:"column", justifyContent:isMobile ? "flex-start" : "center", paddingTop:isMobile ? "0.35rem" : 0 }}>
+            <div style={{ fontFamily:"'Cinzel Decorative',serif", color:opening.pack.accent, fontSize:isMobile ? "1rem" : "1.35rem", marginBottom:"0.3rem", lineHeight:1.15 }}>{opening.pack.name}</div>
             {opening.phase !== "cards" ? (
-              <div style={{ minHeight:430, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:18 }}>
+              <div style={{ minHeight:isMobile ? 360 : 430, display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:18 }}>
                 {opening.phase === "opening"
                   ? <ZodarPackTearAnimation pack={opening.pack} />
                   : <ZodarPackArtwork pack={opening.pack} large />}
@@ -10837,20 +13476,49 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
               </div>
             ) : (
               <>
-                <div style={{ color:"#64748b", fontSize:"0.8rem", marginBottom:"1rem" }}>{allRevealed ? "Ricompense ottenute" : "Clicca sulle carte per rivelarle"}</div>
-                <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))", gap:14, alignItems:"stretch", justifyItems:"center", animation:"cardRevealGridIn 0.34s ease both" }}>
-                  {opening.rewards.map((card, idx) => (
-                    <ZodarLootCard
-                      key={card.uid}
-                      card={card}
-                      revealed={opening.revealed[idx]}
-                      backPack={opening.pack}
-                      onClick={()=>revealCard(idx)}
-                    />
-                  ))}
-                </div>
+                <div style={{ color:"#64748b", fontSize:"0.8rem", marginBottom:isMobile ? "0.55rem" : "1rem" }}>{allRevealed ? "Ricompense ottenute" : "Clicca sulle carte per rivelarle"}</div>
+                {isMobile ? (
+                  <div style={{ animation:"cardRevealGridIn 0.34s ease both", display:"grid", gap:10, justifyItems:"center" }}>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:8, width:"100%" }}>
+                      <button onClick={()=>moveReveal(-1)} aria-label="Carta precedente" style={{ width:38, height:44, borderRadius:8, border:"1px solid rgba(148,163,184,0.24)", background:"rgba(15,23,42,0.82)", color:"#e2e8f0", fontSize:"1.1rem", fontWeight:900, flexShrink:0 }}>‹</button>
+                      <div style={{ width:"min(72vw,270px)", minWidth:210, maxWidth:270 }}>
+                        {opening.rewards[activeRevealIndex] && (
+                          <ZodarLootCard
+                            key={opening.rewards[activeRevealIndex].uid}
+                            card={opening.rewards[activeRevealIndex]}
+                            revealed={opening.revealed[activeRevealIndex]}
+                            backPack={opening.pack}
+                            onClick={()=>revealCard(activeRevealIndex)}
+                          />
+                        )}
+                      </div>
+                      <button onClick={()=>moveReveal(1)} aria-label="Carta successiva" style={{ width:38, height:44, borderRadius:8, border:"1px solid rgba(148,163,184,0.24)", background:"rgba(15,23,42,0.82)", color:"#e2e8f0", fontSize:"1.1rem", fontWeight:900, flexShrink:0 }}>›</button>
+                    </div>
+                    <div style={{ display:"flex", alignItems:"center", justifyContent:"center", gap:6, flexWrap:"wrap" }}>
+                      {opening.rewards.map((card, idx) => (
+                        <button key={card.uid} onClick={()=>setActiveRevealIndex(idx)} aria-label={`Carta ${idx + 1}`} style={{ width:idx === activeRevealIndex ? 24 : 8, height:8, borderRadius:999, border:"none", background:idx === activeRevealIndex ? opening.pack.accent : opening.revealed[idx] ? "#94a3b8" : "#334155", transition:"all .18s ease", padding:0 }} />
+                      ))}
+                    </div>
+                    <div style={{ color:"#94a3b8", fontSize:"0.72rem" }}>
+                      Carta {activeRevealIndex + 1}/{opening.rewards.length}
+                      {opening.revealed[activeRevealIndex] ? " · rivelata" : " · da rivelare"}
+                    </div>
+                  </div>
+                ) : (
+                  <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))", gap:14, alignItems:"stretch", justifyItems:"center", animation:"cardRevealGridIn 0.34s ease both" }}>
+                    {opening.rewards.map((card, idx) => (
+                      <ZodarLootCard
+                        key={card.uid}
+                        card={card}
+                        revealed={opening.revealed[idx]}
+                        backPack={opening.pack}
+                        onClick={()=>revealCard(idx)}
+                      />
+                    ))}
+                  </div>
+                )}
                 {allRevealed && summary && (
-                  <div style={{ margin:"1rem auto 0", maxWidth:760, background:"rgba(15,23,42,0.78)", border:"1px solid rgba(148,163,184,0.16)", borderRadius:8, padding:"0.8rem 1rem", display:"grid", gap:8 }}>
+                  <div style={{ margin:isMobile ? "0.7rem auto 0" : "1rem auto 0", maxWidth:760, background:"rgba(15,23,42,0.78)", border:"1px solid rgba(148,163,184,0.16)", borderRadius:8, padding:isMobile ? "0.7rem" : "0.8rem 1rem", display:"grid", gap:8 }}>
                     <div style={{ display:"flex", alignItems:"center", gap:10, flexWrap:"wrap" }}>
                       <span style={{ color:"#94a3b8", fontSize:"0.72rem", textTransform:"uppercase", letterSpacing:"0.1em" }}>Riepilogo</span>
                       {Object.entries(summary.byRarity).sort((a,b)=>(CARD_RARITY_ORDER[b[0]]||0)-(CARD_RARITY_ORDER[a[0]]||0)).map(([rarity, count]) => (
@@ -10867,7 +13535,7 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
                 )}
               </>
             )}
-            <div style={{ display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap", marginTop:"1.2rem" }}>
+            <div style={{ display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap", marginTop:isMobile ? "0.8rem" : "1.2rem", paddingBottom:isMobile ? "0.8rem" : 0 }}>
               {opening.phase === "cards" && !allRevealed && <BigBtn onClick={()=>setOpening(prev => {
                 const best = prev?.rewards?.find(card => ["mythic","legendary"].includes(card.rarity));
                 if(best) setSpotlight(best);
@@ -10896,31 +13564,255 @@ function PacksView({ vault, catalogItems, me, onOpenPack, onBuyPack, onBuyPackWi
   );
 }
 
-function CardsCollectionView({ vault, inventoryGroups, equipment, onEquip, onUse, onActivateTitle, onSummonAlly, combatActive=false, isMobile=false }) {
+function CollectionBookSlot({ entry, onSelect }) {
+  const template = entry?.template;
+  const card = entry?.card;
+  if(card) {
+    return (
+      <div style={{ position:"relative" }}>
+        <ZodarLootCard card={card} compact onClick={()=>onSelect?.(card)} />
+        {entry.ownedCopies?.length > 1 && (
+          <div style={{ position:"absolute", right:6, top:6, background:"rgba(2,6,23,0.86)", border:"1px solid rgba(251,191,36,0.45)", color:"#fbbf24", borderRadius:999, padding:"1px 7px", fontSize:"0.62rem", fontWeight:900 }}>
+            x{entry.ownedCopies.length}
+          </div>
+        )}
+      </div>
+    );
+  }
+  const color = CARD_RARITY_COLOR[template?.rarity] || "#475569";
+  const hiddenName = template?.secrecy === "unknown";
+  const label = hiddenName ? "???" : template?.name || "Carta sconosciuta";
+  return (
+    <div style={{
+      aspectRatio:"2.5/3.5",
+      minHeight:170,
+      borderRadius:8,
+      border:`1px solid ${hiddenName ? "rgba(100,116,139,0.32)" : color + "44"}`,
+      background:"linear-gradient(160deg,rgba(2,6,23,0.92),rgba(15,23,42,0.76))",
+      boxShadow:"inset 0 0 28px rgba(0,0,0,0.72)",
+      padding:"0.65rem",
+      display:"flex",
+      flexDirection:"column",
+      justifyContent:"space-between",
+      opacity:0.82,
+      position:"relative",
+      overflow:"hidden",
+    }}>
+      <div style={{ position:"absolute", inset:"12% 18% 26%", borderRadius:"42% 42% 28% 28%", background:`radial-gradient(circle at 50% 25%,${color}33,rgba(15,23,42,0.9) 54%,rgba(0,0,0,0.96))`, filter:"grayscale(1) brightness(0.48)" }} />
+      <div style={{ position:"absolute", left:"18%", right:"18%", bottom:"20%", height:"28%", borderRadius:"50% 50% 18% 18%", background:"rgba(0,0,0,0.55)", filter:"blur(1px)" }} />
+      <div style={{ position:"relative", display:"flex", justifyContent:"space-between", alignItems:"center", gap:6 }}>
+        <span style={{ color:hiddenName ? "#64748b" : color, fontSize:"0.62rem", fontWeight:900, textTransform:"uppercase", letterSpacing:"0.08em" }}>{cardRarityLabel(template?.rarity)}</span>
+        <span style={{ color:"#475569", fontSize:"0.65rem" }}>LOCK</span>
+      </div>
+      <div style={{ position:"relative", textAlign:"center", margin:"auto 0" }}>
+        <div style={{ fontSize:"2.2rem", color:"#0f172a", textShadow:`0 0 18px ${color}55` }}>?</div>
+      </div>
+      <div style={{ position:"relative" }}>
+        <div style={{ color:hiddenName ? "#64748b" : "#94a3b8", fontFamily:"'Cinzel',serif", fontSize:"0.74rem", fontWeight:800, textAlign:"center", lineHeight:1.2, minHeight:34, display:"flex", alignItems:"center", justifyContent:"center" }}>{label}</div>
+        <div style={{ color:"#475569", fontSize:"0.62rem", textAlign:"center", marginTop:3 }}>Non scoperta</div>
+      </div>
+    </div>
+  );
+}
+
+function CardsCollectionView({ vault, catalogItems, inventoryGroups, equipment, activeCosmetics, onEquip, onUse, onActivateTitle, onEquipCosmetic, onUnequipCosmetic, onSummonAlly, combatActive=false, isMobile=false }) {
   const [selectedUid, setSelectedUid] = useState(null);
-  const [filter, setFilter] = useState("all");
-  const cards = [...(vault?.cards || [])].sort((a,b) => (CARD_RARITY_ORDER[b.rarity] || 0) - (CARD_RARITY_ORDER[a.rarity] || 0));
-  const filtered = filter === "all" ? cards : cards.filter(card => card.kind === filter || card.type === filter || card.rarity === filter);
-  const selected = cards.find(card => card.uid === selectedUid) || filtered[0] || null;
+  const [activeBucket, setActiveBucket] = useState(null);
+  const [rarityFilter, setRarityFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("rarity");
+  const [bookPage, setBookPage] = useState(0);
+  const cards = [...(vault?.cards || [])];
+  const collectionStats = cardCollectionStats(vault);
+  const nextMilestoneProgress = collectionStats.nextMilestone
+    ? Math.min(100, (collectionStats.resonance / collectionStats.nextMilestone.value) * 100)
+    : 100;
+  const cardsByBucket = CARD_COLLECTION_BUCKETS.reduce((acc, bucket) => ({ ...acc, [bucket.id]:[] }), {});
+  for(const card of cards) {
+    const bucket = cardCollectionBucket(card);
+    if(!cardsByBucket[bucket]) cardsByBucket[bucket] = [];
+    cardsByBucket[bucket].push(card);
+  }
+  const currentBucket = activeBucket || null;
+  const ownedByCardId = cards.reduce((acc, card) => {
+    const key = card.cardId || card.uid;
+    if(!key) return acc;
+    if(!acc[key]) acc[key] = [];
+    acc[key].push(card);
+    return acc;
+  }, {});
+  const bucketTemplates = currentBucket ? collectionTemplatesForBucket(currentBucket, catalogItems, cards) : [];
+  const bucketEntries = bucketTemplates.map(template => {
+    const ownedCopies = ownedByCardId[template.cardId] || [];
+    return {
+      template,
+      card:ownedCopies[0] || null,
+      ownedCopies,
+      locked:ownedCopies.length === 0,
+    };
+  });
+  const bucketCards = currentBucket ? (cardsByBucket[currentBucket] || []) : [];
+  const filteredEntries = (rarityFilter === "all" ? bucketEntries : bucketEntries.filter(entry => entry.template.rarity === rarityFilter))
+    .sort((a,b) => {
+      const cardA = a.card || a.template;
+      const cardB = b.card || b.template;
+      const groupA = a.card?.itemId ? inventoryGroups.find(group => group.item.id === a.card.itemId) : null;
+      const groupB = b.card?.itemId ? inventoryGroups.find(group => group.item.id === b.card.itemId) : null;
+      if(sortBy === "name") return String(a.template.sortName || "").localeCompare(String(b.template.sortName || ""));
+      if(sortBy === "recent") return new Date(b.card?.acquiredAt || 0) - new Date(a.card?.acquiredAt || 0);
+      if(sortBy === "resonance") return cardResonanceValue(cardB) - cardResonanceValue(cardA);
+      if(sortBy === "power") return cardPowerScore(cardB, groupB?.item) - cardPowerScore(cardA, groupA?.item);
+      return (CARD_RARITY_ORDER[cardB.rarity] || 0) - (CARD_RARITY_ORDER[cardA.rarity] || 0) || cardResonanceValue(cardB) - cardResonanceValue(cardA);
+    });
+  const pageSize = isMobile ? 8 : 18;
+  const totalPages = Math.max(1, Math.ceil(filteredEntries.length / pageSize));
+  const currentPage = Math.min(bookPage, totalPages - 1);
+  const pageEntries = filteredEntries.slice(currentPage * pageSize, currentPage * pageSize + pageSize);
+  const selected = cards.find(card => card.uid === selectedUid) || pageEntries.find(entry => entry.card)?.card || null;
   const selectedGroup = selected?.itemId ? inventoryGroups.find(group => group.item.id === selected.itemId) : null;
   const selectedEquipped = selectedGroup && itemSlot(selectedGroup.item) && equipment?.[itemSlot(selectedGroup.item)] === selectedGroup.item.id;
+  const selectedCosmeticSlot = selected?.kind === "cosmetic" ? cosmeticEquipSlot(selected) : null;
+  const selectedCosmeticEquipped = !!selectedCosmeticSlot && activeCosmetics?.[selectedCosmeticSlot]?.cardId === selected.cardId;
   const selectedEffectLines = cardEffectLines(selected, selectedGroup?.item);
+  function openBucket(bucketId) {
+    setActiveBucket(bucketId);
+    setSelectedUid(null);
+    setRarityFilter("all");
+    setBookPage(0);
+  }
   return (
     <div style={{ flex:1, minHeight:0, display:"grid", gridTemplateColumns:isMobile ? "1fr" : "minmax(0,1fr) minmax(280px,360px)", gridTemplateRows:isMobile ? "minmax(0,1fr) auto" : "auto", gap:0, background:"rgba(3,7,18,0.55)", overflow:"hidden" }}>
       <div style={{ overflowY:"auto", padding:"1rem" }}>
         <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:"1rem" }}>
           <h3 style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", margin:0, flex:1 }}>Carte</h3>
+          <span style={{ color:"#fbbf24", border:"1px solid rgba(251,191,36,0.34)", background:"rgba(120,53,15,0.16)", borderRadius:999, padding:"3px 10px", fontSize:"0.72rem", fontWeight:800 }}>Risonanza: {collectionStats.resonance}</span>
           <span style={{ color:"#c4b5fd", border:"1px solid rgba(168,85,247,0.28)", borderRadius:999, padding:"3px 10px", fontSize:"0.72rem", fontWeight:700 }}>Frammenti: {vault?.fragments || 0}</span>
-          {["all","item","ally","cosmetic","title","epic","legendary","mythic"].map(k => (
-            <button key={k} onClick={()=>setFilter(k)} style={{ padding:"0.34rem 0.7rem", borderRadius:6, border:`1px solid ${filter===k?"#7c3aed":"#334155"}`, background:filter===k?"rgba(109,40,217,0.28)":"rgba(15,23,42,0.72)", color:filter===k?"#c4b5fd":"#94a3b8", fontSize:"0.7rem", cursor:"pointer" }}>
-              {k === "all" ? "Tutte" : k === "item" ? "Oggetti" : k === "ally" ? "Alleati" : k === "cosmetic" ? "Sceniche" : cardRarityLabel(k)}
-            </button>
-          ))}
         </div>
+        {!currentBucket && <div style={{ display:"grid", gridTemplateColumns:isMobile ? "1fr" : "minmax(220px,0.9fr) minmax(260px,1.1fr)", gap:10, marginBottom:"1rem" }}>
+          <div style={{ background:"linear-gradient(135deg,rgba(120,53,15,0.22),rgba(15,23,42,0.78))", border:"1px solid rgba(251,191,36,0.24)", borderRadius:8, padding:"0.9rem" }}>
+            <div style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontWeight:800, fontSize:"1rem" }}>⚖️ Risonanza di Zodar</div>
+            <div style={{ color:"#e2e8f0", fontSize:"2rem", fontWeight:900, lineHeight:1.1, marginTop:4 }}>{collectionStats.resonance}</div>
+            <div style={{ color:"#94a3b8", fontSize:"0.74rem", marginTop:4 }}>
+              Carte possedute: {collectionStats.total} · Uniche: {collectionStats.unique} · Mitiche: {collectionStats.mythicCount}
+            </div>
+            <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:8, marginTop:"0.75rem" }}>
+              <button onClick={()=>openBucket("unlock")} style={{ textAlign:"left", border:"1px solid rgba(134,239,172,0.26)", borderRadius:7, background:"rgba(20,83,45,0.18)", color:"#dcfce7", padding:"0.55rem 0.65rem", cursor:"pointer" }}>
+                <div style={{ color:"#86efac", fontSize:"0.68rem", fontWeight:900, textTransform:"uppercase", letterSpacing:"0.08em" }}>Classi sblocco</div>
+                <div style={{ fontFamily:"'Cinzel',serif", fontWeight:900 }}>{collectionStats.characterUnlocks.classes.length}/{Object.keys(CHARACTER_CARD_UNLOCKS.classes).length}</div>
+              </button>
+              <button onClick={()=>openBucket("unlock")} style={{ textAlign:"left", border:"1px solid rgba(96,165,250,0.26)", borderRadius:7, background:"rgba(30,64,175,0.18)", color:"#dbeafe", padding:"0.55rem 0.65rem", cursor:"pointer" }}>
+                <div style={{ color:"#93c5fd", fontSize:"0.68rem", fontWeight:900, textTransform:"uppercase", letterSpacing:"0.08em" }}>Razze sblocco</div>
+                <div style={{ fontFamily:"'Cinzel',serif", fontWeight:900 }}>{collectionStats.characterUnlocks.races.length}/{Object.keys(CHARACTER_CARD_UNLOCKS.races).length}</div>
+              </button>
+            </div>
+            <div style={{ marginTop:"0.75rem", display:"grid", gap:6 }}>
+              <div style={{ color:"#fcd34d", fontSize:"0.68rem", fontWeight:900, textTransform:"uppercase", letterSpacing:"0.08em" }}>Vie di Zodar</div>
+              {collectionStats.zodarPaths.length ? collectionStats.zodarPaths.map(path => (
+                <div key={path.id} style={{ display:"flex", gap:8, alignItems:"center", color:"#fde68a", background:"rgba(120,53,15,0.18)", border:"1px solid rgba(251,191,36,0.22)", borderRadius:7, padding:"0.45rem 0.55rem", fontSize:"0.74rem" }}>
+                  <span>{path.icon}</span>
+                  <span style={{ flex:1 }}><strong>{path.name}</strong> · {path.short}</span>
+                </div>
+              )) : (
+                <button onClick={()=>openBucket("unlock")} style={{ textAlign:"left", border:"1px dashed rgba(251,191,36,0.28)", borderRadius:7, background:"rgba(2,6,23,0.26)", color:"#94a3b8", padding:"0.5rem 0.6rem", cursor:"pointer", fontSize:"0.74rem" }}>
+                  Nessuna Via scoperta. Apri gli sblocchi mitici.
+                </button>
+              )}
+            </div>
+            {collectionStats.nextMilestone ? (
+              <div style={{ marginTop:"0.75rem" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", gap:8, color:"#cbd5e1", fontSize:"0.72rem", marginBottom:4 }}>
+                  <span>Prossima: {collectionStats.nextMilestone.name}</span>
+                  <span>{collectionStats.resonance}/{collectionStats.nextMilestone.value}</span>
+                </div>
+                <div style={{ height:7, background:"rgba(15,23,42,0.9)", borderRadius:999, overflow:"hidden", border:"1px solid rgba(251,191,36,0.16)" }}>
+                  <div style={{ width:`${nextMilestoneProgress}%`, height:"100%", background:"linear-gradient(90deg,#f59e0b,#fbbf24,#fef3c7)", transition:"width .3s" }} />
+                </div>
+              </div>
+            ) : (
+              <div style={{ color:"#fbbf24", fontSize:"0.78rem", marginTop:"0.75rem", fontWeight:800 }}>Tutte le milestone di Risonanza sono raggiunte.</div>
+            )}
+          </div>
+          <div style={{ background:"rgba(15,23,42,0.72)", border:"1px solid rgba(148,163,184,0.14)", borderRadius:8, padding:"0.9rem" }}>
+            <div style={{ color:"#94a3b8", fontSize:"0.68rem", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:8 }}>Milestone</div>
+            <div style={{ display:"grid", gap:7 }}>
+              {ZODAR_RESONANCE_MILESTONES.map(milestone => {
+                const unlocked = collectionStats.resonance >= milestone.value;
+                return (
+                  <div key={milestone.id} style={{ display:"grid", gridTemplateColumns:"64px 1fr", gap:8, alignItems:"start", padding:"0.55rem 0.65rem", borderRadius:7, background:unlocked ? "rgba(251,191,36,0.12)" : "rgba(2,6,23,0.42)", border:`1px solid ${unlocked ? "rgba(251,191,36,0.32)" : "rgba(51,65,85,0.6)"}` }}>
+                    <div style={{ color:unlocked ? "#fbbf24" : "#64748b", fontWeight:900, fontSize:"0.82rem" }}>{milestone.value}</div>
+                    <div>
+                      <div style={{ color:unlocked ? "#fde68a" : "#cbd5e1", fontFamily:"'Cinzel',serif", fontWeight:800, fontSize:"0.78rem" }}>{unlocked ? "✓ " : ""}{milestone.name}</div>
+                      <div style={{ color:unlocked ? "#d6d3d1" : "#64748b", fontSize:"0.68rem", lineHeight:1.35 }}>{milestone.reward}</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>}
         {!cards.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #334155", borderRadius:8 }}>Nessuna carta ancora. Apri un pacchetto e facciamo scintille.</div>}
-        <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(132px,1fr))", gap:10 }}>
-          {filtered.map(card => <ZodarLootCard key={card.uid} card={card} compact onClick={()=>setSelectedUid(card.uid)} />)}
-        </div>
+        {!currentBucket ? (
+          <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fill,minmax(210px,1fr))", gap:12 }}>
+            {CARD_COLLECTION_BUCKETS.map(bucket => {
+              const bucketList = cardsByBucket[bucket.id] || [];
+              const visibleSlots = collectionTemplatesForBucket(bucket.id, catalogItems, cards).length;
+              const resonance = bucketList.reduce((sum, card) => sum + cardResonanceValue(card), 0);
+              const best = bucketList.reduce((top, card) => !top || (CARD_RARITY_ORDER[card.rarity] || 0) > (CARD_RARITY_ORDER[top.rarity] || 0) ? card : top, null);
+              return (
+                <button key={bucket.id} onClick={()=>openBucket(bucket.id)} disabled={!visibleSlots} style={{ textAlign:"left", minHeight:132, padding:"0.95rem", borderRadius:8, border:`1px solid ${best ? (CARD_RARITY_COLOR[best.rarity] || "#334155") + "66" : "#334155"}`, background:visibleSlots ? "linear-gradient(160deg,rgba(15,23,42,0.86),rgba(2,6,23,0.74))" : "rgba(15,23,42,0.42)", color:"#e2e8f0", cursor:visibleSlots ? "pointer" : "not-allowed", opacity:visibleSlots ? 1 : 0.48 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:8 }}>
+                    <span style={{ fontSize:"1.45rem" }}>{bucket.icon}</span>
+                    <div style={{ flex:1 }}>
+                      <div style={{ fontFamily:"'Cinzel',serif", fontWeight:900, color:visibleSlots ? "#f8fafc" : "#64748b" }}>{bucket.label}</div>
+                      <div style={{ color:"#64748b", fontSize:"0.7rem" }}>{bucketList.length}/{visibleSlots} scoperte · {resonance} Risonanza</div>
+                    </div>
+                  </div>
+                  <div style={{ color:"#94a3b8", fontSize:"0.74rem", lineHeight:1.4 }}>{bucket.desc}</div>
+                  {best && <div style={{ marginTop:9, color:CARD_RARITY_COLOR[best.rarity], fontSize:"0.68rem", fontWeight:800 }}>Migliore: {best.name}</div>}
+                </button>
+              );
+            })}
+          </div>
+        ) : (
+          <>
+            <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap", marginBottom:"0.9rem", background:"rgba(15,23,42,0.72)", border:"1px solid rgba(148,163,184,0.12)", borderRadius:8, padding:"0.75rem" }}>
+              <button onClick={()=>{ setActiveBucket(null); setSelectedUid(null); }} style={{ padding:"0.42rem 0.75rem", borderRadius:6, border:"1px solid #334155", background:"rgba(2,6,23,0.72)", color:"#cbd5e1", cursor:"pointer" }}>← Categorie</button>
+              <div style={{ flex:1, minWidth:160 }}>
+                <div style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontWeight:900 }}>{CARD_COLLECTION_BUCKETS.find(b => b.id === currentBucket)?.icon} {CARD_COLLECTION_BUCKETS.find(b => b.id === currentBucket)?.label}</div>
+                <div style={{ color:"#64748b", fontSize:"0.7rem" }}>{bucketCards.length}/{bucketEntries.length} scoperte · pagina {currentPage + 1}/{totalPages}</div>
+              </div>
+              <select value={rarityFilter} onChange={e=>{ setRarityFilter(e.target.value); setBookPage(0); setSelectedUid(null); }} style={{ padding:"0.42rem 0.6rem", background:"rgba(2,6,23,0.72)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.75rem" }}>
+                <option value="all">Tutte le rarita</option>
+                {["common","uncommon","rare","epic","legendary","mythic"].map(rarity => <option key={rarity} value={rarity}>{cardRarityLabel(rarity)}</option>)}
+              </select>
+              <select value={sortBy} onChange={e=>{ setSortBy(e.target.value); setBookPage(0); setSelectedUid(null); }} style={{ padding:"0.42rem 0.6rem", background:"rgba(2,6,23,0.72)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", fontSize:"0.75rem" }}>
+                <option value="rarity">Ordina: rarita</option>
+                <option value="resonance">Ordina: Risonanza</option>
+                <option value="power">Ordina: potenza</option>
+                <option value="recent">Ordina: recenti</option>
+                <option value="name">Ordina: nome</option>
+              </select>
+            </div>
+            {!filteredEntries.length && <div style={{ color:"#64748b", textAlign:"center", padding:"2rem", border:"1px dashed #334155", borderRadius:8 }}>Nessuna carta con questi filtri.</div>}
+            {!!filteredEntries.length && (
+              <div style={{ background:"linear-gradient(180deg,rgba(23,18,10,0.86),rgba(8,10,18,0.92))", border:"1px solid rgba(251,191,36,0.18)", borderRadius:10, padding:isMobile ? "0.65rem" : "1rem", boxShadow:"inset 0 0 45px rgba(0,0,0,0.42)" }}>
+                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", gap:8, marginBottom:"0.75rem", color:"#94a3b8", fontSize:"0.72rem" }}>
+                  <button onClick={()=>setBookPage(p => Math.max(0, p - 1))} disabled={currentPage <= 0} style={{ padding:"0.35rem 0.7rem", borderRadius:6, border:"1px solid #334155", background:"rgba(2,6,23,0.72)", color:currentPage <= 0 ? "#475569" : "#cbd5e1", cursor:currentPage <= 0 ? "not-allowed" : "pointer" }}>← Pagina</button>
+                  <span style={{ fontFamily:"'Cinzel',serif", color:"#fbbf24", fontWeight:800 }}>Collection Book · {currentPage + 1}/{totalPages}</span>
+                  <button onClick={()=>setBookPage(p => Math.min(totalPages - 1, p + 1))} disabled={currentPage >= totalPages - 1} style={{ padding:"0.35rem 0.7rem", borderRadius:6, border:"1px solid #334155", background:"rgba(2,6,23,0.72)", color:currentPage >= totalPages - 1 ? "#475569" : "#cbd5e1", cursor:currentPage >= totalPages - 1 ? "not-allowed" : "pointer" }}>Pagina →</button>
+                </div>
+                <div style={{ display:"grid", gridTemplateColumns:`repeat(auto-fill,minmax(${isMobile ? 118 : 132}px,1fr))`, gap:isMobile ? 8 : 10 }}>
+                  {pageEntries.map(entry => (
+                    <CollectionBookSlot
+                      key={entry.template.cardId}
+                      entry={entry}
+                      onSelect={(card)=>setSelectedUid(card.uid)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+          </>
+        )}
       </div>
       <div style={{ borderLeft:isMobile ? "none" : "1px solid rgba(148,163,184,0.12)", borderTop:isMobile ? "1px solid rgba(148,163,184,0.12)" : "none", padding:"1rem", overflowY:"auto", background:"rgba(2,6,23,0.45)", maxHeight:isMobile ? 360 : "none" }}>
         {selected ? (
@@ -10928,7 +13820,13 @@ function CardsCollectionView({ vault, inventoryGroups, equipment, onEquip, onUse
             <ZodarLootCard card={selected} />
             <div style={{ marginTop:"1rem" }}>
               <div style={{ fontFamily:"'Cinzel',serif", color:"#e2e8f0", fontWeight:700, fontSize:"1.05rem" }}>{selected.name}</div>
-              <div style={{ color:CARD_RARITY_COLOR[selected.rarity], fontSize:"0.75rem", textTransform:"uppercase", letterSpacing:"0.08em", marginTop:3 }}>{cardRarityLabel(selected.rarity)} · {selected.kind === "item" ? "Oggetto" : selected.kind === "ally" ? "Alleato" : "Scenica"}</div>
+              <div style={{ color:CARD_RARITY_COLOR[selected.rarity], fontSize:"0.75rem", textTransform:"uppercase", letterSpacing:"0.08em", marginTop:3 }}>{cardRarityLabel(selected.rarity)} · {cardTypeLine(selected)}</div>
+              <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginTop:8 }}>
+                <div style={{ display:"inline-flex", color:"#fbbf24", border:"1px solid rgba(251,191,36,0.28)", background:"rgba(120,53,15,0.16)", borderRadius:999, padding:"3px 9px", fontSize:"0.72rem", fontWeight:800 }}>⚖️ +{cardResonanceValue(selected)} Risonanza</div>
+                {selected.kind === "unlock" && selected.unlockStatus === "new_unlock" && <div style={{ display:"inline-flex", color:"#86efac", border:"1px solid rgba(134,239,172,0.32)", background:"rgba(20,83,45,0.22)", borderRadius:999, padding:"3px 9px", fontSize:"0.72rem", fontWeight:800 }}>Nuovo sblocco</div>}
+                {selected.kind === "unlock" && selected.unlockStatus === "already_unlocked" && <div style={{ display:"inline-flex", color:"#fcd34d", border:"1px solid rgba(252,211,77,0.32)", background:"rgba(120,53,15,0.22)", borderRadius:999, padding:"3px 9px", fontSize:"0.72rem", fontWeight:800 }}>Gia sbloccata · +{selected.convertedFragments || 0}</div>}
+                {selectedCosmeticEquipped && <div style={{ display:"inline-flex", color:"#c4b5fd", border:"1px solid rgba(196,181,253,0.34)", background:"rgba(76,29,149,0.22)", borderRadius:999, padding:"3px 9px", fontSize:"0.72rem", fontWeight:800 }}>Indossata</div>}
+              </div>
               <p style={{ color:"#94a3b8", fontSize:"0.84rem", lineHeight:1.55 }}>{selected.description || "Carta collezionabile."}</p>
               {!!selectedEffectLines.length && (
                 <div style={{ border:`1px solid ${CARD_RARITY_COLOR[selected.rarity]}44`, background:"rgba(15,23,42,0.72)", borderRadius:8, padding:"0.75rem", margin:"0 0 0.9rem", display:"grid", gap:6 }}>
@@ -10943,6 +13841,11 @@ function CardsCollectionView({ vault, inventoryGroups, equipment, onEquip, onUse
                 {selectedGroup?.item?.type === "potion" && <BigBtn onClick={()=>onUse(selectedGroup.entries[0])} gold>Usa</BigBtn>}
                 {selected.kind === "ally" && <BigBtn onClick={()=>onSummonAlly?.(selected)} gold disabled={!combatActive}>{combatActive ? "Evoca alleato" : "Solo in battaglia"}</BigBtn>}
                 {selected.type === "title" && <BigBtn onClick={()=>onActivateTitle(selected)} gold>{vault.activeTitle === selected.cardId ? "Titolo attivo" : "Attiva titolo"}</BigBtn>}
+                {selected.kind === "cosmetic" && selectedCosmeticSlot && selected.type !== "title" && (
+                  <BigBtn onClick={()=> selectedCosmeticEquipped ? onUnequipCosmetic?.(selectedCosmeticSlot) : onEquipCosmetic?.(selected)} gold>
+                    {selectedCosmeticEquipped ? "Rimuovi" : `Indossa ${cosmeticEquipSlotLabel(selectedCosmeticSlot)}`}
+                  </BigBtn>
+                )}
               </div>
               {selected.kind === "item" && !selectedGroup && <div style={{ color:"#64748b", fontSize:"0.76rem", marginTop:"0.8rem" }}>La carta resta in collezione, ma l'oggetto non e presente nell'inventario.</div>}
               {selected.kind === "ally" && <div style={{ color:"#64748b", fontSize:"0.76rem", marginTop:"0.8rem" }}>Prototipo: l'alleato viene consumato quando lo evochi. La versione finale potra farlo sparire solo alla morte.</div>}
@@ -11024,6 +13927,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   const isMobile = useMobile();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [lootedStepKey, setLootedStepKey] = useState(null);
+  const [lootFeedback, setLootFeedback] = useState(null); // { key, gold, itemName, itemEmoji, recipients }
   const [choiceFeedback, setChoiceFeedback] = useState(null); // { quality, label, xp, gold, _nextStep, _completeQuest }
   const [pendingStoryChoice, setPendingStoryChoice] = useState(null); // { idx, text }
   const [catalogItems, setCatalogItems] = useState(DEFAULT_ITEMS);
@@ -11104,12 +14008,13 @@ function GameScreen({ myId, setScreen, authUser }) {
     const attackBonus = getCombatAttackBonus(attacker, weapon);
     const attackTotal = hitRoll + attackBonus;
     const targetCa = Math.max(8, target?.def || 10);
-    const isCrit = hitRoll === 20;
+    const trait = getCharacterCombatTrait(attacker);
+    const isCrit = hitRoll >= (trait.critThreshold || 20);
     const hit = hitRoll !== 1 && (isCrit || attackTotal >= targetCa);
 
     // Ability modifier for damage: players use weapon profile, monsters add ATK/4
     const profile = attacker.isPlayer ? weaponAttackProfile(weapon, attacker) : null;
-    const damageMod = profile ? profile.mod : Math.floor((attacker.atk || 0) / 4);
+    const damageMod = (profile ? profile.mod : Math.floor((attacker.atk || 0) / 4)) + (trait.weaponDamageBonus || 0);
     const damageAbility = profile ? profile.ability : null;
 
     let damageRoll = 0;
@@ -11148,6 +14053,11 @@ function GameScreen({ myId, setScreen, authUser }) {
     setCardFeatureUnlocked(myId ? localStorage.getItem(cardFeatureUnlockKey(myId)) === "1" : false);
   }, [myId]);
 
+  useEffect(() => {
+    if(!me?.id || !myId) return;
+    dbPublishCardCollectorSnapshot(cardCollectorSnapshot(me, cardVault)).catch(e => console.warn("Classifica collezionisti non aggiornata:", e));
+  }, [me?.id, me?.name, me?.class, me?.race, me?.partyCode, myId]);
+
   function unlockCardFeature() {
     if(myId) localStorage.setItem(cardFeatureUnlockKey(myId), "1");
     setCardFeatureUnlocked(true);
@@ -11156,6 +14066,9 @@ function GameScreen({ myId, setScreen, authUser }) {
   function persistCardVault(nextVault) {
     setCardVault(nextVault);
     saveStoredCardVault(myId, nextVault);
+    if(me?.id) {
+      dbPublishCardCollectorSnapshot(cardCollectorSnapshot(me, nextVault)).catch(e => console.warn("Classifica collezionisti non aggiornata:", e));
+    }
   }
 
   useEffect(() => {
@@ -11271,14 +14184,38 @@ function GameScreen({ myId, setScreen, authUser }) {
     for(const card of itemRewards) {
       await dbAddPlayerItem(me.id, card.itemId);
     }
+    const accountUnlockOwner = authUser?.id || me?.accountId || myId;
+    const previousAccountUnlocks = getStoredCharacterCardUnlocks(accountUnlockOwner);
+    const ownedCardIds = new Set((cardVault.cards || []).map(card => card.cardId || card.uid).filter(Boolean));
+    const seenCardIds = new Set(ownedCardIds);
     const ownedCosmetics = new Set((cardVault.cards || []).filter(card => card.kind === "cosmetic").map(card => card.cardId));
-    const duplicateCosmetics = rewards.filter(card => card.kind === "cosmetic" && ownedCosmetics.has(card.cardId));
-    const newCards = rewards.map(card => (
-      card.kind === "cosmetic" && ownedCosmetics.has(card.cardId)
-        ? { ...card, duplicate:true, convertedFragments:CARD_FRAGMENT_VALUE[card.rarity] || 10 }
-        : card
-    ));
-    const gainedFragments = duplicateCosmetics.reduce((sum, card) => sum + (CARD_FRAGMENT_VALUE[card.rarity] || 10), 0);
+    const newCards = rewards.map(card => {
+      const duplicateCosmetic = card.kind === "cosmetic" && ownedCosmetics.has(card.cardId);
+      const unlockTarget = card.kind === "unlock" ? characterUnlockTargetFromCardId(card.cardId) : null;
+      const alreadyUnlocked = !!unlockTarget && (previousAccountUnlocks[unlockTarget.kind] || []).includes(unlockTarget.key);
+      const duplicatePath = card.kind === "unlock" && card.type === "path" && seenCardIds.has(card.cardId);
+      const duplicateUnlock = (!!unlockTarget && (seenCardIds.has(card.cardId) || alreadyUnlocked)) || duplicatePath;
+      if(card.cardId) seenCardIds.add(card.cardId);
+      if(duplicateCosmetic || duplicateUnlock) {
+        return {
+          ...card,
+          duplicate:true,
+          duplicateReason:duplicateUnlock ? "unlock" : "cosmetic",
+          unlockStatus:duplicateUnlock ? "already_unlocked" : card.unlockStatus,
+          unlockLabel:unlockTarget?.label,
+          convertedFragments:CARD_FRAGMENT_VALUE[card.rarity] || 10,
+        };
+      }
+      if(unlockTarget) {
+        return {
+          ...card,
+          unlockStatus:"new_unlock",
+          unlockLabel:unlockTarget.label,
+        };
+      }
+      return card;
+    });
+    const gainedFragments = newCards.reduce((sum, card) => sum + (card.duplicate ? (card.convertedFragments || 0) : 0), 0);
     const nextVault = {
       ...cardVault,
       packs:{ ...(cardVault.packs || {}), [packId]:owned - 1 },
@@ -11290,11 +14227,27 @@ function GameScreen({ myId, setScreen, authUser }) {
       },
     };
     persistCardVault(nextVault);
+    const accountUnlocks = updateStoredCharacterCardUnlocks(accountUnlockOwner, nextVault);
+    const packUnlocks = mergeCharacterCardUnlocks(
+      characterUnlocksFromCardIds(new Set(newCards.map(card => card.cardId || card.uid).filter(Boolean)))
+    );
+    const freshUnlocks = {
+      classes:packUnlocks.classes.filter(key => !previousAccountUnlocks.classes.includes(key)),
+      races:packUnlocks.races.filter(key => !previousAccountUnlocks.races.includes(key)),
+    };
     await refreshInventory(me);
     const best = rewards.reduce((top, card) => (CARD_RARITY_ORDER[card.rarity] || 0) > (CARD_RARITY_ORDER[top.rarity] || 0) ? card : top, rewards[0]);
     if(best && ["epic","legendary","mythic"].includes(best.rarity)) {
       await addMsg(`📦 **${me.name}** apre **${pack.name}** e trova **${best.name}** (${cardRarityLabel(best.rarity)})!`, "info", "Pacchetti");
     }
+    const unlockedNames = [
+      ...freshUnlocks.classes.map(key => CLASSES[key]?.name).filter(Boolean),
+      ...freshUnlocks.races.map(key => RACES[key]?.name).filter(Boolean),
+    ];
+    if(unlockedNames.length) {
+      await addMsg(`🔓 **${me.name}** ha sbloccato per l'account: **${unlockedNames.join(", ")}**. Ora puo creare nuovi personaggi con questi sblocchi.`, "info", "Carte");
+    }
+    if(accountUnlocks.classes.length || accountUnlocks.races.length) saveStoredCharacterCardUnlocks(accountUnlockOwner, accountUnlocks);
     return newCards;
   }
 
@@ -11302,6 +14255,25 @@ function GameScreen({ myId, setScreen, authUser }) {
     if(!card || card.type !== "title") return;
     const nextVault = { ...cardVault, activeTitle:card.cardId };
     persistCardVault(nextVault);
+  }
+
+  async function equipCardCosmetic(card) {
+    const slot = cosmeticEquipSlot(card);
+    if(!slot || !card?.cardId) return;
+    const nextActive = { ...normalizeActiveCosmetics(cardVault.activeCosmetics), [slot]:card.cardId };
+    const nextVault = { ...cardVault, activeCosmetics:nextActive };
+    persistCardVault(nextVault);
+    await addMsg(`✨ **${me.name}** indossa **${card.name}** (${cosmeticEquipSlotLabel(slot)}).`, "info", "Carte");
+  }
+
+  async function unequipCardCosmetic(slot) {
+    if(!slot) return;
+    const active = normalizeActiveCosmetics(cardVault.activeCosmetics);
+    const currentCard = activeCosmeticCardsFromVault(cardVault)[slot];
+    if(!active[slot]) return;
+    const nextVault = { ...cardVault, activeCosmetics:{ ...active, [slot]:null } };
+    persistCardVault(nextVault);
+    await addMsg(`✨ **${me.name}** rimuove **${currentCard?.name || cosmeticEquipSlotLabel(slot)}**.`, "info", "Carte");
   }
 
   async function summonAllyCard(card) {
@@ -11834,7 +14806,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       let monsterStatusLog = null;
       if ((actor.statusEffects || []).length > 0) {
         const sfx = processStatusEffects(actor);
-        const actorIdx = latestCombatants.findIndex(c => c.id === actor.id);
+        const actorIdx = latestCombat.turn % latestCombatants.length;
         if (actorIdx >= 0) latestCombatants[actorIdx] = sfx.combatant;
         if (sfx.skipTurn || sfx.died) {
           const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
@@ -11943,7 +14915,9 @@ function GameScreen({ myId, setScreen, authUser }) {
       const effectivePt = legDefBonus ? { ...pt, def: (pt.def || 0) + legDefBonus } : pt;
       const resolved = await performAsyncAttack(enragedActor, effectivePt, weaponDie);
       const playerResisted = resolved.hit && (effectivePt.resistances || []).includes('physical');
-      const edmg = playerResisted ? Math.max(1, Math.floor(resolved.damage / 2)) : resolved.damage;
+      const resistedDmg = playerResisted ? Math.max(1, Math.floor(resolved.damage / 2)) : resolved.damage;
+      const traitReduction = reduceIncomingDamageForTraits(resistedDmg, effectivePt);
+      const edmg = traitReduction.damage;
       let effectiveHp = Math.max(0, pt.hp - edmg);
       const playerCombatantIdx = latestCombatants.findIndex(c => c.id === pt.id);
       if(ptBuffs.immortal > 0 && effectiveHp <= 0) {
@@ -11960,6 +14934,7 @@ function GameScreen({ myId, setScreen, authUser }) {
         await dbSavePlayer({ ...pt, hp: 1, dead: false });
         if (pt.id === myId) setMeRaw({ ...pt, hp: 1, dead: false });
         let koLog = formatWeaponAttackLog(enragedActor, pt, { ...resolved, damage: edmg }, lang === "en" ? (enraged ? "Attack (Fury)" : "Natural attack") : (enraged ? "Attacco (Furia)" : "Attacco naturale"), 0, pt.maxHp, { resisted: playerResisted, lang });
+        if(traitReduction.reducedBy > 0) koLog += `\n🛡️ Tratti razza/classe: danno ridotto di **${traitReduction.reducedBy}**.`;
         koLog += `\n💀 **${pt.name}** è stato eliminato dall'arena! Tornerà a 1 HP e potrà rientrare tra 90 secondi.`;
         if (enraged && !latestCombat.bossEnraged) koLog += `\n🔴 **${actor.name}** è in **FURIA**!`;
         if (monsterStatusLog) koLog = monsterStatusLog + '\n---\n' + koLog;
@@ -11989,6 +14964,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       const immortalNote = immortalTriggered ? `\n🛡️ **${pt.name}** è protetto dall'Immortalità! (${ptBuffs.immortal - 1} turni rimasti)` : "";
       let enrageNote = (enraged && !latestCombat.bossEnraged) ? `\n🔴 **${actor.name}** è in **FURIA**! I suoi attacchi sono ora devastanti!` : "";
       let log = formatWeaponAttackLog(enragedActor, pt, { ...resolved, damage: edmg }, lang === "en" ? (enraged ? "Attack (Fury)" : "Natural attack") : (enraged ? "Attacco (Furia)" : "Attacco naturale"), updPt.hp, pt.maxHp, { resisted: playerResisted, statusApplied: monsterAttackStatusEffect?.type, lang }) + immortalNote + enrageNote;
+      if(traitReduction.reducedBy > 0) log += `\n🛡️ Tratti razza/classe: danno ridotto di **${traitReduction.reducedBy}**.`;
       if (monsterStatusLog) log = monsterStatusLog + '\n---\n' + log;
       const { nextTurn, nextRound } = getNextCombatTurn(latestCombatants, latestCombat.turn, latestCombat.round);
       const allDead = latestCombatants.filter(c => !c.isPlayer).every(c => c.hp <= 0);
@@ -12040,9 +15016,11 @@ function GameScreen({ myId, setScreen, authUser }) {
       id: myId, name: me.name, class: me.class, race: me.race,
       emoji: CLASSES[me.class]?.emoji || "⚔️",
       hp: me.hp, maxHp: me.maxHp, atk: me.atk, def: me.def, mag: me.mag, init: me.init,
+      ...getInitialClassCombatState(me),
+      zodarPathTrait: zodarPathCombatTrait,
       weaponDie: getEquippedWeapon(equipment, itemMapRef.current).weapon_die,
       isPlayer: true, dying: false, stable: false, dead: false, deathSuccesses: 0, deathFailures: 0,
-      rollInit: (me.init || 1) + Math.floor(Math.random() * 20) + 1,
+      rollInit: (me.init || 1) + (getCharacterCombatTrait({ ...me, zodarPathTrait:zodarPathCombatTrait }).initBonus || 0) + Math.floor(Math.random() * 20) + 1,
     };
     const newKO = { ...(c.bossKnockedOut || {}) };
     delete newKO[myId];
@@ -12054,6 +15032,7 @@ function GameScreen({ myId, setScreen, authUser }) {
   function buildJoinCombatant(player) {
     const hp = Math.max(1, Number(player?.hp || player?.maxHp || player?.max_hp || 1));
     const maxHp = Math.max(hp, Number(player?.maxHp || player?.max_hp || hp));
+    const localPathTrait = player?.id === myId ? zodarPathCombatTrait : undefined;
     return {
       id: player.id,
       name: player.name,
@@ -12074,7 +15053,9 @@ function GameScreen({ myId, setScreen, authUser }) {
       dead: false,
       deathSuccesses: 0,
       deathFailures: 0,
-      rollInit: (Number(player.init || 1)) + roll(20),
+      zodarPathTrait: localPathTrait,
+      rollInit: (Number(player.init || 1)) + (getCharacterCombatTrait({ ...player, zodarPathTrait:localPathTrait }).initBonus || 0) + roll(20),
+      ...getInitialClassCombatState(player),
     };
   }
 
@@ -12136,11 +15117,14 @@ function GameScreen({ myId, setScreen, authUser }) {
     if(!summon?.isSummon) return;
     const enemies = combatants.filter(c => !c.isPlayer && c.hp > 0);
     if(!enemies.length) { await endCombat(latestQs); return; }
-    const target = (targetId && combatants.find(c => c.id === targetId && c.hp > 0)) || enemies[0];
+    const selectedTargetIdx = targetId ? findCombatantIndexBySelectKey(combatants, targetId, c=>!c.isPlayer && c.hp > 0) : -1;
+    const firstTargetIdx = combatants.findIndex(c=>!c.isPlayer && c.hp > 0);
+    const tidx = selectedTargetIdx >= 0 ? selectedTargetIdx : firstTargetIdx;
+    const target = combatants[tidx] || enemies[0];
     const atkRoll = parseDice("1d20") + Math.floor((summon.atk || 0) / 2);
     const rawDmg = parseDice(summon.dmgDie || "1d8");
     const dmg = Math.max(1, rawDmg + Math.floor((summon.atk || 0) / 2) - Math.floor((target.def || 0) / 2));
-    const tidx = combatants.findIndex(c => c.id === target.id);
+    if(tidx < 0) return;
     combatants[tidx] = { ...target, hp: Math.max(0, target.hp - dmg) };
     const log = `${summon.emoji} **${summon.name}** attacca **${target.name}**!\n⚔️ Tiro: ${atkRoll}\n💥 Danno: **${dmg}**\n❤️ ${target.name}: ${combatants[tidx].hp}/${target.maxHp} HP`;
     const { nextTurn, nextRound } = getNextCombatTurn(combatants, latestCombat.turn, latestCombat.round);
@@ -12181,6 +15165,45 @@ function GameScreen({ myId, setScreen, authUser }) {
 
   async function addMsg(content, type="narration", author=null) {
     await dbSendMessage({ party_code:code, author:author||me?.name, content, type });
+  }
+
+  async function grantCardPackRewards(players, rewards, sourceLabel, sourceKey="reward", announce=true) {
+    const mergedRewards = mergeCardPackRewards(rewards);
+    const eligiblePlayers = (players || []).filter(player => player?.id && (player.partyCode || code));
+    if(!eligiblePlayers.length || !mergedRewards.length) return "";
+    const now = Date.now();
+    for(const player of eligiblePlayers) {
+      const partyCode = player.partyCode || code;
+      for(const reward of mergedRewards) {
+        const pack = cardPackDef(reward.packId);
+        if(!pack) continue;
+        await dbSendMessage({
+          party_code:partyCode,
+          author:"Sistema",
+          type:"card_grant",
+          content:JSON.stringify({
+            kind:"card_pack_grant",
+            grantId:`${sourceKey}_${player.id}_${reward.packId}_${now}_${Math.random().toString(36).slice(2,8)}`,
+            targetPlayerId:player.id,
+            playerName:player.name,
+            packId:reward.packId,
+            quantity:reward.quantity,
+            note:sourceLabel,
+            createdAt:new Date().toISOString(),
+          }),
+        });
+      }
+    }
+    const summary = cardPackRewardSummary(mergedRewards, lang);
+    if(summary && announce) {
+      await addMsg(lang === "en"
+        ? `📦 **Card pack reward:** ${summary} for each eligible hero.`
+        : `📦 **Ricompensa pacchetti:** ${summary} per ogni eroe idoneo.`,
+        "victory",
+        lang === "en" ? "System" : "Sistema"
+      );
+    }
+    return summary;
   }
 
   async function refreshGuilds() {
@@ -12651,7 +15674,11 @@ function GameScreen({ myId, setScreen, authUser }) {
     const updDungeon = { ...dungeon, rooms:newRooms, currentRoom: Math.min(nextRoom, dungeon.rooms.length - 1), pendingCombatRoom:null, ...(allDone ? { completedAt:new Date().toISOString() } : {}) };
     await dbSavePartyState(code, { ...qs, dungeon: updDungeon });
     setQs(prev => ({ ...prev, dungeon: updDungeon }));
-    if (allDone) await addMsg(lang === "en" ? `🏆 **DUNGEON COMPLETED!** ${dungeonThemeName(dungeon.themeId, dungeon.name, lang)} — every enemy defeated, every secret revealed!` : `🏆 **DUNGEON COMPLETATO!** ${dungeon.name} — tutti i nemici sconfitti, tutti i segreti svelati!`, 'victory', lang === "en" ? "System" : "Sistema");
+    if (allDone) {
+      await addMsg(lang === "en" ? `🏆 **DUNGEON COMPLETED!** ${dungeonThemeName(dungeon.themeId, dungeon.name, lang)} — every enemy defeated, every secret revealed!` : `🏆 **DUNGEON COMPLETATO!** ${dungeon.name} — tutti i nemici sconfitti, tutti i segreti svelati!`, 'victory', lang === "en" ? "System" : "Sistema");
+      const freshPlayers = await dbGetPlayers(code);
+      await grantCardPackRewards(freshPlayers, cardPackRewardsForDungeon(updDungeon), `Dungeon: ${dungeon.name}`, `dungeon_${dungeon.seed || Date.now()}`);
+    }
   }
 
   /* ─── Daily event claim ─── */
@@ -12827,6 +15854,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       } else {
         const freshPlayers = await dbGetPlayers(code);
         await _applySceneRewards(scene, freshPlayers, "success");
+        await grantCardPackRewards(freshPlayers, cardPackRewardsForStory(activeStory), `Storia: ${activeStory.title}`, `story_${activeStory.id || Date.now()}`);
         await addMsg(lang === "en" ? `🏆 **Story concluded**: *${activeStory.title}*` : `🏆 **Storia conclusa**: *${activeStory.title}*`, "victory", lang === "en" ? "System" : "Sistema");
       }
 
@@ -12933,20 +15961,23 @@ function GameScreen({ myId, setScreen, authUser }) {
     const latestQs = await dbGetPartyState(code);
     if(latestQs.combat?.active) return;
     const partyForCombat = await getOnlinePartyPlayersForCombat(latestQs);
-    const playerCombatants = partyForCombat.map(p => ({
-      id:p.id, name:p.name, emoji:CLASSES[p.class||"warrior"]?.emoji||"⚔️",
-      hp:p.hp, maxHp:p.maxHp||p.max_hp||p.hp||1,
-      atk:p.atk+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_atk,
-      def:p.def+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_def,
-      mag:p.mag+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_mag,
-      init:p.init+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_init,
-      isPlayer:true, isSummon:false, dead:false, dying:false, stable:false, deathSuccesses:0, deathFailures:0,
-      rollInit: (p.init||0) + Math.floor(Math.random()*20),
-    }));
-    const monsterCombatants = scene.combat.monsters.map(m => {
-      const baseHp = m.maxHp || m.max_hp || m.hp || 10;
-      return { ...m, hp:baseHp, maxHp:baseHp, rollInit:(m.init||0)+Math.floor(Math.random()*20) };
+    const playerCombatants = partyForCombat.map(p => {
+      const localPathTrait = p.id === myId ? zodarPathCombatTrait : undefined;
+      return {
+        id:p.id, name:p.name, emoji:CLASSES[p.class||"warrior"]?.emoji||"⚔️",
+        class:p.class||"warrior", race:p.race||"human",
+        hp:p.hp, maxHp:p.maxHp||p.max_hp||p.hp||1,
+        atk:p.atk+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_atk,
+        def:p.def+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_def,
+        mag:p.mag+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_mag,
+        init:p.init+getEquipmentBonuses(getStoredEquipment(p.id),itemMap).bonus_init,
+        ...getInitialClassCombatState(p),
+        zodarPathTrait:localPathTrait,
+        isPlayer:true, isSummon:false, dead:false, dying:false, stable:false, deathSuccesses:0, deathFailures:0,
+        rollInit: (p.init||0) + (getCharacterCombatTrait({ ...p, zodarPathTrait:localPathTrait }).initBonus || 0) + Math.floor(Math.random()*20),
+      };
     });
+    const monsterCombatants = scene.combat.monsters.map((m, index) => makeMonsterCombatant(m, index, `story_${activeStory.id || "story"}_${scene.id || "scene"}`));
     const allCombatants = [...playerCombatants, ...monsterCombatants].sort((a,b)=>b.rollInit-a.rollInit);
     const newCombat = { active:true, combatants:allCombatants, turn:0, round:1, spellSlots:{}, startedAt:Date.now(), questDmgLog:{} };
     const newStory = { ...latestQs.story, battlePending:true, battleNext:scene.combat.successScene, battleNextFail:scene.combat.failureScene||null };
@@ -13414,7 +16445,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     const freshQs = await dbGetPartyState(code);
     const combat = freshQs?.combat;
     if(!combat?.active || combat.pendingLog) return;
-    const combatants = [...combat.combatants];
+    let combatants = [...combat.combatants];
     const turn = combat.turn % combatants.length;
     const attacker = combatants[turn];
     if(!attacker?.isPlayer || attacker.id!==myId) return;
@@ -13504,7 +16535,10 @@ function GameScreen({ myId, setScreen, authUser }) {
     }
     const targets = combatants.filter(c=>!c.isPlayer&&c.hp>0);
     if(!targets.length) { await endCombat(); return; }
-    const target = targets.find(c=>c.id===selectedTarget) || targets[0];
+    const selectedTargetIdx = selectedTarget ? findCombatantIndexBySelectKey(combatants, selectedTarget, c=>!c.isPlayer && c.hp > 0) : -1;
+    const firstTargetIdx = combatants.findIndex(c=>!c.isPlayer && c.hp > 0);
+    const tidx = selectedTargetIdx >= 0 ? selectedTargetIdx : firstTargetIdx;
+    const target = combatants[tidx];
     setSelectedTarget(null);
     // Check legendary item from local state (synced via realtime before attack)
     const myPreBuff = (qs?.masterBuffs?.[myId]?.legendaryItem?.turnsLeft > 0) ? qs.masterBuffs[myId].legendaryItem : null;
@@ -13539,14 +16573,21 @@ function GameScreen({ myId, setScreen, authUser }) {
     const finalDmg = resisted ? Math.max(1, Math.floor(effectiveResolved.damage / 2)) : effectiveResolved.damage;
     const effectiveResolved2 = resisted ? { ...effectiveResolved, damage: finalDmg } : effectiveResolved;
     // Status effect applicato dall'attacco (es. mostro con statusEffect)
-    const attackStatusEffect = effectiveResolved.hit && attacker.attackStatusEffect ? attacker.attackStatusEffect : null;
-    const tidx = combatants.findIndex(c=>c.id===target.id);
+    const traitStatusOnHit = getCharacterCombatTrait(attacker).statusOnHit;
+    const attackStatusEffect = effectiveResolved.hit ? (attacker.attackStatusEffect || traitStatusOnHit || null) : null;
+    if(tidx < 0) return;
     const targetAfterDmg = { ...target, hp: Math.max(0, target.hp - finalDmg) };
     if (attackStatusEffect) {
       targetAfterDmg.statusEffects = mergeStatusEffects(targetAfterDmg.statusEffects, attackStatusEffect);
     }
     combatants[tidx] = targetAfterDmg;
+    const actionMomentum = applyClassActionMomentum(combatants, attacker.id, "attack");
+    combatants = actionMomentum.combatants;
+    const killRewards = applyClassKillRewards(combatants, attacker.id, target.hp > 0 && targetAfterDmg.hp <= 0 ? 1 : 0);
+    combatants = killRewards.combatants;
     let log = formatWeaponAttackLog(attacker, target, effectiveResolved2, weapon.name, combatants[tidx].hp, target.maxHp, { resisted, statusApplied: attackStatusEffect?.type, lang });
+    if(actionMomentum.lines.length) log += `\n${actionMomentum.lines.join("\n")}`;
+    if(killRewards.lines.length) log += `\n${killRewards.lines.join("\n")}`;
     if (statusPrefixLog) log = statusPrefixLog + '\n---\n' + log;
     if(myPreBuff) {
       const newTurnsAfter = (myBuffs.legendaryItem?.turnsLeft || 0) - 1;
@@ -13620,28 +16661,53 @@ function GameScreen({ myId, setScreen, authUser }) {
 
     const enemies = combatants.filter(c=>!c.isPlayer && c.hp>0);
     if(!enemies.length) { await endCombat(); setSpellMenu(false); return; }
-    const target = enemies.find(c=>c.id===selectedTarget) || enemies[0];
+    const selectedTargetIdx = selectedTarget ? findCombatantIndexBySelectKey(combatants, selectedTarget, c=>!c.isPlayer && c.hp > 0) : -1;
+    const firstTargetIdx = combatants.findIndex(c=>!c.isPlayer && c.hp > 0);
+    const target = combatants[selectedTargetIdx >= 0 ? selectedTargetIdx : firstTargetIdx];
     setSelectedTarget(null);
 
     const spellMasterBuffs = latestSpellBuffState.masterBuffs || {};
     const spellMyBuffs = spellMasterBuffs[myId] || {};
+    const casterTraits = getCharacterCombatTrait(attacker);
     let newSpellMasterBuffs = spellMasterBuffs;
 
     let log = lang === "en" ? `🔮 **${attacker.name}** casts **${castSpellInfo.name}**!\n` : `🔮 **${attacker.name}** lancia **${spell.name}**!\n`;
     let newCombatants = combatants;
     let spellDmgToLog = 0;
+    let spellKillCount = 0;
+    if(spell.hpCost && attacker.isPlayer) {
+      const hpCost = Math.min(Math.max(0, Number(spell.hpCost) || 0), Math.max(0, (attacker.hp || 1) - 1));
+      if(hpCost > 0) {
+        const aidx = newCombatants.findIndex(c=>c.id===attacker.id);
+        if(aidx !== -1) newCombatants[aidx] = { ...newCombatants[aidx], hp:Math.max(1, (newCombatants[aidx].hp || 1) - hpCost) };
+        const playerData = partyPlayers.find(p => p.id === attacker.id) || (attacker.id === myId ? me : null);
+        if(playerData) {
+          const updated = { ...playerData, hp:Math.max(1, (playerData.hp || 1) - hpCost) };
+          await dbSavePlayer(updated);
+          if(attacker.id === myId) setMeRaw(updated);
+        }
+        log += `🩸 Costo ematico: **-${hpCost} HP**\n`;
+      }
+    }
 
     if(spell.type === "damage") {
       const base = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), notation:spell.dmg, label:`${lang === "en" ? "Damage" : "Danno"} ${spell.dmg}`, themeColor:"#a855f7" });
       const magLegBonus = (spellMyBuffs.legendaryItem?.turnsLeft > 0 && spellMyBuffs.legendaryItem?.bonus_mag) ? spellMyBuffs.legendaryItem.bonus_mag : 0;
-      const bonus = Math.floor((attacker.mag||0)/2) + magLegBonus;
+      const bonus = Math.floor((attacker.mag||0)/2) + magLegBonus + (casterTraits.spellDamageBonus || 0);
       let effectiveBase = base;
       if(spellMyBuffs.crit > 0) {
         effectiveBase = base * 2;
         newSpellMasterBuffs = { ...spellMasterBuffs, [myId]: { ...spellMyBuffs, crit: spellMyBuffs.crit - 1 } };
       }
       const bonusLabel = magLegBonus > 0 ? `+${Math.floor((attacker.mag||0)/2)} +${magLegBonus}(leg)` : `+${bonus}`;
-      const spellStatusEffect = inferSpellStatusEffect(spell, attacker);
+      const inferredStatusEffect = inferSpellStatusEffect(spell, attacker);
+      const spellStatusEffect = inferredStatusEffect
+        ? {
+            ...inferredStatusEffect,
+            duration:(inferredStatusEffect.duration || 1) + (casterTraits.statusDurationBonus || 0) + (/control/.test(spell.type) ? (casterTraits.controlDurationBonus || 0) : 0),
+            damagePerRound:(inferredStatusEffect.damagePerRound || 0) + (casterTraits.statusDamageBonus || 0),
+          }
+        : casterTraits.statusOnSpell;
       const spellTargets = isAreaDamageSpell(spell)
         ? newCombatants.filter(c => !c.isPlayer && c.hp > 0)
         : [target];
@@ -13649,7 +16715,9 @@ function GameScreen({ myId, setScreen, authUser }) {
       for (const spellTarget of spellTargets) {
         const dmg = Math.max(1, effectiveBase + bonus - Math.floor((spellTarget.def || 0) / 2));
         spellDmgToLog += dmg;
-        const tidx = newCombatants.findIndex(c=>c.id===spellTarget.id);
+        const spellTargetKey = combatantSelectKey(spellTarget, newCombatants.indexOf(spellTarget));
+        const tidx = findCombatantIndexBySelectKey(newCombatants, spellTargetKey, c=>!c.isPlayer);
+        if(tidx < 0) continue;
         const damagedTarget = {
           ...newCombatants[tidx],
           hp: Math.max(0, (newCombatants[tidx].hp || 0) - dmg),
@@ -13657,6 +16725,7 @@ function GameScreen({ myId, setScreen, authUser }) {
         if (spellStatusEffect && damagedTarget.hp > 0) {
           damagedTarget.statusEffects = mergeStatusEffects(damagedTarget.statusEffects, spellStatusEffect);
         }
+        if((spellTarget.hp || 0) > 0 && damagedTarget.hp <= 0) spellKillCount += 1;
         newCombatants[tidx] = damagedTarget;
         hitLines.push(`❤️ ${spellTarget.name}: -${dmg} → ${damagedTarget.hp}/${spellTarget.maxHp} HP`);
       }
@@ -13673,7 +16742,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     } else if(spell.type === "heal") {
       const magLegHealBonus = (spellMyBuffs.legendaryItem?.turnsLeft > 0 && spellMyBuffs.legendaryItem?.bonus_mag) ? spellMyBuffs.legendaryItem.bonus_mag : 0;
       const baseHeal = await showDiceVisual({ sides:getPrimaryDieSides(spell.dmg, 6), notation:spell.dmg, label:`${lang === "en" ? "Heal" : "Cura"} ${spell.dmg}`, themeColor:"#10b981" });
-      const heal = Math.max(1, baseHeal + Math.floor((attacker.mag||0)/2) + magLegHealBonus);
+      const heal = Math.max(1, baseHeal + Math.floor((attacker.mag||0)/2) + magLegHealBonus + (casterTraits.healBonus || 0));
       if(spell.area) {
         // Area heal: restore HP to ALL alive player combatants
         const healTargets = newCombatants.filter(c => c.isPlayer && !c.isSummon && !c.dead);
@@ -13713,8 +16782,8 @@ function GameScreen({ myId, setScreen, authUser }) {
     } else if(spell.type === "summon" && spell.summon) {
       const s = spell.summon;
       const levelScale = Math.max(1, Math.floor((me.level || 1) / 2));
-      const summonHp = s.hp + levelScale * 4;
-      const summonAtk = s.atk + levelScale * 2;
+      const summonHp = s.hp + levelScale * 4 + (casterTraits.summonHpBonus || 0);
+      const summonAtk = s.atk + levelScale * 2 + (casterTraits.summonAtkBonus || 0);
       const summonDef = s.def + levelScale;
       // Allow up to 2 summons per player — remove oldest if already at limit
       const myCurrentSummons = newCombatants.filter(c => c.isSummon && c.summonOwner === myId);
@@ -13753,8 +16822,12 @@ function GameScreen({ myId, setScreen, authUser }) {
         let areaLog = "";
         for(const en of aliveEnemies) {
           const dmg = Math.max(1, base + bonus - Math.floor(en.def/2));
-          const idx = newCombatants.findIndex(c=>c.id===en.id);
-          newCombatants[idx] = {...en, hp:Math.max(0,en.hp-dmg)};
+          const enKey = combatantSelectKey(en, newCombatants.indexOf(en));
+          const idx = findCombatantIndexBySelectKey(newCombatants, enKey, c=>!c.isPlayer);
+          if(idx < 0) continue;
+          const nextHp = Math.max(0,en.hp-dmg);
+          if((en.hp || 0) > 0 && nextHp <= 0) spellKillCount += 1;
+          newCombatants[idx] = {...en, hp:nextHp};
           totalHeal += Math.floor(dmg * drainPct);
           spellDmgToLog += dmg;
           areaLog += `\n💥 ${en.name}: -${dmg} HP`;
@@ -13765,10 +16838,14 @@ function GameScreen({ myId, setScreen, authUser }) {
           ? `💋 **${castSpellInfo.name}** hits ALL enemies!${areaLog}\n💗 Total healing: **+${totalHeal} HP**`
           : `💋 **${spell.name}** colpisce TUTTI i nemici!${areaLog}\n💗 Cura totale: **+${totalHeal} HP**`;
       } else {
-        const dtidx = newCombatants.findIndex(c=>c.id===target.id);
+        const targetKey = combatantSelectKey(target, newCombatants.indexOf(target));
+        const dtidx = findCombatantIndexBySelectKey(newCombatants, targetKey, c=>!c.isPlayer);
+        if(dtidx < 0) return;
         const dmg = Math.max(1, base + bonus - Math.floor(target.def/2));
         const heal = Math.floor(dmg * drainPct);
-        newCombatants[dtidx] = {...target, hp:Math.max(0,target.hp-dmg)};
+        const nextHp = Math.max(0,target.hp-dmg);
+        if((target.hp || 0) > 0 && nextHp <= 0) spellKillCount += 1;
+        newCombatants[dtidx] = {...target, hp:nextHp};
         const aidx = newCombatants.findIndex(c=>c.id===attacker.id);
         if(aidx !== -1) newCombatants[aidx] = {...newCombatants[aidx], hp:Math.min(newCombatants[aidx].maxHp, newCombatants[aidx].hp+heal)};
         spellDmgToLog = dmg;
@@ -13789,7 +16866,8 @@ function GameScreen({ myId, setScreen, authUser }) {
           name: `${deadEnemy.name} (Non-Morto)`,
           rollInit: (attacker.rollInit || 10) - 0.5,
         };
-        newCombatants = newCombatants.filter(c => c.id !== deadEnemy.id);
+        const deadEnemyKey = combatantSelectKey(deadEnemy, newCombatants.indexOf(deadEnemy));
+        newCombatants = newCombatants.filter((c, idx) => combatantSelectKey(c, idx) !== deadEnemyKey);
         const attackerIdx = newCombatants.findIndex(c => c.id === attacker.id);
         newCombatants.splice(Math.max(0, attackerIdx + 1), 0, reanimated);
         log += `☠️ **${deadEnemy.name}** viene animato dalla morte e combatte al tuo fianco!\n❤️ ${reanimated.hp} HP · ⚔️ ${reanimated.atk} ATK · 🛡️ ${reanimated.def} DEF`;
@@ -13826,16 +16904,18 @@ function GameScreen({ myId, setScreen, authUser }) {
         log += `✝️ Nessun alleato caduto da riportare in vita.`;
       }
     } else if(spell.type === "control") {
+      const controlDuration = 1 + (casterTraits.controlDurationBonus || 0);
       if(spell.area) {
         const aliveEnemies = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
-        newCombatants = newCombatants.map(c => (!c.isPlayer && c.hp>0) ? {...c, statusEffects:mergeStatusEffects(c.statusEffects,{type:"stun",duration:1})} : c);
+        newCombatants = newCombatants.map(c => (!c.isPlayer && c.hp>0) ? {...c, statusEffects:mergeStatusEffects(c.statusEffects,{type:"stun",duration:controlDuration})} : c);
         log += lang === "en"
           ? `💜 **${castSpellInfo.name}**\nAll enemies are charmed or stunned and skip their next turn!\n${aliveEnemies.map(e=>`• ${e.name}`).join("\n")}`
           : `💜 **${spell.name}**\nTutti i nemici sono ammaliati e saltano il prossimo turno!\n${aliveEnemies.map(e=>`• ${e.name}`).join("\n")}`;
       } else {
         const ctarget = [...newCombatants.filter(c=>!c.isPlayer&&c.hp>0)].sort((a,b)=>(b.atk||0)-(a.atk||0))[0] || target;
-        const cidx = newCombatants.findIndex(c=>c.id===ctarget.id);
-        if(cidx !== -1) newCombatants[cidx] = {...newCombatants[cidx], statusEffects:mergeStatusEffects(newCombatants[cidx].statusEffects,{type:"stun",duration:1})};
+        const ctargetKey = combatantSelectKey(ctarget, newCombatants.indexOf(ctarget));
+        const cidx = findCombatantIndexBySelectKey(newCombatants, ctargetKey, c=>!c.isPlayer);
+        if(cidx !== -1) newCombatants[cidx] = {...newCombatants[cidx], statusEffects:mergeStatusEffects(newCombatants[cidx].statusEffects,{type:"stun",duration:controlDuration})};
         log += lang === "en"
           ? `💜 **${castSpellInfo.name}**\n${ctarget.name} is charmed or stunned and skips the next turn!`
           : `💜 **${spell.name}**\n${ctarget.name} è ammaliato/stordito e salta il prossimo turno!`;
@@ -13926,6 +17006,13 @@ function GameScreen({ myId, setScreen, authUser }) {
     } else {
       log += lang === "en" ? `${castSpellInfo.desc || "Special effect"}` : `${spell.desc || "Effetto speciale"}`;
     }
+
+    const spellMomentum = applyClassActionMomentum(newCombatants, attacker.id, "spell", spell);
+    newCombatants = spellMomentum.combatants;
+    const spellKillRewards = applyClassKillRewards(newCombatants, attacker.id, spellKillCount);
+    newCombatants = spellKillRewards.combatants;
+    if(spellMomentum.lines.length) log += `\n${spellMomentum.lines.join("\n")}`;
+    if(spellKillRewards.lines.length) log += `\n${spellKillRewards.lines.join("\n")}`;
 
     // Decrement legendary item turns after spell
     if(spellMyBuffs.legendaryItem?.turnsLeft > 0) {
@@ -14070,6 +17157,8 @@ function GameScreen({ myId, setScreen, authUser }) {
     setQs(prev => ({ ...prev, combat: newCombat, dungeon: newDungeon, story: newStoryState }));
     if (newDungeon?.active && newDungeon.completedAt && !latestQs.dungeon?.completedAt) {
       await addMsg(`🏆 **DUNGEON COMPLETATO!** ${newDungeon.name} — tutti i segreti svelati!`, 'victory', 'Sistema');
+      const dungeonRewardPlayers = await dbGetPlayers(code);
+      await grantCardPackRewards(dungeonRewardPlayers, cardPackRewardsForDungeon(newDungeon), `Dungeon: ${newDungeon.name}`, `dungeon_${newDungeon.seed || Date.now()}`);
     }
     // Guild: bonus oro e XP gilda per vittoria
     const myGuild = getPlayerGuild(guilds, myId);
@@ -14207,6 +17296,10 @@ ${stepText(step)}`, "quest","Master");
     const guildXp = normalizedQuestDiff==="epica"?160:normalizedQuestDiff==="difficile"?120:normalizedQuestDiff==="facile"?40:70;
     if(myGuild) await addGuildXP(guildXp);
     const bonusNote = myGuild ? (lang === "en" ? ` (guild bonus +${Math.round((goldMult-1)*100)}%)` : ` (bonus gilda +${Math.round((goldMult-1)*100)}%)`) : "";
+    const packRewardSummary = await grantCardPackRewards(freshQuestPlayers, cardPackRewardsForQuest(q), `Missione: ${lq.title}`, `quest_${q.id}_${Date.now()}`, false);
+    const packRewardLine = packRewardSummary
+      ? (lang === "en" ? `\n\n📦 **Card pack reward:** ${packRewardSummary}.` : `\n\n📦 **Ricompensa pacchetti:** ${packRewardSummary}.`)
+      : "";
     // Material loot drop based on quest difficulty
     const isSpecial = !!(q.specialPassword);
     const matRarity = isSpecial ? "legendary"
@@ -14223,9 +17316,9 @@ ${stepText(step)}`, "quest","Master");
       const rarityLabel = lang === "en"
         ? (matRarity === "legendary" ? "🟣 Legendary" : matRarity === "epic" ? "🔴 Epic" : matRarity === "rare" ? "🔵 Rare" : matRarity === "uncommon" ? "🟢 Uncommon" : "⚪ Common")
         : (matRarity === "legendary" ? "🟣 Leggendario" : matRarity === "epic" ? "🔴 Epico" : matRarity === "rare" ? "🔵 Raro" : matRarity === "uncommon" ? "🟢 Non comune" : "⚪ Comune");
-      await addMsg(lang === "en" ? `⚔️ **QUEST COMPLETED: ${lq.title}!**\n\n⭐ +${xpE} XP each · 💰 +${goldE} gold each${bonusNote}\n\n🎁 **Material loot found:** ${droppedMat.emoji} **${itemName(droppedMat)}** [${rarityLabel}] — received by everyone!\n\nIf you have enough XP, open the **Level** tab to level up.` : `⚔️ **MISSIONE COMPLETATA: ${lq.title}!**\n\n⭐ +${xpE} XP a testa · 💰 +${goldE} oro a testa${bonusNote}\n\n🎁 **Bottino materiale trovato:** ${droppedMat.emoji} **${itemName(droppedMat)}** [${rarityLabel}] — ricevuto da tutti!\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, "victory","Master");
+      await addMsg(lang === "en" ? `⚔️ **QUEST COMPLETED: ${lq.title}!**\n\n⭐ +${xpE} XP each · 💰 +${goldE} gold each${bonusNote}\n\n🎁 **Material loot found:** ${droppedMat.emoji} **${itemName(droppedMat)}** [${rarityLabel}] — received by everyone!${packRewardLine}\n\nIf you have enough XP, open the **Level** tab to level up.` : `⚔️ **MISSIONE COMPLETATA: ${lq.title}!**\n\n⭐ +${xpE} XP a testa · 💰 +${goldE} oro a testa${bonusNote}\n\n🎁 **Bottino materiale trovato:** ${droppedMat.emoji} **${itemName(droppedMat)}** [${rarityLabel}] — ricevuto da tutti!${packRewardLine}\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, "victory","Master");
     } else {
-      await addMsg(lang === "en" ? `⚔️ **QUEST COMPLETED: ${lq.title}!**\n\n⭐ +${xpE} XP each · 💰 +${goldE} gold each${bonusNote}\n\nIf you have enough XP, open the **Level** tab to level up.` : `⚔️ **MISSIONE COMPLETATA: ${lq.title}!**\n\n⭐ +${xpE} XP a testa · 💰 +${goldE} oro a testa${bonusNote}\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, "victory","Master");
+      await addMsg(lang === "en" ? `⚔️ **QUEST COMPLETED: ${lq.title}!**\n\n⭐ +${xpE} XP each · 💰 +${goldE} gold each${bonusNote}${packRewardLine}\n\nIf you have enough XP, open the **Level** tab to level up.` : `⚔️ **MISSIONE COMPLETATA: ${lq.title}!**\n\n⭐ +${xpE} XP a testa · 💰 +${goldE} oro a testa${bonusNote}${packRewardLine}\n\nSe hai abbastanza XP, apri la scheda **Livello** per aumentare di livello.`, "victory","Master");
     }
   }
 
@@ -14239,36 +17332,41 @@ ${stepText(step)}`, "quest","Master");
     const hpMult   = (1 + (avgLevel - 1) * 0.18) * diffMult;
     const atkBonus = Math.floor(avgLevel * 0.6 * diffMult);
     const defBonus = Math.floor(avgLevel * 0.25 * diffMult);
-    const monsters = (stepData.monsters||[]).map(e=>{
+    const monsters = (stepData.monsters||[]).map((e, index)=>{
       const baseHp = e.maxHp || e.hp;
       const maxHp = Math.round(baseHp * hpMult);
       const atk = (e.atk || 5) + atkBonus;
       const def = (e.def || 0) + defBonus;
-      return { ...e, atk, def, hp:maxHp, maxHp, xp:monsterXpValue({ ...e, maxHp }), weaponDie:e.weaponDie || getCombatDamageDie({...e, atk}) };
+      return makeMonsterCombatant({ ...e, atk, def, hp:maxHp, maxHp, xp:monsterXpValue({ ...e, maxHp }), weaponDie:e.weaponDie || getCombatDamageDie({...e, atk}) }, index, `quest_${qs?.currentId || "quest"}_${qs?.step || 0}`);
     });
     const combatPartyPlayers = await getOnlinePartyPlayersForCombat();
-    const players = combatPartyPlayers.map(p=>({
-      id:p?.id,
-      name:p?.name,
-      class:p?.class||"warrior",
-      race:p?.race||"human",
-      gender:p?.gender||getStoredCharacterGender(p?.id,"male"),
-      emoji:CLASSES[p?.class||'warrior']?.emoji||"⚔️",
-      hp:p?.hp||0,
-      maxHp:p?.maxHp||0,
-      atk:p?.atk||0,
-      def:p?.def||0,
-      mag:p?.mag||0,
-      init:p?.init||1,
-      weaponDie:p?.id===myId ? getEquippedWeapon(equipment, itemMapRef.current).weapon_die : getCombatDamageDie(p),
-      isPlayer:true,
-      dying:false,
-      stable:false,
-      dead:false,
-      deathSuccesses:0,
-      deathFailures:0,
-    }));
-    const allCombatants = [...players,...monsters].map(c=>({...c, rollInit:(c.init||1)+roll(20)}));
+    const players = combatPartyPlayers.map(p=>{
+      const localPathTrait = p?.id === myId ? zodarPathCombatTrait : undefined;
+      return {
+        id:p?.id,
+        name:p?.name,
+        class:p?.class||"warrior",
+        race:p?.race||"human",
+        gender:p?.gender||getStoredCharacterGender(p?.id,"male"),
+        emoji:CLASSES[p?.class||'warrior']?.emoji||"⚔️",
+        hp:p?.hp||0,
+        maxHp:p?.maxHp||0,
+        atk:p?.atk||0,
+        def:p?.def||0,
+        mag:p?.mag||0,
+        init:p?.init||1,
+        weaponDie:p?.id===myId ? getEquippedWeapon(equipment, itemMapRef.current).weapon_die : getCombatDamageDie(p),
+        ...getInitialClassCombatState(p),
+        zodarPathTrait:localPathTrait,
+        isPlayer:true,
+        dying:false,
+        stable:false,
+        dead:false,
+        deathSuccesses:0,
+        deathFailures:0,
+      };
+    });
+    const allCombatants = [...players,...monsters].map(c=>c.combatId ? c : ({...c, rollInit:(c.init||1)+(c.isPlayer ? (getCharacterCombatTrait(c).initBonus || 0) : 0)+roll(20)}));
     allCombatants.sort((a,b)=>b.rollInit-a.rollInit);
     const spellSlots = Object.fromEntries(players.map(p=>{
       const computed = getSpellSlots(p.level || 1);
@@ -14404,6 +17502,14 @@ ${stepText(step)}`, "quest","Master");
       await refreshInventory({ ...me, gold: (me.gold || 0) + goldFound });
     }
     await addMsg(lootMsg, "victory", "Master");
+    setLootFeedback({
+      key:currentStepKey,
+      gold:goldFound,
+      itemName:itemFound ? itemName(itemFound) : "",
+      itemEmoji:itemFound?.emoji || "🎁",
+      itemRarity:itemFound?.rarity || "",
+      recipients:partyPlayers.length || 1,
+    });
     setLootedStepKey(currentStepKey);
   }
 
@@ -14414,9 +17520,9 @@ ${stepText(step)}`, "quest","Master");
     try {
       if(c==="avanza") await advanceQuest();
       else if(c==="aiuto") await addMsg(`⚔️ **Comandi:** avanza · stato · party · classifica`, "system","Sistema");
-      else if(c==="stato") { if(me) await addMsg(`${CLASSES[me?.class||'warrior']?.emoji} **${me.name}** Lv.${me.level} ❤️${me.hp||0}/${me.maxHp||0} ⚔️${me.atk||0} 🛡️${me.def||0} ✨${me.mag||0} 💰${me.gold||0}`,`info`,me.name); }
-      else if(c==="party") { const lines=partyPlayers.map(p=>`${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} ❤️${p?.hp||0}/${p?.maxHp||0}`); await addMsg(`⚔️ **Party [${code}]**\n${lines.join("\n")}`,"info","Master"); }
-      else if(c==="classifica") { const sorted=[...partyPlayers].sort((a,b)=>b.level-a.level); await addMsg(`⚔️ **Classifica**\n${sorted.map((p,i)=>`${i===0?"🥇":i===1?"🥈":"🥉"} ${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${p.level} — ${p.xp||0}XP`).join("\n")}`,"info","Master"); }
+      else if(c==="stato") { if(me) await addMsg(`${CLASSES[me?.class||'warrior']?.emoji} **${me.name}** Lv.${displayLevel(me)} ❤️${me.hp||0}/${me.maxHp||0} ⚔️${me.atk||0} 🛡️${me.def||0} ✨${me.mag||0} 💰${me.gold||0}`,`info`,me.name); }
+      else if(c==="party") { const lines=partyPlayers.map(p=>`${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${displayLevel(p)} ❤️${p?.hp||0}/${p?.maxHp||0}`); await addMsg(`⚔️ **Party [${code}]**\n${lines.join("\n")}`,"info","Master"); }
+      else if(c==="classifica") { const sorted=[...partyPlayers].sort((a,b)=>b.level-a.level); await addMsg(`⚔️ **Classifica**\n${sorted.map((p,i)=>`${i===0?"🥇":i===1?"🥈":"🥉"} ${CLASSES[p?.class||'warrior']?.emoji} **${p.name}** Lv.${displayLevel(p)} — ${p.xp||0}XP`).join("\n")}`,"info","Master"); }
       else if(chatChannel === "world") {
         await dbSendMessage({ party_code:"__world__", author:me?.name, content:raw, type:"chat" });
         const wm = await dbGetMessages("__world__");
@@ -14448,7 +17554,7 @@ ${stepText(step)}`, "quest","Master");
   };
 
   const spellbookCaster = MAGIC_CLASSES.includes(me?.class);
-  const spellbookAvailableSpells = spellbookCaster ? availableSpellsFor(me?.class, me?.level) : [];
+  const spellbookAvailableSpells = spellbookCaster ? availableSpellsFor(me?.class, me?.level, cardVault) : [];
 
   useEffect(() => {
     if(!myId || !spellbookCaster) {
@@ -14461,7 +17567,7 @@ ${stepText(step)}`, "quest","Master");
     const normalized = nextPrepared.length ? nextPrepared : spellbookAvailableSpells.map(spell => spell.id);
     setPreparedSpellIds(normalized);
     saveStoredPreparedSpells(myId, normalized);
-  }, [myId, spellbookCaster, me?.class, me?.level]);
+  }, [myId, spellbookCaster, me?.class, me?.level, cardVault]);
 
   if(!me || !me.class) return <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", color:"#f3f4f6", fontFamily:"'Cinzel',serif", fontSize:"1.2rem" }}>Caricamento personaggio...</div>;
 
@@ -14473,6 +17579,8 @@ ${stepText(step)}`, "quest","Master");
   const myDeathTurn = myTurn && isDyingCombatant(activeCombatant);
   const isMySummonTurn = combat?.active && activeCombatant?.isSummon && activeCombatant?.summonOwner === myId;
   const isCaster = MAGIC_CLASSES.includes(me?.class) || me?.class === 'custode_equilibrio';
+  const zodarPathSummary = getZodarPathSummary(cardVault);
+  const zodarPathCombatTrait = getZodarPathCombatTrait(cardVault);
   const spellSlots = (() => {
     const computed = getSpellSlots(me?.level || 1);
     // Detect stale level-1 data: all higher tiers are 0 but computed has slots there
@@ -14491,8 +17599,8 @@ ${stepText(step)}`, "quest","Master");
     if(!persisted) return computed;
     return Object.fromEntries([1,2,3,4,5].map(k => [k, Math.max(persisted[k] ?? 0, computed[k] ?? 0)]));
   })();
-  const availableSpells = isCaster ? availableSpellsFor(me?.class, me?.level) : [];
-  const maxPreparedSpells = maxPreparedSpellsForLevel(me?.level || 1);
+  const availableSpells = isCaster ? availableSpellsFor(me?.class, me?.level, cardVault) : [];
+  const maxPreparedSpells = maxPreparedSpellsForLevel(me?.level || 1) + getZodarPathPreparedBonus(cardVault);
   const preparedNormalSpellCount = availableSpells.filter(spell => spell.slots > 0 && preparedSpellIds.includes(spell.id)).length;
   const preparedSpells = availableSpells.filter(spell => spell.slots === 0 || preparedSpellIds.includes(spell.id));
   const spellLevels = Array.from(new Set([
@@ -14523,6 +17631,8 @@ ${stepText(step)}`, "quest","Master");
   const equippedItems = Object.fromEntries(
     EQUIP_SLOTS.map(s => [s, itemMap.get(equipment[s]) || null])
   );
+  const activeCosmetics = activeCosmeticCardsFromVault(cardVault);
+  const ownedCosmetics = (cardVault?.cards || []).filter(card => card?.kind === "cosmetic" && !card.duplicate);
   const currentLevelGain = levelGainForClass(me?.class);
   const nextLevelXp = xpForLevel(me?.level || 1);
   const canLevelUp = (me?.xp || 0) >= nextLevelXp;
@@ -14536,6 +17646,7 @@ ${stepText(step)}`, "quest","Master");
       ["equipment",`🎽 ${t("nav.equipment")}`],
       ["cardpacks",`📦 Pacchetti${cardFeatureUnlocked ? "" : " 🔒"}`],
       ["cardcollection",`🃏 Carte${cardFeatureUnlocked ? "" : " 🔒"}`],
+      ["hallofechoes","🏛️ Echi"],
       ["level",`⭐ ${t("nav.level")}`],
       ["diary",`📖 ${t("nav.diary")}`],
       ["combat",`⚔️ ${t("nav.battle")}`],
@@ -14915,7 +18026,7 @@ ${stepText(step)}`, "quest","Master");
                 <div style={{ color:"#94a3b8", fontSize:"0.62rem" }}>{RACES[me?.race]?.name} {CLASSES[me?.class]?.name}</div>
                 {(() => { const t = getPlayerTitle(me?.stats); return t ? <div style={{ fontSize:"0.6rem", color: t.tier===4?"#fbbf24":t.tier===3?"#a855f7":t.tier===2?"#22c55e":"#94a3b8", fontStyle:"italic" }}>{t.icon} {t.title}</div> : null; })()}
               </div>
-              <span style={{ padding:"1px 5px", background:"#3b0764", borderRadius:3, fontSize:"0.62rem", color:"#a78bfa", flexShrink:0 }}>Lv.{me.level}</span>
+              <span style={{ padding:"1px 5px", background:"#3b0764", borderRadius:3, fontSize:"0.62rem", color:"#a78bfa", flexShrink:0 }}>Lv.{displayLevel(me)}</span>
             </div>
             <HpBar cur={me.hp} max={me.maxHp} />
             <div style={{ display:"flex", justifyContent:"space-between", fontSize:"0.65rem", marginTop:4 }}>
@@ -14969,7 +18080,7 @@ ${stepText(step)}`, "quest","Master");
                   <div style={{ height:"100%", background:(p?.hp||0)/(p?.maxHp||1)>0.5?"#22c55e":(p?.hp||0)/(p?.maxHp||1)>0.25?"#f59e0b":"#ef4444", width:`${Math.min(100,(p?.hp||0)/(p?.maxHp||1)*100)}%`, opacity:online ? 1 : 0.45 }} />
                 </div>
               </div>
-              <span style={{ fontSize:"0.6rem", color:"#94a3b8", flexShrink:0 }}>Lv.{p?.level||1}</span>
+              <span style={{ fontSize:"0.6rem", color:"#94a3b8", flexShrink:0 }}>Lv.{displayLevel(p)}</span>
             </div>
           )})}
           {partyPlayers.length<=1&&<div style={{ color:"#1f2937", fontSize:"0.68rem" }}>{lang === "en" ? "Solo for now" : "Solo per ora"}</div>}
@@ -15234,6 +18345,33 @@ ${stepText(step)}`, "quest","Master");
                   <div style={{ color:"#cbd5e1", fontSize:"0.86rem", lineHeight:1.6 }}>
                     Bonus della tua classe: <strong>{currentLevelGain.label}</strong>
                   </div>
+                  {getCharacterFeatureLines(me).length > 0 && (
+                    <div style={{ marginTop:8, display:"grid", gap:4 }}>
+                      {getCharacterFeatureLines(me).map(line => (
+                        <div key={line} style={{ color:"#c4b5fd", fontSize:"0.78rem", lineHeight:1.45 }}>✦ {line}</div>
+                      ))}
+                      {CLASS_RESOURCE_INFO[me.class] && (
+                        <div style={{ color:"#93c5fd", fontSize:"0.78rem", lineHeight:1.45 }}>
+                          {CLASS_RESOURCE_INFO[me.class].icon} Risorsa: <strong>{CLASS_RESOURCE_INFO[me.class].label}</strong> — {CLASS_RESOURCE_INFO[me.class].desc}
+                        </div>
+                      )}
+                      {getClassSpellBonus(me.class) && (
+                        <div style={{ color:"#fcd34d", fontSize:"0.78rem", lineHeight:1.45 }}>
+                          ✨ Magie: <strong>{getClassSpellBonus(me.class).title}</strong> — {getClassSpellBonus(me.class).lines[0]}
+                        </div>
+                      )}
+                      {getClassRaceSynergy(me) && (
+                        <div style={{ color:"#fcd34d", fontSize:"0.78rem", lineHeight:1.45 }}>
+                          ✨ Sinergia: <strong>{getClassRaceSynergy(me).name}</strong> — {getClassRaceSynergy(me).desc}
+                        </div>
+                      )}
+                      {zodarPathSummary.map(path => (
+                        <div key={path.id} style={{ color:"#fde68a", fontSize:"0.78rem", lineHeight:1.45 }}>
+                          {path.icon} {path.name}: <strong>{path.short}</strong> — {path.desc}
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit,minmax(130px,1fr))", gap:8, marginBottom:"1rem" }}>
                   {[
@@ -15412,18 +18550,30 @@ ${stepText(step)}`, "quest","Master");
             onBuyPackWithPremium={handleBuyCardPackWithPremium}
             onBuyPremiumCurrency={handleBuyPremiumCurrency}
             onGrantDevPack={grantDevCardPack}
+            isMobile={isMobile}
           />
         )}
         {tab==="cardcollection" && cardFeatureUnlocked && (
           <CardsCollectionView
             vault={cardVault}
+            catalogItems={catalogItems}
             inventoryGroups={inventoryGroups}
             equipment={equipment}
+            activeCosmetics={activeCosmetics}
             onEquip={equipItem}
             onUse={usePotion}
             onActivateTitle={activateCardTitle}
+            onEquipCosmetic={equipCardCosmetic}
+            onUnequipCosmetic={unequipCardCosmetic}
             onSummonAlly={summonAllyCard}
             combatActive={!!combat?.active}
+            isMobile={isMobile}
+          />
+        )}
+        {tab==="hallofechoes" && (
+          <HallOfEchoesView
+            me={me}
+            cardVault={cardVault}
             isMobile={isMobile}
           />
         )}
@@ -15455,8 +18605,12 @@ ${stepText(step)}`, "quest","Master");
             me={me}
             equippedItems={equippedItems}
             equippedWeapon={equippedWeapon}
+            activeCosmetics={activeCosmetics}
+            ownedCosmetics={ownedCosmetics}
             onUnequip={unequipItem}
             onEquip={equipItem}
+            onEquipCosmetic={equipCardCosmetic}
+            onUnequipCosmetic={unequipCardCosmetic}
             inventoryGroups={inventoryGroups}
             onSell={handleInventorySell}
             onUse={usePotion}
@@ -15476,6 +18630,8 @@ ${stepText(step)}`, "quest","Master");
             preparedCount={preparedNormalSpellCount}
             maxPrepared={maxPreparedSpells}
             onTogglePrepared={togglePreparedSpell}
+            classKey={me?.class}
+            zodarPaths={zodarPathSummary}
           />
         )}
         {tab==="spells" && !isCaster && (
@@ -15634,9 +18790,50 @@ ${stepText(step)}`, "quest","Master");
                     );
                   }
                   if(isLootStep(stepData)) {
+                    const visibleLootFeedback = lootFeedback?.key === currentStepKey ? lootFeedback : null;
                     return (
                       <div style={{ textAlign:"center", padding:"1rem" }}>
                         <p style={{ color:"#fde68a", fontSize:"0.88rem", marginBottom:12 }}><TypewriterText text={stepData.text} speed={16} /></p>
+                        {visibleLootFeedback && (
+                          <div style={{
+                            width:"min(420px,100%)",
+                            margin:"0 auto 1rem",
+                            padding:"1rem",
+                            borderRadius:10,
+                            border:"1px solid rgba(251,191,36,0.42)",
+                            background:"linear-gradient(160deg,rgba(120,53,15,0.34),rgba(15,23,42,0.94))",
+                            boxShadow:"0 18px 42px rgba(0,0,0,0.36), 0 0 26px rgba(251,191,36,0.13)",
+                            textAlign:"left",
+                            animation:"pulse 0.35s ease",
+                          }}>
+                            <div style={{ display:"flex", alignItems:"center", gap:10, marginBottom:10 }}>
+                              <div style={{ width:40, height:40, borderRadius:9, display:"grid", placeItems:"center", background:"rgba(251,191,36,0.14)", border:"1px solid rgba(251,191,36,0.32)", fontSize:"1.25rem" }}>💰</div>
+                              <div>
+                                <div style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontWeight:900, fontSize:"0.98rem" }}>Bottino recuperato</div>
+                                <div style={{ color:"#94a3b8", fontSize:"0.72rem" }}>{visibleLootFeedback.recipients} eroe{visibleLootFeedback.recipients === 1 ? "" : "i"} coinvolti nella ricerca</div>
+                              </div>
+                            </div>
+                            <div style={{ display:"grid", gap:8 }}>
+                              {visibleLootFeedback.gold > 0 && (
+                                <div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"0.55rem 0.65rem", borderRadius:7, background:"rgba(2,6,23,0.48)", border:"1px solid rgba(251,191,36,0.18)" }}>
+                                  <span style={{ color:"#fde68a", fontWeight:800 }}>🪙 Oro</span>
+                                  <span style={{ color:"#fbbf24", fontWeight:900 }}>+{visibleLootFeedback.gold} a testa</span>
+                                </div>
+                              )}
+                              {visibleLootFeedback.itemName && (
+                                <div style={{ display:"flex", justifyContent:"space-between", gap:10, padding:"0.55rem 0.65rem", borderRadius:7, background:"rgba(2,6,23,0.48)", border:"1px solid rgba(34,197,94,0.2)" }}>
+                                  <span style={{ color:"#bbf7d0", fontWeight:800 }}>{visibleLootFeedback.itemEmoji} Oggetto</span>
+                                  <span style={{ color:"#86efac", fontWeight:900, textAlign:"right" }}>{visibleLootFeedback.itemName}</span>
+                                </div>
+                              )}
+                              {visibleLootFeedback.gold <= 0 && !visibleLootFeedback.itemName && (
+                                <div style={{ padding:"0.65rem", borderRadius:7, background:"rgba(2,6,23,0.48)", border:"1px solid rgba(148,163,184,0.18)", color:"#94a3b8", textAlign:"center" }}>
+                                  Le rovine non hanno restituito nulla di utile.
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        )}
                         {canAdvance
                           ? <BigBtn onClick={advanceQuest} gold>Avanti →</BigBtn>
                           : <BigBtn onClick={()=>handleLoot(stepData)} gold icon="🔍">Cerca tra le rovine</BigBtn>
@@ -15879,7 +19076,7 @@ ${stepText(step)}`, "quest","Master");
                         <span style={{ fontSize:"0.55rem", color:online?"#22c55e":"#374151" }}>●</span>
                         <div style={{ flex:1, minWidth:0 }}>
                           <div style={{ fontSize:"0.78rem", color:online?"#e2e8f0":"#64748b", fontWeight:600, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{p.name}</div>
-                          <div style={{ fontSize:"0.62rem", color:"#475569" }}>Lv.{p.level||1} {CLASSES[p.class]?.emoji||"⚔️"}{pg ? ` · ${pg.emoji}${pg.name}` : ""}</div>
+                          <div style={{ fontSize:"0.62rem", color:"#475569" }}>Lv.{displayLevel(p)} {CLASSES[p.class]?.emoji||"⚔️"}{pg ? ` · ${pg.emoji}${pg.name}` : ""}</div>
                         </div>
                       </div>
                     );
@@ -15998,7 +19195,7 @@ ${stepText(step)}`, "quest","Master");
                                 {invitablePlayers.map(p=>(
                                   <button key={p.id} onClick={()=>setGuildInviteCode(p.id)}
                                     style={{ padding:"0.3rem 0.7rem", background:guildInviteCode===p.id?"rgba(109,40,217,0.35)":"rgba(15,23,42,0.7)", border:`1px solid ${guildInviteCode===p.id?"#7c3aed":"#334155"}`, borderRadius:6, color:guildInviteCode===p.id?"#c4b5fd":"#e2e8f0", cursor:"pointer", fontSize:"0.75rem" }}>
-                                    {CLASSES[p.class]?.emoji||"⚔️"} {p.name} <span style={{color:"#64748b"}}>Lv.{p.level||1}</span>
+                                    {CLASSES[p.class]?.emoji||"⚔️"} {p.name} <span style={{color:"#64748b"}}>Lv.{displayLevel(p)}</span>
                                   </button>
                                 ))}
                               </div>
@@ -16381,6 +19578,14 @@ ${stepText(step)}`, "quest","Master");
                           🔔 {lang === "en" ? "Notifications" : "Notifiche"}
                         </button>
                       )}
+                      {classResourceSummary(myCombatant) && (() => {
+                        const res = classResourceSummary(myCombatant);
+                        return (
+                          <span title={res.desc} style={{ padding:"0.25rem 0.65rem", background:"rgba(76,29,149,0.25)", border:"1px solid rgba(167,139,250,0.38)", borderRadius:999, color:"#ddd6fe", fontSize:"0.7rem", fontWeight:800 }}>
+                            {res.icon} {res.label}: {res.value}/{res.max}
+                          </span>
+                        );
+                      })()}
                     </div>
                   </div>
                   {myTurn&&(
@@ -16471,8 +19676,8 @@ ${stepText(step)}`, "quest","Master");
                             {lang === "en" ? <>Turn of <strong>{activeCombatant?.name}</strong> - choose a target!</> : <>Turno di <strong>{activeCombatant?.name}</strong> — scegli il bersaglio!</>}
                           </p>
                           <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
-                            {(combat.combatants||[]).filter(c => !c.isPlayer && c.hp > 0).map(enemy => (
-                              <button key={enemy.id} onClick={() => doSummonAttack(enemy.id)}
+                            {(combat.combatants||[]).map((enemy, idx) => ({ enemy, idx })).filter(({ enemy }) => !enemy.isPlayer && enemy.hp > 0).map(({ enemy, idx }) => (
+                              <button key={combatantSelectKey(enemy, idx)} onClick={() => doSummonAttack(combatantSelectKey(enemy, idx))}
                                 style={{ padding:"0.6rem 1rem", background:"rgba(127,29,29,0.3)", border:"1px solid #ef4444", borderRadius:8, color:"#fca5a5", fontFamily:"'Cinzel',serif", fontSize:"0.85rem", cursor:"pointer", display:"flex", justifyContent:"space-between", alignItems:"center" }}>
                                 <span>{enemy.emoji} {enemy.name}</span>
                                 <span style={{ fontSize:"0.72rem", color:"#94a3b8" }}>❤️ {enemy.hp}/{enemy.maxHp}</span>
@@ -16497,16 +19702,17 @@ ${stepText(step)}`, "quest","Master");
                               <div style={{ fontSize:"0.92rem", color:"#fbbf24", fontWeight:700 }}>{lang === "en" ? "Choose a spell" : "Scegli un incantesimo"}</div>
                               {/* Bersaglio nemico (per magie danno) */}
                               {(() => {
-                                const liveEnemies = combat.combatants.filter(c=>!c.isPlayer&&c.hp>0);
+                                const liveEnemies = combat.combatants.map((enemy, idx) => ({ enemy, idx })).filter(({ enemy })=>!enemy.isPlayer&&enemy.hp>0);
                                 if(liveEnemies.length <= 1) return null;
                                 return (
                                   <div style={{ width:"100%", marginBottom:4 }}>
                                     <div style={{ fontSize:"0.7rem", color:"#fca5a5", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:5 }}>🎯 {lang === "en" ? "Enemy target" : "Bersaglio nemico"}</div>
                                     <div style={{ display:"grid", gap:5 }}>
-                                      {liveEnemies.map(e=>{
-                                        const isSel = selectedTarget===e.id;
+                                      {liveEnemies.map(({ enemy:e, idx })=>{
+                                        const key = combatantSelectKey(e, idx);
+                                        const isSel = selectedTarget===key;
                                         return (
-                                          <button key={e.id} onClick={()=>setSelectedTarget(isSel?null:e.id)}
+                                          <button key={key} onClick={()=>setSelectedTarget(isSel?null:key)}
                                             style={{ display:"flex", alignItems:"center", gap:7, padding:"0.45rem 0.6rem", background:isSel?"rgba(239,68,68,0.25)":"rgba(127,29,29,0.18)", border:`2px solid ${isSel?"#ef4444":"#7f1d1d"}`, borderRadius:7, cursor:"pointer", textAlign:"left" }}>
                                             <span style={{ fontSize:"1rem" }}>{e.emoji}</span>
                                             <div style={{ flex:1, minWidth:0 }}>
@@ -16607,16 +19813,17 @@ ${stepText(step)}`, "quest","Master");
                               )}
                               {/* Selezione bersaglio */}
                               {(() => {
-                                const liveEnemies = combat.combatants.filter(c=>!c.isPlayer&&c.hp>0);
+                                const liveEnemies = combat.combatants.map((enemy, idx) => ({ enemy, idx })).filter(({ enemy })=>!enemy.isPlayer&&enemy.hp>0);
                                 if(liveEnemies.length <= 1) return null;
                                 return (
                                   <div style={{ marginBottom:10 }}>
                                     <div style={{ fontSize:"0.72rem", color:"#fca5a5", textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:6, fontFamily:"'Cinzel',serif" }}>🎯 {lang === "en" ? "Choose target" : "Scegli bersaglio"}</div>
                                     <div style={{ display:"grid", gap:6 }}>
-                                      {liveEnemies.map(e=>{
-                                        const isSel = selectedTarget===e.id;
+                                      {liveEnemies.map(({ enemy:e, idx })=>{
+                                        const key = combatantSelectKey(e, idx);
+                                        const isSel = selectedTarget===key;
                                         return (
-                                          <button key={e.id} onClick={()=>setSelectedTarget(isSel?null:e.id)}
+                                          <button key={key} onClick={()=>setSelectedTarget(isSel?null:key)}
                                             style={{ display:"flex", alignItems:"center", gap:8, padding:"0.55rem 0.75rem", background:isSel?"rgba(239,68,68,0.25)":"rgba(127,29,29,0.18)", border:`2px solid ${isSel?"#ef4444":"#7f1d1d"}`, borderRadius:8, cursor:"pointer", textAlign:"left", transition:"all 0.15s" }}>
                                             <ArtThumb src={getMonsterImage(e)} alt={e.name} size={36} radius={6} />
                                             <div style={{ flex:1, minWidth:0 }}>
@@ -16652,7 +19859,7 @@ ${stepText(step)}`, "quest","Master");
                               <div style={{ display:"grid", gap:10 }}>
                                 <button onClick={doAttack} style={{ width:"100%", padding:"1rem 1.4rem", background:"linear-gradient(135deg,#7f1d1d,#dc2626)", border:"2px solid #ef4444", borderRadius:10, color:"#fee2e2", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.1rem", cursor:"pointer", letterSpacing:"0.08em", boxShadow:"0 14px 28px rgba(127,29,29,0.24)" }}>
                                   <span className={diceAnim?"dice-spin":""} style={{ display:"inline-block", marginRight:8 }}>🎲</span>
-                                  {selectedTarget ? `${lang === "en" ? "ATTACK" : "ATTACCA"} ${combat.combatants.find(c=>c.id===selectedTarget)?.name||""}` : (lang === "en" ? "ATTACK" : "ATTACCA")}
+                                  {selectedTarget ? `${lang === "en" ? "ATTACK" : "ATTACCA"} ${combat.combatants.find((c, idx)=>combatantSelectKey(c, idx)===selectedTarget)?.name||""}` : (lang === "en" ? "ATTACK" : "ATTACCA")}
                                 </button>
                                 {isCaster && (
                                   <button onClick={()=>setSpellMenu(true)} disabled={!availableSpells.length} style={{ width:"100%", padding:"1rem 1.4rem", background:availableSpells.length?"linear-gradient(135deg,#551a8b,#7c3aed)":"rgba(75,43,105,0.35)", border:"2px solid #7c3aed", borderRadius:10, color:"#e0d7ff", fontFamily:"'Cinzel Decorative',serif", fontSize:"1.04rem", cursor:availableSpells.length?"pointer":"not-allowed", letterSpacing:"0.08em" }}>
@@ -16684,17 +19891,17 @@ ${stepText(step)}`, "quest","Master");
                         .filter(m=>m.type==="combat" && (!combat?.startedAt || new Date(m.created_at).getTime() >= combat.startedAt - 5000))
                         .slice(-50);
                       return (
-                        <div style={{ background:"linear-gradient(180deg,rgba(8,14,28,0.94),rgba(15,23,42,0.86))", border:"1px solid rgba(148,163,184,0.18)", borderRadius:12, overflow:"hidden", boxShadow:"0 16px 34px rgba(0,0,0,0.18)" }}>
-                          <button onClick={()=>setShowCombatLog(v=>!v)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, padding:"0.75rem 1rem", background:"transparent", border:"none", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", color:"#cbd5e1", letterSpacing:"0.08em" }}>
+                        <div style={{ background:"linear-gradient(180deg,rgba(8,13,26,0.98),rgba(15,23,42,0.96))", border:"1px solid rgba(148,163,184,0.34)", borderRadius:12, overflow:"hidden", boxShadow:"0 18px 42px rgba(0,0,0,0.34)" }}>
+                          <button onClick={()=>setShowCombatLog(v=>!v)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, padding:"0.85rem 1.05rem", background:"rgba(2,6,23,0.24)", border:"none", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.86rem", color:"#e5e7eb", letterSpacing:"0.08em" }}>
                             <span style={{ display:"flex", alignItems:"center", gap:8 }}>
                               <span>📜</span>
                               <span>{lang === "en" ? "BATTLE LOG" : "LOG DI BATTAGLIA"}</span>
                               <span style={{ padding:"0.1rem 0.42rem", borderRadius:999, background:"rgba(148,163,184,0.12)", border:"1px solid rgba(148,163,184,0.16)", color:"#e2e8f0", fontSize:"0.68rem", letterSpacing:0 }}>{battleLogEntries.length}</span>
                             </span>
-                            <span style={{ flexShrink:0, fontSize:"0.72rem", color:"#94a3b8" }}>{showCombatLog ? (lang === "en" ? "▲ close" : "▲ chiudi") : (lang === "en" ? "▼ open" : "▼ apri")}</span>
+                            <span style={{ flexShrink:0, fontSize:"0.75rem", color:"#cbd5e1" }}>{showCombatLog ? (lang === "en" ? "▲ close" : "▲ chiudi") : (lang === "en" ? "▼ open" : "▼ apri")}</span>
                           </button>
                           {showCombatLog && (
-                            <div style={{ maxHeight:340, overflowY:"auto", padding:"0.65rem 0.75rem 0.75rem", borderTop:"1px solid rgba(148,163,184,0.1)", display:"flex", flexDirection:"column", gap:7 }}>
+                            <div style={{ maxHeight:430, overflowY:"auto", padding:"0.75rem 0.85rem 0.85rem", borderTop:"1px solid rgba(148,163,184,0.18)", display:"flex", flexDirection:"column", gap:9 }}>
                               {battleLogEntries.length === 0 ? (
                                 <div style={{ padding:"1rem", color:"#64748b", textAlign:"center", fontSize:"0.78rem", fontFamily:"'Cinzel',serif" }}>
                                   {lang === "en" ? "No combat actions recorded yet." : "Nessuna azione di combattimento registrata."}
@@ -16707,26 +19914,26 @@ ${stepText(step)}`, "quest","Master");
                                 const valueText = summary.value || cue?.value || "";
                                 const valueColor = summary.kind === "heal" ? "#86efac" : (summary.kind === "damage" ? "#fecaca" : cue?.color || "#cbd5e1");
                                 return (
-                                  <details key={m.id} open={isRecent} style={{ border:`1px solid ${cue?.color || "#64748b"}55`, borderRadius:10, background:cue?.bg || "rgba(30,41,59,0.42)", overflow:"hidden" }}>
-                                    <summary style={{ listStyle:"none", cursor:"pointer", display:"grid", gridTemplateColumns:"34px minmax(0,1fr) auto auto", alignItems:"center", gap:9, padding:"0.58rem 0.68rem" }}>
-                                      <span style={{ width:28, height:28, borderRadius:8, display:"grid", placeItems:"center", background:"rgba(2,6,23,0.48)", color:cue?.color || "#cbd5e1", border:`1px solid ${cue?.color || "#64748b"}55`, boxShadow:`0 0 16px ${cue?.color || "#64748b"}22` }}>{cue?.icon || "✨"}</span>
+                                  <details key={m.id} open={isRecent} style={{ border:`1px solid ${cue?.color || "#64748b"}88`, borderRadius:10, background:cue?.bg || "rgba(30,41,59,0.78)", overflow:"hidden", boxShadow:"0 8px 20px rgba(0,0,0,0.18)" }}>
+                                    <summary style={{ listStyle:"none", cursor:"pointer", display:"grid", gridTemplateColumns:"42px minmax(0,1fr) auto auto", alignItems:"center", gap:10, padding:"0.72rem 0.78rem", minHeight:62, lineHeight:1.32 }}>
+                                      <span style={{ width:34, height:34, borderRadius:9, display:"grid", placeItems:"center", background:"rgba(2,6,23,0.66)", color:cue?.color || "#e2e8f0", border:`1px solid ${cue?.color || "#64748b"}88`, boxShadow:`0 0 18px ${cue?.color || "#64748b"}33`, fontSize:"1rem" }}>{cue?.icon || "✨"}</span>
                                       <span style={{ minWidth:0 }}>
-                                        <span style={{ display:"flex", flexWrap:"wrap", alignItems:"baseline", gap:6, color:"#f8fafc", fontSize:"0.78rem", fontWeight:800 }}>
-                                          <span style={{ color:cue?.color || "#cbd5e1", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>{cue?.title || (lang === "en" ? "Event" : "Evento")}</span>
-                                          <span style={{ color:"#cbd5e1", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap", maxWidth:"100%" }}>{summary.header}</span>
+                                        <span style={{ display:"flex", flexWrap:"wrap", alignItems:"baseline", gap:"4px 7px", color:"#f8fafc", fontSize:"0.88rem", fontWeight:900 }}>
+                                          <span style={{ color:cue?.color || "#e2e8f0", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em", flexShrink:0 }}>{cue?.title || (lang === "en" ? "Event" : "Evento")}</span>
+                                          <span style={{ color:"#f8fafc", overflowWrap:"anywhere" }}>{summary.header}</span>
                                         </span>
-                                        {summary.detail && <span style={{ display:"block", marginTop:3, color:"#94a3b8", fontSize:"0.72rem", overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{summary.detail}</span>}
+                                        {summary.detail && <span style={{ display:"block", marginTop:4, color:"#cbd5e1", fontSize:"0.78rem", lineHeight:1.35, overflowWrap:"anywhere" }}>{summary.detail}</span>}
                                       </span>
-                                      {valueText && <span style={{ padding:"0.18rem 0.45rem", borderRadius:999, background:"rgba(2,6,23,0.44)", border:`1px solid ${valueColor}55`, color:valueColor, fontSize:"0.72rem", fontWeight:900, whiteSpace:"nowrap" }}>{valueText}</span>}
-                                      <span style={{ color:"#64748b", fontSize:"0.68rem", whiteSpace:"nowrap" }}>{time}</span>
+                                      {valueText && <span style={{ padding:"0.22rem 0.5rem", borderRadius:999, background:"rgba(2,6,23,0.58)", border:`1px solid ${valueColor}88`, color:valueColor, fontSize:"0.78rem", fontWeight:900, whiteSpace:"nowrap" }}>{valueText}</span>}
+                                      <span style={{ color:"#94a3b8", fontSize:"0.72rem", whiteSpace:"nowrap" }}>{time}</span>
                                     </summary>
-                                    <div style={{ padding:"0 0.75rem 0.7rem 3.35rem", color:"#e2e8f0", fontSize:"0.78rem", lineHeight:1.55, borderTop:"1px solid rgba(148,163,184,0.08)" }}
+                                    <div style={{ padding:"0.05rem 0.85rem 0.82rem 3.9rem", color:"#f1f5f9", fontSize:"0.84rem", lineHeight:1.62, borderTop:"1px solid rgba(148,163,184,0.14)" }}
                                       dangerouslySetInnerHTML={{ __html:fmt(m.content) }} />
                                   </details>
                                 );
                               })}
                               <div ref={combatLogEndRef} />
-                              <div style={{ textAlign:"center", fontSize:"0.68rem", color:"#475569", marginTop:2 }}>{lang === "en" ? "Last 50 combat actions" : "Ultime 50 azioni di combattimento"}</div>
+                              <div style={{ textAlign:"center", fontSize:"0.72rem", color:"#94a3b8", marginTop:4 }}>{lang === "en" ? "Last 50 combat actions" : "Ultime 50 azioni di combattimento"}</div>
                             </div>
                           )}
                         </div>
