@@ -2067,7 +2067,7 @@ const QUEST_MONSTER_IMAGE_ALIASES = {
   "idra-adulta": "m180",
   "hydra-delle-profondita": "m180",
   "unicorno-oscuro": "m105",
-  "satiro": "m175",
+  "satiro": "m111",        // Oni — umanoide cornuto, più vicino di un demone-tigre
   "centauro-ribelle": "m105",
   "pixie-maligna": "m54",
   "folletto-dispettoso": "m54",
@@ -2282,12 +2282,20 @@ const QUEST_MONSTER_IMAGE_RULES = [
   [/pipistrello/, "m50"],
   [/scorpione|ankheg|insett|cavalletta|mantide|talpa/, "m92"],
   [/squalo|sirena|marina|mare|lago|pesce/, "m98"],
-  [/pixie|folletto|fata|fatato|driade|treant|boschi|grano/, "m113"],
+  [/pixie|folletto|fata|fatato/, "m54"],           // creature fatate → Fuoco Fatuo (spirito luminoso)
+  [/driade|treant|boschi|grano|radice|pianta/, "m113"], // creature vegetali → Ammasso Brulicante
   [/lupo|sciacallo|yeti|orso|bestia|cinghiale|cane|ratto|topo|scimmia|cucciolo/, "m57"],
   [/aquila|falco|roc|uccello|rapace/, "m166"],
   [/demone|diavolo|inferno|balrog|apocalisse/, "m160"],
-  [/cultista|sacerdote|alchimista|mago|arcimago|apprendista|omuncolo/, "m16"],
-  [/pirata|marinaio|corsaro|mozzo|capitano|capobanda|ammiraglio|brigante|ladro|sicario|predone|bandito|contrabbandiere|assassino|gangster|gladiatore|nomade|monaco|vedetta|arciere|cavaliere|guerriero/, "m5"],
+  [/cultista|sacerdote|alchimista|arcimago|apprendista|omuncolo/, "m16"],
+  [/mago|strega|stregone|negromante/, "m16"],       // maghi → Mago Ribelle
+  [/cavaliere|paladino/, "m30"],                    // cavalieri → Cavaliere del Vespro
+  [/arciere|balestriere|tiratore/, "m61"],          // arcieri → Scheletro Arciere
+  [/guerriero|soldato|campione|veterano/, "m13"],   // guerrieri → Orco Guerriero
+  [/assassino|sicario|ladro|cecchino/, "m29"],      // assassini → Cacciatrice Drow
+  [/pirata|marinaio|corsaro|mozzo|capitano|ammiraglio/, "m26"], // pirati → Vampiro (cappotto scuro)
+  [/brigante|predone|bandito|contrabbandiere|gangster|capobanda/, "m12"], // briganti → Mercenario Rinnegato
+  [/gladiatore|nomade|monaco|vedetta/, "m12"],      // combattenti vari → Mercenario
   [/orco|ogre/, "m13"],
   [/goblin|coboldo|nano/, "m1"],
   [/gigante/, "m158"],
