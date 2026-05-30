@@ -4701,58 +4701,61 @@ function CharacterPortrait({ player, race, gender, cls, face=1, eyes=1, scar=0, 
 }
 
 const MANNEQUIN_HEAD_FRAME = {
-  default: { left:50, top:10.5, width:24.5, height:16.5, scale:1.55, y:9, radius:"48% 48% 44% 44%" },
+  // left/top = centro della testa in % del container; width/height = dimensione in % del container (width%W, height%H)
+  // scale = zoom portrait nel riquadro (1.0 = nessuno zoom, usare il meno possibile)
+  // y = translateY % per centrare il viso nel riquadro
+  default: { left:50, top:10.5, width:17.0, height:11.5, scale:1.12, y:6, radius:"48% 48% 44% 44%" },
   human: {
-    male: { left:50, top:9.2, width:26.5, height:15.5, scale:1.62, y:10, radius:"48% 48% 44% 44%" },
-    female: { left:50, top:9.8, width:24.2, height:15.0, scale:1.58, y:10, radius:"48% 48% 44% 44%" },
+    male:   { left:50, top:9.5,  width:17.5, height:11.5, scale:1.12, y:6,  radius:"48% 48% 44% 44%" },
+    female: { left:50, top:9.8,  width:16.5, height:11.0, scale:1.10, y:6,  radius:"48% 48% 44% 44%" },
   },
   elf: {
-    male: { left:50, top:10.1, width:27.5, height:16.0, scale:1.55, y:10, radius:"50% 50% 44% 44%" },
-    female: { left:50, top:10.0, width:26.5, height:15.7, scale:1.54, y:10, radius:"50% 50% 44% 44%" },
+    male:   { left:50, top:10.0, width:17.5, height:11.5, scale:1.10, y:6,  radius:"50% 50% 44% 44%" },
+    female: { left:50, top:10.0, width:16.5, height:11.0, scale:1.08, y:6,  radius:"50% 50% 44% 44%" },
   },
   halfelf: {
-    male: { left:50, top:10.0, width:26.5, height:15.7, scale:1.55, y:10, radius:"50% 50% 44% 44%" },
-    female: { left:50, top:9.9, width:25.8, height:15.4, scale:1.55, y:10, radius:"50% 50% 44% 44%" },
+    male:   { left:50, top:10.0, width:17.0, height:11.5, scale:1.10, y:6,  radius:"50% 50% 44% 44%" },
+    female: { left:50, top:9.9,  width:16.5, height:11.0, scale:1.08, y:6,  radius:"50% 50% 44% 44%" },
   },
   dwarf: {
-    male: { left:50, top:10.5, width:28.5, height:16.2, scale:1.52, y:9, radius:"46% 46% 42% 42%" },
-    female: { left:50, top:10.4, width:26.6, height:15.7, scale:1.54, y:9, radius:"46% 46% 42% 42%" },
+    male:   { left:50, top:10.5, width:18.5, height:12.0, scale:1.12, y:5,  radius:"46% 46% 42% 42%" },
+    female: { left:50, top:10.4, width:17.5, height:11.5, scale:1.10, y:5,  radius:"46% 46% 42% 42%" },
   },
   halfling: {
-    male: { left:50, top:10.3, width:24.8, height:15.0, scale:1.58, y:10, radius:"48% 48% 44% 44%" },
-    female: { left:50, top:10.2, width:24.2, height:14.8, scale:1.58, y:10, radius:"48% 48% 44% 44%" },
+    male:   { left:50, top:10.3, width:16.0, height:10.5, scale:1.10, y:6,  radius:"48% 48% 44% 44%" },
+    female: { left:50, top:10.2, width:15.5, height:10.2, scale:1.08, y:6,  radius:"48% 48% 44% 44%" },
   },
   gnome: {
-    male: { left:50, top:10.2, width:25.0, height:15.2, scale:1.58, y:10, radius:"48% 48% 44% 44%" },
-    female: { left:50, top:10.1, width:24.4, height:15.0, scale:1.58, y:10, radius:"48% 48% 44% 44%" },
+    male:   { left:50, top:10.2, width:16.0, height:10.5, scale:1.10, y:6,  radius:"48% 48% 44% 44%" },
+    female: { left:50, top:10.1, width:15.5, height:10.2, scale:1.08, y:6,  radius:"48% 48% 44% 44%" },
   },
   halforc: {
-    male: { left:50, top:10.4, width:28.0, height:16.2, scale:1.52, y:9, radius:"46% 46% 42% 42%" },
-    female: { left:50, top:10.3, width:27.0, height:15.8, scale:1.54, y:9, radius:"46% 46% 42% 42%" },
+    male:   { left:50, top:10.4, width:19.0, height:12.5, scale:1.12, y:5,  radius:"46% 46% 42% 42%" },
+    female: { left:50, top:10.3, width:18.0, height:12.0, scale:1.10, y:5,  radius:"46% 46% 42% 42%" },
   },
   tiefling: {
-    male: { left:50, top:9.6, width:31.0, height:18.0, scale:1.42, y:10, radius:"50% 50% 43% 43%" },
-    female: { left:50, top:9.5, width:30.0, height:17.8, scale:1.42, y:10, radius:"50% 50% 43% 43%" },
+    male:   { left:50, top:9.6,  width:19.5, height:13.0, scale:1.08, y:6,  radius:"50% 50% 43% 43%" },
+    female: { left:50, top:9.5,  width:18.5, height:12.5, scale:1.06, y:6,  radius:"50% 50% 43% 43%" },
   },
   dragonborn: {
-    male: { left:50, top:10.4, width:32.0, height:20.0, scale:1.35, y:9, radius:"42% 42% 48% 48%" },
-    female: { left:50, top:10.3, width:31.0, height:19.5, scale:1.35, y:9, radius:"42% 42% 48% 48%" },
+    male:   { left:50, top:10.4, width:21.0, height:14.0, scale:1.05, y:5,  radius:"42% 42% 48% 48%" },
+    female: { left:50, top:10.3, width:20.0, height:13.5, scale:1.04, y:5,  radius:"42% 42% 48% 48%" },
   },
 };
 const MANNEQUIN_PROFILE_HEAD_FRAME = {
-  normal: MANNEQUIN_HEAD_FRAME.human,
-  slender: MANNEQUIN_HEAD_FRAME.elf,
-  stocky: MANNEQUIN_HEAD_FRAME.dwarf,
-  small: MANNEQUIN_HEAD_FRAME.gnome,
+  normal:    MANNEQUIN_HEAD_FRAME.human,
+  slender:   MANNEQUIN_HEAD_FRAME.elf,
+  stocky:    MANNEQUIN_HEAD_FRAME.dwarf,
+  small:     MANNEQUIN_HEAD_FRAME.gnome,
   massive: {
-    male: { left:50, top:8.8, width:34.0, height:20.5, scale:1.34, y:8, radius:"44% 44% 46% 46%" },
-    female: { left:50, top:8.9, width:32.5, height:19.8, scale:1.36, y:8, radius:"44% 44% 46% 46%" },
+    male:   { left:50, top:8.8,  width:22.0, height:14.5, scale:1.06, y:4,  radius:"44% 44% 46% 46%" },
+    female: { left:50, top:8.9,  width:21.0, height:13.8, scale:1.05, y:4,  radius:"44% 44% 46% 46%" },
   },
-  draconic: MANNEQUIN_HEAD_FRAME.dragonborn,
-  horned: MANNEQUIN_HEAD_FRAME.tiefling,
-  winged: MANNEQUIN_HEAD_FRAME.elf,
-  aquatic: MANNEQUIN_HEAD_FRAME.elf,
-  ethereal: MANNEQUIN_HEAD_FRAME.elf,
+  draconic:  MANNEQUIN_HEAD_FRAME.dragonborn,
+  horned:    MANNEQUIN_HEAD_FRAME.tiefling,
+  winged:    MANNEQUIN_HEAD_FRAME.elf,
+  aquatic:   MANNEQUIN_HEAD_FRAME.elf,
+  ethereal:  MANNEQUIN_HEAD_FRAME.elf,
   construct: MANNEQUIN_HEAD_FRAME.human,
 };
 
@@ -4786,10 +4789,9 @@ function MannequinHeadOverlay({ me }) {
       overflow:"hidden",
       zIndex:MANNEQUIN_LAYER_ORDER.headWear - 1,
       pointerEvents:"none",
-      filter:"brightness(1.08) contrast(1.03)",
-      boxShadow:"0 0 0 1px rgba(0,0,0,0.12)",
-      WebkitMaskImage:"radial-gradient(ellipse at 50% 50%, #000 0 61%, rgba(0,0,0,0.82) 72%, transparent 100%)",
-      maskImage:"radial-gradient(ellipse at 50% 50%, #000 0 61%, rgba(0,0,0,0.82) 72%, transparent 100%)",
+      filter:"brightness(1.04) contrast(1.02)",
+      WebkitMaskImage:"radial-gradient(ellipse at 50% 46%, #000 0 48%, rgba(0,0,0,0.7) 62%, rgba(0,0,0,0.2) 78%, transparent 92%)",
+      maskImage:"radial-gradient(ellipse at 50% 46%, #000 0 48%, rgba(0,0,0,0.7) 62%, rgba(0,0,0,0.2) 78%, transparent 92%)",
     }}>
       <CharacterPortrait
         player={me}
