@@ -17837,8 +17837,16 @@ ${stepText(step)}`, "quest","Master");
     }
     const stored = getStoredPreparedSpells(myId, spellbookAvailableSpells);
     const validIds = new Set(spellbookAvailableSpells.map(spell => spell.id));
-    const nextPrepared = stored.filter(id => validIds.has(id));
-    const normalized = nextPrepared.length ? nextPrepared : spellbookAvailableSpells.map(spell => spell.id);
+    const storedSet = new Set(stored);
+    // Spell già preparate (ancora valide al livello attuale)
+    const stillPrepared = stored.filter(id => validIds.has(id));
+    // Nuove spell diventate disponibili salendo di livello — aggiunte auto
+    const newlyUnlocked = spellbookAvailableSpells
+      .filter(s => !storedSet.has(s.id))
+      .map(s => s.id);
+    const normalized = stillPrepared.length
+      ? [...stillPrepared, ...newlyUnlocked]
+      : spellbookAvailableSpells.map(s => s.id);
     setPreparedSpellIds(normalized);
     saveStoredPreparedSpells(myId, normalized);
   }, [myId, spellbookCaster, me?.class, me?.level, cardVault]);
