@@ -4748,19 +4748,74 @@ function MannequinHeadOverlay({ me }) {
   );
 }
 
+// Mappa nome evocazione → ID mostro catalogo per le immagini
+const SUMMON_IMAGE_MAP = {
+  // Zodar
+  "angelo della bilancia":   "m178",  // Fenice — divino/dorato
+  "drago cosmico di zodar":  "m179",  // Drago Antico Rosso — il più epico
+  "guardiano eterno":        "m147",  // Golem di Pietra — guardiano immortale
+  "titano dell'alba":        "m158",  // Gigante della Tempesta — colosso
+  "fenice immortale":        "m178",  // Fenice ✓
+  // Summoner
+  "lupo spettrale":          "m33",   // Signore dei Lupi Bianchi
+  "elementale del fuoco":    "m27",   // Elementale del Fuoco ✓
+  "demone delle ombre":      "m160",  // Balor — grande demone
+  "grifone da guerra":       "m104",  // Griffone ✓
+  "drago minore":            "m38",   // Drago Rosso
+  "idra evocata":            "m180",  // Idra Adulta ✓
+  "golem di cristallo":      "m147",  // Golem di Pietra
+  "guardiano planare":       "m173",  // Beholder — occhio planare
+  "titano evocato":          "m167",  // Tarrasca — creatura più massiccia
+  "campione dei piani":      "m161",  // Pit Fiend — campione infernale
+  // Negromante
+  "scheletro":               "m3",    // Scheletro Errante
+  "scheletro guerriero":     "m18",   // Cavaliere Scheletrico ✓
+  "scheletro d'elite":       "m35",   // Lich delle Catacombe
+  "signore non-morto":       "m148",  // Re Mummia
+  "lich campione":           "m169",  // Arcilich ✓
+  // Chierico
+  "scheletro alleato":       "m3",
+  // Druido
+  "lupo della natura":       "m2",    // Lupo Selvatico
+  // Artefice
+  "torretta da combattimento": "m28", // Guardiano Runico — costrutto
+  "drone d'attacco":         "m28",
+  "drago meccanico":         "m36",   // Titano di Ferro
+  "mech da battaglia":       "m36",
+  "titano meccanico":        "m36",
+  // Echo Knight
+  "avatar dell'eco":         "m87",   // Cavaliere Spettrale
+  // Relic Tamer
+  "reliquia animata":        "m28",
+  "guardiano reliquiario":   "m147",
+  "reliquiario vivente":     "m147",
+  // Soul Forger
+  "guardiano d'anima":       "m28",
+  "colosso spirituale":      "m147",
+  // Altri
+  "elementale della terra":  "m141",
+  "elementale dell'acqua":   "m140",
+  "elementale dell'aria":    "m142",
+};
+
 function getMonsterImage(monster) {
   if(!monster) return "";
   if(monster.image) return monster.image;
   if(monster.image_url) return monster.image_url;
   if(monster.name) {
     // ID tipo m\d+: usa il nome del catalogo per costruire il path corretto
-    // (il mostro potrebbe essere stato rinominato rispetto al catalogo)
     if(monster.id && monster.id.match(/^m\d+/)) {
       const catalogById = DEFAULT_MONSTERS.find(m => m.id === monster.id);
       return monsterAssetPath(catalogById || monster);
     }
-    // Per mostri delle quest: cerca per nome nel catalogo
     const nameSlug = slugifyAssetName(monster.name);
+    // Evocazioni: mappa nome → ID catalogo dedicato
+    const summonMappedId = SUMMON_IMAGE_MAP[monster.name.toLowerCase()] || SUMMON_IMAGE_MAP[nameSlug.replace(/-/g," ")];
+    if(summonMappedId) {
+      const summonCatalog = DEFAULT_MONSTERS.find(m => m.id === summonMappedId);
+      if(summonCatalog) return monsterAssetPath(summonCatalog);
+    }
+    // Per mostri delle quest: cerca per nome nel catalogo
     const catalogMatch = DEFAULT_MONSTERS.find(m => slugifyAssetName(m.name) === nameSlug);
     if(catalogMatch) return monsterAssetPath(catalogMatch);
     // Cerca per sourceMonsterId (ID originale del catalogo prima del rename)
