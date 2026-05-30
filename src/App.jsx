@@ -17507,10 +17507,15 @@ ${lq.desc}
   async function getOnlinePartyPlayersForCombat() {
     const userMeta = await dbGetUserMasterMeta();
     const nowMs = Date.now();
-    const onlinePlayers = partyPlayers.filter(player =>
-      player.id === myId ||
-      (player.accountId !== authUser?.id && isPartyPlayerOnline(player, userMeta, nowMs))
-    );
+    const myAccountId = authUser?.id || null;
+    const onlinePlayers = partyPlayers.filter(player => {
+      if(player.id === myId) return true;
+      // Escludi sempre i personaggi dello stesso account (stesso utente, personaggio diverso)
+      // Se authUser non è caricato (null), non possiamo confrontare → escludiamo per sicurezza
+      if(!myAccountId) return false;
+      if(player.accountId === myAccountId) return false;
+      return isPartyPlayerOnline(player, userMeta, nowMs);
+    });
     return onlinePlayers.length ? onlinePlayers : partyPlayers.filter(player => player.id === myId);
   }
 
