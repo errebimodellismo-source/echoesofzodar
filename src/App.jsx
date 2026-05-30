@@ -4753,15 +4753,23 @@ function getMonsterImage(monster) {
   if(monster.image) return monster.image;
   if(monster.image_url) return monster.image_url;
   if(monster.name) {
-    // Try with monster's own id first (e.g. m1-goblin-delle-rovine.png)
-    if(monster.id && monster.id.match(/^m\d+/)) return monsterAssetPath(monster);
-    // For quest-specific enemies look up matching monster in catalogue by name
+    // ID tipo m\d+: usa il nome del catalogo per costruire il path corretto
+    // (il mostro potrebbe essere stato rinominato rispetto al catalogo)
+    if(monster.id && monster.id.match(/^m\d+/)) {
+      const catalogById = DEFAULT_MONSTERS.find(m => m.id === monster.id);
+      return monsterAssetPath(catalogById || monster);
+    }
+    // Per mostri delle quest: cerca per nome nel catalogo
     const nameSlug = slugifyAssetName(monster.name);
     const catalogMatch = DEFAULT_MONSTERS.find(m => slugifyAssetName(m.name) === nameSlug);
     if(catalogMatch) return monsterAssetPath(catalogMatch);
+    // Cerca per sourceMonsterId (ID originale del catalogo prima del rename)
+    if(monster.sourceMonsterId && monster.sourceMonsterId.match(/^m\d+/)) {
+      const catalogBySrc = DEFAULT_MONSTERS.find(m => m.id === monster.sourceMonsterId);
+      if(catalogBySrc) return monsterAssetPath(catalogBySrc);
+    }
     const aliasMatch = getQuestMonsterImageByAlias(monster);
     if(aliasMatch) return aliasMatch;
-    // No file match — fall through to archetype generated image below
   }
   const key = `${monster.id || ""} ${monster.name || ""} ${monster.desc || ""}`.toLowerCase();
   const theme =
@@ -15158,6 +15166,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     const allDead = combatants.filter(c => !c.isPlayer).every(c => c.hp <= 0);
     if(allDead) { await endCombat({ ...latestQs, combat: { ...latestCombat, combatants } }); return; }
     await saveQState({ ...latestQs, combat: { ...latestCombat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
+    await addMsg(log, "combat", "Sistema");
   }
 
   // Auto-fallback: if owner doesn't act within 15s, auto-attack first enemy
@@ -16497,6 +16506,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       if (sfx.skipTurn || sfx.died) {
         const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
         await saveQState({ ...freshQs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: sfx.log } });
+        await addMsg(sfx.log, "combat", "Sistema");
         return;
       }
       statusPrefixLog = sfx.log;
@@ -16558,6 +16568,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       }
       const { nextTurn, nextRound } = getNextCombatTurn(combatants, combat.turn, combat.round);
       await saveQState({ ...qs, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: deathSave.log } });
+      await addMsg(deathSave.log, "combat", "Sistema");
       return;
     }
     const targets = combatants.filter(c=>!c.isPlayer&&c.hp>0);
@@ -16635,6 +16646,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     const allDead = combatants.filter(c=>!c.isPlayer).every(c=>c.hp<=0);
     if(allDead) { await endCombat({...latestBuffState, masterBuffs: newMasterBuffs, questDmgLog: newQuestDmgLog, combat:{...combat, combatants}}); return; }
     await saveQState({ ...latestBuffState, masterBuffs: newMasterBuffs, questDmgLog: newQuestDmgLog, combat: { ...combat, combatants, turn: nextTurn, round: nextRound, pendingLog: log } });
+    await addMsg(log, "combat", "Sistema");
     } finally {
       playerAttackBusyRef.current = false;
     }
@@ -17110,6 +17122,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     setSpellMenu(false);
     if(allDead) { await endCombat({...latestSpellBuffState, masterBuffs: newSpellMasterBuffs, questDmgLog: newSpellQuestDmgLog, combat:{...combat, combatants:newCombatants, spellSlots:nextSlots}}); return; }
     await saveQState({ ...latestSpellBuffState, masterBuffs: newSpellMasterBuffs, questDmgLog: newSpellQuestDmgLog, combat: { ...combat, combatants:newCombatants, turn:nextTurn, round:nextRound, spellSlots:nextSlots, pendingLog: log } });
+    await addMsg(log, "combat", "Sistema");
     } catch(err) {
       console.error("castSpell error:", err);
       setSpellMenu(false);
