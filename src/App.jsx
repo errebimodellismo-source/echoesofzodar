@@ -5036,9 +5036,11 @@ async function dbSavePlayer(p) {
     : (p.avatarConfig && typeof p.avatarConfig === 'object' ? p.avatarConfig : {});
   const appearance = {
     ...(previousAvatarConfig.appearance || {}),
-    portrait_face: p.portrait_face ?? previousAvatarConfig.appearance?.portrait_face ?? null,
-    portrait_eyes: p.portrait_eyes ?? previousAvatarConfig.appearance?.portrait_eyes ?? 1,
-    portrait_scar: p.portrait_scar ?? previousAvatarConfig.appearance?.portrait_scar ?? 0,
+    portrait_face:  p.portrait_face  ?? previousAvatarConfig.appearance?.portrait_face  ?? null,
+    portrait_eyes:  p.portrait_eyes  ?? previousAvatarConfig.appearance?.portrait_eyes  ?? 1,
+    portrait_scar:  p.portrait_scar  ?? previousAvatarConfig.appearance?.portrait_scar  ?? 0,
+    portrait_hair:  p.portrait_hair  ?? previousAvatarConfig.appearance?.portrait_hair  ?? 0,
+    portrait_beard: p.portrait_beard ?? previousAvatarConfig.appearance?.portrait_beard ?? 0,
   };
   const payload = {
     id: p.id, name: p.name, party_code: p.partyCode,
@@ -5076,9 +5078,11 @@ async function dbGetPlayers(partyCode) {
     stats: cfg.stats || {},
     achievements: cfg.achievements || [],
     subclass: cfg.subclass || null,
-    portrait_face: appearance.portrait_face || null,
-    portrait_eyes: appearance.portrait_eyes || 1,
-    portrait_scar: appearance.portrait_scar || 0,
+    portrait_face:  appearance.portrait_face  || null,
+    portrait_eyes:  appearance.portrait_eyes  || 1,
+    portrait_scar:  appearance.portrait_scar  || 0,
+    portrait_hair:  appearance.portrait_hair  || 0,
+    portrait_beard: appearance.portrait_beard || 0,
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
     mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
@@ -5099,9 +5103,11 @@ async function dbGetAccountCharacters(accountId) {
     stats: cfg.stats || {},
     achievements: cfg.achievements || [],
     subclass: cfg.subclass || null,
-    portrait_face: appearance.portrait_face || null,
-    portrait_eyes: appearance.portrait_eyes || 1,
-    portrait_scar: appearance.portrait_scar || 0,
+    portrait_face:  appearance.portrait_face  || null,
+    portrait_eyes:  appearance.portrait_eyes  || 1,
+    portrait_scar:  appearance.portrait_scar  || 0,
+    portrait_hair:  appearance.portrait_hair  || 0,
+    portrait_beard: appearance.portrait_beard || 0,
     class: r?.class || 'warrior', race: r?.race || 'human',
     hp: r?.hp || 0, maxHp: r?.max_hp || 0, atk: r?.atk || 0, def: r?.def || 0,
     mag: r?.mag || 0, init: r?.init || 1, xp: r?.xp || 0, level: r?.level || 1, gold: r?.gold || 0, dead: !!r?.dead,
@@ -6676,21 +6682,32 @@ function CreateChar({ setScreen, goGame, authUser }) {
       )}
       {step===3 && (
         <Card title={`🎨 ${t("create.appearanceTitle")}`}>
-          {/* Anteprima ritratto */}
-          <div style={{ display:"flex", justifyContent:"center", marginBottom:"1rem" }}>
-            <CharacterPortrait
-              cls={cls}
-              race={race}
-              gender={gender}
-              face={faceVariant}
-              hair={hairVariant}
-              eyes={eyesVariant}
-              scar={scarVariant}
-              beard={beardVariant}
-              size={160}
-              radius="50%"
-              style={{ border:"3px solid #a78bfa", boxShadow:"0 0 20px rgba(167,139,250,0.3)" }}
-            />
+          {/* Anteprima manichino con viso sovrapposto */}
+          <div style={{ display:"flex", justifyContent:"center", marginBottom:"1.2rem" }}>
+            <div style={{
+              position:"relative", width:110, height:220,
+              border:"2px solid rgba(167,139,250,0.45)",
+              borderRadius:12,
+              boxShadow:"0 0 24px rgba(167,139,250,0.25), inset 0 0 14px rgba(10,14,23,0.6)",
+              overflow:"hidden",
+              background:"linear-gradient(180deg,rgba(30,20,50,0.85) 0%,rgba(10,14,23,0.95) 100%)",
+            }}>
+              <CharacterViewer
+                me={{
+                  race,
+                  gender,
+                  class: cls,
+                  portrait_face:  faceVariant,
+                  portrait_hair:  hairVariant,
+                  portrait_eyes:  eyesVariant,
+                  portrait_scar:  scarVariant,
+                  portrait_beard: gender === "male" ? beardVariant : 0,
+                }}
+                equippedItems={{}}
+                activeCosmetics={{}}
+                fillContainer
+              />
+            </div>
           </div>
 
           {/* Viso */}
@@ -14500,9 +14517,11 @@ function GameScreen({ myId, setScreen, authUser }) {
           id:data.id, name:data.name, partyCode:data.party_code, accountId:data.account_id||null,
           class:data.class, race:data.race, gender:getStoredCharacterGender(data.id, cfg.gender || "male"),
           avatar_config:cfg, stats:cfg.stats || {}, achievements:cfg.achievements || [], subclass:cfg.subclass || null,
-          portrait_face:appearance.portrait_face || null,
-          portrait_eyes:appearance.portrait_eyes || 1,
-          portrait_scar:appearance.portrait_scar || 0,
+          portrait_face:  appearance.portrait_face  || null,
+          portrait_eyes:  appearance.portrait_eyes  || 1,
+          portrait_scar:  appearance.portrait_scar  || 0,
+          portrait_hair:  appearance.portrait_hair  || 0,
+          portrait_beard: appearance.portrait_beard || 0,
           hp:data.hp, maxHp:data.max_hp, atk:data.atk, def:data.def, mag:data.mag, init:data.init, xp:data.xp, level:data.level, gold:data.gold,
           dead:!!data.dead,
         };
