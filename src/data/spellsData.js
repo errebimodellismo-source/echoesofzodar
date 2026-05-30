@@ -512,69 +512,76 @@ export const SPELLS = {
         desc:"La Fenice che non muore mai sorge dal fuoco dell'eternità. Se cade, risorge con HP pieno."
       },
 
-      // ATTACCHI CHE TOLGONO % HP
+      // ── DANNO % HP ────────────────────────────────────────────────────────
       {
         id:"zd16", name:"Sentenza del Mezzo", emoji:"⚖️", slots:0, type:"zodar_half_hp",
-        desc:"Zodar alza la bilancia e la abbassa: TUTTI i nemici perdono il 50% degli HP attuali. Istantaneo. Inevitabile."
+        desc:"Zodar dimezza gli HP attuali di TUTTI i nemici. Inevitabile. Non uccide — li lascia a metà strada."
       },
       {
-        id:"zd17", name:"Decima Cosmica", emoji:"🔟", slots:0, type:"zodar_tenth_hp",
-        desc:"L'imposta dell'Equilibrio: tutti i nemici perdono il 90% degli HP massimi. Zodar prende ciò che è dovuto."
+        id:"zd17", name:"Tocco della Fine", emoji:"🖐️", slots:0, type:"zodar_percent_kill",
+        desc:"Porta TUTTI i nemici a 1 HP. L'equilibrio li lascia in vita — per un attimo. Il colpo finale spetta al party."
       },
       {
-        id:"zd18", name:"Tocco della Fine", emoji:"💀", slots:0, type:"zodar_percent_kill",
-        desc:"Un tocco divino che porta tutti i nemici a 1 HP. L'equilibrio li lascia in vita — per un attimo."
-      },
-      {
-        id:"zd19", name:"Drenaggio dell'Infinito", emoji:"🌌", slots:0, type:"zodar_drain_all",
-        dmg:"99999d99999", type:"damage",
-        desc:"Zodar succhia la vitalità cosmica da ogni essere vivente in campo. Danno infinito su tutti i nemici, cura totale del party."
+        id:"zd18", name:"Drenaggio Cosmico", emoji:"🌌", slots:0, type:"zodar_drain_allies",
+        desc:"Drena il 40% degli HP attuali da TUTTI i nemici e li trasferisce agli alleati come cura. La bilancia toglie ai forti e dà ai deboli."
       },
 
-      // ATTACCHI DIVINI
+      // ── CURA E RIGENERAZIONE ──────────────────────────────────────────────
       {
-        id:"zd20", name:"Fiat Lux", emoji:"✨", slots:0, type:"damage", dmg:"99999d9999", area:true,
-        desc:"Zodar pronuncia le parole della creazione al contrario. La luce primordiale brucia tutto ciò che non dovrebbe esistere."
+        id:"zd19", name:"Onda di Guarigione", emoji:"💚", slots:0, type:"zodar_heal_half",
+        desc:"Cura tutti gli alleati per metà dei loro HP massimi. Rapida, affidabile, sempre utile."
       },
       {
-        id:"zd21", name:"Tempesta Primordiale", emoji:"⛈️", slots:0, type:"damage", dmg:"77777d7777", area:true,
-        desc:"La tempesta che ha preceduto il mondo si abbatte sul campo. Nessun riparo. Nessuna difesa."
+        id:"zd20", name:"Rigenerazione Cosmica", emoji:"🌿", slots:0, type:"zodar_regen_all",
+        desc:"Il party rigenera HP per 5 round: ogni turno recupera il 15% degli HP massimi. Zodar sostiene chi lotta."
       },
       {
-        id:"zd22", name:"Il Peso dell'Eternità", emoji:"⏳", slots:0, type:"zodar_stun_all",
-        desc:"Il tempo si ferma attorno ai nemici per 5 round. Sono coscienti ma incapaci di muoversi. Zodar li lascia pensare."
+        id:"zd21", name:"Resurrezione di Massa", emoji:"✝️", slots:0, type:"zodar_revive_half",
+        desc:"Riporta in vita tutti gli alleati caduti con il 50% degli HP. La morte non è permanente sotto gli occhi di Zodar."
+      },
+
+      // ── BUFF AGLI ALLEATI ─────────────────────────────────────────────────
+      {
+        id:"zd22", name:"Benedizione dell'Equilibrio", emoji:"🌟", slots:0, type:"zodar_buff_party",
+        desc:"+40 ATK, +40 DEF, +40 MAG a tutti gli alleati per 3 round. Zodar potenzia chi merita di vincere."
       },
       {
-        id:"zd23", name:"Maledizione dell'Infinito", emoji:"♾️", slots:0, type:"damage", dmg:"9999d9999", area:true,
-        desc:"Una maledizione senza termine si incide sull'anima di ogni nemico. Danno cosmico e debuff permanente a tutte le statistiche."
+        id:"zd23", name:"Scudo Cosmico", emoji:"🛡️", slots:0, type:"zodar_shield_party",
+        desc:"Tutti gli alleati guadagnano uno scudo divino per 3 round: il prossimo attacco che ricevono viene assorbito."
       },
       {
         id:"zd24", name:"Occhio di Zodar", emoji:"👁️‍🗨️", slots:0, type:"zodar_godmode",
-        desc:"Zodar apre l'occhio dell'Equilibrio. Per 10 round: il party è invincibile, ogni attacco è critico, ogni cura è triplicata."
+        desc:"Per 3 round: il party è invincibile (riduzione danni 90%), ogni attacco è automaticamente critico, ogni cura è triplicata."
+      },
+
+      // ── DEBUFF AI NEMICI ──────────────────────────────────────────────────
+      {
+        id:"zd25", name:"Il Peso dell'Eternità", emoji:"⏳", slots:0, type:"zodar_stun_all",
+        desc:"Tutti i nemici sono storditi per 3 round. Sono coscienti ma incapaci di muoversi o attaccare."
       },
       {
-        id:"zd25", name:"Annichilimento Divino", emoji:"💥", slots:0, type:"damage", dmg:"99999d99999", area:true,
-        desc:"La forma più pura della distruzione. Non è magia — è Zodar che decide che qualcosa non esiste più."
+        id:"zd26", name:"Maledizione della Bilancia", emoji:"⚖️", slots:0, type:"zodar_curse_enemies",
+        desc:"Tutti i nemici subiscono -50 ATK, -50 DEF, -50 MAG per 4 round. L'equilibrio li priva di tutto ciò che li rende pericolosi."
       },
       {
-        id:"zd26", name:"Rigenerazione Cosmica", emoji:"💚", slots:0, type:"zodar_regen_all",
-        desc:"Il party rigenera HP pieni ogni round per 5 round. Non morirà. Non può morire. Zodar lo ha deciso."
+        id:"zd27", name:"Inversione della Realtà", emoji:"🔄", slots:0, type:"zodar_reality_flip",
+        desc:"Scambia gli HP attuali tra party e nemici. I forti diventano deboli. I deboli si rialzano. Zodar ridisegna il campo."
+      },
+
+      // ── ATTACCHI DIVINI (non instant-kill) ───────────────────────────────
+      {
+        id:"zd28", name:"Fiat Lux", emoji:"✨", slots:0, type:"damage", dmg:"999d999", area:true,
+        desc:"Luce primordiale che brucia tutti i nemici. Potente, ma non li cancella — li costringe a combattere."
       },
       {
-        id:"zd27", name:"Parola della Creazione", emoji:"📖", slots:0, type:"zodar_buff_infinite",
-        desc:"Zodar pronuncia la parola che ha creato il mondo. Tutte le stat del party diventano ∞ per 3 round."
+        id:"zd29", name:"Tempesta Primordiale", emoji:"⛈️", slots:0, type:"damage", dmg:"777d777", area:true,
+        desc:"La tempesta cosmica si abbatte su tutti i nemici. Danni enormi, nessun riparo, nessuna difesa conta."
       },
-      {
-        id:"zd28", name:"Marchio dell'Infinito", emoji:"♾️", slots:0, type:"damage", dmg:"∞", area:true,
-        desc:"Chi porta il marchio di Zodar non conosce fine. Danno inarrestabile che continua a moltiplicarsi ogni round."
-      },
-      {
-        id:"zd29", name:"Inversione della Realtà", emoji:"🔄", slots:0, type:"zodar_reality_flip",
-        desc:"Zodar scambia HP attuali e HP massimi tra alleati e nemici. I nemici si ritrovano quasi morti. Gli alleati a HP pieno."
-      },
+
+      // ── FINALE ────────────────────────────────────────────────────────────
       {
         id:"zd30", name:"IL GIUDIZIO FINALE DI ZODAR", emoji:"⚖️", slots:0, type:"zodar_final_judgement",
-        desc:"La sentenza cosmica definitiva. Tutti i nemici vengono cancellati dall'esistenza. Il combattimento termina. La bilancia è appesa. Zodar ha parlato."
+        desc:"La sentenza cosmica definitiva. Una sola. Tutti i nemici vengono cancellati dall'esistenza. Usarla è raro — ma quando la bilancia ha deciso, è finita."
       },
       {
         id:"zd31", name:"Resurrezione Assoluta", emoji:"✝️", slots:0, type:"zodar_resurrection",

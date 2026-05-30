@@ -17141,6 +17141,91 @@ function GameScreen({ myId, setScreen, authUser }) {
         );
         log += `✝️ **RESURREZIONE ASSOLUTA**\n✨ Nessun caduto, ma Zodar benedice tutti — HP massimi e rigenerazione per 5 round.`;
       }
+    // ── Handler magie Zodar aggiuntive ────────────────────────────────────
+    } else if(spell.type === "zodar_half_hp") {
+      const enemies_hh = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
+      newCombatants = newCombatants.map(c=>!c.isPlayer && c.hp>0 ? {...c, hp:Math.max(1,Math.floor(c.hp*0.5))} : c);
+      log += `⚖️ **SENTENZA DEL MEZZO**\nZodar dimezza gli HP di tutti i nemici!\n${enemies_hh.map(e=>`• ${e.name}: ${Math.floor(e.hp*0.5)}/${e.maxHp} HP`).join("\n")}`;
+    } else if(spell.type === "zodar_percent_kill") {
+      const enemies_pk = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
+      newCombatants = newCombatants.map(c=>!c.isPlayer && c.hp>0 ? {...c, hp:1} : c);
+      log += `🖐️ **TOCCO DELLA FINE**\nTutti i nemici ridotti a 1 HP! Il colpo finale è vostro.\n${enemies_pk.map(e=>`• ${e.name}: 1/${e.maxHp} HP`).join("\n")}`;
+    } else if(spell.type === "zodar_drain_allies") {
+      const enemies_da = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
+      const allies_da  = newCombatants.filter(c=>c.isPlayer && !c.isSummon && c.hp>0);
+      const totalDrained = enemies_da.reduce((s,e)=>s+Math.floor(e.hp*0.4),0);
+      const healPerAlly  = allies_da.length>0 ? Math.floor(totalDrained/allies_da.length) : 0;
+      newCombatants = newCombatants.map(c=>{
+        if(!c.isPlayer && c.hp>0) return {...c, hp:Math.max(1,Math.floor(c.hp*0.6))};
+        if(c.isPlayer && !c.isSummon && !c.dead) return {...c, hp:Math.min(c.maxHp,(c.hp||0)+healPerAlly)};
+        return c;
+      });
+      log += `🌌 **DRENAGGIO COSMICO**\nZodar drena il 40% dagli HP nemici e li trasferisce al party!\n💚 Cura per alleato: +${healPerAlly} HP\n${enemies_da.map(e=>`• ${e.name}: -${Math.floor(e.hp*0.4)} HP`).join("\n")}`;
+    } else if(spell.type === "zodar_heal_half") {
+      const allies_hh = newCombatants.filter(c=>c.isPlayer && !c.isSummon);
+      newCombatants = newCombatants.map(c=>{
+        if(!c.isPlayer || c.isSummon) return c;
+        const heal = Math.floor(c.maxHp*0.5);
+        const revived = {...c, hp:Math.min(c.maxHp,(c.hp||0)+heal), dead:false, dying:false, stable:false};
+        const pData = partyPlayers.find(p=>p.id===c.id)||(c.id===myId?me:null);
+        if(pData) { const u={...pData,hp:revived.hp,dead:false}; dbSavePlayer(u); if(c.id===myId) setMeRaw(u); }
+        return revived;
+      });
+      log += `💚 **ONDA DI GUARIGIONE**\n⚖️ Zodar cura tutti gli alleati per il 50% degli HP massimi!\n${allies_hh.map(a=>`❤️ ${a.name}: +${Math.floor(a.maxHp*0.5)} HP`).join("\n")}`;
+    } else if(spell.type === "zodar_regen_all") {
+      newCombatants = newCombatants.map(c=>c.isPlayer && !c.isSummon ? {...c, statusEffects:mergeStatusEffects(c.statusEffects,{type:"regen",duration:5,amount:Math.floor(c.maxHp*0.15)})} : c);
+      const allies_rg = newCombatants.filter(c=>c.isPlayer && !c.isSummon);
+      log += `🌿 **RIGENERAZIONE COSMICA**\nTutti gli alleati rigenerano il 15% HP per 5 round!\n${allies_rg.map(a=>`• ${a.name}: +${Math.floor(a.maxHp*0.15)} HP/turno`).join("\n")}`;
+    } else if(spell.type === "zodar_revive_half") {
+      const fallen = newCombatants.filter(c=>c.isPlayer && !c.isSummon && (c.dead||c.dying||(c.hp||0)<=0));
+      if(fallen.length) {
+        newCombatants = newCombatants.map(c=>{
+          if(!c.isPlayer||c.isSummon||(!c.dead&&!c.dying&&c.hp>0)) return c;
+          const reviveHp = Math.floor(c.maxHp*0.5);
+          const revived = {...c,hp:reviveHp,dead:false,dying:false,stable:false,deathSuccesses:0,deathFailures:0};
+          const pData = partyPlayers.find(p=>p.id===c.id)||(c.id===myId?me:null);
+          if(pData) { const u={...pData,hp:reviveHp,dead:false}; dbSavePlayer(u); if(c.id===myId) setMeRaw(u); }
+          return revived;
+        });
+        log += `✝️ **RESURREZIONE DI MASSA**\n${fallen.map(a=>`💫 ${a.name} risorge con ${Math.floor(a.maxHp*0.5)} HP`).join("\n")}`;
+      } else log += `✝️ **RESURREZIONE DI MASSA**\nNessun alleato caduto. Il party è già in piedi.`;
+    } else if(spell.type === "zodar_buff_party") {
+      const buffAmt = 40;
+      newCombatants = newCombatants.map(c=>c.isPlayer&&!c.isSummon&&!c.dead ? {...c, statusEffects:mergeStatusEffects(c.statusEffects,{type:"buff",duration:3,atkBonus:buffAmt,defBonus:buffAmt,magBonus:buffAmt})} : c);
+      const allies_bp = newCombatants.filter(c=>c.isPlayer&&!c.isSummon);
+      log += `🌟 **BENEDIZIONE DELL'EQUILIBRIO**\n+${buffAmt} ATK/DEF/MAG a tutti gli alleati per 3 round!\n${allies_bp.map(a=>`⭐ ${a.name} potenziato`).join("\n")}`;
+    } else if(spell.type === "zodar_shield_party") {
+      newCombatants = newCombatants.map(c=>c.isPlayer&&!c.isSummon&&!c.dead ? {...c, statusEffects:mergeStatusEffects(c.statusEffects,{type:"shield",duration:3})} : c);
+      const allies_sp = newCombatants.filter(c=>c.isPlayer&&!c.isSummon);
+      log += `🛡️ **SCUDO COSMICO**\nTutti gli alleati protetti da scudo divino per 3 round!\n${allies_sp.map(a=>`🛡️ ${a.name} — scudo attivo`).join("\n")}`;
+    } else if(spell.type === "zodar_godmode") {
+      newCombatants = newCombatants.map(c=>c.isPlayer&&!c.isSummon&&!c.dead ? {...c, statusEffects:mergeStatusEffects(c.statusEffects,{type:"godmode",duration:3})} : c);
+      const allies_gm = newCombatants.filter(c=>c.isPlayer&&!c.isSummon);
+      log += `👁️ **OCCHIO DI ZODAR**\nPer 3 round: riduzione danni 90%, ogni attacco è critico, cure triplicate!\n${allies_gm.map(a=>`👁️ ${a.name} — modalità divina`).join("\n")}`;
+    } else if(spell.type === "zodar_stun_all") {
+      const enemies_st = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
+      newCombatants = newCombatants.map(c=>!c.isPlayer&&c.hp>0 ? {...c, statusEffects:mergeStatusEffects(c.statusEffects,{type:"stun",duration:3})} : c);
+      log += `⏳ **IL PESO DELL'ETERNITÀ**\nTutti i nemici storditi per 3 round!\n${enemies_st.map(e=>`💫 ${e.name} — paralizzato`).join("\n")}`;
+    } else if(spell.type === "zodar_curse_enemies") {
+      const curseAmt = 50;
+      const enemies_ce = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
+      newCombatants = newCombatants.map(c=>!c.isPlayer&&c.hp>0 ? {...c, statusEffects:mergeStatusEffects(c.statusEffects,{type:"curse",duration:4,atkBonus:-curseAmt,defBonus:-curseAmt,magBonus:-curseAmt})} : c);
+      log += `⚖️ **MALEDIZIONE DELLA BILANCIA**\n-${curseAmt} ATK/DEF/MAG a tutti i nemici per 4 round!\n${enemies_ce.map(e=>`☠️ ${e.name} — maledetto`).join("\n")}`;
+    } else if(spell.type === "zodar_reality_flip") {
+      const allies_rf  = newCombatants.filter(c=>c.isPlayer&&!c.isSummon&&!c.dead);
+      const enemies_rf = newCombatants.filter(c=>!c.isPlayer&&c.hp>0);
+      const avgAllyHp  = allies_rf.length  ? Math.floor(allies_rf.reduce((s,c)=>s+c.hp,0)/allies_rf.length)  : 0;
+      const avgEnemyHp = enemies_rf.length ? Math.floor(enemies_rf.reduce((s,c)=>s+c.hp,0)/enemies_rf.length) : 0;
+      newCombatants = newCombatants.map(c=>{
+        if(c.isPlayer&&!c.isSummon&&!c.dead) return {...c, hp:Math.min(c.maxHp, Math.max(c.hp, avgEnemyHp))};
+        if(!c.isPlayer&&c.hp>0) return {...c, hp:Math.max(1, Math.min(c.hp, avgAllyHp))};
+        return c;
+      });
+      log += `🔄 **INVERSIONE DELLA REALTÀ**\nZodar ridisegna il campo — HP scambiati tra alleati e nemici!\n💚 Alleati → ${avgEnemyHp} HP medi · ☠️ Nemici → ${avgAllyHp} HP medi`;
+    } else if(spell.type === "zodar_final_judgement") {
+      const enemies_fj = newCombatants.filter(c=>!c.isPlayer && c.hp>0);
+      newCombatants = newCombatants.map(c=>!c.isPlayer ? {...c,hp:0,dead:true,dying:false} : c);
+      log += `⚖️ **IL GIUDIZIO FINALE DI ZODAR**\n☄️ La sentenza cosmica definitiva.\n${enemies_fj.map(e=>`💀 ${e.name} — cancellato dall'esistenza`).join("\n")}\nLa bilancia si è abbassata. Non c'è appello.`;
     } else if(spell.type === "zodar_balance_hp") {
       const alive = newCombatants.filter(c=>!c.dead && c.hp>0);
       const totalHp = alive.reduce((s,c)=>s+c.hp,0);
