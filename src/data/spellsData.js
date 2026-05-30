@@ -576,6 +576,10 @@ export const SPELLS = {
         id:"zd30", name:"IL GIUDIZIO FINALE DI ZODAR", emoji:"⚖️", slots:0, type:"zodar_final_judgement",
         desc:"La sentenza cosmica definitiva. Tutti i nemici vengono cancellati dall'esistenza. Il combattimento termina. La bilancia è appesa. Zodar ha parlato."
       },
+      {
+        id:"zd31", name:"Resurrezione Assoluta", emoji:"✝️", slots:0, type:"zodar_resurrection",
+        desc:"Zodar sfida la morte stessa. Tutti gli alleati caduti — morti in combattimento, morenti, o ufficialmente morti nel mondo — risorgono a HP pieno e rigenerano HP massimi per 5 round. Anche Zodar stesso, se caduto, risorge. La morte non è permanente quando Zodar decide il contrario."
+      },
     ],
   },
 };

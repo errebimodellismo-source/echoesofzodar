@@ -16953,6 +16953,46 @@ function GameScreen({ myId, setScreen, authUser }) {
       });
       if(allDead2.length) log += `✝️ **RICHIAMO DALL'OBLIO**\n🌟 Zodar sfida la morte stessa — tutti risorgono a HP pieno!\n${allDead2.map(a=>`✨ ${a.name} risorge — ${a.maxHp}/${a.maxHp} HP`).join("\n")}`;
       else log += `✝️ **RICHIAMO DALL'OBLIO**\nNessun alleato da riportare in vita. L'equilibrio è già ristabilito.`;
+    } else if(spell.type === "zodar_resurrection") {
+      // Resurrezione Assoluta — riporta in vita TUTTI gli alleati caduti (anche dead:true ufficiale)
+      // + rigenera HP al massimo per 5 round, salva su DB
+      const toRevive = newCombatants.filter(c => c.isPlayer && !c.isSummon && (c.dead || c.dying || (c.hp||0) <= 0));
+      newCombatants = newCombatants.map(c => {
+        if(!c.isPlayer || c.isSummon) return c;
+        // Resuscita chiunque sia morto/morente/a 0 HP
+        const wasDown = c.dead || c.dying || (c.hp||0) <= 0;
+        const revived = {
+          ...c,
+          hp: c.maxHp,
+          dead: false,
+          dying: false,
+          stable: false,
+          deathSuccesses: 0,
+          deathFailures: 0,
+          statusEffects: mergeStatusEffects(c.statusEffects, { type:"regen", duration:5, amount: c.maxHp })
+        };
+        if(wasDown) {
+          // Salva su DB: il personaggio torna vivo anche fuori dal combat
+          const pData = partyPlayers.find(p=>p.id===c.id)||(c.id===myId?me:null);
+          if(pData) {
+            const u = { ...pData, hp: c.maxHp, dead: false };
+            dbSavePlayer(u);
+            if(c.id === myId) setMeRaw(u);
+          }
+        }
+        return revived;
+      });
+      if(toRevive.length) {
+        log += `✝️ **RESURREZIONE ASSOLUTA**\n🌟 La morte stessa si inchina a Zodar.\n${toRevive.map(a=>`💫 ${a.name} torna in vita — ${a.maxHp}/${a.maxHp} HP | rigenera per 5 round`).join("\n")}\n⚖️ Nessuno muore per sempre quando Zodar è presente.`;
+      } else {
+        // Nessun morto — ma guarisce e potenzia tutti al massimo comunque
+        newCombatants = newCombatants.map(c =>
+          c.isPlayer && !c.isSummon
+            ? { ...c, hp: c.maxHp, statusEffects: mergeStatusEffects(c.statusEffects, { type:"regen", duration:5, amount: c.maxHp }) }
+            : c
+        );
+        log += `✝️ **RESURREZIONE ASSOLUTA**\n✨ Nessun caduto, ma Zodar benedice tutti — HP massimi e rigenerazione per 5 round.`;
+      }
     } else if(spell.type === "zodar_balance_hp") {
       const alive = newCombatants.filter(c=>!c.dead && c.hp>0);
       const totalHp = alive.reduce((s,c)=>s+c.hp,0);
