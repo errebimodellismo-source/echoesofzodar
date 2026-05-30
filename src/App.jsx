@@ -17510,8 +17510,9 @@ ${lq.desc}
     const myAccountId = authUser?.id || null;
     const onlinePlayers = partyPlayers.filter(player => {
       if(player.id === myId) return true;
-      // Escludi sempre i personaggi dello stesso account (stesso utente, personaggio diverso)
-      // Se authUser non è caricato (null), non possiamo confrontare → escludiamo per sicurezza
+      // Zodar entra sempre e comunque, senza restrizioni di account
+      if(CLASSES[player.class]?._zodar) return true;
+      // Escludi personaggi dello stesso account (stesso utente, personaggio diverso)
       if(!myAccountId) return false;
       if(player.accountId === myAccountId) return false;
       return isPartyPlayerOnline(player, userMeta, nowMs);
