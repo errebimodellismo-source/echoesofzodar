@@ -438,9 +438,10 @@ export const SPELLS = {
     ],
   },
 
-  // ── ZODAR — Custode dell'Equilibrio ──────────────────────────────────────
+  // ── ZODAR — Custode dell'Equilibrio ∞ ────────────────────────────────────
   custode_equilibrio: {
     0: [
+      // ── Magie originali ──
       {
         id:"zd01", name:"Equilibrio Universale", emoji:"⚖️", slots:0, type:"zodar_heal_all",
         desc:"Porta tutti gli alleati al massimo HP istantaneamente. L'equilibrio ripristina ciò che è stato spezzato."
@@ -481,6 +482,308 @@ export const SPELLS = {
         id:"zd10", name:"ZODAR VI OSSERVA", emoji:"👁️", slots:0, type:"zodar_observe",
         desc:"Nessun effetto. Ma tutti sapranno che Zodar è presente. Un messaggio cosmico attraversa il mondo."
       },
+
+      // ── Nuove magie divine — Livello ∞ ──
+
+      // EVOCAZIONE
+      {
+        id:"zd11", name:"Evoca l'Angelo della Bilancia", emoji:"😇", slots:0, type:"summon",
+        summon:{name:"Angelo della Bilancia",emoji:"⚖️",hp:999999,atk:99999,def:99999,dmgDie:"99d999"}, maxSummons:99,
+        desc:"Evoca un Angelo della Bilancia direttamente dall'Empireo. Obbedisce solo a Zodar. Inscalfibile."
+      },
+      {
+        id:"zd12", name:"Evoca il Drago Cosmico", emoji:"🐉", slots:0, type:"summon",
+        summon:{name:"Drago Cosmico di Zodar",emoji:"🌌",hp:9999999,atk:999999,def:999999,dmgDie:"999d999"}, maxSummons:99,
+        desc:"Il Drago Primordiale che dormiva prima della creazione si risvegia al richiamo di Zodar."
+      },
+      {
+        id:"zd13", name:"Evoca i Guardiani Eterni", emoji:"🛡️", slots:0, type:"summon",
+        summon:{name:"Guardiano Eterno",emoji:"🌟",hp:5000000,atk:500000,def:999999,dmgDie:"500d999"}, maxSummons:99,
+        desc:"Tre Guardiani Eterni si materializzano attorno al party. Nulla può attraversarli."
+      },
+      {
+        id:"zd14", name:"Evoca il Titano dell'Alba", emoji:"🌅", slots:0, type:"summon",
+        summon:{name:"Titano dell'Alba",emoji:"☀️",hp:99999999,atk:9999999,def:9999999,dmgDie:"9999d999"}, maxSummons:99,
+        desc:"Il Titano nato all'alba del primo giorno scende dal piano superiore. La sua sola presenza fa fuggire i nemici."
+      },
+      {
+        id:"zd15", name:"Evoca la Fenice Immortale", emoji:"🦅", slots:0, type:"summon",
+        summon:{name:"Fenice Immortale",emoji:"🔥",hp:7777777,atk:777777,def:777777,dmgDie:"777d777"}, maxSummons:99,
+        desc:"La Fenice che non muore mai sorge dal fuoco dell'eternità. Se cade, risorge con HP pieno."
+      },
+
+      // ATTACCHI CHE TOLGONO % HP
+      {
+        id:"zd16", name:"Sentenza del Mezzo", emoji:"⚖️", slots:0, type:"zodar_half_hp",
+        desc:"Zodar alza la bilancia e la abbassa: TUTTI i nemici perdono il 50% degli HP attuali. Istantaneo. Inevitabile."
+      },
+      {
+        id:"zd17", name:"Decima Cosmica", emoji:"🔟", slots:0, type:"zodar_tenth_hp",
+        desc:"L'imposta dell'Equilibrio: tutti i nemici perdono il 90% degli HP massimi. Zodar prende ciò che è dovuto."
+      },
+      {
+        id:"zd18", name:"Tocco della Fine", emoji:"💀", slots:0, type:"zodar_percent_kill",
+        desc:"Un tocco divino che porta tutti i nemici a 1 HP. L'equilibrio li lascia in vita — per un attimo."
+      },
+      {
+        id:"zd19", name:"Drenaggio dell'Infinito", emoji:"🌌", slots:0, type:"zodar_drain_all",
+        dmg:"99999d99999", type:"damage",
+        desc:"Zodar succhia la vitalità cosmica da ogni essere vivente in campo. Danno infinito su tutti i nemici, cura totale del party."
+      },
+
+      // ATTACCHI DIVINI
+      {
+        id:"zd20", name:"Fiat Lux", emoji:"✨", slots:0, type:"damage", dmg:"99999d9999", area:true,
+        desc:"Zodar pronuncia le parole della creazione al contrario. La luce primordiale brucia tutto ciò che non dovrebbe esistere."
+      },
+      {
+        id:"zd21", name:"Tempesta Primordiale", emoji:"⛈️", slots:0, type:"damage", dmg:"77777d7777", area:true,
+        desc:"La tempesta che ha preceduto il mondo si abbatte sul campo. Nessun riparo. Nessuna difesa."
+      },
+      {
+        id:"zd22", name:"Il Peso dell'Eternità", emoji:"⏳", slots:0, type:"zodar_stun_all",
+        desc:"Il tempo si ferma attorno ai nemici per 5 round. Sono coscienti ma incapaci di muoversi. Zodar li lascia pensare."
+      },
+      {
+        id:"zd23", name:"Maledizione dell'Infinito", emoji:"♾️", slots:0, type:"damage", dmg:"9999d9999", area:true,
+        desc:"Una maledizione senza termine si incide sull'anima di ogni nemico. Danno cosmico e debuff permanente a tutte le statistiche."
+      },
+      {
+        id:"zd24", name:"Occhio di Zodar", emoji:"👁️‍🗨️", slots:0, type:"zodar_godmode",
+        desc:"Zodar apre l'occhio dell'Equilibrio. Per 10 round: il party è invincibile, ogni attacco è critico, ogni cura è triplicata."
+      },
+      {
+        id:"zd25", name:"Annichilimento Divino", emoji:"💥", slots:0, type:"damage", dmg:"99999d99999", area:true,
+        desc:"La forma più pura della distruzione. Non è magia — è Zodar che decide che qualcosa non esiste più."
+      },
+      {
+        id:"zd26", name:"Rigenerazione Cosmica", emoji:"💚", slots:0, type:"zodar_regen_all",
+        desc:"Il party rigenera HP pieni ogni round per 5 round. Non morirà. Non può morire. Zodar lo ha deciso."
+      },
+      {
+        id:"zd27", name:"Parola della Creazione", emoji:"📖", slots:0, type:"zodar_buff_infinite",
+        desc:"Zodar pronuncia la parola che ha creato il mondo. Tutte le stat del party diventano ∞ per 3 round."
+      },
+      {
+        id:"zd28", name:"Marchio dell'Infinito", emoji:"♾️", slots:0, type:"damage", dmg:"∞", area:true,
+        desc:"Chi porta il marchio di Zodar non conosce fine. Danno inarrestabile che continua a moltiplicarsi ogni round."
+      },
+      {
+        id:"zd29", name:"Inversione della Realtà", emoji:"🔄", slots:0, type:"zodar_reality_flip",
+        desc:"Zodar scambia HP attuali e HP massimi tra alleati e nemici. I nemici si ritrovano quasi morti. Gli alleati a HP pieno."
+      },
+      {
+        id:"zd30", name:"IL GIUDIZIO FINALE DI ZODAR", emoji:"⚖️", slots:0, type:"zodar_final_judgement",
+        desc:"La sentenza cosmica definitiva. Tutti i nemici vengono cancellati dall'esistenza. Il combattimento termina. La bilancia è appesa. Zodar ha parlato."
+      },
     ],
   },
 };
+
+Object.assign(SPELLS, {
+  echo_knight:{
+    0:[{id:"ek00",name:"Colpo d'Eco",emoji:"⚔️",dmg:"1d8",type:"damage",slots:0,desc:"La tua eco colpisce insieme a te, tecnica gratuita."}],
+    1:[{id:"ek11",name:"Passo Riflesso",emoji:"🌀",dmg:"2d8",type:"damage",slots:1,desc:"Scatti attraverso la tua eco e ferisci il bersaglio."},{id:"ek12",name:"Parata dell'Eco",emoji:"🛡️",dmg:"0",type:"control",slots:1,desc:"L'eco disorienta il nemico: salta il prossimo turno."}],
+    2:[{id:"ek21",name:"Doppio Fendente",emoji:"⚔️",dmg:"4d8",type:"damage",slots:2,desc:"Due fendenti sovrapposti da corpo ed eco."}],
+    3:[{id:"ek31",name:"Assalto Bifasico",emoji:"💠",dmg:"6d8",type:"damage",slots:3,desc:"Attacco sincronizzato che colpisce tutti i nemici.",area:true}],
+  },
+  moon_reaver:{
+    0:[{id:"mr00",name:"Lama di Luna",emoji:"🌙",dmg:"1d8",type:"damage",slots:0,desc:"Taglio lunare rapido, gratuito."}],
+    1:[{id:"mr11",name:"Balzo Notturno",emoji:"🌑",dmg:"3d6",type:"damage",slots:1,desc:"Ti muovi tra le ombre e colpisci un punto scoperto."},{id:"mr12",name:"Eclissi Breve",emoji:"🌘",dmg:"0",type:"control",slots:1,desc:"Oscuri i sensi del bersaglio: salta il prossimo turno."}],
+    2:[{id:"mr21",name:"Falce Crescente",emoji:"🌙",dmg:"5d6",type:"damage",slots:2,desc:"Un arco di luce lunare taglia piu nemici.",area:true}],
+    3:[{id:"mr31",name:"Caccia di Mezzanotte",emoji:"🗡️",dmg:"7d8",type:"damage",slots:3,desc:"Un'esecuzione rapida favorita dalle fasi lunari."}],
+  },
+  oathblade:{
+    0:[{id:"ob00",name:"Taglio Giurato",emoji:"🗡️",dmg:"1d10",type:"damage",slots:0,desc:"Colpo alimentato da una promessa mantenuta."}],
+    1:[{id:"ob11",name:"Vincolo Sacro",emoji:"⛓️",dmg:"3d8",type:"damage",slots:1,desc:"Marchi il nemico con un giuramento doloroso."},{id:"ob12",name:"Parola del Patto",emoji:"⚖️",dmg:"-2d6",type:"heal",slots:1,desc:"Il giuramento sostiene te o un alleato."}],
+    2:[{id:"ob21",name:"Sentenza della Lama",emoji:"⚔️",dmg:"5d8",type:"damage",slots:2,desc:"La lama punisce chi rompe l'ordine del patto."}],
+    3:[{id:"ob31",name:"Giuramento Impossibile",emoji:"🔥",dmg:"6d8",type:"damage",slots:3,desc:"Promessa estrema che travolge tutti i nemici.",area:true}],
+  },
+  blade_dancer:{
+    0:[{id:"bd00",name:"Passo di Ritmo",emoji:"🗡️",dmg:"1d8",type:"damage",slots:0,desc:"Colpo leggero che mantiene il ritmo."}],
+    1:[{id:"bd11",name:"Danza Incrociata",emoji:"⚔️",dmg:"3d6",type:"damage",slots:1,desc:"Sequenza di fendenti rapidi."},{id:"bd12",name:"Finta Rotante",emoji:"💫",dmg:"0",type:"control",slots:1,desc:"Il nemico perde il tempo e salta il turno."}],
+    2:[{id:"bd21",name:"Tempesta di Lame",emoji:"🌪️",dmg:"5d6",type:"damage",slots:2,desc:"Danza offensiva che colpisce tutti i nemici.",area:true}],
+    3:[{id:"bd31",name:"Finale Perfetto",emoji:"💥",dmg:"7d8",type:"damage",slots:3,desc:"Chiusura brutale di una combo impeccabile."}],
+  },
+  sigilwarden:{
+    0:[{id:"sw00",name:"Sigillo Minore",emoji:"⛨️",dmg:"1d6",type:"damage",slots:0,desc:"Un marchio arcano ferisce il bersaglio."}],
+    1:[{id:"sw11",name:"Sigillo di Guardia",emoji:"🛡️",dmg:"-2d6",type:"heal",slots:1,desc:"Ripara ferite e stabilizza l'alleato scelto."},{id:"sw12",name:"Marchio Vincolante",emoji:"🔒",dmg:"0",type:"control",slots:1,desc:"Il bersaglio viene bloccato da rune di contenimento."}],
+    2:[{id:"sw21",name:"Muro Runico",emoji:"🔷",dmg:"4d6",type:"damage",slots:2,desc:"Le rune esplodono e travolgono tutti i nemici.",area:true}],
+    3:[{id:"sw31",name:"Cerchio Inviolato",emoji:"⭕",dmg:"-3d8",type:"heal",area:true,slots:3,desc:"Cura tutto il party entro il cerchio."}],
+  },
+  ashen_oracle:{
+    0:[{id:"ao00",name:"Favilla Profetica",emoji:"🔥",dmg:"1d8",type:"damage",slots:0,desc:"Una brace del futuro ferisce il bersaglio."}],
+    1:[{id:"ao11",name:"Cenere Rivelatrice",emoji:"🌫️",dmg:"3d6",type:"damage",slots:1,desc:"Cenere sacra brucia e rivela il destino del nemico per 2 round."},{id:"ao12",name:"Presagio Spezzato",emoji:"💫",dmg:"0",type:"control",slots:1,desc:"Il nemico vede la propria fine e perde il turno."}],
+    2:[{id:"ao21",name:"Pioggia di Braci",emoji:"🔥",dmg:"5d6",type:"damage",slots:2,desc:"Braci divine cadono su tutti i nemici.",area:true}],
+    3:[{id:"ao31",name:"Futuro in Fiamme",emoji:"☄️",dmg:"7d8",type:"damage",slots:3,desc:"Un disastro annunciato esplode sul bersaglio."}],
+  },
+  blood_cartographer:{
+    0:[{id:"bc00",name:"Linea di Sangue",emoji:"🗺️",dmg:"1d8",type:"damage",slots:0,desc:"Tracci una linea viva che taglia il bersaglio."}],
+    1:[{id:"bc11",name:"Marchio della Mappa",emoji:"📍",dmg:"3d6",type:"damage",slots:1,desc:"Il bersaglio viene segnato e lacerato per 2 round."},{id:"bc12",name:"Sentiero Vietato",emoji:"🚫",dmg:"0",type:"control",slots:1,desc:"Riscrivi il terreno e blocchi il movimento del nemico."}],
+    2:[{id:"bc21",name:"Carta Ematica",emoji:"🩸",dmg:"5d6",type:"damage",slots:2,desc:"La mappa si apre sotto tutti i nemici.",area:true}],
+    3:[{id:"bc31",name:"Coordinate del Destino",emoji:"🎯",dmg:"7d8",type:"damage",slots:3,desc:"Colpo preciso sul punto debole segnato."}],
+  },
+  void_sage:{
+    0:[{id:"vs00",name:"Scheggia del Vuoto",emoji:"🌌",dmg:"1d10",type:"damage",slots:0,desc:"Frammento cosmico gratuito."}],
+    1:[{id:"vs11",name:"Assenza",emoji:"⚫",dmg:"3d8",type:"damage",slots:1,desc:"Il vuoto morde il bersaglio per 2 round."},{id:"vs12",name:"Silenzio Cosmico",emoji:"🔇",dmg:"0",type:"control",slots:1,desc:"Il bersaglio perde contatto con il mondo e salta il turno."}],
+    2:[{id:"vs21",name:"Fame Stellare",emoji:"🌑",dmg:"5d8",type:"damage",slots:2,desc:"Ombra cosmica soffoca tutti i nemici per 2 round.",area:true}],
+    3:[{id:"vs31",name:"Collasso del Vuoto",emoji:"🕳️",dmg:"8d8",type:"damage",slots:3,desc:"Il nulla collassa sul bersaglio."}],
+  },
+  herald_zodar:{
+    0:[{id:"hz00",name:"Scaglia dell'Equilibrio",emoji:"⚖️",dmg:"1d8",type:"damage",slots:0,desc:"Un verdetto minore di Zodar."}],
+    1:[{id:"hz11",name:"Mano della Bilancia",emoji:"⚖️",dmg:"-2d8",type:"heal",slots:1,desc:"Riporta equilibrio guarendo un alleato."},{id:"hz12",name:"Richiamo dell'Ordine",emoji:"🔔",dmg:"0",type:"control",slots:1,desc:"La voce di Zodar ferma il bersaglio."}],
+    2:[{id:"hz21",name:"Peso del Giudizio",emoji:"☄️",dmg:"5d8",type:"damage",slots:2,desc:"Il giudizio cade su tutti i nemici.",area:true}],
+    3:[{id:"hz31",name:"Intervento Minore",emoji:"✨",dmg:"-3d8",type:"heal",area:true,slots:3,desc:"La bilancia sostiene tutto il party."}],
+  },
+  relic_tamer:{
+    0:[{id:"rt00",name:"Scatto di Reliquia",emoji:"🔱",dmg:"1d8",type:"damage",slots:0,desc:"Una reliquia minore scarica potere."}],
+    1:[{id:"rt11",name:"Reliquia Mordente",emoji:"🗡️",dmg:"0",type:"summon",slots:1,desc:"Una reliquia animata combatte per te.",summon:{name:"Reliquia Animata",emoji:"🔱",hp:45,atk:14,def:10,dmgDie:"2d8"},maxSummons:2},{id:"rt12",name:"Sigillo dell'Oggetto",emoji:"📦",dmg:"3d6",type:"damage",slots:1,desc:"Un oggetto caricato esplode sul bersaglio."}],
+    2:[{id:"rt21",name:"Teatro di Reliquie",emoji:"🏺",dmg:"5d6",type:"damage",slots:2,desc:"Le reliquie colpiscono tutti i nemici.",area:true}],
+    3:[{id:"rt31",name:"Custode Antico",emoji:"🛡️",dmg:"0",type:"summon",slots:3,desc:"Evoca un guardiano reliquiario.",summon:{name:"Guardiano Reliquiario",emoji:"🛡️",hp:90,atk:24,def:18,dmgDie:"3d10"},maxSummons:2}],
+  },
+  echo_singer:{
+    0:[{id:"es00",name:"Nota d'Eco",emoji:"🎵",dmg:"1d8",type:"damage",slots:0,desc:"Una nota risonante colpisce il bersaglio."}],
+    1:[{id:"es11",name:"Canto Curativo",emoji:"🎶",dmg:"-2d6",type:"heal",slots:1,desc:"Una melodia ricuce ferite."},{id:"es12",name:"Accordo Spezzato",emoji:"🔊",dmg:"0",type:"control",slots:1,desc:"Il bersaglio perde ritmo e salta il turno."}],
+    2:[{id:"es21",name:"Coro degli Echi",emoji:"🎼",dmg:"-3d6",type:"heal",area:true,slots:2,desc:"Cura l'intero party con risonanza."}],
+    3:[{id:"es31",name:"Urlo di Risonanza",emoji:"🔔",dmg:"6d8",type:"damage",slots:3,desc:"Onda sonora contro tutti i nemici.",area:true}],
+  },
+  echo_reaper:{
+    0:[{id:"er00",name:"Falce d'Eco",emoji:"☠️",dmg:"1d10",type:"damage",slots:0,desc:"Taglio che raccoglie frammenti di eco."}],
+    1:[{id:"er11",name:"Mietitura Minore",emoji:"💀",dmg:"3d8",type:"drain",drainPct:0.35,slots:1,desc:"Danneggia e recupera una parte dell'energia rubata."},{id:"er12",name:"Eco del Caduto",emoji:"👻",dmg:"3d6",type:"damage",slots:1,desc:"Le memorie dei morti graffiano il bersaglio."}],
+    2:[{id:"er21",name:"Raccolto Oscuro",emoji:"🌑",dmg:"5d8",type:"drain",drainPct:0.25,area:true,slots:2,desc:"Dreni energia da tutti i nemici."}],
+    3:[{id:"er31",name:"Legione di Echi",emoji:"👻",dmg:"7d8",type:"damage",slots:3,desc:"Gli echi raccolti travolgono tutti i nemici.",area:true}],
+  },
+  seal_inquisitor:{
+    0:[{id:"si00",name:"Sigillo Punitivo",emoji:"🔍",dmg:"1d8",type:"damage",slots:0,desc:"Punizione rapida contro magia e corruzione."}],
+    1:[{id:"si11",name:"Interdizione",emoji:"🚫",dmg:"0",type:"control",slots:1,desc:"Sigilli il bersaglio: salta il prossimo turno."},{id:"si12",name:"Rottura Scudo",emoji:"🛡️",dmg:"3d8",type:"damage",slots:1,desc:"Colpo che spezza protezioni e difese."}],
+    2:[{id:"si21",name:"Cerchio Anti-Magia",emoji:"⭕",dmg:"5d6",type:"damage",area:true,slots:2,desc:"Il cerchio punisce tutti i nemici."}],
+    3:[{id:"si31",name:"Verdetto del Sigillo",emoji:"⚖️",dmg:"7d8",type:"damage",slots:3,desc:"Sentenza concentrata sul bersaglio dominante."}],
+  },
+  blood_alchemist:{
+    0:[{id:"baq00",name:"Fiala Ematica",emoji:"🧪",dmg:"1d8",type:"damage",slots:0,desc:"Una fiala viva esplode sul bersaglio."}],
+    1:[{id:"baq11",name:"Pozione Vivente",emoji:"🩸",dmg:"-2d8",type:"heal",slots:1,hpCost:3,desc:"Alchimia del sangue che cura rapidamente consumando una piccola quota di HP."},{id:"baq12",name:"Detonazione Organica",emoji:"💥",dmg:"3d8",type:"damage",slots:1,hpCost:4,desc:"Esplosione biologica dolorosa alimentata dal sangue."}],
+    2:[{id:"baq21",name:"Nebbia Ematica",emoji:"🌫️",dmg:"5d6",type:"drain",drainPct:0.3,area:true,slots:2,hpCost:7,desc:"Drenaggio diffuso su tutti i nemici, alimentato da HP propri."}],
+    3:[{id:"baq31",name:"Mutazione Rossa",emoji:"🧬",dmg:"7d8",type:"damage",slots:3,hpCost:10,desc:"Reazione estrema che lacera il bersaglio e consuma il corpo dell'alchimista."}],
+  },
+  rune_elder:{
+    0:[{id:"re00",name:"Runa Minore",emoji:"ᚱ",dmg:"1d8",type:"damage",slots:0,desc:"Una runa lenta ma precisa."}],
+    1:[{id:"re11",name:"Runa di Vincolo",emoji:"ᚱ",dmg:"0",type:"control",slots:1,desc:"La runa blocca il bersaglio."},{id:"re12",name:"Runa di Frattura",emoji:"💠",dmg:"3d10",type:"damage",slots:1,desc:"Incisione arcana ad alto impatto."}],
+    2:[{id:"re21",name:"Cerchio Runico",emoji:"⭕",dmg:"5d10",type:"damage",area:true,slots:2,desc:"Rune preparate esplodono su tutti i nemici."}],
+    3:[{id:"re31",name:"Nome Antico",emoji:"📜",dmg:"8d10",type:"damage",slots:3,desc:"Pronunci una parola incisa prima del mondo."}],
+  },
+  cursebreaker:{
+    0:[{id:"cb00",name:"Scintilla Purga",emoji:"🔥",dmg:"1d8",type:"damage",slots:0,desc:"Fiamma anti-maledizione."}],
+    1:[{id:"cb11",name:"Spezzavelo",emoji:"✨",dmg:"3d8",type:"damage",slots:1,desc:"Rompe ombre, maledizioni e non morti."},{id:"cb12",name:"Rito di Sollievo",emoji:"💚",dmg:"-2d6",type:"heal",slots:1,desc:"Rimuove dolore e ricuce ferite."}],
+    2:[{id:"cb21",name:"Cerchio Purificante",emoji:"☀️",dmg:"5d6",type:"damage",area:true,slots:2,desc:"Luce purificatrice su tutti i nemici."}],
+    3:[{id:"cb31",name:"Fine della Maledizione",emoji:"🔥",dmg:"7d8",type:"damage",slots:3,desc:"Colpo definitivo contro una fonte corrotta."}],
+  },
+  star_pilgrim:{
+    0:[{id:"sp00",name:"Raggio Stellare",emoji:"⭐",dmg:"1d8",type:"damage",slots:0,desc:"Luce di coordinate lontane."}],
+    1:[{id:"sp11",name:"Passo tra Stelle",emoji:"🌌",dmg:"3d8",type:"damage",slots:1,desc:"Appari dietro il bersaglio con luce cosmica."},{id:"sp12",name:"Varchi Minori",emoji:"🌀",dmg:"0",type:"control",slots:1,desc:"Sposta il nemico fuori fase: salta il turno."}],
+    2:[{id:"sp21",name:"Costellazione Cadente",emoji:"☄️",dmg:"5d8",type:"damage",area:true,slots:2,desc:"Piccole stelle cadono su tutti i nemici."}],
+    3:[{id:"sp31",name:"Porta Astrale",emoji:"🌠",dmg:"7d10",type:"damage",slots:3,desc:"Un varco astrale si chiude sul bersaglio."}],
+  },
+  soul_forger:{
+    0:[{id:"sf00",name:"Martello d'Anima",emoji:"⚒️",dmg:"1d8",type:"damage",slots:0,desc:"Colpo spirituale da forgia interiore."}],
+    1:[{id:"sf11",name:"Lama Spirituale",emoji:"⚔️",dmg:"3d8",type:"damage",slots:1,desc:"Forgi un'arma temporanea e colpisci."},{id:"sf12",name:"Scudo d'Anima",emoji:"💠",dmg:"-2d6",type:"heal",slots:1,desc:"Rinforzi l'anima di un alleato."}],
+    2:[{id:"sf21",name:"Armeria Spettrale",emoji:"⚔️",dmg:"5d8",type:"damage",area:true,slots:2,desc:"Armi spirituali colpiscono tutti i nemici."}],
+    3:[{id:"sf31",name:"Campione Forgiato",emoji:"🛡️",dmg:"0",type:"summon",slots:3,desc:"Forgi un guardiano d'anima.",summon:{name:"Guardiano d'Anima",emoji:"🛡️",hp:95,atk:26,def:16,dmgDie:"3d10"},maxSummons:2}],
+  },
+  doom_prophet:{
+    0:[{id:"dp00",name:"Presagio Minore",emoji:"⏳",dmg:"1d8",type:"damage",slots:0,desc:"Un piccolo segno della fine."}],
+    1:[{id:"dp11",name:"Campana della Fine",emoji:"🔔",dmg:"3d8",type:"damage",slots:1,desc:"Il suono della fine ferisce e spaventa."},{id:"dp12",name:"Panico Profetico",emoji:"💫",dmg:"0",type:"control",slots:1,desc:"Il bersaglio vede la rovina e perde il turno."}],
+    2:[{id:"dp21",name:"Pioggia di Presagi",emoji:"☄️",dmg:"5d8",type:"damage",area:true,slots:2,desc:"Segni funesti cadono su tutti i nemici."}],
+    3:[{id:"dp31",name:"Ultima Ora",emoji:"⏳",dmg:"8d8",type:"damage",slots:3,desc:"La clessidra si svuota sul bersaglio."}],
+  },
+  maze_keeper:{
+    0:[{id:"mk00",name:"Filo del Labirinto",emoji:"🧭",dmg:"1d8",type:"damage",slots:0,desc:"Un filo arcano taglia il percorso del nemico."}],
+    1:[{id:"mk11",name:"Muro Improvviso",emoji:"🧱",dmg:"0",type:"control",slots:1,desc:"Il labirinto cambia e blocca il bersaglio."},{id:"mk12",name:"Stanza Tagliente",emoji:"🗡️",dmg:"3d6",type:"damage",slots:1,desc:"Il pavimento diventa una trappola."}],
+    2:[{id:"mk21",name:"Corridoio Mobile",emoji:"🌀",dmg:"5d6",type:"damage",area:true,slots:2,desc:"Il labirinto schiaccia tutti i nemici."}],
+    3:[{id:"mk31",name:"Centro del Labirinto",emoji:"🧭",dmg:"0",type:"control",area:true,slots:3,desc:"Tutti i nemici perdono orientamento e turno."}],
+  },
+});
+
+Object.entries({
+  echo_knight:{
+    4:[{id:"ek41",name:"Frattura Gemella",emoji:"⚔️",dmg:"8d8",type:"damage",area:true,slots:4,desc:"Tu e l'eco aprite due linee temporali nello stesso colpo: tutti i nemici vengono attraversati dalla fenditura."}],
+    5:[{id:"ek51",name:"Avatar dell'Eco",emoji:"🛡️",dmg:"0",type:"summon",slots:5,desc:"Rendi solida la tua eco come un secondo cavaliere per il resto dello scontro.",summon:{name:"Avatar dell'Eco",emoji:"🛡️",hp:130,atk:32,def:22,dmgDie:"4d10"},maxSummons:2}],
+  },
+  moon_reaver:{
+    4:[{id:"mr41",name:"Eclissi Totale",emoji:"🌑",dmg:"8d8",type:"damage",area:true,slots:4,desc:"La luna scompare e il campo diventa caccia: ombra tagliente su tutti i nemici."}],
+    5:[{id:"mr51",name:"Luna Sanguigna",emoji:"🌕",dmg:"10d8",type:"drain",drainPct:0.35,slots:5,desc:"Un'esecuzione lunare che ruba vita al bersaglio e la riversa nel cacciatore."}],
+  },
+  oathblade:{
+    4:[{id:"ob41",name:"Patto Infranto",emoji:"⚖️",dmg:"8d8",type:"damage",slots:4,desc:"La lama punisce il nemico che ha violato il giuramento e lo lascia tremante per 2 round."}],
+    5:[{id:"ob51",name:"Voto Eterno",emoji:"🔥",dmg:"9d8",type:"damage",area:true,slots:5,desc:"Il giuramento diventa incendio sacro: danno ad area e pressione morale sui nemici."}],
+  },
+  blade_dancer:{
+    4:[{id:"bd41",name:"Cento Tagli",emoji:"🗡️",dmg:"9d6",type:"damage",area:true,slots:4,desc:"Una danza rapidissima distribuisce fendenti su tutto il fronte nemico."}],
+    5:[{id:"bd51",name:"Apoteosi del Ritmo",emoji:"💥",dmg:"11d8",type:"damage",slots:5,desc:"La combo perfetta scarica tutto il ritmo accumulato in un singolo finale devastante."}],
+  },
+  sigilwarden:{
+    4:[{id:"sw41",name:"Fortezza dei Sigilli",emoji:"🛡️",dmg:"-5d8",type:"heal",area:true,slots:4,desc:"Un anello di rune ripara tutto il party e rinforza la linea."}],
+    5:[{id:"sw51",name:"Sigillo Primo",emoji:"🔒",dmg:"9d8",type:"damage",area:true,slots:5,desc:"Il sigillo originale si chiude sui nemici: danno e blocco arcano di massa."}],
+  },
+  ashen_oracle:{
+    4:[{id:"ao41",name:"Apocalisse in Cenere",emoji:"🔥",dmg:"9d8",type:"damage",area:true,slots:4,desc:"Il futuro peggiore cade in forma di cenere ardente su tutti i nemici."}],
+    5:[{id:"ao51",name:"Fenice Profetica",emoji:"✨",dmg:"-6d8",type:"heal",area:true,slots:5,desc:"Una fenice di cenere rialza il party e brucia il destino avverso."}],
+  },
+  blood_cartographer:{
+    4:[{id:"bc41",name:"Atlante delle Vene",emoji:"🗺️",dmg:"8d8",type:"drain",drainPct:0.3,area:true,slots:4,desc:"Disegni la circolazione del campo e dreni forza da ogni nemico segnato."}],
+    5:[{id:"bc51",name:"Mappa del Destino",emoji:"📍",dmg:"11d8",type:"damage",slots:5,desc:"La mappa trova un punto impossibile: il colpo arriva dove il bersaglio non puo difendersi."}],
+  },
+  void_sage:{
+    4:[{id:"vs41",name:"Singolarita",emoji:"🕳️",dmg:"9d10",type:"damage",area:true,slots:4,desc:"Il vuoto comprime il campo e lacera tutti i nemici."}],
+    5:[{id:"vs51",name:"Cancellazione",emoji:"⚫",dmg:"12d10",type:"damage",slots:5,desc:"Una porzione del bersaglio viene rimossa dal mondo per un istante."}],
+  },
+  herald_zodar:{
+    4:[{id:"hz41",name:"Decreto della Bilancia",emoji:"⚖️",dmg:"8d8",type:"damage",area:true,slots:4,desc:"Zodar pesa il campo: chi eccede viene ferito, chi resiste sente la sentenza."}],
+    5:[{id:"hz51",name:"Armonia Suprema",emoji:"✨",dmg:"-7d8",type:"heal",area:true,slots:5,desc:"La bilancia si riallinea e il party recupera sotto un verdetto cosmico."}],
+  },
+  relic_tamer:{
+    4:[{id:"rt41",name:"Reliquiario Vivente",emoji:"🏺",dmg:"0",type:"summon",slots:4,desc:"Un reliquiario animato entra in battaglia e protegge il gruppo.",summon:{name:"Reliquiario Vivente",emoji:"🏺",hp:120,atk:28,def:22,dmgDie:"4d8"},maxSummons:2}],
+    5:[{id:"rt51",name:"Processione delle Reliquie",emoji:"🔱",dmg:"10d8",type:"damage",area:true,slots:5,desc:"Tutte le reliquie rispondono insieme, travolgendo i nemici con scariche antiche."}],
+  },
+  echo_singer:{
+    4:[{id:"es41",name:"Sinfonia degli Echi",emoji:"🎼",dmg:"-5d10",type:"heal",area:true,slots:4,desc:"Un coro risonante cura tutto il party e stabilizza gli alleati vicini al crollo."}],
+    5:[{id:"es51",name:"Nota Impossibile",emoji:"🔊",dmg:"10d8",type:"damage",area:true,slots:5,desc:"Una nota che non dovrebbe esistere spezza il ritmo dei nemici e li investe."}],
+  },
+  echo_reaper:{
+    4:[{id:"er41",name:"Tributo dei Caduti",emoji:"☠️",dmg:"9d8",type:"drain",drainPct:0.3,area:true,slots:4,desc:"Gli echi raccolti pretendono pagamento da tutti i nemici."}],
+    5:[{id:"er51",name:"Mietitura Finale",emoji:"💀",dmg:"12d8",type:"damage",area:true,slots:5,desc:"Una falce corale cala sul campo, piu feroce se la classe ha accumulato Echi."}],
+  },
+  seal_inquisitor:{
+    4:[{id:"si41",name:"Tribunale del Sigillo",emoji:"⚖️",dmg:"8d8",type:"damage",area:true,slots:4,desc:"Il tribunale arcano giudica tutti i nemici e ne interrompe le magie."}],
+    5:[{id:"si51",name:"Abiura Suprema",emoji:"🚫",dmg:"11d8",type:"damage",slots:5,desc:"Il sigillo cancella protezioni, evocazioni e menzogne intorno al bersaglio."}],
+  },
+  blood_alchemist:{
+    4:[{id:"baq41",name:"Cuore Reattivo",emoji:"🧪",dmg:"9d8",type:"drain",drainPct:0.4,area:true,slots:4,hpCost:14,desc:"Il sangue diventa catalizzatore instabile: drena tutti i nemici ma costa HP."}],
+    5:[{id:"baq51",name:"Grande Trasfusione Rossa",emoji:"🩸",dmg:"12d8",type:"damage",area:true,slots:5,hpCost:18,desc:"Una reazione proibita esplode dal corpo dell'alchimista e travolge il campo."}],
+  },
+  rune_elder:{
+    4:[{id:"re41",name:"Tavola delle Prime Rune",emoji:"ᚱ",dmg:"10d10",type:"damage",area:true,slots:4,desc:"Le prime incisioni del mondo si accendono sotto tutti i nemici."}],
+    5:[{id:"re51",name:"Nome Vero della Rovina",emoji:"📜",dmg:"13d10",type:"damage",slots:5,desc:"Pronunci un nome antico che la materia ricorda ancora con terrore."}],
+  },
+  cursebreaker:{
+    4:[{id:"cb41",name:"Rogo delle Catene",emoji:"🔥",dmg:"8d8",type:"damage",area:true,slots:4,desc:"Ogni maledizione diventa combustibile e brucia contro chi l'ha portata."}],
+    5:[{id:"cb51",name:"Assoluzione Radiante",emoji:"☀️",dmg:"-6d10",type:"heal",area:true,slots:5,desc:"Una purga luminosa cura il party e spezza le pressioni oscure residue."}],
+  },
+  star_pilgrim:{
+    4:[{id:"sp41",name:"Cometa Guidata",emoji:"☄️",dmg:"9d10",type:"damage",area:true,slots:4,desc:"Le Coordinate Stellari richiamano una traiettoria precisa sul campo."}],
+    5:[{id:"sp51",name:"Porta tra Mondi",emoji:"🌌",dmg:"11d10",type:"damage",area:true,slots:5,desc:"Apri un varco cosmico che inghiotte spazio, posizione e difese nemiche."}],
+  },
+  soul_forger:{
+    4:[{id:"sf41",name:"Forgia delle Anime",emoji:"⚒️",dmg:"9d8",type:"damage",area:true,slots:4,desc:"Le anime forgiate diventano armi incandescenti contro tutto il fronte."}],
+    5:[{id:"sf51",name:"Colosso Spirituale",emoji:"🛡️",dmg:"0",type:"summon",slots:5,desc:"Forgi un colosso d'anima che cresce meglio con le cariche spirituali accumulate.",summon:{name:"Colosso Spirituale",emoji:"🛡️",hp:145,atk:34,def:24,dmgDie:"4d10"},maxSummons:2}],
+  },
+  doom_prophet:{
+    4:[{id:"dp41",name:"Settimo Presagio",emoji:"⏳",dmg:"9d10",type:"damage",area:true,slots:4,desc:"La rovina annunciata arriva prima del previsto e colpisce tutti."}],
+    5:[{id:"dp51",name:"Fine Scritta",emoji:"☄️",dmg:"13d8",type:"damage",area:true,slots:5,desc:"Il Profeta legge l'ultima riga dello scontro: devastante quando i Presagi sono alti."}],
+  },
+  maze_keeper:{
+    4:[{id:"mk41",name:"Stanze Sovrapposte",emoji:"🧭",dmg:"8d8",type:"damage",area:true,slots:4,desc:"Più stanze occupano lo stesso punto e schiacciano tutti i nemici."}],
+    5:[{id:"mk51",name:"Cuore del Labirinto",emoji:"🌀",dmg:"9d8",type:"damage",area:true,slots:5,desc:"Il centro del labirinto si apre: danno ad area e disorientamento profondo."}],
+  },
+}).forEach(([classKey, tiers]) => {
+  SPELLS[classKey] = { ...(SPELLS[classKey] || {}), ...tiers };
+});
