@@ -484,6 +484,72 @@ function actionCaptionFromLog({ log, fx, activeCombatant, targetCombatants, lang
   };
 }
 
+function battleAnnouncementFromLog({ log, fx, activeCombatant, targetCombatants, lang = "it" }) {
+  if(!fx) return null;
+  const isEn = lang === "en";
+  const raw = String(log || "");
+  const text = raw.replace(/\*\*/g, "").replace(/\*/g, "");
+  const boldParts = [...raw.matchAll(/\*\*([^*]+)\*\*/g)].map(m => m[1]).filter(Boolean);
+  const actor = activeCombatant?.name || boldParts[0] || (isEn ? "Someone" : "Qualcuno");
+  const targetNames = targetCombatants?.map(t => t.name).filter(Boolean) || [];
+  const targetText = targetNames.length > 2
+    ? (isEn ? `${targetNames.length} targets` : `${targetNames.length} bersagli`)
+    : targetNames.join(", ");
+  const spellMatch = raw.match(/(?:lancia|casts)\s+\*\*([^*]+)\*\*/i);
+  const weaponMatch = raw.match(/(?:con|with)\s+\*\*([^*]+)\*\*/i);
+  const summonMatch = raw.match(/(?:evoca|summons?)\s+\*\*([^*]+)\*\*/i);
+  const isMiss = /Mancato|Miss|miss|manca/i.test(text) || fx.type === "miss";
+  const isHeal = fx.type === "healMagic" || /cura|guarisce|recupera|heal|heals|restores/i.test(text);
+  const isSpell = !!spellMatch || ["magic","healMagic","fire","ice","lightning","poison","shadow","holy","nature","sonic","control","divine"].includes(fx.type);
+  const actionName = spellMatch?.[1] || summonMatch?.[1] || weaponMatch?.[1] || fx.label || (isEn ? "Action" : "Azione");
+  const verb = summonMatch
+    ? (isEn ? "summons" : "evoca")
+    : isSpell
+      ? (isHeal ? (isEn ? "casts healing" : "lancia cura") : (isEn ? "casts" : "lancia"))
+      : isMiss
+        ? (isEn ? "misses" : "manca")
+        : (isEn ? "attacks" : "attacca");
+  return {
+    actor,
+    verb,
+    actionName,
+    targetText,
+    isSpell,
+    isMiss,
+    color: fx.color || (isSpell ? "#a78bfa" : "#f87171"),
+    icon: isSpell ? "✦" : isMiss ? "×" : "⚔",
+  };
+}
+
+function BattleAnnouncement({ announcement, isMobile, effectKey }) {
+  if(!announcement) return null;
+  const { actor, verb, actionName, targetText, isSpell, isMiss, color, icon } = announcement;
+  return (
+    <div key={`announce_${effectKey}`} style={{ position:'absolute', left:'50%', top:isMobile ? '38%' : '34%', transform:'translate(-50%,-50%)', zIndex:10, width:isMobile ? '88%' : 'min(720px,78%)', pointerEvents:'none', textAlign:'center', opacity:0, animation:'battleVignetteCallout 2.65s ease-out both' }}>
+      {isSpell && (
+        <div style={{ display:'inline-flex', alignItems:'center', justifyContent:'center', gap:8, maxWidth:'100%', marginBottom:8, padding:isMobile ? '0.34rem 0.7rem' : '0.42rem 0.9rem', borderRadius:999, border:`1px solid ${color}`, background:'linear-gradient(90deg,rgba(2,6,23,.14),rgba(15,23,42,.94),rgba(2,6,23,.14))', boxShadow:`0 0 24px ${color}55`, color, fontFamily:"'Cinzel Decorative',serif", fontWeight:900, fontSize:isMobile ? '.78rem' : '.92rem', letterSpacing:'.1em', textTransform:'uppercase', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis', animation:'battleSpellRibbon 2.35s ease-out .08s both' }}>
+          <span>{icon}</span>
+          <span style={{ overflow:'hidden', textOverflow:'ellipsis' }}>{actionName}</span>
+          <span>{icon}</span>
+        </div>
+      )}
+      <div style={{ padding:isMobile ? '0.78rem 0.9rem' : '0.95rem 1.25rem', borderRadius:14, border:`1px solid ${color}`, background:'linear-gradient(180deg,rgba(2,6,23,.94),rgba(15,23,42,.88))', boxShadow:`0 18px 44px rgba(0,0,0,.44), 0 0 34px ${color}55`, color:'#e5e7eb' }}>
+        <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap:isMobile ? 8 : 12, minWidth:0, fontFamily:"'Cinzel',serif", fontWeight:900, textTransform:'uppercase', letterSpacing:'.06em', fontSize:isMobile ? '1rem' : '1.35rem', lineHeight:1.15 }}>
+          <span style={{ color, flexShrink:0, textShadow:`0 0 14px ${color}` }}>{isMiss ? "MISS" : icon}</span>
+          <span style={{ minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{actor}</span>
+          <span style={{ color, flexShrink:0, fontSize:isMobile ? '.78rem' : '.95rem' }}>{verb}</span>
+          {!isSpell && <span style={{ minWidth:0, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', color:'#fef3c7' }}>{actionName}</span>}
+        </div>
+        {targetText && (
+          <div style={{ marginTop:6, color:'#cbd5e1', fontSize:isMobile ? '.78rem' : '.92rem', whiteSpace:'nowrap', overflow:'hidden', textOverflow:'ellipsis' }}>
+            → <strong style={{ color:isMiss ? '#94a3b8' : '#fca5a5' }}>{targetText}</strong>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
 function BattleStageAction({ fx, activeCombatant, isMobile, effectKey, originPoint, targetPoint, areaTargetPoints = [] }) {
   if(!fx || !activeCombatant) return null;
   const fromLeft = !!activeCombatant.isPlayer;
@@ -695,6 +761,7 @@ function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, is
   const targetPoint = stagePointForCombatant(primaryTarget, targetList, isMobile);
   const areaTargetPoints = targetCombatants.map(t => stagePointForCombatant(t, t.isPlayer ? players : monsters, isMobile));
   const caption = actionCaptionFromLog({ log: actionLog, fx: actionFx, activeCombatant, targetCombatants, lang });
+  const announcement = battleAnnouncementFromLog({ log: actionLog, fx: actionFx, activeCombatant, targetCombatants, lang });
 
   const renderSide = (list, side) => (
     <div style={{
@@ -780,6 +847,7 @@ function BattlefieldStage({ players, monsters, combatants, activeIdx, floats, is
           )}
         </div>
       )}
+      <BattleAnnouncement announcement={announcement} isMobile={isMobile} effectKey={effectKey} />
       {actionFx && !isMissAction && (
         <div style={{
           position:'absolute',
@@ -948,6 +1016,8 @@ export default function CombatVisualizer({ combat, myId, isMobile, images = {}, 
         @keyframes battleSpotlightPulse { 0%{opacity:0;transform:translate(-50%,-50%) scale(.55)} 28%{opacity:.85;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.35)} }
         @keyframes battleTargetLock { 0%{opacity:0;transform:translate(-50%,-50%) scale(1.35) rotate(0deg)} 28%{opacity:1;transform:translate(-50%,-50%) scale(.92) rotate(18deg)} 100%{opacity:0;transform:translate(-50%,-50%) scale(1.15) rotate(62deg)} }
         @keyframes battleActionPlate { 0%{opacity:0;transform:translate(-50%,-10px) scale(.92);filter:blur(4px)} 18%{opacity:1;transform:translate(-50%,0) scale(1);filter:blur(0)} 76%{opacity:1} 100%{opacity:0;transform:translate(-50%,-8px) scale(1.02);filter:blur(2px)} }
+        @keyframes battleVignetteCallout { 0%{opacity:0;transform:translate(-50%,-42%) scale(.9);filter:blur(5px)} 10%{opacity:1;transform:translate(-50%,-50%) scale(1);filter:blur(0)} 76%{opacity:1;transform:translate(-50%,-50%) scale(1)} 100%{opacity:0;transform:translate(-50%,-58%) scale(1.04);filter:blur(3px)} }
+        @keyframes battleSpellRibbon { 0%{opacity:0;transform:translateY(12px) scale(.92);letter-spacing:.22em} 18%{opacity:1;transform:translateY(0) scale(1);letter-spacing:.1em} 82%{opacity:1} 100%{opacity:0;transform:translateY(-10px) scale(1.03);letter-spacing:.16em} }
       `}</style>
       <div style={{
         textAlign: 'center', marginBottom: isMobile ? 10 : 14,

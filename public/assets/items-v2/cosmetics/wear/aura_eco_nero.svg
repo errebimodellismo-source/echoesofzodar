@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 640">
+  <defs>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fbbf24"/><stop offset="52%" stop-color="#fffbeb"/><stop offset="100%" stop-color="#f97316"/></linearGradient>
+    <radialGradient id="glow" cx="50%" cy="38%" r="68%"><stop offset="0%" stop-color="#fffbeb" stop-opacity=".48"/><stop offset="52%" stop-color="#fbbf24" stop-opacity=".18"/><stop offset="100%" stop-color="#f97316" stop-opacity="0"/></radialGradient>
+    <filter id="soft"><feGaussianBlur stdDeviation="4" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+    <filter id="wide"><feGaussianBlur stdDeviation="8" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+  
+      <g filter="url(#wide)">
+        <ellipse cx="160" cy="320" rx="122" ry="254" fill="url(#glow)" opacity=".46"/>
+        <ellipse cx="160" cy="320" rx="114" ry="240" fill="none" stroke="url(#metal)" stroke-width="11" opacity=".6"/>
+        <ellipse cx="160" cy="320" rx="82" ry="190" fill="none" stroke="#fffbeb" stroke-width="4" opacity=".32"/>
+        <path d="M58 238 C104 168 216 168 262 238 M58 404 C104 488 216 488 262 404" fill="none" stroke="#fbbf24" stroke-width="6" opacity=".3"/>
+        <circle cx="73" cy="135" r="3" fill="#fffbeb" opacity=".55"/><circle cx="120" cy="196" r="4" fill="#fbbf24" opacity=".55"/><circle cx="167" cy="257" r="2" fill="#fffbeb" opacity=".55"/><circle cx="214" cy="318" r="3" fill="#fbbf24" opacity=".55"/><circle cx="261" cy="379" r="4" fill="#fffbeb" opacity=".55"/><circle cx="94" cy="440" r="2" fill="#fbbf24" opacity=".55"/><circle cx="141" cy="501" r="3" fill="#fffbeb" opacity=".55"/><circle cx="188" cy="152" r="4" fill="#fbbf24" opacity=".55"/><circle cx="235" cy="213" r="2" fill="#fffbeb" opacity=".55"/><circle cx="68" cy="274" r="3" fill="#fbbf24" opacity=".55"/>
+      </g>
+</svg>

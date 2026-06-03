@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 640">
+  <defs>
+    <linearGradient id="mat" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fde68a"/><stop offset="42%" stop-color="#b7791f"/><stop offset="100%" stop-color="#3b2508"/></linearGradient>
+    <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff" stop-opacity=".75"/><stop offset="45%" stop-color="#faf5ff" stop-opacity=".28"/><stop offset="100%" stop-color="#020617" stop-opacity=".45"/></linearGradient>
+    <linearGradient id="trim" x1="0" y1="0" x2="1" y2="0"><stop offset="0%" stop-color="#c084fc"/><stop offset="100%" stop-color="#f472b6"/></linearGradient>
+    <radialGradient id="jewel" cx="38%" cy="28%" r="70%"><stop offset="0%" stop-color="#fff"/><stop offset="28%" stop-color="#faf5ff"/><stop offset="70%" stop-color="#c084fc"/><stop offset="100%" stop-color="#f472b6"/></radialGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#020617" flood-opacity=".52"/></filter>
+  </defs>
+  <g filter="url(#shadow)" ><path d="M92 146 L120 166 L108 530 L84 548 L82 510 Z" fill="url(#mat)"/><path d="M92 168 C88 286 92 402 86 506" stroke="url(#edge)" stroke-width="7" opacity=".48" fill="none"/><path d="M62 560 L128 498" stroke="url(#trim)" stroke-width="14" stroke-linecap="round"/><path d="M72 502 L136 500" stroke="#c084fc" stroke-width="9" stroke-linecap="round"/><circle cx="101" cy="504" r="9" fill="url(#jewel)" opacity=".76"/><path d="M101 170 C94 280 98 404 88 510" stroke="#fff" stroke-width="4" opacity=".32" fill="none"/></g>
+</svg>
