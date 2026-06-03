@@ -4378,22 +4378,49 @@ function makeItemWearImage(item) {
   const common = `
     <defs>
       <linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${pal.a}"/><stop offset="100%" stop-color="${pal.b}"/></linearGradient>
-      <filter id="soft"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="#fff" stop-opacity=".7"/><stop offset="50%" stop-color="${pal.a}" stop-opacity=".2"/><stop offset="100%" stop-color="#020617" stop-opacity=".4"/></linearGradient>
+      <radialGradient id="jewel" cx="38%" cy="28%" r="70%"><stop offset="0%" stop-color="#fff"/><stop offset="30%" stop-color="${pal.a}"/><stop offset="100%" stop-color="${pal.b}"/></radialGradient>
+      <filter id="soft"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+      <filter id="shadow"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#020617" flood-opacity=".5"/></filter>
     </defs>`;
   const shape = ({
-    head:`<path d="M122 92 C132 56 188 56 198 92 L206 138 C177 126 143 126 114 138 Z" fill="url(#g)" opacity=".9"/><circle cx="160" cy="86" r="16" fill="#f8fafc" opacity=".2"/>`,
-    chest:`<path d="M98 178 C116 148 204 148 222 178 L206 326 C178 346 142 346 114 326 Z" fill="url(#g)" opacity=".82"/><path d="M132 168 L160 218 L188 168" fill="none" stroke="#f8fafc" stroke-width="5" opacity=".25"/>`,
-    legs:`<path d="M122 318 L154 318 L148 500 L112 500 Z M166 318 L198 318 L208 500 L172 500 Z" fill="url(#g)" opacity=".82"/>`,
-    boots:`<path d="M102 496 L150 496 L146 558 L82 558 C88 534 98 520 102 496 Z M170 496 L218 496 C222 520 232 534 238 558 L174 558 Z" fill="url(#g)" opacity=".9"/>`,
-    gloves:`<path d="M60 244 L104 262 L94 320 L48 306 Z M216 262 L260 244 L272 306 L226 320 Z" fill="url(#g)" opacity=".88"/>`,
-    cloak:`<path d="M96 122 C132 148 188 148 224 122 L256 548 C214 584 106 584 64 548 Z" fill="url(#g)" opacity=".48"/><path d="M96 122 C132 148 188 148 224 122" fill="none" stroke="${pal.a}" stroke-width="5" opacity=".7"/>`,
-    weapon:`<path d="M92 146 L120 166 L108 530 L84 548 L82 510 Z" fill="url(#g)" opacity=".95"/><path d="M62 560 L128 498" stroke="${pal.a}" stroke-width="14" stroke-linecap="round"/><path d="M72 502 L136 500" stroke="${pal.b}" stroke-width="9" stroke-linecap="round"/><path d="M101 170 C94 280 98 404 88 510" stroke="#fff" stroke-width="4" opacity=".3" fill="none"/>`,
-    offhand:`<path d="M236 204 C292 226 302 342 240 420 C178 342 188 226 236 204 Z" fill="url(#g)" opacity=".84"/><path d="M236 228 L236 386" stroke="#f8fafc" stroke-width="5" opacity=".25"/><path d="M196 292 C220 314 252 314 276 292" stroke="${pal.a}" stroke-width="5" opacity=".65" fill="none"/>`,
-    amulet:`<path d="M128 146 C142 176 178 176 192 146" fill="none" stroke="${pal.a}" stroke-width="7" opacity=".85"/><circle cx="160" cy="188" r="18" fill="url(#g)" opacity=".95"/>`,
-    ring1:`<circle cx="76" cy="282" r="14" fill="none" stroke="${pal.a}" stroke-width="7" opacity=".9"/>`,
-    ring2:`<circle cx="244" cy="282" r="14" fill="none" stroke="${pal.a}" stroke-width="7" opacity=".9"/>`,
+    head:`<path d="M118 88 C122 52 198 52 202 88 L210 134 C180 122 140 122 110 134 Z" fill="url(#g)" opacity=".9"/><path d="M130 88 C136 68 184 68 190 88" fill="none" stroke="#f8fafc" stroke-width="4" opacity=".3"/>`,
+    chest:`<path d="M94 164 C114 132 206 132 226 164 L210 340 C182 362 138 362 110 340 Z" fill="url(#g)" opacity=".85"/>
+      <path d="M66 174 C94 142 118 138 144 154 L128 224 C104 212 82 208 62 210 Z M196 154 C222 138 246 142 274 174 L258 210 C238 208 216 212 192 224 Z" fill="url(#g)" opacity=".82"/>
+      <path d="M108 172 C130 150 190 150 212 172 L200 312 C176 328 144 328 120 312 Z" fill="url(#edge)" opacity=".28"/>
+      <path d="M118 162 L160 220 L202 162" stroke="${pal.b}" stroke-width="4" opacity=".4" fill="none"/>
+      <circle cx="160" cy="214" r="12" fill="url(#jewel)" opacity=".6"/>`,
+    legs:`<path d="M118 322 L156 322 L150 508 L108 506 Z" fill="url(#g)" opacity=".85"/>
+      <path d="M164 322 L202 322 L212 506 L170 508 Z" fill="url(#g)" opacity=".85"/>
+      <path d="M120 390 L154 390 M110 460 L150 462" stroke="${pal.b}" stroke-width="3" opacity=".35" fill="none"/>
+      <path d="M170 390 L204 390 M170 460 L210 462" stroke="${pal.b}" stroke-width="3" opacity=".35" fill="none"/>`,
+    boots:`<path d="M98 502 L152 502 L148 562 L78 562 C84 536 92 524 98 502 Z" fill="url(#g)" opacity=".9"/>
+      <path d="M168 502 L222 502 C228 524 236 536 242 562 L172 562 Z" fill="url(#g)" opacity=".9"/>
+      <path d="M80 548 L148 548 M172 548 L240 548" stroke="${pal.b}" stroke-width="3" opacity=".3" fill="none"/>`,
+    gloves:`<path d="M54 248 L100 264 L90 326 L44 310 Z" fill="url(#g)" opacity=".88"/>
+      <path d="M220 264 L266 248 L276 310 L230 326 Z" fill="url(#g)" opacity=".88"/>
+      <path d="M58 272 L90 300 M232 300 L264 272" stroke="${pal.b}" stroke-width="3" opacity=".3" fill="none"/>`,
+    cloak:`<path d="M92 118 C128 146 192 146 228 118 L262 556 C218 590 102 590 58 556 Z" fill="url(#g)" opacity=".52"/>
+      <path d="M92 118 C128 146 192 146 228 118" fill="none" stroke="${pal.a}" stroke-width="5" opacity=".6"/>
+      <path d="M80 220 C112 280 208 280 240 220 M74 360 C110 430 210 430 246 360" fill="none" stroke="${pal.b}" stroke-width="3" opacity=".25"/>`,
+    weapon:`<path d="M88 142 L116 162 L104 530 L80 548 L78 510 Z" fill="url(#g)" opacity=".95"/>
+      <path d="M56 558 L124 498" stroke="${pal.a}" stroke-width="14" stroke-linecap="round"/>
+      <path d="M68 502 L130 500" stroke="${pal.b}" stroke-width="8" stroke-linecap="round"/>
+      <path d="M98 166 C91 276 95 404 85 510" stroke="#fff" stroke-width="3" opacity=".28" fill="none"/>
+      <path d="M80 148 C86 140 106 140 112 148" fill="${pal.b}" opacity=".6"/>`,
+    offhand:`<path d="M234 200 C292 224 302 346 238 426 C174 346 184 224 234 200 Z" fill="url(#g)" opacity=".86"/>
+      <path d="M234 224 L234 392" stroke="#f8fafc" stroke-width="4" opacity=".22"/>
+      <path d="M194 294 C218 318 250 318 274 294" stroke="${pal.a}" stroke-width="5" opacity=".6" fill="none"/>
+      <circle cx="234" cy="210" r="12" fill="url(#jewel)" opacity=".5"/>`,
+    amulet:`<path d="M122 138 C140 168 180 168 198 138" fill="none" stroke="${pal.a}" stroke-width="8" opacity=".82"/>
+      <circle cx="160" cy="186" r="20" fill="url(#g)" opacity=".95"/>
+      <circle cx="160" cy="186" r="10" fill="url(#jewel)" opacity=".7"/>`,
+    ring1:`<circle cx="74" cy="290" r="16" fill="none" stroke="${pal.a}" stroke-width="8" opacity=".9"/>
+      <circle cx="74" cy="290" r="7" fill="url(#jewel)" opacity=".75"/>`,
+    ring2:`<circle cx="246" cy="290" r="16" fill="none" stroke="${pal.a}" stroke-width="8" opacity=".9"/>
+      <circle cx="246" cy="290" r="7" fill="url(#jewel)" opacity=".75"/>`,
   })[slot] || `<text x="160" y="320" text-anchor="middle" font-size="72">${theme.icon || "◆"}</text>`;
-  return svgDataUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 640">${common}<g filter="url(#soft)">${shape}</g></svg>`);
+  return svgDataUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 640">${common}<g filter="url(#shadow)">${shape}</g></svg>`);
 }
 function getItemImage(item) {
   if(!item) return "";
@@ -10956,8 +10983,24 @@ function getMannequinCosmeticFitSlot(slot) {
   return cosmeticEquipSlotConfig(slot)?.mannequinSlot || "chest";
 }
 const SHOW_PROCEDURAL_EQUIPMENT_OVERLAYS = true;
+// Blend mode e filter per slot — rende le overlay integrate nel corpo invece di sticker piatti
+const SLOT_BLEND = {
+  chest:   { blend:"multiply",  opacity:0.88, filter:"brightness(0.96) contrast(1.05)" },
+  legs:    { blend:"multiply",  opacity:0.86, filter:"brightness(0.94) contrast(1.04)" },
+  boots:   { blend:"multiply",  opacity:0.84, filter:"brightness(0.93) contrast(1.04)" },
+  gloves:  { blend:"multiply",  opacity:0.82, filter:"brightness(0.93) contrast(1.03)" },
+  cloak:   { blend:"multiply",  opacity:0.72, filter:"brightness(0.90) contrast(1.02)" },
+  head:    { blend:"normal",    opacity:0.92, filter:"brightness(1.0)  contrast(1.05) drop-shadow(0 2px 4px rgba(0,0,0,0.5))" },
+  weapon:  { blend:"normal",    opacity:0.96, filter:"brightness(1.05) contrast(1.08) drop-shadow(0 3px 8px rgba(0,0,0,0.6))" },
+  offhand: { blend:"normal",    opacity:0.95, filter:"brightness(1.04) contrast(1.06) drop-shadow(0 3px 7px rgba(0,0,0,0.55))" },
+  amulet:  { blend:"normal",    opacity:0.90, filter:"brightness(1.06) contrast(1.1)  drop-shadow(0 2px 5px rgba(0,0,0,0.5))" },
+  ring1:   { blend:"normal",    opacity:0.88, filter:"brightness(1.06) contrast(1.1)  drop-shadow(0 1px 3px rgba(0,0,0,0.5))" },
+  ring2:   { blend:"normal",    opacity:0.88, filter:"brightness(1.06) contrast(1.1)  drop-shadow(0 1px 3px rgba(0,0,0,0.5))" },
+};
+
 function mannequinOverlayStyle(race, slot, zIndex = getMannequinSlotLayer(slot)) {
-  const fit = getMannequinSlotFit(race, slot);
+  const fit  = getMannequinSlotFit(race, slot);
+  const look = SLOT_BLEND[slot] || { blend:"normal", opacity:0.9, filter:"brightness(1.0)" };
   return {
     position:"absolute",
     inset:0,
@@ -10969,6 +11012,9 @@ function mannequinOverlayStyle(race, slot, zIndex = getMannequinSlotLayer(slot))
     zIndex,
     transform:`translate(${fit.x || 0}%, ${fit.y || 0}%) scale(${fit.scale || 1})`,
     transformOrigin:"50% 50%",
+    mixBlendMode: look.blend,
+    opacity: look.opacity,
+    filter: look.filter,
   };
 }
 function makeMannequinBaseImage(race, gender) {
