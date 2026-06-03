@@ -4445,9 +4445,8 @@ function getItemWearImage(item, race=null) {
   if(item.equipSprite) return `/assets/equip/${item.equipSprite}.png`;
   const baseId = getItemAssetBaseId(item);
   if(baseId) {
-    const profile = race ? getMannequinProfile(race) : "";
-    if(USE_BODY_PROFILE_WEAR_ASSETS && profile && profile !== "normal") return `/assets/items-v2/wear/${profile}/${baseId}.svg?v=${ITEM_ASSET_VERSION}`;
-    return `/assets/items-v2/wear/${baseId}.svg?v=${ITEM_ASSET_VERSION}`;
+    // Prova prima PNG AI (generato da generate-item-wear-ai.mjs), poi SVG fallback
+    return `/assets/items-v2/wear/${baseId}.png`;
   }
   return makeItemWearImage(item);
 }
@@ -11116,7 +11115,15 @@ function CharacterViewer({ me, equippedItems, activeCosmetics, size, fillContain
             src={kind === "cosmetic" ? getCosmeticWearImage(item) : getItemWearImage(item, rawRace)}
             alt={kind === "cosmetic" ? item.name : itemName(item)}
             onError={e => {
+              if(kind === "item" && !e.currentTarget.dataset.triedSvg) {
+                // PNG AI non trovato → prova SVG
+                e.currentTarget.dataset.triedSvg = "1";
+                const baseId = getItemAssetBaseId(item);
+                e.currentTarget.src = baseId ? `/assets/items-v2/wear/${baseId}.svg?v=${ITEM_ASSET_VERSION}` : "";
+                return;
+              }
               if(kind === "item" && !e.currentTarget.dataset.triedGenericWear) {
+                // SVG non trovato → fallback procedurale
                 e.currentTarget.dataset.triedGenericWear = "1";
                 e.currentTarget.src = getItemWearFallbackImage(item);
                 return;
