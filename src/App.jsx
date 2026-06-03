@@ -187,6 +187,9 @@ const MASTER_EMAILS = (import.meta.env.VITE_MASTER_EMAILS || "")
   .split(",")
   .map(email => email.trim().toLowerCase())
   .filter(Boolean);
+const BUILTIN_MASTER_EMAILS = [
+  "roppo@hotmail.it",
+];
 const PANEL_BG = "rgba(7,10,20,0.96)";
 const PANEL_BG_SOFT = "rgba(7,10,20,0.90)";
 const PANEL_BORDER = "rgba(148,163,184,0.16)";
@@ -613,7 +616,7 @@ let _masterPasswordVerified = false;
 function canAccessMasterPanel(user) {
   if(_masterPasswordVerified) return true;
   const email = user?.email?.trim().toLowerCase();
-  return !!email && MASTER_EMAILS.includes(email);
+  return !!email && (MASTER_EMAILS.includes(email) || BUILTIN_MASTER_EMAILS.includes(email));
 }
 
 const MAGIC_CLASSES = DATA_MAGIC_CLASSES;
@@ -1600,11 +1603,17 @@ const SECRET_RACE_BASE_FALLBACK = {
   minotaur:'halforc', angel:'human', succubus:'tiefling',
   aasimar:'human', drow:'elf', forged:'human', renegade_vampire:'human',
   sirenide:'elf', echide:'human', genasi:'tiefling', ancient_draconid:'dragonborn',
-  shadow_awakened:'elf', fae:'halfling', echo_born:'human', mezzo_djinn:'tiefling',
+  shadow_awakened:'elf', fae:'halfling', echo_born:'human', half_djinn:'tiefling', mezzo_djinn:'tiefling',
   golemide:'halforc', void_touched:'human', fallen_seraphite:'human',
   primordial_draconian:'dragonborn', night_child:'human', ancient_silvan:'elf',
   atlantean:'human', living_mirror:'human',
 };
+const DEDICATED_FACE_ASSET_RACES = new Set([
+  "human", "dwarf", "elf", "halfling", "dragonborn", "gnome", "halfelf", "halforc", "tiefling",
+]);
+function usesProceduralAppearanceRace(race) {
+  return !DEDICATED_FACE_ASSET_RACES.has(String(race || "human").toLowerCase());
+}
 // Classi segrete senza portrait dedicato → classe base visivamente simile
 const SECRET_CLASS_BASE_FALLBACK = {
   necromancer:'warlock', artificer:'warrior', summoner:'mage', seductress:'rogue',
@@ -1619,6 +1628,7 @@ const SECRET_CLASS_BASE_FALLBACK = {
 
 function getCharacterChoiceArt(kind, key, value, gender="male") {
   if(kind === "classes" && value?._cardUnlock) return `/assets/cards/art/unlock/class-${keyToAssetSlug(key)}.png`;
+  if(kind === "races" && gender === "female") return getRacePortraitPath(key, gender);
   if(kind === "races"   && value?._cardUnlock) return `/assets/cards/art/unlock/race-${keyToAssetSlug(key)}.png`;
   if(kind === "classes") {
     // Classi segrete senza cardUnlock: usa portrait della classe base più vicina
@@ -1795,7 +1805,12 @@ function getPrimaryDieSides(dice, fallback = 20) {
 }
 
 function getSpellSlots(level) {
-  const base = SPELL_SLOTS[level] || SPELL_SLOTS[1];
+  const numericLevel = Number(level) || 1;
+  const knownLevels = Object.keys(SPELL_SLOTS).map(Number);
+  const minLevel = Math.min(...knownLevels);
+  const maxLevel = Math.max(...knownLevels);
+  const clampedLevel = Math.max(minLevel, Math.min(maxLevel, numericLevel));
+  const base = SPELL_SLOTS[clampedLevel] || SPELL_SLOTS[minLevel];
   return { ...base };
 }
 
@@ -1956,7 +1971,7 @@ function availableSpellsFor(className, level, vault=null) {
     return [...zodarBase, ...unlockedCardSpells];
   }
   const packs = SPELLS[className] || {};
-  const slotsForLevel = SPELL_SLOTS[level] || SPELL_SLOTS[1];
+  const slotsForLevel = getSpellSlots(level);
   const maxSlot = Math.max(...Object.entries(slotsForLevel).filter(([,v])=>v>0).map(([k])=>Number(k)), 1);
   const baseSpells = Object.entries(packs)
     .filter(([slot]) => Number(slot) <= maxSlot)
@@ -3683,18 +3698,66 @@ function weaponAttackProfile(weapon, actor={}) {
 }
 function getCombatDamageDie(actor) {
   if(actor?.weaponDie) return actor.weaponDie;
+  if(actor?.weapon_die) return actor.weapon_die;
+  if(actor?.dmgDie) return actor.dmgDie;
+  if(actor?.damageDice) return actor.damageDice;
   if(actor?.isPlayer) return DEFAULT_WEAPON.weapon_die;
-  if((actor?.atk || 0) >= 18) return "2d8";
-  if((actor?.atk || 0) >= 12) return "1d10";
-  if((actor?.atk || 0) >= 8) return "1d8";
-  return "1d6";
+  // Tabella danni mostri bilanciata — niente dadi assurdi nemmeno ad ATK altissimo
+  if((actor?.atk || 0) >= 90) return "3d10";
+  if((actor?.atk || 0) >= 70) return "2d10";
+  if((actor?.atk || 0) >= 50) return "2d8";
+  if((actor?.atk || 0) >= 36) return "2d6";
+  if((actor?.atk || 0) >= 26) return "1d10";
+  if((actor?.atk || 0) >= 18) return "1d8";
+  if((actor?.atk || 0) >= 12) return "1d6";
+  if((actor?.atk || 0) >= 8)  return "1d4";
+  return "1d4";
+}
+function scaleDamageDie(dice, extraDice=0) {
+  const match = String(dice || "1d6").match(/^(\d+)d(\d+)$/i);
+  if(!match) return dice || "1d6";
+  const count = Math.max(1, Number(match[1]) || 1);
+  const sides = Math.max(3, Number(match[2]) || 6);
+  // Cap assoluto: mai più di 6 dadi per i mostri normali (sicurezza extra)
+  return `${Math.min(6, count + Math.max(0, Math.floor(extraDice || 0)))}d${sides}`;
+}
+function encounterDifficultyMultiplier(diff) {
+  return diff === "facile" ? 0.85 : diff === "difficile" ? 1.45 : diff === "epica" ? 1.8 : 1.15;
+}
+function scaleMonsterForEncounter(monster, { avgLevel=1, diff="medio" } = {}) {
+  const level = Math.max(1, Number(avgLevel) || 1);
+  const normalizedDiff = normalizeMissionDifficulty(diff || "medio");
+  const diffMult = encounterDifficultyMultiplier(normalizedDiff);
+  const bossMult = monster?.isBoss ? 1.35 : 1;
+  const baseHp = monster?.maxHp || monster?.max_hp || monster?.hp || 10;
+  const hpMult = (1 + (level - 1) * 0.18) * diffMult * bossMult;
+  const maxHp = Math.max(1, Math.round(baseHp * hpMult));
+  // ATK cresce più lentamente — era level*1.35, ora level*0.8 (boss +0.4)
+  const atk = Math.max(1, Math.round((monster?.atk || 5) + (level * 0.8 * diffMult) + (monster?.isBoss ? level * 0.4 : 0)));
+  const def = Math.max(0, Math.round((monster?.def || 0) + (level * 0.25 * diffMult) + (monster?.isBoss ? level * 0.12 : 0)));
+  const baseDie = monster?.weaponDie || monster?.weapon_die || monster?.dmgDie || monster?.damageDica || getCombatDamageDie({ ...monster, atk });
+  // extraDice cappato: max 2 per livello, +1 diff difficile, +2 epica, +1 boss (non +2)
+  const extraDice = Math.min(2, Math.floor(level / 8))
+    + (normalizedDiff === "difficile" ? 1 : normalizedDiff === "epica" ? 2 : 0)
+    + (monster?.isBoss ? 1 : 0);
+  const weaponDie = scaleDamageDie(baseDie, extraDice);
+  return {
+    ...monster,
+    hp:maxHp,
+    maxHp,
+    atk,
+    def,
+    weaponDie,
+    dmgDie:weaponDie,
+    xp:monsterXpValue({ ...monster, maxHp, atk, def, isBoss:monster?.isBoss }),
+  };
 }
 function getCombatAttackBonus(actor, weapon=null) {
   if(actor?.isPlayer) {
     const profile = weaponAttackProfile(weapon, actor);
     return profile.mod + getProficiencyBonus(actor.level || 1) + (weapon?.bonus_atk || 0) + (getCharacterCombatTrait(actor).hitBonus || 0);
   }
-  return Math.max(1, Math.floor((actor?.atk || 0) / 3));
+  return Math.max(1, Math.floor((actor?.atk || 0) / 2));
 }
 function resolveWeaponAttack(attacker, target, weaponDie) {
   const hitRoll = roll(20);
@@ -4275,7 +4338,8 @@ function getItemAssetBaseId(item) {
   const rawId = item.baseItemId || item.baseId || item.base_id || item.id;
   return rawId ? getBaseItemId(String(rawId).replace(/[+\-]\d+$/, '')) : "";
 }
-const ITEM_ASSET_VERSION = "equip-v3";
+const ITEM_ASSET_VERSION = "equip-v6";
+const USE_BODY_PROFILE_WEAR_ASSETS = false;
 function makeItemIconImage(item, size=420) {
   const theme = itemImageTheme(item);
   const pal = itemRarityPalette(item?.rarity);
@@ -4323,8 +4387,8 @@ function makeItemWearImage(item) {
     boots:`<path d="M102 496 L150 496 L146 558 L82 558 C88 534 98 520 102 496 Z M170 496 L218 496 C222 520 232 534 238 558 L174 558 Z" fill="url(#g)" opacity=".9"/>`,
     gloves:`<path d="M60 244 L104 262 L94 320 L48 306 Z M216 262 L260 244 L272 306 L226 320 Z" fill="url(#g)" opacity=".88"/>`,
     cloak:`<path d="M96 122 C132 148 188 148 224 122 L256 548 C214 584 106 584 64 548 Z" fill="url(#g)" opacity=".48"/><path d="M96 122 C132 148 188 148 224 122" fill="none" stroke="${pal.a}" stroke-width="5" opacity=".7"/>`,
-    weapon:`<path d="M244 112 L262 104 L142 446 L124 454 Z" fill="url(#g)" opacity=".95"/><path d="M104 478 L160 424" stroke="${pal.a}" stroke-width="16" stroke-linecap="round"/><text x="248" y="118" font-size="34">${theme.icon || "⚔️"}</text>`,
-    offhand:`<path d="M230 214 C278 228 284 318 238 370 C194 318 188 228 230 214 Z" fill="url(#g)" opacity=".84"/><path d="M230 236 L230 342" stroke="#f8fafc" stroke-width="5" opacity=".25"/>`,
+    weapon:`<path d="M92 146 L120 166 L108 530 L84 548 L82 510 Z" fill="url(#g)" opacity=".95"/><path d="M62 560 L128 498" stroke="${pal.a}" stroke-width="14" stroke-linecap="round"/><path d="M72 502 L136 500" stroke="${pal.b}" stroke-width="9" stroke-linecap="round"/><path d="M101 170 C94 280 98 404 88 510" stroke="#fff" stroke-width="4" opacity=".3" fill="none"/>`,
+    offhand:`<path d="M236 204 C292 226 302 342 240 420 C178 342 188 226 236 204 Z" fill="url(#g)" opacity=".84"/><path d="M236 228 L236 386" stroke="#f8fafc" stroke-width="5" opacity=".25"/><path d="M196 292 C220 314 252 314 276 292" stroke="${pal.a}" stroke-width="5" opacity=".65" fill="none"/>`,
     amulet:`<path d="M128 146 C142 176 178 176 192 146" fill="none" stroke="${pal.a}" stroke-width="7" opacity=".85"/><circle cx="160" cy="188" r="18" fill="url(#g)" opacity=".95"/>`,
     ring1:`<circle cx="76" cy="282" r="14" fill="none" stroke="${pal.a}" stroke-width="7" opacity=".9"/>`,
     ring2:`<circle cx="244" cy="282" r="14" fill="none" stroke="${pal.a}" stroke-width="7" opacity=".9"/>`,
@@ -4345,7 +4409,20 @@ function getItemLargeImage(item) {
   if(!item) return "";
   return item.largeImage || item.large_image || getItemImage(item);
 }
-function getItemWearImage(item) {
+function getItemWearImage(item, race=null) {
+  if(!item) return "";
+  if(item.wearImage) return item.wearImage;
+  if(item.wear_image) return item.wear_image;
+  if(item.equipSprite) return `/assets/equip/${item.equipSprite}.png`;
+  const baseId = getItemAssetBaseId(item);
+  if(baseId) {
+    const profile = race ? getMannequinProfile(race) : "";
+    if(USE_BODY_PROFILE_WEAR_ASSETS && profile && profile !== "normal") return `/assets/items-v2/wear/${profile}/${baseId}.svg?v=${ITEM_ASSET_VERSION}`;
+    return `/assets/items-v2/wear/${baseId}.svg?v=${ITEM_ASSET_VERSION}`;
+  }
+  return makeItemWearImage(item);
+}
+function getItemWearFallbackImage(item) {
   if(!item) return "";
   if(item.wearImage) return item.wearImage;
   if(item.wear_image) return item.wear_image;
@@ -4518,6 +4595,7 @@ function getPlayerPortrait(player) {
 
   // Custom appearance: usa face portrait della razza (con fallback sulla razza base)
   if(hasGeneratedAppearance(player)) {
+    if(usesProceduralAppearanceRace(race)) return getGeneratedPortrait(cls, race, gender, player.portrait_face || 1);
     const faceRace = SECRET_RACE_BASE_FALLBACK[race] || race;
     return `/assets/portraits/${faceRace}_${gender}_face_${player.portrait_face || 1}.png`;
   }
@@ -4525,6 +4603,7 @@ function getPlayerPortrait(player) {
   // Razze segrete con card art — usala come portrait
   const raceData = RACES[race];
   if(raceData?._cardUnlock) {
+    if(gender === "female") return getRacePortraitPath(race, gender);
     return `/assets/cards/art/unlock/race-${keyToAssetSlug(race)}.png`;
   }
   // Razze segrete senza card art (minotaur, angel, succubus)
@@ -4664,9 +4743,13 @@ function CharacterPortrait({ player, race, gender, cls, face=1, eyes=1, scar=0, 
   const finalScar = Number(player?.portrait_scar || scar || 0);
   const finalHair = Number(player?.portrait_hair || hair || 0);
   const finalBeard = finalGender === "male" ? Number(player?.portrait_beard || beard || 0) : 0;
-  // Per razze segrete senza face portrait dedicato, usa la razza base più vicina
-  const faceRace = SECRET_RACE_BASE_FALLBACK[finalRace] || finalRace;
-  const baseSrc = `/assets/portraits/${faceRace}_${finalGender}_face_${finalFace}.png`;
+  const proceduralRace = usesProceduralAppearanceRace(finalRace);
+  // Le razze senza set face dedicato usano un ritratto generato coerente con la razza,
+  // invece di ricadere su facce umane/elfiche.
+  const faceRace = proceduralRace ? finalRace : (SECRET_RACE_BASE_FALLBACK[finalRace] || finalRace);
+  const baseSrc = proceduralRace
+    ? getGeneratedPortrait(finalClass, finalRace, finalGender, finalFace)
+    : `/assets/portraits/${faceRace}_${finalGender}_face_${finalFace}.png`;
   const generatedFaceMode = !player || hasGeneratedAppearance(player);
   return (
     <div style={{
@@ -4691,10 +4774,10 @@ function CharacterPortrait({ player, race, gender, cls, face=1, eyes=1, scar=0, 
           }}
           style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"cover", display:"block" }}
         />
-        {generatedFaceMode && !player?.portrait && !player?.image && <CharacterHairOverlay variant={finalHair} gender={finalGender} />}
-        {generatedFaceMode && !player?.portrait && !player?.image && <CharacterBeardOverlay variant={finalBeard} />}
-        {generatedFaceMode && !player?.portrait && !player?.image && <CharacterEyesOverlay variant={finalEyes} />}
-        {generatedFaceMode && !player?.portrait && !player?.image && <CharacterScarOverlay variant={finalScar} />}
+        {generatedFaceMode && !proceduralRace && !player?.portrait && !player?.image && <CharacterHairOverlay variant={finalHair} gender={finalGender} />}
+        {generatedFaceMode && !proceduralRace && !player?.portrait && !player?.image && <CharacterBeardOverlay variant={finalBeard} />}
+        {generatedFaceMode && !proceduralRace && !player?.portrait && !player?.image && <CharacterEyesOverlay variant={finalEyes} />}
+        {generatedFaceMode && !proceduralRace && !player?.portrait && !player?.image && <CharacterScarOverlay variant={finalScar} />}
       </div>
     </div>
   );
@@ -4925,7 +5008,7 @@ function TypewriterText({ text, speed=18, style={}, onDone }) {
   );
 }
 
-function ArtThumb({ src, alt, size=56, radius=12, race, gender, cls }) {
+function ArtThumb({ src, alt, size=56, radius=12, race, gender, cls, fit="cover" }) {
   return (
     <img
       src={src}
@@ -4942,7 +5025,7 @@ function ArtThumb({ src, alt, size=56, radius=12, race, gender, cls }) {
           e.currentTarget.src = makeArchetypeImage({ icon:"👾", title:alt || "Creatura", subtitle:"" });
         }
       }}
-      style={{ width:size, height:size, minWidth:size, borderRadius:radius, objectFit:"cover", display:"block", background:"rgba(15,23,42,0.72)", border:"1px solid rgba(148,163,184,0.16)", boxShadow:"0 10px 24px rgba(0,0,0,0.22)" }}
+      style={{ width:size, height:size, minWidth:size, borderRadius:radius, objectFit:fit, display:"block", background:"rgba(15,23,42,0.72)", border:"1px solid rgba(148,163,184,0.16)", boxShadow:"0 10px 24px rgba(0,0,0,0.22)" }}
     />
   );
 }
@@ -5236,13 +5319,15 @@ async function dbGetAccountCharacters(accountId) {
 
 async function dbGetMessages(partyCode) {
   if(!partyCode) {
-    const { data } = await supabase.from("messages").select("*").order("created_at", { ascending: true }).limit(400);
-    return (data || []).filter(msg => !["player_meta","user_meta"].includes(msg.type));
+    const { data } = await supabase.from("messages").select("*").order("created_at", { ascending: false }).limit(400);
+    return (data || [])
+      .filter(msg => !["player_meta","user_meta"].includes(msg.type))
+      .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
   }
   // Load chat and combat messages separately to avoid combat logs being pushed out by chat volume
   const [chatRes, combatRes] = await Promise.all([
-    supabase.from("messages").select("*").eq("party_code", partyCode).not("type","eq","combat").order("created_at", { ascending: true }).limit(250),
-    supabase.from("messages").select("*").eq("party_code", partyCode).eq("type","combat").order("created_at", { ascending: true }).limit(200),
+    supabase.from("messages").select("*").eq("party_code", partyCode).not("type","eq","combat").order("created_at", { ascending: false }).limit(250),
+    supabase.from("messages").select("*").eq("party_code", partyCode).eq("type","combat").order("created_at", { ascending: false }).limit(200),
   ]);
   const all = [...(chatRes.data || []), ...(combatRes.data || [])];
   all.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
@@ -5250,6 +5335,25 @@ async function dbGetMessages(partyCode) {
 }
 
 async function dbSavePartyState(partyCode, state) {
+  const incomingCombat = state?.combat || null;
+  if(incomingCombat?.active && incomingCombat?.startedAt) {
+    const { data: currentRow, error: currentError } = await supabase
+      .from("party_state")
+      .select("combat")
+      .eq("party_code", partyCode)
+      .maybeSingle();
+    if (currentError) throw currentError;
+    const currentRaw = currentRow?.combat || {};
+    const currentCombat = currentRaw.__v === 2 ? (currentRaw.__combat || null) : (currentRaw && Object.keys(currentRaw).length ? currentRaw : null);
+    if(
+      currentCombat &&
+      currentCombat.startedAt === incomingCombat.startedAt &&
+      currentCombat.active === false
+    ) {
+      console.warn("Ignored stale combat save after victory", { partyCode, startedAt: incomingCombat.startedAt });
+      return { skipped:true, reason:"stale-combat-after-victory" };
+    }
+  }
   // Pack all extra state into the combat JSONB column using a versioned wrapper.
   // v2 format: { __v:2, __combat, __masterBuffs, __rest, __persistentSpellSlots, __longRestSeed }
   const wrapped = {
@@ -5279,6 +5383,7 @@ async function dbSavePartyState(partyCode, state) {
     updated_at: new Date().toISOString(),
   });
   if (error) throw error;
+  return { skipped:false };
 }
 
 async function dbGetPartyState(partyCode) {
@@ -5729,7 +5834,7 @@ function AppContent() {
   // Master can bypass maintenance to access the panel
   const isMasterUser = canAccessMasterPanel(authUser);
   const showLanguageToggle = !authUser || screen === "landing";
-  if(appMaintenance && !isMasterUser) return (
+  if(appMaintenance && authUser && !isMasterUser) return (
     <div style={{ minHeight:"100vh", width:"100vw", position:"relative", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"1.5rem", padding:"2rem", textAlign:"center" }}>
       <AnimatedBackground screen={screen} />
       <div style={{ position:"absolute", inset:0, background:"rgba(2,4,14,0.97)", zIndex:0 }} />
@@ -6537,6 +6642,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
   const [scarVariant, setScarVariant] = useState(0); // 0 = nessuna
   const [beardVariant, setBeardVariant] = useState(0);
   const c = CLASSES[cls]; const r = RACES[race];
+  const proceduralAppearanceRace = usesProceduralAppearanceRace(race);
 
   useEffect(() => {
     let cancelled = false;
@@ -6608,10 +6714,10 @@ function CreateChar({ setScreen, goGame, authUser }) {
         mag:c.mag+r.magB, init:c.init+r.initB,
         xp:0, level:1, gold:20, dead:false,
         portrait_face: faceVariant,
-        portrait_hair: hairVariant,
-        portrait_eyes: eyesVariant,
-        portrait_scar: scarVariant,
-        portrait_beard: gender === "male" ? beardVariant : 0,
+        portrait_hair: proceduralAppearanceRace ? 0 : hairVariant,
+        portrait_eyes: proceduralAppearanceRace ? 1 : eyesVariant,
+        portrait_scar: proceduralAppearanceRace ? 0 : scarVariant,
+        portrait_beard: !proceduralAppearanceRace && gender === "male" ? beardVariant : 0,
       };
       debugCharacterFlow("create_player_generated", player);
       debugCharacterFlow("save_attempt", { id: player.id, accountId: player.accountId, partyCode: player.partyCode });
@@ -6817,10 +6923,10 @@ function CreateChar({ setScreen, goGame, authUser }) {
                   gender,
                   class: cls,
                   portrait_face:  faceVariant,
-                  portrait_hair:  hairVariant,
-                  portrait_eyes:  eyesVariant,
-                  portrait_scar:  scarVariant,
-                  portrait_beard: gender === "male" ? beardVariant : 0,
+                  portrait_hair:  proceduralAppearanceRace ? 0 : hairVariant,
+                  portrait_eyes:  proceduralAppearanceRace ? 1 : eyesVariant,
+                  portrait_scar:  proceduralAppearanceRace ? 0 : scarVariant,
+                  portrait_beard: !proceduralAppearanceRace && gender === "male" ? beardVariant : 0,
                 }}
                 equippedItems={{}}
                 activeCosmetics={{}}
@@ -6841,6 +6947,8 @@ function CreateChar({ setScreen, goGame, authUser }) {
             </div>
           </div>
 
+          {!proceduralAppearanceRace && (
+            <>
           <div style={{ marginBottom:"1rem" }}>
             <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.72rem", color:"#a78bfa", marginBottom:6 }}>💇 Capelli</div>
             <div style={{ display:"flex", gap:8 }}>
@@ -6891,6 +6999,8 @@ function CreateChar({ setScreen, goGame, authUser }) {
               </div>
             </div>
           )}
+            </>
+          )}
 
           <div style={{ display:"flex", gap:8, marginTop:"1rem" }}>
             <SmallBtn onClick={()=>setStep(2)}>🔙 {t("common.back")}</SmallBtn>
@@ -6906,10 +7016,10 @@ function CreateChar({ setScreen, goGame, authUser }) {
               race={race}
               gender={gender}
               face={faceVariant}
-              hair={hairVariant}
-              eyes={eyesVariant}
-              scar={scarVariant}
-              beard={beardVariant}
+              hair={proceduralAppearanceRace ? 0 : hairVariant}
+              eyes={proceduralAppearanceRace ? 1 : eyesVariant}
+              scar={proceduralAppearanceRace ? 0 : scarVariant}
+              beard={proceduralAppearanceRace ? 0 : beardVariant}
               size={140}
               radius="50%"
               style={{ border:'3px solid #fbbf24', boxShadow:'0 0 20px rgba(251,191,36,0.3)' }}
@@ -9685,7 +9795,7 @@ function ShopView({ me, items, loading, error, inventoryCounts, onBuy, restSeed 
           return (
             <div key={it.id} style={{ background:"rgba(15,23,42,0.7)", border:`1px solid ${rarityColor}44`, borderRadius:12, padding:"1.2rem", display:"flex", flexDirection:"column", gap:"0.8rem", boxShadow:"0 4px 16px rgba(0,0,0,0.3)" }}>
               <div style={{ display:"flex", gap:14, alignItems:"center" }}>
-                <ArtThumb src={getItemImage(it)} alt={itemName(it)} size={72} />
+                <ArtThumb src={getItemImage(it)} alt={itemName(it)} size={72} fit="contain" />
                 <div style={{ flex:1, minWidth:0 }}>
                   <div style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700, fontSize:"1rem", lineHeight:1.3 }}>{itemName(it)}</div>
                   <div style={{ fontSize:"0.78rem", color:"#94a3b8", marginTop:2 }}>{itemTypeLabel(it.type)}</div>
@@ -10110,7 +10220,7 @@ function _invCategory(item) {
 const RARITY_ORDER = { common:0, uncommon:1, rare:2, epic:3, legendary:4 };
 const RARITY_COLOR_INV = { common:"#9ca3af", uncommon:"#34d399", rare:"#60a5fa", epic:"#a78bfa", legendary:"#fbbf24" };
 
-function InventoryView({ loading, groups, equipment, onEquip, onSell, onUse, canUseConsumables }) {
+function InventoryView({ me, loading, groups, equipment, onEquip, onSell, onUse, canUseConsumables }) {
   const { itemName, itemDescription } = useI18n();
   const [expandedId, setExpandedId] = React.useState(null);
   const [collapsedCats, setCollapsedCats] = React.useState({});
@@ -10143,7 +10253,7 @@ function InventoryView({ loading, groups, equipment, onEquip, onSell, onUse, can
           style={{ width:"100%", display:"flex", alignItems:"center", gap:10, padding:"0.55rem 0.75rem",
             background: open ? "rgba(99,102,241,0.08)" : "transparent",
             border:"none", cursor:"pointer", color:"inherit", font:"inherit", textAlign:"left" }}>
-          <span style={{ fontSize:"1.4rem", flexShrink:0, width:28, textAlign:"center" }}>{group.item.emoji || "📦"}</span>
+          <ArtThumb src={getItemImage(group.item)} alt={itemName(group.item)} size={38} radius={7} fit="contain" />
           <div style={{ flex:1, minWidth:0 }}>
             <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.82rem", color:"#e2d9c5", fontWeight:700,
               overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>
@@ -10162,13 +10272,29 @@ function InventoryView({ loading, groups, equipment, onEquip, onSell, onUse, can
         {/* Expanded detail */}
         {open && (
           <div style={{ padding:"0.75rem 1rem 1rem 1rem", background:"rgba(15,23,42,0.6)", borderTop:"1px solid rgba(99,102,241,0.15)" }}>
-            <div style={{ display:"flex", gap:12, marginBottom:10 }}>
-              <ArtThumb src={getItemImage(group.item)} alt={itemName(group.item)} size={72} radius={8} />
-              <div style={{ flex:1 }}>
-                <div style={{ color:"#cbd5e1", fontSize:"0.84rem", lineHeight:1.6, marginBottom:6 }}>{itemDescription(group.item)}</div>
+            <div style={{ display:"flex", flexWrap:"wrap", gap:12, marginBottom:10, alignItems:"stretch" }}>
+              <div style={{ borderRadius:10, border:`1px solid ${rc}`, background:"rgba(2,6,23,0.45)", display:"flex", alignItems:"center", justifyContent:"center", padding:8, boxShadow:`0 0 18px ${rc}22` }}>
+                <ArtThumb src={getItemLargeImage(group.item)} alt={itemName(group.item)} size={96} radius={8} fit="contain" />
+              </div>
+              {isEquippableItem(group.item) && (
+                <ItemWearPreview me={me} item={group.item} width={116} height={112} />
+              )}
+              <div style={{ flex:"1 1 240px", minWidth:0 }}>
+                <div style={{ display:"flex", gap:6, flexWrap:"wrap", marginBottom:7 }}>
+                  <span style={{ fontSize:"0.68rem", color:"#0f172a", background:rc, borderRadius:999, padding:"2px 8px", fontWeight:800 }}>{itemRarityLabel(group.item.rarity)}</span>
+                  <span style={{ fontSize:"0.68rem", color:"#cbd5e1", background:"rgba(255,255,255,0.06)", border:"1px solid rgba(148,163,184,0.18)", borderRadius:999, padding:"2px 8px" }}>{itemTypeLabel(group.item.type)}</span>
+                  {slot && <span style={{ fontSize:"0.68rem", color:"#ddd6fe", background:"rgba(124,58,237,0.18)", border:"1px solid rgba(167,139,250,0.35)", borderRadius:999, padding:"2px 8px" }}>{equipSlotLabel(slot)}</span>}
+                  <span style={{ fontSize:"0.68rem", color:"#fde68a", background:"rgba(180,83,9,0.18)", border:"1px solid rgba(251,191,36,0.3)", borderRadius:999, padding:"2px 8px" }}>💰 {group.item.price||0}</span>
+                </div>
+                <div style={{ color:"#cbd5e1", fontSize:"0.84rem", lineHeight:1.6, marginBottom:8 }}>{itemDescription(group.item)}</div>
                 <div style={{ display:"flex", gap:6, flexWrap:"wrap" }}>
                   {itemStatSummary(group.item).map(stat => (
                     <span key={stat} style={{ fontSize:"0.7rem", color:"#d1d5db", background:"rgba(255,255,255,0.05)", border:"1px solid #1f2937", borderRadius:999, padding:"2px 8px" }}>{stat}</span>
+                  ))}
+                </div>
+                <div style={{ display:"grid", gap:3, marginTop:7 }}>
+                  {itemEffectLines(group.item).slice(0, 4).map(line => (
+                    <div key={line} style={{ color:"#94a3b8", fontSize:"0.69rem", lineHeight:1.35 }}>✦ {line}</div>
                   ))}
                 </div>
               </div>
@@ -10296,7 +10422,7 @@ function PartyTradeView({ me, players, groups, loading, equipment, onTrade }) {
               </div>
               {selectedGroup && (
                 <div style={{ marginTop:"1rem", background:"rgba(15,23,42,0.78)", border:"1px solid #334155", borderRadius:6, padding:"0.85rem", display:"flex", gap:10, alignItems:"center", flexWrap:"wrap" }}>
-                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={itemName(selectedGroup.item)} size={58} />
+                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={itemName(selectedGroup.item)} size={58} fit="contain" />
                   <div style={{ flex:1, minWidth:220 }}>
                     <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700 }}>{itemName(selectedGroup.item)}</div>
                     <div style={{ color:"#94a3b8", fontSize:"0.78rem" }}>{itemStatSummary(selectedGroup.item).join(" • ") || itemDescription(selectedGroup.item)}</div>
@@ -10360,7 +10486,7 @@ function AuctionHouseView({ me, groups, auctions, loading, busy, onRefresh, onCr
     const bidValue = bidValues[a.id] ?? minBid;
     return (
       <div key={a.id} style={{ background:"rgba(15,23,42,0.72)", border:`1px solid ${expired?"#92400e":"#334155"}`, borderRadius:8, padding:"0.85rem", display:"flex", gap:12, alignItems:"flex-start", flexWrap:"wrap" }}>
-        <ArtThumb src={getItemImage(item)} alt={itemName(item)} size={64} radius={8} />
+        <ArtThumb src={getItemImage(item)} alt={itemName(item)} size={64} radius={8} fit="contain" />
         <div style={{ flex:1, minWidth:240 }}>
           <div style={{ display:"flex", gap:8, alignItems:"center", flexWrap:"wrap", marginBottom:4 }}>
             <span style={{ fontFamily:"'Cinzel',serif", color:"#e2d9c5", fontWeight:700 }}>{itemName(item)}</span>
@@ -10429,7 +10555,7 @@ function AuctionHouseView({ me, groups, auctions, loading, busy, onRefresh, onCr
               </div>
               {selectedGroup && (
                 <div style={{ marginTop:"1rem", display:"flex", gap:10, alignItems:"center", background:"rgba(15,23,42,0.7)", border:"1px solid #334155", borderRadius:8, padding:"0.75rem" }}>
-                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={itemName(selectedGroup.item)} size={58} radius={8} />
+                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={itemName(selectedGroup.item)} size={58} radius={8} fit="contain" />
                   <div style={{ flex:1 }}>
                     <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700 }}>{itemName(selectedGroup.item)}</div>
                     <div style={{ color:"#94a3b8", fontSize:"0.76rem" }}>{itemStatSummary(selectedGroup.item).join(" · ") || itemDescription(selectedGroup.item)}</div>
@@ -10482,13 +10608,13 @@ function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick, 
   const rarityColors = { common:"#94a3b8", uncommon:"#22c55e", rare:"#3b82f6", epic:"#a855f7", legendary:"#f59e0b" };
   const borderColor = isEmpty ? "rgba(255,255,255,0.1)" : (rarityColors[item?.rarity] || "#94a3b8");
   const boxSize = compact ? 62 : 96;
-  const artSize = compact ? 40 : 68;
+  const artSize = compact ? 36 : 56;
   return (
     <div
       onClick={() => onPick ? onPick(slotCfg.key) : (isEmpty ? null : onSelect(slotCfg.key))}
       style={{
         width:boxSize, height:boxSize, borderRadius:compact ? 9 : 12,
-        background: isEmpty ? "rgba(0,0,0,0.35)" : "rgba(15,23,42,0.9)",
+        background: isEmpty ? "rgba(0,0,0,0.35)" : "radial-gradient(circle at 50% 22%, rgba(148,163,184,0.18), rgba(15,23,42,0.92) 58%, rgba(2,6,23,0.98))",
         border: `2px solid ${isSelected ? "#fbbf24" : borderColor}`,
         display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center",
         cursor: isEmpty ? "default" : "pointer",
@@ -10506,7 +10632,10 @@ function EquipSlotBox({ slotCfg, item, onUnequip, isSelected, onSelect, onPick, 
         </>
       ) : (
         <>
-          <ArtThumb src={getItemImage(item)} alt={itemName(item)} size={artSize} radius={6} />
+          <div style={{ width:artSize+8, height:artSize+8, borderRadius:8, display:"flex", alignItems:"center", justifyContent:"center", background:"rgba(2,6,23,0.42)", border:`1px solid ${borderColor}55`, boxShadow:`0 0 14px ${borderColor}22` }}>
+            <ArtThumb src={getItemImage(item)} alt={itemName(item)} size={artSize} radius={6} fit="contain" />
+          </div>
+          <span style={{ position:"absolute", top:3, left:4, fontSize:compact ? "0.48rem" : "0.58rem", color:"#fbbf24", lineHeight:1 }}>★</span>
           <span style={{ fontSize:compact ? "0.38rem" : "0.44rem", color: rarityColors[item.rarity] || "#94a3b8", marginTop:1, fontFamily:"'Cinzel',serif", maxWidth:boxSize-10, overflow:"hidden", textOverflow:"ellipsis", whiteSpace:"nowrap" }}>{itemName(item)}</span>
           {!compact && <span style={{ fontSize:"0.5rem", color:"#475569", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>{slotCfg.label}</span>}
         </>
@@ -10826,7 +10955,7 @@ function getMannequinCosmeticSlotLayer(slot) {
 function getMannequinCosmeticFitSlot(slot) {
   return cosmeticEquipSlotConfig(slot)?.mannequinSlot || "chest";
 }
-const SHOW_PROCEDURAL_EQUIPMENT_OVERLAYS = false;
+const SHOW_PROCEDURAL_EQUIPMENT_OVERLAYS = true;
 function mannequinOverlayStyle(race, slot, zIndex = getMannequinSlotLayer(slot)) {
   const fit = getMannequinSlotFit(race, slot);
   return {
@@ -10928,7 +11057,7 @@ function CharacterViewer({ me, equippedItems, activeCosmetics, size, fillContain
           img.onerror = null;
           img.src = makeMannequinBaseImage(rawRace || race, gender);
         }}
-        style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none", filter:"brightness(1.25) contrast(1.05)", zIndex:MANNEQUIN_LAYER_ORDER.body }}
+        style={{ position:"absolute", inset:0, width:"100%", height:"100%", objectFit:"contain", userSelect:"none", filter:"brightness(1.08) contrast(1.04)", zIndex:MANNEQUIN_LAYER_ORDER.body }}
       />
       <MannequinHeadOverlay me={me} />
       {/* Equipment overlays */}
@@ -10936,9 +11065,14 @@ function CharacterViewer({ me, equippedItems, activeCosmetics, size, fillContain
         return (
           <img
             key={key}
-            src={kind === "cosmetic" ? getCosmeticWearImage(item) : getItemWearImage(item)}
+            src={kind === "cosmetic" ? getCosmeticWearImage(item) : getItemWearImage(item, rawRace)}
             alt={kind === "cosmetic" ? item.name : itemName(item)}
             onError={e => {
+              if(kind === "item" && !e.currentTarget.dataset.triedGenericWear) {
+                e.currentTarget.dataset.triedGenericWear = "1";
+                e.currentTarget.src = getItemWearFallbackImage(item);
+                return;
+              }
               if(kind === "cosmetic" && !e.currentTarget.dataset.triedFallback) {
                 e.currentTarget.dataset.triedFallback = "1";
                 e.currentTarget.src = makeCosmeticWearImage(item);
@@ -10950,6 +11084,31 @@ function CharacterViewer({ me, equippedItems, activeCosmetics, size, fillContain
           />
         );
       })}
+    </div>
+  );
+}
+
+function ItemWearPreview({ me, item, width=132, height=190 }) {
+  const slot = itemSlot(item);
+  if(!item || !slot || !isEquippableItem(item)) return null;
+  return (
+    <div style={{
+      width,
+      height,
+      position:"relative",
+      borderRadius:8,
+      overflow:"hidden",
+      background:"radial-gradient(circle at 50% 28%, rgba(148,163,184,0.14), rgba(2,6,23,0.72) 62%, rgba(2,6,23,0.96))",
+      border:"1px solid rgba(148,163,184,0.18)",
+      boxShadow:"inset 0 0 26px rgba(2,6,23,0.75)",
+      flexShrink:0,
+    }}>
+      <CharacterViewer
+        me={me}
+        equippedItems={{ [slot]:item }}
+        activeCosmetics={{}}
+        fillContainer
+      />
     </div>
   );
 }
@@ -10998,7 +11157,7 @@ function DonateView({ me, players, groups, loading, onTrade }) {
               </div>
               {selectedGroup && (
                 <div style={{ marginTop:"1rem", background:"rgba(15,23,42,0.78)", border:"1px solid #334155", borderRadius:6, padding:"0.85rem", display:"flex", gap:10, alignItems:"center" }}>
-                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={itemName(selectedGroup.item)} size={58} />
+                  <ArtThumb src={getItemImage(selectedGroup.item)} alt={itemName(selectedGroup.item)} size={58} fit="contain" />
                   <div style={{ flex:1 }}>
                     <div style={{ color:"#e2d9c5", fontFamily:"'Cinzel',serif", fontWeight:700 }}>{itemName(selectedGroup.item)}</div>
                     <div style={{ color:"#94a3b8", fontSize:"0.78rem" }}>{itemStatSummary(selectedGroup.item).join(" • ") || itemDescription(selectedGroup.item)}</div>
@@ -12180,8 +12339,11 @@ function EquipmentView({ me, equippedItems, equippedWeapon, activeCosmetics, own
               </div>
             )
           ) : detailItem ? (<>
-            <div style={{ alignSelf:"stretch", borderRadius:10, border:`1px solid ${rarityColors[detailItem.rarity] || "#334155"}`, background:"rgba(2,6,23,0.45)", display:"flex", alignItems:"center", justifyContent:"center", padding:8, boxShadow:`0 0 24px ${(rarityColors[detailItem.rarity] || "#334155")}22` }}>
-              <ArtThumb src={getItemLargeImage(detailItem)} alt={itemName(detailItem)} size={isMobile ? 80 : 132} radius={8} />
+            <div style={{ alignSelf:"stretch", borderRadius:10, border:`1px solid ${rarityColors[detailItem.rarity] || "#334155"}`, background:"rgba(2,6,23,0.45)", display:"flex", flexDirection:isMobile ? "row" : "column", alignItems:"center", justifyContent:"center", gap:8, padding:8, boxShadow:`0 0 24px ${(rarityColors[detailItem.rarity] || "#334155")}22`, minWidth:0 }}>
+              <ArtThumb src={getItemLargeImage(detailItem)} alt={itemName(detailItem)} size={isMobile ? 80 : 92} radius={8} fit="contain" />
+              {!isMobile && isEquippableItem(detailItem) && (
+                <ItemWearPreview me={me} item={detailItem} width={132} height={118} />
+              )}
             </div>
             <div style={{ minWidth:0, display:"flex", flexDirection:"column", gap:7 }}>
               <div style={{ fontFamily:"'Cinzel',serif", fontSize:isMobile ? "0.9rem" : "1.05rem", color: rarityColors[detailItem.rarity]||"#e2d9c5", fontWeight:800, lineHeight:1.15 }}>{itemName(detailItem)}</div>
@@ -12300,7 +12462,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, activeCosmetics, own
                   }}>
                   {isEquipped && <div style={{ position:"absolute", top:3, right:4, fontSize:"0.5rem", color:"#fbbf24" }}>★</div>}
                   {g.quantity > 1 && <div style={{ position:"absolute", top:3, left:4, fontSize:"0.55rem", color:"#c4b5fd", fontWeight:700 }}>×{g.quantity}</div>}
-                  <ArtThumb src={getItemImage(item)} alt={itemName(item)} size={64} radius={6} />
+                  <ArtThumb src={getItemImage(item)} alt={itemName(item)} size={64} radius={6} fit="contain" />
                   <div style={{ fontFamily:"'Cinzel',serif", fontSize:"0.56rem", color:rc, marginTop:3, lineHeight:1.2, overflow:"hidden", display:"-webkit-box", WebkitLineClamp:2, WebkitBoxOrient:"vertical", width:"100%" }}>{itemName(item)}</div>
                 </div>
               );
@@ -16124,7 +16286,13 @@ function GameScreen({ myId, setScreen, authUser }) {
         rollInit: (p.init||0) + (getCharacterCombatTrait({ ...p, zodarPathTrait:localPathTrait }).initBonus || 0) + Math.floor(Math.random()*20),
       };
     });
-    const monsterCombatants = scene.combat.monsters.map((m, index) => makeMonsterCombatant(m, index, `story_${activeStory.id || "story"}_${scene.id || "scene"}`));
+    const avgLevel = partyForCombat.length
+      ? Math.round(partyForCombat.reduce((sum, p) => sum + (p.level || 1), 0) / partyForCombat.length)
+      : (me?.level || 1);
+    const storyDiff = normalizeMissionDifficulty(scene.combat.difficulty || scene.difficulty || "medio");
+    const monsterCombatants = scene.combat.monsters.map((m, index) =>
+      makeMonsterCombatant(scaleMonsterForEncounter(m, { avgLevel, diff:storyDiff }), index, `story_${activeStory.id || "story"}_${scene.id || "scene"}`)
+    );
     const allCombatants = [...playerCombatants, ...monsterCombatants].sort((a,b)=>b.rollInit-a.rollInit);
     const newCombat = { active:true, combatants:allCombatants, turn:0, round:1, spellSlots:{}, startedAt:Date.now(), questDmgLog:{} };
     const newStory = { ...latestQs.story, battlePending:true, battleNext:scene.combat.successScene, battleNextFail:scene.combat.failureScene||null };
@@ -17393,7 +17561,7 @@ function GameScreen({ myId, setScreen, authUser }) {
       const q = getQuests().find(x => x.id === latestQs.currentId);
       return q && isCombatStep(q.steps[latestQs.step]);
     })();
-    const newCombat = { active: false, won: !!onQuestCombat, victoryData };
+    const newCombat = { active: false, won: !!onQuestCombat, startedAt: latestCombat?.startedAt, endedAt: Date.now(), victoryData };
     // Persist remaining spell slots so they carry over between combats
     // Merge with computed so all tiers are always present in the saved state
     const rawUsedSlots = latestCombat?.spellSlots || {};
@@ -17610,16 +17778,9 @@ ${stepText(step)}`, "quest","Master");
       ? Math.round(partyPlayers.reduce((s,p) => s + (p.level||1), 0) / partyPlayers.length)
       : (me?.level || 1);
     const diff = normalizeMissionDifficulty(qs?.currentDifficulty || stepData.difficulty || "medio");
-    const diffMult = diff === "facile" ? 0.85 : diff === "difficile" ? 1.45 : 1.15;
-    const hpMult   = (1 + (avgLevel - 1) * 0.18) * diffMult;
-    const atkBonus = Math.floor(avgLevel * 0.6 * diffMult);
-    const defBonus = Math.floor(avgLevel * 0.25 * diffMult);
     const monsters = (stepData.monsters||[]).map((e, index)=>{
-      const baseHp = e.maxHp || e.hp;
-      const maxHp = Math.round(baseHp * hpMult);
-      const atk = (e.atk || 5) + atkBonus;
-      const def = (e.def || 0) + defBonus;
-      return makeMonsterCombatant({ ...e, atk, def, hp:maxHp, maxHp, xp:monsterXpValue({ ...e, maxHp }), weaponDie:e.weaponDie || getCombatDamageDie({...e, atk}) }, index, `quest_${qs?.currentId || "quest"}_${qs?.step || 0}`);
+      const scaled = scaleMonsterForEncounter(e, { avgLevel, diff });
+      return makeMonsterCombatant(scaled, index, `quest_${qs?.currentId || "quest"}_${qs?.step || 0}`);
     });
     const combatPartyPlayers = await getOnlinePartyPlayersForCombat();
     const players = combatPartyPlayers.map(p=>{
@@ -17977,7 +18138,7 @@ ${stepText(step)}`, "quest","Master");
       <div style={{ position:"absolute", inset:0, background:"linear-gradient(180deg, rgba(2,6,23,0.38) 0%, rgba(2,6,23,0.32) 45%, rgba(2,6,23,0.42) 100%)", pointerEvents:"none" }} />
 
       {/* ── Maintenance overlay ── */}
-      {maintenanceMode && (
+      {maintenanceMode && !canAccessMasterPanel(authUser) && (
         <div style={{ position:"fixed", inset:0, zIndex:99999, background:"linear-gradient(180deg,rgba(2,4,14,0.98),rgba(8,10,24,0.99))", display:"flex", flexDirection:"column", alignItems:"center", justifyContent:"center", gap:"1.5rem", padding:"2rem", textAlign:"center" }}>
           <div style={{ fontSize:"4rem" }}>🔧</div>
           <div style={{ fontFamily:"'Cinzel Decorative',serif", color:"#fbbf24", fontSize:"1.6rem", fontWeight:700, letterSpacing:"0.04em" }}>Gioco in Manutenzione</div>
@@ -18817,6 +18978,7 @@ ${stepText(step)}`, "quest","Master");
                 </div>
               )}
               <InventoryView
+                me={me}
                 loading={inventoryLoading}
                 groups={inventoryGroups}
                 equipment={equipment}
@@ -20177,9 +20339,26 @@ ${stepText(step)}`, "quest","Master");
                     </div>
 
                     {(() => {
-                      const battleLogEntries = messages
-                        .filter(m=>m.type==="combat" && (!combat?.startedAt || new Date(m.created_at).getTime() >= combat.startedAt - 5000))
+                      const startedAt = combat?.startedAt || 0;
+                      const storedBattleLogEntries = messages
+                        .filter(m => {
+                          if(m.type !== "combat") return false;
+                          if(!startedAt) return true;
+                          const ts = new Date(m.created_at).getTime();
+                          return Number.isFinite(ts) && ts >= startedAt - 5000;
+                        })
                         .slice(-50);
+                      const hasPendingStored = !!combat?.pendingLog && storedBattleLogEntries.some(m => m.content === combat.pendingLog);
+                      const battleLogEntries = combat?.pendingLog && !hasPendingStored
+                        ? [...storedBattleLogEntries, {
+                            id:`pending_${combat.startedAt || "combat"}_${combat.round || 0}_${combat.turn || 0}`,
+                            content:combat.pendingLog,
+                            type:"combat",
+                            author:"Sistema",
+                            created_at:new Date().toISOString(),
+                            _pending:true,
+                          }].slice(-50)
+                        : storedBattleLogEntries;
                       return (
                         <div style={{ background:"linear-gradient(180deg,rgba(8,13,26,0.98),rgba(15,23,42,0.96))", border:"1px solid rgba(148,163,184,0.34)", borderRadius:12, overflow:"hidden", boxShadow:"0 18px 42px rgba(0,0,0,0.34)" }}>
                           <button onClick={()=>setShowCombatLog(v=>!v)} style={{ width:"100%", display:"flex", alignItems:"center", justifyContent:"space-between", gap:10, padding:"0.85rem 1.05rem", background:"rgba(2,6,23,0.24)", border:"none", cursor:"pointer", fontFamily:"'Cinzel',serif", fontSize:"0.86rem", color:"#e5e7eb", letterSpacing:"0.08em" }}>
