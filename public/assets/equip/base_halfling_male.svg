@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 640">
+  <defs>
+    <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#e5b07b"/>
+      <stop offset="100%" stop-color="#8a5a32"/>
+    </linearGradient>
+    <radialGradient id="light" cx="45%" cy="32%" r="70%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".16"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity=".12"/>
+    </radialGradient>
+  </defs>
+  <title>Halfling male</title>
+  <ellipse cx="160" cy="606" rx="78" ry="15" fill="#020617" opacity=".28"/>
+  
+  <path d="M116 162 C119 122 201 122 204 162
+           L196.44444444444446 298 C184 320 136 320 123.55555555555556 298 Z" fill="url(#skin)"/>
+  <path d="M122 180 L86 306" stroke="url(#skin)" stroke-width="23" stroke-linecap="round"/>
+  <path d="M198 180 L234 306" stroke="url(#skin)" stroke-width="23" stroke-linecap="round"/>
+  <path d="M138 296 L126 518" stroke="url(#skin)" stroke-width="25" stroke-linecap="round"/>
+  <path d="M182 296 L194 518" stroke="url(#skin)" stroke-width="25" stroke-linecap="round"/>
+  <ellipse cx="122" cy="548" rx="22.5" ry="14" fill="url(#skin)"/>
+  <ellipse cx="198" cy="548" rx="22.5" ry="14" fill="url(#skin)"/>
+  <circle cx="160" cy="86" r="34" fill="url(#skin)"/>
+  <path d="M142 82 L155 84 M165 84 L178 82" stroke="#111827" stroke-width="4" stroke-linecap="round" opacity=".45"/>
+  <path d="M146 106 C158 114 162 114 174 106" fill="none" stroke="#111827" stroke-width="3" opacity=".28"/>
+  
+  <path d="M128.46153846153845 158 L160 222 L191.53846153846155 158" fill="none" stroke="#f8fafc" stroke-width="5" opacity=".15"/>
+  <rect width="320" height="640" fill="url(#light)"/>
+</svg>

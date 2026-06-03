@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 640">
+  <defs>
+    <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#b27a43"/>
+      <stop offset="100%" stop-color="#7c2d12"/>
+    </linearGradient>
+    <radialGradient id="light" cx="45%" cy="32%" r="70%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".16"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity=".12"/>
+    </radialGradient>
+  </defs>
+  <title>Draconide Antico male</title>
+  <ellipse cx="160" cy="606" rx="78" ry="15" fill="#020617" opacity=".28"/>
+  <path d="M118 78 L96 54 L120 58 Z M202 78 L224 54 L200 58 Z" fill="#7c2d12" opacity=".85"/><path d="M132 42 L148 22 L158 50 Z M188 42 L172 22 L162 50 Z" fill="#7c2d12" opacity=".78"/>
+<path d="M202 318 C278 352 248 438 300 472" fill="none" stroke="#7c2d12" stroke-width="18" stroke-linecap="round" opacity=".76"/>
+  <path d="M84 162 C99 122 221 122 236 162
+           L214.22222222222223 334 C184 356 136 356 105.77777777777777 334 Z" fill="url(#skin)"/>
+  <path d="M90 180 L54 306" stroke="url(#skin)" stroke-width="31" stroke-linecap="round"/>
+  <path d="M230 180 L266 306" stroke="url(#skin)" stroke-width="31" stroke-linecap="round"/>
+  <path d="M138 332 L126 518" stroke="url(#skin)" stroke-width="34" stroke-linecap="round"/>
+  <path d="M182 332 L194 518" stroke="url(#skin)" stroke-width="34" stroke-linecap="round"/>
+  <ellipse cx="122" cy="548" rx="30.6" ry="14" fill="url(#skin)"/>
+  <ellipse cx="198" cy="548" rx="30.6" ry="14" fill="url(#skin)"/>
+  <circle cx="160" cy="86" r="44" fill="url(#skin)"/>
+  <path d="M142 82 L155 84 M165 84 L178 82" stroke="#111827" stroke-width="4" stroke-linecap="round" opacity=".45"/>
+  <path d="M146 106 C158 114 162 114 174 106" fill="none" stroke="#111827" stroke-width="3" opacity=".28"/>
+  
+  <path d="M113.07692307692308 158 L160 222 L206.9230769230769 158" fill="none" stroke="#f8fafc" stroke-width="5" opacity=".15"/>
+  <rect width="320" height="640" fill="url(#light)"/>
+</svg>

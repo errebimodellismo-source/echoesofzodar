@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 640">
+  <defs>
+    <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#d8aa7a"/>
+      <stop offset="100%" stop-color="#8b5a35"/>
+    </linearGradient>
+    <radialGradient id="light" cx="45%" cy="32%" r="70%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".16"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity=".12"/>
+    </radialGradient>
+  </defs>
+  <title>Umano female</title>
+  <ellipse cx="160" cy="606" rx="78" ry="15" fill="#020617" opacity=".28"/>
+  
+  <path d="M97 162 C116 122 204 122 223 162
+           L199.11111111111111 324 C184 346 136 346 120.88888888888889 324 Z" fill="url(#skin)"/>
+  <path d="M103 180 L67 306" stroke="url(#skin)" stroke-width="26" stroke-linecap="round"/>
+  <path d="M217 180 L253 306" stroke="url(#skin)" stroke-width="26" stroke-linecap="round"/>
+  <path d="M138 322 L126 518" stroke="url(#skin)" stroke-width="30" stroke-linecap="round"/>
+  <path d="M182 322 L194 518" stroke="url(#skin)" stroke-width="30" stroke-linecap="round"/>
+  <ellipse cx="122" cy="548" rx="27" ry="14" fill="url(#skin)"/>
+  <ellipse cx="198" cy="548" rx="27" ry="14" fill="url(#skin)"/>
+  <circle cx="160" cy="86" r="41" fill="url(#skin)"/>
+  <path d="M142 82 L155 84 M165 84 L178 82" stroke="#111827" stroke-width="4" stroke-linecap="round" opacity=".45"/>
+  <path d="M146 106 C158 114 162 114 174 106" fill="none" stroke="#111827" stroke-width="3" opacity=".28"/>
+  <path d="M130 184 C150 170 170 170 190 184" fill="none" stroke="#f8fafc" stroke-width="5" opacity=".14"/>
+  <path d="M126.15384615384616 158 L160 222 L193.84615384615384 158" fill="none" stroke="#f8fafc" stroke-width="5" opacity=".15"/>
+  <rect width="320" height="640" fill="url(#light)"/>
+</svg>

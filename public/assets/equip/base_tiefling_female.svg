@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 640">
+  <defs>
+    <linearGradient id="skin" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#b86b8c"/>
+      <stop offset="100%" stop-color="#7f1d1d"/>
+    </linearGradient>
+    <radialGradient id="light" cx="45%" cy="32%" r="70%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity=".16"/>
+      <stop offset="100%" stop-color="#020617" stop-opacity=".12"/>
+    </radialGradient>
+  </defs>
+  <title>Tiefling female</title>
+  <ellipse cx="160" cy="606" rx="78" ry="15" fill="#020617" opacity=".28"/>
+  <path d="M128 50 C108 26 94 28 84 44 C104 44 116 54 126 70 Z M192 50 C212 26 226 28 236 44 C216 44 204 54 194 70 Z" fill="#e5d0a0" stroke="#7f1d1d" stroke-width="3"/>
+<path d="M202 318 C278 352 248 438 300 472" fill="none" stroke="#7f1d1d" stroke-width="18" stroke-linecap="round" opacity=".76"/>
+  <path d="M106 162 C121 122 199 122 214 162
+           L194.66666666666666 326 C184 348 136 348 125.33333333333334 326 Z" fill="url(#skin)"/>
+  <path d="M112 180 L76 306" stroke="url(#skin)" stroke-width="22" stroke-linecap="round"/>
+  <path d="M208 180 L244 306" stroke="url(#skin)" stroke-width="22" stroke-linecap="round"/>
+  <path d="M138 324 L126 518" stroke="url(#skin)" stroke-width="26" stroke-linecap="round"/>
+  <path d="M182 324 L194 518" stroke="url(#skin)" stroke-width="26" stroke-linecap="round"/>
+  <ellipse cx="122" cy="548" rx="23.400000000000002" ry="14" fill="url(#skin)"/>
+  <ellipse cx="198" cy="548" rx="23.400000000000002" ry="14" fill="url(#skin)"/>
+  <circle cx="160" cy="86" r="39" fill="url(#skin)"/>
+  <path d="M142 82 L155 84 M165 84 L178 82" stroke="#111827" stroke-width="4" stroke-linecap="round" opacity=".45"/>
+  <path d="M146 106 C158 114 162 114 174 106" fill="none" stroke="#111827" stroke-width="3" opacity=".28"/>
+  <path d="M130 184 C150 170 170 170 190 184" fill="none" stroke="#f8fafc" stroke-width="5" opacity=".14"/>
+  <path d="M130 158 L160 222 L190 158" fill="none" stroke="#f8fafc" stroke-width="5" opacity=".15"/>
+  <rect width="320" height="640" fill="url(#light)"/>
+</svg>
