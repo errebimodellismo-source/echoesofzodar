@@ -6,5 +6,5 @@
     <radialGradient id="jewel" cx="38%" cy="28%" r="70%"><stop offset="0%" stop-color="#fff"/><stop offset="28%" stop-color="#f0fdf4"/><stop offset="70%" stop-color="#34d399"/><stop offset="100%" stop-color="#0ea5e9"/></radialGradient>
     <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#020617" flood-opacity=".52"/></filter>
   </defs>
-  <g filter="url(#shadow)" ><path d="M84 78 L112 150 L80 132 Z" fill="url(#mat)"/><path d="M82 132 L96 574" stroke="url(#trim)" stroke-width="10" stroke-linecap="round"/><path d="M74 172 L104 178" stroke="#e5e7eb" stroke-width="4" opacity=".55"/><path d="M90 110 L98 138" stroke="#fff" stroke-width="3" opacity=".45"/></g>
+  <g filter="url(#shadow)" ><path d="M84 78 L112 148 L80 130 Z" fill="url(#mat)"/><path d="M82 130 L94 408" stroke="url(#trim)" stroke-width="10" stroke-linecap="round"/><path d="M74 170 L104 176" stroke="#e5e7eb" stroke-width="4" opacity=".55"/><path d="M90 108 L98 136" stroke="#fff" stroke-width="3" opacity=".45"/><circle cx="90" cy="412" r="8" fill="url(#mat)" opacity=".7"/></g>
 </svg>

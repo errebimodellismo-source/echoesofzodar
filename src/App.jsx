@@ -4383,42 +4383,44 @@ function makeItemWearImage(item) {
       <filter id="soft"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
       <filter id="shadow"><feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#020617" flood-opacity=".5"/></filter>
     </defs>`;
+  // Coordinate allineate al body PNG: testa y=35-125, mani y=390, piedi y=610
   const shape = ({
-    head:`<path d="M118 88 C122 52 198 52 202 88 L210 134 C180 122 140 122 110 134 Z" fill="url(#g)" opacity=".9"/><path d="M130 88 C136 68 184 68 190 88" fill="none" stroke="#f8fafc" stroke-width="4" opacity=".3"/>`,
-    chest:`<path d="M94 164 C114 132 206 132 226 164 L210 340 C182 362 138 362 110 340 Z" fill="url(#g)" opacity=".85"/>
-      <path d="M66 174 C94 142 118 138 144 154 L128 224 C104 212 82 208 62 210 Z M196 154 C222 138 246 142 274 174 L258 210 C238 208 216 212 192 224 Z" fill="url(#g)" opacity=".82"/>
-      <path d="M108 172 C130 150 190 150 212 172 L200 312 C176 328 144 328 120 312 Z" fill="url(#edge)" opacity=".28"/>
-      <path d="M118 162 L160 220 L202 162" stroke="${pal.b}" stroke-width="4" opacity=".4" fill="none"/>
-      <circle cx="160" cy="214" r="12" fill="url(#jewel)" opacity=".6"/>`,
-    legs:`<path d="M118 322 L156 322 L150 508 L108 506 Z" fill="url(#g)" opacity=".85"/>
-      <path d="M164 322 L202 322 L212 506 L170 508 Z" fill="url(#g)" opacity=".85"/>
-      <path d="M120 390 L154 390 M110 460 L150 462" stroke="${pal.b}" stroke-width="3" opacity=".35" fill="none"/>
-      <path d="M170 390 L204 390 M170 460 L210 462" stroke="${pal.b}" stroke-width="3" opacity=".35" fill="none"/>`,
-    boots:`<path d="M98 502 L152 502 L148 562 L78 562 C84 536 92 524 98 502 Z" fill="url(#g)" opacity=".9"/>
-      <path d="M168 502 L222 502 C228 524 236 536 242 562 L172 562 Z" fill="url(#g)" opacity=".9"/>
-      <path d="M80 548 L148 548 M172 548 L240 548" stroke="${pal.b}" stroke-width="3" opacity=".3" fill="none"/>`,
-    gloves:`<path d="M54 248 L100 264 L90 326 L44 310 Z" fill="url(#g)" opacity=".88"/>
-      <path d="M220 264 L266 248 L276 310 L230 326 Z" fill="url(#g)" opacity=".88"/>
-      <path d="M58 272 L90 300 M232 300 L264 272" stroke="${pal.b}" stroke-width="3" opacity=".3" fill="none"/>`,
-    cloak:`<path d="M92 118 C128 146 192 146 228 118 L262 556 C218 590 102 590 58 556 Z" fill="url(#g)" opacity=".52"/>
-      <path d="M92 118 C128 146 192 146 228 118" fill="none" stroke="${pal.a}" stroke-width="5" opacity=".6"/>
-      <path d="M80 220 C112 280 208 280 240 220 M74 360 C110 430 210 430 246 360" fill="none" stroke="${pal.b}" stroke-width="3" opacity=".25"/>`,
-    weapon:`<path d="M88 142 L116 162 L104 530 L80 548 L78 510 Z" fill="url(#g)" opacity=".95"/>
-      <path d="M56 558 L124 498" stroke="${pal.a}" stroke-width="14" stroke-linecap="round"/>
-      <path d="M68 502 L130 500" stroke="${pal.b}" stroke-width="8" stroke-linecap="round"/>
-      <path d="M98 166 C91 276 95 404 85 510" stroke="#fff" stroke-width="3" opacity=".28" fill="none"/>
-      <path d="M80 148 C86 140 106 140 112 148" fill="${pal.b}" opacity=".6"/>`,
-    offhand:`<path d="M234 200 C292 224 302 346 238 426 C174 346 184 224 234 200 Z" fill="url(#g)" opacity=".86"/>
-      <path d="M234 224 L234 392" stroke="#f8fafc" stroke-width="4" opacity=".22"/>
-      <path d="M194 294 C218 318 250 318 274 294" stroke="${pal.a}" stroke-width="5" opacity=".6" fill="none"/>
-      <circle cx="234" cy="210" r="12" fill="url(#jewel)" opacity=".5"/>`,
-    amulet:`<path d="M122 138 C140 168 180 168 198 138" fill="none" stroke="${pal.a}" stroke-width="8" opacity=".82"/>
-      <circle cx="160" cy="186" r="20" fill="url(#g)" opacity=".95"/>
-      <circle cx="160" cy="186" r="10" fill="url(#jewel)" opacity=".7"/>`,
-    ring1:`<circle cx="74" cy="290" r="16" fill="none" stroke="${pal.a}" stroke-width="8" opacity=".9"/>
-      <circle cx="74" cy="290" r="7" fill="url(#jewel)" opacity=".75"/>`,
-    ring2:`<circle cx="246" cy="290" r="16" fill="none" stroke="${pal.a}" stroke-width="8" opacity=".9"/>
-      <circle cx="246" cy="290" r="7" fill="url(#jewel)" opacity=".75"/>`,
+    head:`<path d="M106 130 C112 42 208 42 214 130 L208 150 C184 168 136 168 112 150 Z" fill="url(#g)" opacity=".9"/>
+      <path d="M116 112 C134 78 186 78 204 112 L200 148 C178 162 142 162 120 148 Z" fill="url(#edge)" opacity=".4"/>
+      <path d="M124 124 L196 124" stroke="#020617" stroke-width="12" opacity=".5"/>`,
+    chest:`<path d="M90 158 C112 124 208 124 230 158 L212 325 C184 348 136 348 108 325 Z" fill="url(#g)" opacity=".85"/>
+      <path d="M66 170 C96 138 122 134 146 152 L130 216 C108 206 88 200 64 202 Z M174 152 C198 134 222 138 252 170 L256 202 C232 200 212 206 190 216 Z" fill="url(#g)" opacity=".82"/>
+      <path d="M108 164 C130 144 190 144 212 164 L200 298 C176 314 144 314 120 298 Z" fill="url(#edge)" opacity=".28"/>
+      <path d="M118 150 L160 218 L202 150" stroke="${pal.b}" stroke-width="4" opacity=".4" fill="none"/>
+      <circle cx="160" cy="210" r="12" fill="url(#jewel)" opacity=".6"/>`,
+    legs:`<path d="M110 332 L152 332 L146 546 L96 546 Z M168 332 L210 332 L224 546 L174 546 Z" fill="url(#g)" opacity=".85"/>
+      <path d="M112 332 C136 344 184 344 208 332" stroke="${pal.a}" stroke-width="4" opacity=".6" fill="none"/>
+      <path d="M102 428 L148 428 M172 428 L220 428" stroke="${pal.b}" stroke-width="3" opacity=".35" fill="none"/>`,
+    boots:`<path d="M100 544 L152 544 L148 600 L72 615 C80 584 92 566 100 544 Z" fill="url(#g)" opacity=".9"/>
+      <path d="M168 544 L220 544 C228 566 240 584 248 615 L172 600 Z" fill="url(#g)" opacity=".9"/>
+      <path d="M74 615 L150 608 M170 608 L246 615" stroke="${pal.a}" stroke-width="4" opacity=".6" fill="none"/>`,
+    gloves:`<path d="M46 368 L98 386 L90 428 L34 410 Z" fill="url(#g)" opacity=".88"/>
+      <path d="M222 386 L274 368 L286 410 L230 428 Z" fill="url(#g)" opacity=".88"/>
+      <path d="M40 410 L90 428 M230 428 L280 410" stroke="${pal.a}" stroke-width="4" opacity=".6" fill="none"/>`,
+    cloak:`<path d="M86 118 C124 150 196 150 234 118 L274 598 C224 622 96 622 46 598 Z" fill="url(#g)" opacity=".52"/>
+      <path d="M86 118 C124 150 196 150 234 118" fill="none" stroke="${pal.a}" stroke-width="5" opacity=".6"/>`,
+    weapon:`<path d="M84 168 L108 182 L100 363 L76 376 L74 357 Z" fill="url(#g)" opacity=".95"/>
+      <path d="M46 360 L127 360 L124 376 L48 376 Z" fill="url(#g)"/>
+      <path d="M46 362 L127 362" stroke="${pal.a}" stroke-width="3" opacity=".7"/>
+      <path d="M76 376 L100 376 L98 410 L74 410 Z" fill="url(#g)"/>
+      <circle cx="86" cy="416" r="10" fill="url(#jewel)" opacity=".82"/>
+      <path d="M98 184 C94 268 96 330 90 355" stroke="#fff" stroke-width="3" opacity=".28" fill="none"/>`,
+    offhand:`<path d="M238 170 C298 194 312 330 244 415 C176 330 190 194 238 170 Z" fill="url(#g)" opacity=".86"/>
+      <path d="M238 196 L238 374" stroke="#f8fafc" stroke-width="4" opacity=".22"/>
+      <path d="M198 292 C222 314 256 314 280 292" stroke="${pal.a}" stroke-width="5" opacity=".6" fill="none"/>
+      <circle cx="238" cy="295" r="14" fill="url(#jewel)" opacity=".65"/>`,
+    amulet:`<path d="M118 128 C136 172 184 172 202 128" fill="none" stroke="${pal.a}" stroke-width="8" opacity=".82"/>
+      <circle cx="160" cy="180" r="20" fill="url(#g)" opacity=".95"/>
+      <circle cx="160" cy="180" r="10" fill="url(#jewel)" opacity=".7"/>`,
+    ring1:`<circle cx="72" cy="400" r="16" fill="none" stroke="${pal.a}" stroke-width="8" opacity=".9"/>
+      <circle cx="72" cy="400" r="7" fill="url(#jewel)" opacity=".75"/>`,
+    ring2:`<circle cx="248" cy="400" r="16" fill="none" stroke="${pal.a}" stroke-width="8" opacity=".9"/>
+      <circle cx="248" cy="400" r="7" fill="url(#jewel)" opacity=".75"/>`,
   })[slot] || `<text x="160" y="320" text-anchor="middle" font-size="72">${theme.icon || "◆"}</text>`;
   return svgDataUrl(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 640">${common}<g filter="url(#shadow)">${shape}</g></svg>`);
 }

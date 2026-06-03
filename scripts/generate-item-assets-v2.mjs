@@ -317,30 +317,85 @@ function wearSvg(entity, meta, profile = "normal") {
   </defs>`;
   const seam = `stroke="#111827" stroke-width="3" opacity=".42" fill="none"`;
   const trim = `stroke="url(#trim)" stroke-width="5" opacity=".76" fill="none"`;
+  // ── Corpo 320×640: testa y=35-125, spalle y=140, mani y=390, piedi y=600 ──
+  // Arma impugnata in mano dx del personaggio = lato SINISTRO del canvas (x≈80)
+  // Grip della spada a y≈368-408, lama punta in ALTO verso y≈165
   const weaponHead = ({
-    bow:`<path d="M78 126 C28 260 38 438 96 558" ${trim} stroke-width="11"/><path d="M78 126 C70 260 74 432 96 558" stroke="#e5e7eb" stroke-width="2" opacity=".5" fill="none"/><path d="M92 334 L178 334" stroke="url(#mat)" stroke-width="8" stroke-linecap="round"/><path d="M178 334 L150 322 M178 334 L150 346" stroke="#e5e7eb" stroke-width="5" stroke-linecap="round"/><circle cx="91" cy="334" r="7" fill="url(#jewel)" opacity=".75"/>`,
-    crossbow:`<path d="M50 304 C92 270 154 270 196 304" ${trim} stroke-width="9"/><path d="M122 260 L122 420" stroke="url(#mat)" stroke-width="13" stroke-linecap="round"/><path d="M62 344 L182 344" stroke="url(#mat)" stroke-width="13" stroke-linecap="round"/><path d="M122 262 L88 226 M122 262 L156 226" stroke="#e5e7eb" stroke-width="4" opacity=".55"/><circle cx="122" cy="344" r="9" fill="url(#jewel)" opacity=".7"/>`,
-    spear:`<path d="M84 78 L112 150 L80 132 Z" fill="url(#mat)"/><path d="M82 132 L96 574" stroke="url(#trim)" stroke-width="10" stroke-linecap="round"/><path d="M74 172 L104 178" stroke="#e5e7eb" stroke-width="4" opacity=".55"/><path d="M90 110 L98 138" stroke="#fff" stroke-width="3" opacity=".45"/>`,
-    axe:`<path d="M82 120 C142 104 164 164 110 210 C104 170 94 142 82 120 Z" fill="url(#mat)"/><path d="M92 150 L86 574" stroke="url(#trim)" stroke-width="11" stroke-linecap="round"/><path d="M80 208 L130 228" stroke="#111827" stroke-width="4" opacity=".35"/><path d="M98 132 C126 132 142 148 138 168" stroke="#fff" stroke-width="4" opacity=".35" fill="none"/>`,
-    mace:`<path d="M90 96 L120 126 L90 156 L60 126 Z" fill="url(#mat)"/><circle cx="90" cy="126" r="34" fill="url(#mat)"/><path d="M90 160 L94 574" stroke="url(#trim)" stroke-width="12" stroke-linecap="round"/><path d="M62 110 L118 142 M118 110 L62 142" stroke="#111827" stroke-width="4" opacity=".3"/><circle cx="78" cy="112" r="7" fill="#fff" opacity=".28"/>`,
-    staff:`<path d="M88 72 C70 186 112 290 82 574" stroke="url(#trim)" stroke-width="12" stroke-linecap="round" fill="none"/><circle cx="88" cy="78" r="25" fill="url(#jewel)"/><path d="M68 96 C82 122 104 122 118 96" ${trim}/><circle cx="78" cy="68" r="8" fill="#fff" opacity=".34"/>`,
-    book:`<g transform="translate(34 232) scale(.78)"><path d="M84 96 C122 74 152 88 152 120 L152 318 C120 300 100 302 84 320 Z" fill="url(#mat)"/><path d="M152 120 C178 88 220 74 252 96 L252 320 C220 302 184 300 152 318 Z" fill="url(#mat)" opacity=".86"/><path d="M152 120 L152 318" ${seam}/><path d="M104 128 L132 118 M180 128 L226 112" ${seam}/></g>`,
-    orb:`<circle cx="86" cy="178" r="40" fill="url(#mat)"/><circle cx="72" cy="164" r="11" fill="#fff" opacity=".35"/><path d="M86 222 L88 574" stroke="url(#trim)" stroke-width="10" stroke-linecap="round"/>`,
-  })[glyph] || `<path d="M92 146 L120 166 L108 530 L84 548 L82 510 Z" fill="url(#mat)"/><path d="M92 168 C88 286 92 402 86 506" stroke="url(#edge)" stroke-width="7" opacity=".48" fill="none"/><path d="M62 560 L128 498" stroke="url(#trim)" stroke-width="14" stroke-linecap="round"/><path d="M72 502 L136 500" stroke="${pal.a}" stroke-width="9" stroke-linecap="round"/><circle cx="101" cy="504" r="9" fill="url(#jewel)" opacity=".76"/><path d="M101 170 C94 280 98 404 88 510" stroke="#fff" stroke-width="4" opacity=".32" fill="none"/>`;
+    bow:`<path d="M80 192 C30 306 40 470 98 538" ${trim} stroke-width="11"/><path d="M80 192 C72 308 76 462 98 538" stroke="#e5e7eb" stroke-width="2" opacity=".5" fill="none"/><path d="M94 366 L175 366" stroke="url(#mat)" stroke-width="8" stroke-linecap="round"/><path d="M175 366 L150 354 M175 366 L150 378" stroke="#e5e7eb" stroke-width="5" stroke-linecap="round"/><circle cx="93" cy="366" r="7" fill="url(#jewel)" opacity=".75"/>`,
+    crossbow:`<path d="M52 350 C90 318 154 318 194 350" ${trim} stroke-width="9"/><path d="M122 308 L122 430" stroke="url(#mat)" stroke-width="13" stroke-linecap="round"/><path d="M64 372 L182 372" stroke="url(#mat)" stroke-width="13" stroke-linecap="round"/><path d="M122 310 L90 276 M122 310 L154 276" stroke="#e5e7eb" stroke-width="4" opacity=".55"/><circle cx="122" cy="372" r="9" fill="url(#jewel)" opacity=".7"/>`,
+    spear:`<path d="M84 78 L112 148 L80 130 Z" fill="url(#mat)"/><path d="M82 130 L94 408" stroke="url(#trim)" stroke-width="10" stroke-linecap="round"/><path d="M74 170 L104 176" stroke="#e5e7eb" stroke-width="4" opacity=".55"/><path d="M90 108 L98 136" stroke="#fff" stroke-width="3" opacity=".45"/><circle cx="90" cy="412" r="8" fill="url(#mat)" opacity=".7"/>`,
+    axe:`<path d="M82 120 C142 104 164 162 110 208 C104 168 94 140 82 120 Z" fill="url(#mat)"/><path d="M92 150 L86 408" stroke="url(#trim)" stroke-width="11" stroke-linecap="round"/><path d="M80 206 L130 226" stroke="#111827" stroke-width="4" opacity=".35"/><path d="M98 132 C126 132 142 148 138 168" stroke="#fff" stroke-width="4" opacity=".35" fill="none"/><circle cx="89" cy="413" r="9" fill="url(#mat)" opacity=".7"/>`,
+    mace:`<circle cx="88" cy="114" r="34" fill="url(#mat)"/><path d="M60 98 L116 130 M116 98 L60 130 M88 80 L88 150 M62 114 L114 114" stroke="#111827" stroke-width="4" opacity=".3"/><path d="M88 150 L90 408" stroke="url(#trim)" stroke-width="12" stroke-linecap="round"/><circle cx="76" cy="100" r="7" fill="#fff" opacity=".28"/><circle cx="90" cy="412" r="10" fill="url(#mat)" opacity=".7"/>`,
+    staff:`<circle cx="86" cy="72" r="26" fill="url(#jewel)"/><path d="M66 92 C80 118 102 118 116 92" ${trim}/><path d="M86 98 C68 195 108 295 80 408" stroke="url(#trim)" stroke-width="12" stroke-linecap="round" fill="none"/><circle cx="76" cy="66" r="8" fill="#fff" opacity=".34"/><circle cx="82" cy="412" r="9" fill="url(#mat)" opacity=".7"/>`,
+    book:`<g transform="translate(18 158) scale(.84)"><path d="M84 96 C122 74 152 88 152 120 L152 308 C120 290 100 292 84 310 Z" fill="url(#mat)"/><path d="M152 120 C178 88 220 74 252 96 L252 310 C220 292 184 290 152 308 Z" fill="url(#mat)" opacity=".86"/><path d="M152 120 L152 308" ${seam}/><path d="M104 128 L132 118 M180 128 L226 112" ${seam}/></g>`,
+    orb:`<circle cx="86" cy="168" r="40" fill="url(#mat)"/><circle cx="72" cy="155" r="11" fill="#fff" opacity=".35"/><path d="M86 210 L88 408" stroke="url(#trim)" stroke-width="10" stroke-linecap="round"/><circle cx="88" cy="412" r="9" fill="url(#mat)" opacity=".7"/>`,
+  })[glyph] ||
+  // SPADA DEFAULT: lama da y=168 a y=363, guardia a y=363-376, impugnatura y=376-410
+  `<path d="M84 168 L108 182 L100 363 L76 376 L74 357 Z" fill="url(#mat)"/>
+   <path d="M100 184 C96 268 98 330 92 357" stroke="url(#edge)" stroke-width="7" opacity=".48" fill="none"/>
+   <path d="M46 360 L127 360 L124 376 L48 376 Z" fill="url(#mat)"/>
+   <path d="M46 362 L127 362" stroke="url(#trim)" stroke-width="3" opacity=".7"/>
+   <path d="M76 376 L100 376 L98 410 L74 410 Z" fill="url(#mat)"/>
+   <circle cx="86" cy="416" r="10" fill="url(#jewel)" opacity=".82"/>
+   <path d="M86 170 C80 200 84 280 88 356" stroke="#fff" stroke-width="3" opacity=".28" fill="none"/>`;
+
   const shapes = {
+    // TESTA: copre y=38-136, x=106-214 (testa reale nel body PNG)
     head: glyph === "hood"
-      ? `<path d="M100 116 C104 50 216 50 220 116 L208 188 C184 204 136 204 112 188 Z" fill="url(#mat)"/><path d="M112 126 C132 144 188 144 208 126 L202 182 C178 197 142 197 118 182 Z" fill="url(#edge)" opacity=".45"/><path d="M122 170 C132 116 188 116 198 170 C176 158 144 158 122 170 Z" fill="#020617" opacity=".62"/><path d="M110 128 C132 146 188 146 210 128" ${trim}/><path d="M128 88 C146 76 174 76 192 88" ${seam}/>`
-      : `<path d="M104 126 C110 48 210 48 216 126 L208 178 C184 198 136 198 112 178 Z" fill="url(#mat)"/><path d="M114 112 C132 82 188 82 206 112 L202 178 C178 194 142 194 118 178 Z" fill="url(#edge)" opacity=".42"/><path d="M124 128 L196 128" stroke="#020617" stroke-width="13" opacity=".55"/><path d="M160 56 L160 194" ${seam}/><path d="M116 98 C96 74 98 54 126 72 M204 98 C224 74 222 54 194 72" ${trim}/>` ,
-    chest:`<path d="M90 158 C112 124 208 124 230 158 L212 338 C184 362 136 362 108 338 Z" fill="url(#mat)"/><path d="M70 172 C100 140 124 136 148 154 L132 218 C110 208 90 202 66 204 Z M172 154 C196 136 220 140 250 172 L254 204 C230 202 210 208 188 218 Z" fill="url(#mat)" opacity=".9"/><path d="M110 166 C130 146 190 146 210 166 L198 304 C176 322 144 322 122 304 Z" fill="url(#edge)" opacity=".33"/><path d="M124 152 L160 222 L196 152" ${seam}/><circle cx="160" cy="214" r="14" fill="url(#jewel)" opacity=".7"/><path d="M110 270 C136 292 184 292 210 270" ${trim}/><path d="M104 194 L216 194 M106 238 L214 238 M118 302 L202 302" ${seam}/>`,
-    legs:`<path d="M112 330 L154 330 L148 522 L98 522 Z M166 330 L208 330 L222 522 L172 522 Z" fill="url(#mat)"/><path d="M122 350 L146 350 L140 504 L106 504 Z M174 350 L198 350 L214 504 L180 504 Z" fill="url(#edge)" opacity=".32"/><path d="M128 348 L120 506 M188 348 L198 506" ${seam}/><path d="M112 330 C136 342 184 342 208 330" ${trim}/><path d="M102 420 L150 420 M170 420 L218 420" ${seam}/>`,
-    boots:`<path d="M100 500 L152 500 L148 572 L76 572 C82 540 94 522 100 500 Z M168 500 L220 500 C226 522 238 540 244 572 L172 572 Z" fill="url(#mat)"/><path d="M108 510 L144 510 L140 558 L86 558 C92 536 100 520 108 510 Z M176 510 L212 510 C220 520 228 536 234 558 L180 558 Z" fill="url(#edge)" opacity=".34"/><path d="M92 536 L148 536 M172 536 L228 536" ${seam}/><path d="M78 572 L150 572 M172 572 L244 572" ${trim}/><path d="M122 502 L118 560 M194 502 L200 560" ${seam}/>`,
-    gloves:`<path d="M48 234 L100 252 L92 330 L36 312 Z M220 252 L272 234 L284 312 L228 330 Z" fill="url(#mat)"/><path d="M58 250 L92 262 L86 310 L46 300 Z M228 262 L262 250 L274 300 L234 310 Z" fill="url(#edge)" opacity=".34"/><path d="M58 264 L96 278 M224 278 L262 264" ${seam}/><path d="M42 312 L92 330 M228 330 L278 312" ${trim}/>`,
-    cloak:`<path d="M86 118 C124 150 196 150 234 118 L276 558 C226 594 94 594 44 558 Z" fill="url(#mat)" opacity=".72"/><path d="M106 150 C136 172 184 172 214 150 L238 540 C198 564 122 564 82 540 Z" fill="url(#edge)" opacity=".2"/><path d="M98 140 C130 166 190 166 222 140" ${trim}/><path d="M74 210 C100 310 96 430 58 548 M246 210 C220 310 224 430 262 548" ${seam}/><path d="M132 156 L112 548 M188 156 L208 548" stroke="#111827" stroke-width="2" opacity=".22" fill="none"/>`,
+      ? `<path d="M102 130 C106 44 214 44 218 130 L210 160 C184 178 136 178 110 160 Z" fill="url(#mat)"/>
+         <path d="M114 128 C134 148 186 148 206 128 L200 158 C178 172 142 172 120 158 Z" fill="url(#edge)" opacity=".45"/>
+         <path d="M124 148 C134 108 186 108 196 148 C174 136 146 136 124 148 Z" fill="#020617" opacity=".62"/>
+         <path d="M112 132 C134 150 186 150 208 132" ${trim}/>
+         <path d="M130 84 C148 72 172 72 190 84" ${seam}/>`
+      : `<path d="M106 130 C112 42 208 42 214 130 L208 150 C184 168 136 168 112 150 Z" fill="url(#mat)"/>
+         <path d="M116 112 C134 78 186 78 204 112 L200 148 C178 162 142 162 120 148 Z" fill="url(#edge)" opacity=".42"/>
+         <path d="M124 124 L196 124" stroke="#020617" stroke-width="13" opacity=".55"/>
+         <path d="M160 50 L160 166" ${seam}/>
+         <path d="M118 94 C98 70 100 50 128 68 M202 94 C222 70 220 50 192 68" ${trim}/>`,
+    // PETTO: spalle y=130-155, vita y=320, pauldron x=62-258
+    chest:`<path d="M90 158 C112 124 208 124 230 158 L212 325 C184 348 136 348 108 325 Z" fill="url(#mat)"/>
+      <path d="M70 170 C100 138 124 134 148 152 L132 216 C110 206 90 200 66 202 Z M172 152 C196 134 220 138 250 170 L254 202 C230 200 210 206 188 216 Z" fill="url(#mat)" opacity=".9"/>
+      <path d="M110 164 C130 144 190 144 210 164 L198 298 C176 314 144 314 122 298 Z" fill="url(#edge)" opacity=".33"/>
+      <path d="M124 150 L160 218 L196 150" ${seam}/>
+      <circle cx="160" cy="210" r="14" fill="url(#jewel)" opacity=".7"/>
+      <path d="M110 266 C136 288 184 288 210 266" ${trim}/>
+      <path d="M104 192 L216 192 M106 234 L214 234 M118 298 L202 298" ${seam}/>`,
+    // GAMBE: anche y=325-340, ginocchio y=452, caviglia y=548
+    legs:`<path d="M110 332 L152 332 L146 546 L96 546 Z M168 332 L210 332 L224 546 L174 546 Z" fill="url(#mat)"/>
+      <path d="M120 352 L144 352 L138 528 L104 528 Z M176 352 L200 352 L216 528 L182 528 Z" fill="url(#edge)" opacity=".32"/>
+      <path d="M128 350 L120 530 M188 350 L198 530" ${seam}/>
+      <path d="M112 332 C136 344 184 344 208 332" ${trim}/>
+      <path d="M102 428 L148 428 M172 428 L220 428 M100 480 L146 480 M174 480 L220 480" ${seam}/>`,
+    // STIVALI: caviglia y=548, piede y=610
+    boots:`<path d="M100 544 L152 544 L148 600 L72 615 C80 584 92 566 100 544 Z M168 544 L220 544 C228 566 240 584 248 615 L172 600 Z" fill="url(#mat)"/>
+      <path d="M108 554 L144 554 L140 592 L82 606 C88 578 98 562 108 554 Z M176 554 L212 554 C222 562 232 578 238 606 L180 592 Z" fill="url(#edge)" opacity=".34"/>
+      <path d="M90 578 L148 578 M172 578 L230 578" ${seam}/>
+      <path d="M74 615 L150 608 M170 608 L246 615" ${trim}/>
+      <path d="M124 546 L120 594 M196 546 L202 594" ${seam}/>`,
+    // GUANTI: mani a y=370-420, braccia a x=48-100 e x=220-272
+    gloves:`<path d="M46 368 L98 386 L90 428 L34 410 Z M222 386 L274 368 L286 410 L230 428 Z" fill="url(#mat)"/>
+      <path d="M56 382 L90 394 L84 418 L44 408 Z M230 394 L264 382 L276 408 L236 418 Z" fill="url(#edge)" opacity=".34"/>
+      <path d="M56 392 L94 406 M226 406 L264 392" ${seam}/>
+      <path d="M40 410 L90 428 M230 428 L280 410" ${trim}/>`,
+    // MANTELLO: parte dalle spalle, scende fino ai piedi
+    cloak:`<path d="M86 118 C124 150 196 150 234 118 L274 598 C224 622 96 622 46 598 Z" fill="url(#mat)" opacity=".72"/>
+      <path d="M106 150 C136 172 184 172 214 150 L236 574 C196 596 124 596 84 574 Z" fill="url(#edge)" opacity=".2"/>
+      <path d="M98 140 C130 166 190 166 222 140" ${trim}/>
+      <path d="M74 210 C100 310 96 430 58 586 M246 210 C220 310 224 430 262 586" ${seam}/>`,
     weapon:weaponHead,
-    offhand:`<path d="M236 204 C292 226 302 342 240 420 C178 342 188 226 236 204 Z" fill="url(#mat)" opacity=".94"/><path d="M210 246 C232 232 258 232 280 246 C280 308 264 362 240 394 C216 362 200 308 210 246 Z" fill="url(#edge)" opacity=".34"/><path d="M236 228 L236 386" ${seam}/><path d="M196 292 C220 314 252 314 276 292" ${trim}/><circle cx="236" cy="306" r="18" fill="url(#jewel)" opacity=".68"/><path d="M206 248 L266 364 M266 248 L206 364" stroke="#020617" stroke-width="4" opacity=".24"/>`,
-    amulet:`<path d="M112 122 C130 176 190 176 208 122" ${trim}/><path d="M160 184 L194 230 L160 286 L126 230 Z" fill="url(#mat)"/><circle cx="160" cy="226" r="12" fill="#fff" opacity=".26"/>`,
-    ring1:`<circle cx="74" cy="294" r="18" fill="none" stroke="url(#trim)" stroke-width="8"/><circle cx="74" cy="294" r="8" fill="#020617" opacity=".38"/>`,
-    ring2:`<circle cx="246" cy="294" r="18" fill="none" stroke="url(#trim)" stroke-width="8"/><circle cx="246" cy="294" r="8" fill="#020617" opacity=".38"/>`,
+    // OFFHAND: mano sinistra del personaggio = lato DESTRO del canvas (x≈240)
+    offhand:`<path d="M238 170 C298 194 312 330 244 415 C176 330 190 194 238 170 Z" fill="url(#mat)" opacity=".94"/>
+      <path d="M212 210 C234 196 260 196 282 210 C282 278 266 336 242 370 C218 336 202 278 212 210 Z" fill="url(#edge)" opacity=".34"/>
+      <path d="M238 196 L238 374" ${seam}/>
+      <path d="M198 292 C222 314 256 314 280 292" ${trim}/>
+      <circle cx="238" cy="295" r="18" fill="url(#jewel)" opacity=".68"/>`,
+    // AMULETO: collana a y=128-150, pendente a y=168-200
+    amulet:`<path d="M118 128 C136 172 184 172 202 128" ${trim}/>
+      <path d="M160 178 L196 224 L160 276 L124 224 Z" fill="url(#mat)"/>
+      <circle cx="160" cy="220" r="14" fill="url(#jewel)" opacity=".75"/>`,
+    // ANELLI: dita a y=396-408
+    ring1:`<circle cx="72" cy="400" r="16" fill="none" stroke="url(#trim)" stroke-width="8"/><circle cx="72" cy="400" r="7" fill="#020617" opacity=".38"/>`,
+    ring2:`<circle cx="248" cy="400" r="16" fill="none" stroke="url(#trim)" stroke-width="8"/><circle cx="248" cy="400" r="7" fill="#020617" opacity=".38"/>`,
   };
   const body = shapes[slot] || shapes.amulet;
   const bodyTransform = profileWearTransform(profile, slot);

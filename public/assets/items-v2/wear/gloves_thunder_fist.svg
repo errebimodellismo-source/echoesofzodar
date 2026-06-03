@@ -6,5 +6,8 @@
     <radialGradient id="jewel" cx="38%" cy="28%" r="70%"><stop offset="0%" stop-color="#fff"/><stop offset="28%" stop-color="#faf5ff"/><stop offset="70%" stop-color="#c084fc"/><stop offset="100%" stop-color="#f472b6"/></radialGradient>
     <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#020617" flood-opacity=".52"/></filter>
   </defs>
-  <g filter="url(#shadow)" ><path d="M48 234 L100 252 L92 330 L36 312 Z M220 252 L272 234 L284 312 L228 330 Z" fill="url(#mat)"/><path d="M58 250 L92 262 L86 310 L46 300 Z M228 262 L262 250 L274 300 L234 310 Z" fill="url(#edge)" opacity=".34"/><path d="M58 264 L96 278 M224 278 L262 264" stroke="#111827" stroke-width="3" opacity=".42" fill="none"/><path d="M42 312 L92 330 M228 330 L278 312" stroke="url(#trim)" stroke-width="5" opacity=".76" fill="none"/></g>
+  <g filter="url(#shadow)" ><path d="M46 368 L98 386 L90 428 L34 410 Z M222 386 L274 368 L286 410 L230 428 Z" fill="url(#mat)"/>
+      <path d="M56 382 L90 394 L84 418 L44 408 Z M230 394 L264 382 L276 408 L236 418 Z" fill="url(#edge)" opacity=".34"/>
+      <path d="M56 392 L94 406 M226 406 L264 392" stroke="#111827" stroke-width="3" opacity=".42" fill="none"/>
+      <path d="M40 410 L90 428 M230 428 L280 410" stroke="url(#trim)" stroke-width="5" opacity=".76" fill="none"/></g>
 </svg>

@@ -6,5 +6,9 @@
     <radialGradient id="jewel" cx="38%" cy="28%" r="70%"><stop offset="0%" stop-color="#fff"/><stop offset="28%" stop-color="#f0fdf4"/><stop offset="70%" stop-color="#34d399"/><stop offset="100%" stop-color="#0ea5e9"/></radialGradient>
     <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#020617" flood-opacity=".52"/></filter>
   </defs>
-  <g filter="url(#shadow)" ><path d="M100 500 L152 500 L148 572 L76 572 C82 540 94 522 100 500 Z M168 500 L220 500 C226 522 238 540 244 572 L172 572 Z" fill="url(#mat)"/><path d="M108 510 L144 510 L140 558 L86 558 C92 536 100 520 108 510 Z M176 510 L212 510 C220 520 228 536 234 558 L180 558 Z" fill="url(#edge)" opacity=".34"/><path d="M92 536 L148 536 M172 536 L228 536" stroke="#111827" stroke-width="3" opacity=".42" fill="none"/><path d="M78 572 L150 572 M172 572 L244 572" stroke="url(#trim)" stroke-width="5" opacity=".76" fill="none"/><path d="M122 502 L118 560 M194 502 L200 560" stroke="#111827" stroke-width="3" opacity=".42" fill="none"/></g>
+  <g filter="url(#shadow)" ><path d="M100 544 L152 544 L148 600 L72 615 C80 584 92 566 100 544 Z M168 544 L220 544 C228 566 240 584 248 615 L172 600 Z" fill="url(#mat)"/>
+      <path d="M108 554 L144 554 L140 592 L82 606 C88 578 98 562 108 554 Z M176 554 L212 554 C222 562 232 578 238 606 L180 592 Z" fill="url(#edge)" opacity=".34"/>
+      <path d="M90 578 L148 578 M172 578 L230 578" stroke="#111827" stroke-width="3" opacity=".42" fill="none"/>
+      <path d="M74 615 L150 608 M170 608 L246 615" stroke="url(#trim)" stroke-width="5" opacity=".76" fill="none"/>
+      <path d="M124 546 L120 594 M196 546 L202 594" stroke="#111827" stroke-width="3" opacity=".42" fill="none"/></g>
 </svg>

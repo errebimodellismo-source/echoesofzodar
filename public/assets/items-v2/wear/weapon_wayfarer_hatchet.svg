@@ -6,5 +6,5 @@
     <radialGradient id="jewel" cx="38%" cy="28%" r="70%"><stop offset="0%" stop-color="#fff"/><stop offset="28%" stop-color="#f8fafc"/><stop offset="70%" stop-color="#cbd5e1"/><stop offset="100%" stop-color="#64748b"/></radialGradient>
     <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#020617" flood-opacity=".52"/></filter>
   </defs>
-  <g filter="url(#shadow)" ><path d="M82 120 C142 104 164 164 110 210 C104 170 94 142 82 120 Z" fill="url(#mat)"/><path d="M92 150 L86 574" stroke="url(#trim)" stroke-width="11" stroke-linecap="round"/><path d="M80 208 L130 228" stroke="#111827" stroke-width="4" opacity=".35"/><path d="M98 132 C126 132 142 148 138 168" stroke="#fff" stroke-width="4" opacity=".35" fill="none"/></g>
+  <g filter="url(#shadow)" ><path d="M82 120 C142 104 164 162 110 208 C104 168 94 140 82 120 Z" fill="url(#mat)"/><path d="M92 150 L86 408" stroke="url(#trim)" stroke-width="11" stroke-linecap="round"/><path d="M80 206 L130 226" stroke="#111827" stroke-width="4" opacity=".35"/><path d="M98 132 C126 132 142 148 138 168" stroke="#fff" stroke-width="4" opacity=".35" fill="none"/><circle cx="89" cy="413" r="9" fill="url(#mat)" opacity=".7"/></g>
 </svg>

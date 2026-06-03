@@ -6,5 +6,11 @@
     <radialGradient id="jewel" cx="38%" cy="28%" r="70%"><stop offset="0%" stop-color="#fff"/><stop offset="28%" stop-color="#f0fdf4"/><stop offset="70%" stop-color="#34d399"/><stop offset="100%" stop-color="#0ea5e9"/></radialGradient>
     <filter id="shadow" x="-30%" y="-30%" width="160%" height="160%"><feDropShadow dx="0" dy="6" stdDeviation="4" flood-color="#020617" flood-opacity=".52"/></filter>
   </defs>
-  <g filter="url(#shadow)" ><path d="M90 158 C112 124 208 124 230 158 L212 338 C184 362 136 362 108 338 Z" fill="url(#mat)"/><path d="M70 172 C100 140 124 136 148 154 L132 218 C110 208 90 202 66 204 Z M172 154 C196 136 220 140 250 172 L254 204 C230 202 210 208 188 218 Z" fill="url(#mat)" opacity=".9"/><path d="M110 166 C130 146 190 146 210 166 L198 304 C176 322 144 322 122 304 Z" fill="url(#edge)" opacity=".33"/><path d="M124 152 L160 222 L196 152" stroke="#111827" stroke-width="3" opacity=".42" fill="none"/><circle cx="160" cy="214" r="14" fill="url(#jewel)" opacity=".7"/><path d="M110 270 C136 292 184 292 210 270" stroke="url(#trim)" stroke-width="5" opacity=".76" fill="none"/><path d="M104 194 L216 194 M106 238 L214 238 M118 302 L202 302" stroke="#111827" stroke-width="3" opacity=".42" fill="none"/></g>
+  <g filter="url(#shadow)" ><path d="M90 158 C112 124 208 124 230 158 L212 325 C184 348 136 348 108 325 Z" fill="url(#mat)"/>
+      <path d="M70 170 C100 138 124 134 148 152 L132 216 C110 206 90 200 66 202 Z M172 152 C196 134 220 138 250 170 L254 202 C230 200 210 206 188 216 Z" fill="url(#mat)" opacity=".9"/>
+      <path d="M110 164 C130 144 190 144 210 164 L198 298 C176 314 144 314 122 298 Z" fill="url(#edge)" opacity=".33"/>
+      <path d="M124 150 L160 218 L196 150" stroke="#111827" stroke-width="3" opacity=".42" fill="none"/>
+      <circle cx="160" cy="210" r="14" fill="url(#jewel)" opacity=".7"/>
+      <path d="M110 266 C136 288 184 288 210 266" stroke="url(#trim)" stroke-width="5" opacity=".76" fill="none"/>
+      <path d="M104 192 L216 192 M106 234 L214 234 M118 298 L202 298" stroke="#111827" stroke-width="3" opacity=".42" fill="none"/></g>
 </svg>
