@@ -6770,11 +6770,11 @@ function CreateChar({ setScreen, goGame, authUser }) {
         hp:maxHp, maxHp, atk:c.atk+r.atkB, def:c.def+r.defB,
         mag:c.mag+r.magB, init:c.init+r.initB,
         xp:0, level:1, gold:20, dead:false,
-        portrait_face: faceVariant,
-        portrait_hair: proceduralAppearanceRace ? 0 : hairVariant,
-        portrait_eyes: proceduralAppearanceRace ? 1 : eyesVariant,
-        portrait_scar: proceduralAppearanceRace ? 0 : scarVariant,
-        portrait_beard: !proceduralAppearanceRace && gender === "male" ? beardVariant : 0,
+        portrait_face: null,
+        portrait_hair: null,
+        portrait_eyes: null,
+        portrait_scar: null,
+        portrait_beard: null,
       };
       debugCharacterFlow("create_player_generated", player);
       debugCharacterFlow("save_attempt", { id: player.id, accountId: player.accountId, partyCode: player.partyCode });
