@@ -1627,15 +1627,16 @@ const SECRET_CLASS_BASE_FALLBACK = {
 };
 
 function getCharacterChoiceArt(kind, key, value, gender="male") {
+  // Classi con card art → usa sempre quella (non dipende dal genere)
   if(kind === "classes" && value?._cardUnlock) return `/assets/cards/art/unlock/class-${keyToAssetSlug(key)}.png`;
-  if(kind === "races" && gender === "female") return getRacePortraitPath(key, gender);
-  if(kind === "races"   && value?._cardUnlock) return `/assets/cards/art/unlock/race-${keyToAssetSlug(key)}.png`;
+  // Razze con card art → usa quella (stessa per entrambi i generi, molto più artistica dei portrait 3D)
+  if(kind === "races" && value?._cardUnlock) return `/assets/cards/art/unlock/race-${keyToAssetSlug(key)}.png`;
   if(kind === "classes") {
     // Classi segrete senza cardUnlock: usa portrait della classe base più vicina
     const effectiveCls = SECRET_CLASS_BASE_FALLBACK[key] || key;
     return getClassPortraitPath(effectiveCls, gender);
   }
-  // Razze segrete senza cardUnlock: usa portrait della razza base più vicina
+  // Razze senza cardUnlock: usa portrait della razza base più vicina per genere
   const effectiveRace = SECRET_RACE_BASE_FALLBACK[key] || key;
   return getRacePortraitPath(effectiveRace, gender);
 }
