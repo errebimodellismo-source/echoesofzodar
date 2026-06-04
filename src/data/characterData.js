@@ -88,3 +88,50 @@ export const MAGIC_CLASSES = ['mage','sorcerer','cleric','druid','bard','warlock
 
 export const SECRET_UNLOCK_KEY = 'eoz_secret_unlocked';
 export const SECRET_PASSWORD   = 'the chosen one';
+
+// Codici promo monouso — uno per classe/razza sbloccabile.
+// Ogni codice sblocca solo quella specifica opzione.
+export const PROMO_CODES = {
+  // CLASSI
+  "EOZ-ECHOKNIGHT-4A2":   { kind:"classes", key:"echo_knight" },
+  "EOZ-VOIDSAGE-7F1":     { kind:"classes", key:"void_sage" },
+  "EOZ-SIGILWARD-3K9":    { kind:"classes", key:"sigilwarden" },
+  "EOZ-ASHORACLE-8B5":    { kind:"classes", key:"ashen_oracle" },
+  "EOZ-BLOODCART-2M7":    { kind:"classes", key:"blood_cartographer" },
+  "EOZ-MOONREAV-6D3":     { kind:"classes", key:"moon_reaver" },
+  "EOZ-HERALDZOD-1X4":    { kind:"classes", key:"herald_zodar" },
+  "EOZ-RELICTAM-9P2":     { kind:"classes", key:"relic_tamer" },
+  "EOZ-OATHBLAD-5H8":     { kind:"classes", key:"oathblade" },
+  "EOZ-ECHOSING-3R6":     { kind:"classes", key:"echo_singer" },
+  "EOZ-ECHOREAP-7W1":     { kind:"classes", key:"echo_reaper" },
+  "EOZ-SEALINQ-4N5":      { kind:"classes", key:"seal_inquisitor" },
+  "EOZ-BLOODALC-2T9":     { kind:"classes", key:"blood_alchemist" },
+  "EOZ-RUNELDR-8C3":      { kind:"classes", key:"rune_elder" },
+  "EOZ-BLADEDNC-6Q7":     { kind:"classes", key:"blade_dancer" },
+  "EOZ-CURSEBRK-1V5":     { kind:"classes", key:"cursebreaker" },
+  "EOZ-STARPILG-9J2":     { kind:"classes", key:"star_pilgrim" },
+  "EOZ-SOULFORG-3Z8":     { kind:"classes", key:"soul_forger" },
+  "EOZ-DOOMPROP-5Y4":     { kind:"classes", key:"doom_prophet" },
+  "EOZ-MAZEKEEP-7U6":     { kind:"classes", key:"maze_keeper" },
+  // RAZZE
+  "EOZ-AASIMAR-2K1":      { kind:"races", key:"aasimar" },
+  "EOZ-DROW-8F4":         { kind:"races", key:"drow" },
+  "EOZ-FORGED-5M7":       { kind:"races", key:"forged" },
+  "EOZ-REGVAMP-3B9":      { kind:"races", key:"renegade_vampire" },
+  "EOZ-SIREN-6X2":        { kind:"races", key:"sirenide" },
+  "EOZ-ECHIDE-1P5":       { kind:"races", key:"echide" },
+  "EOZ-GENASI-9H3":       { kind:"races", key:"genasi" },
+  "EOZ-ANTDRAC-4W8":      { kind:"races", key:"ancient_draconid" },
+  "EOZ-SHADAWK-7T6":      { kind:"races", key:"shadow_awakened" },
+  "EOZ-FAE-2R1":          { kind:"races", key:"fae" },
+  "EOZ-ECHBORN-8N4":      { kind:"races", key:"echo_born" },
+  "EOZ-HALFDJI-5J7":      { kind:"races", key:"half_djinn" },
+  "EOZ-GOLEMID-3V2":      { kind:"races", key:"golemide" },
+  "EOZ-VOIDTCH-6C9":      { kind:"races", key:"void_touched" },
+  "EOZ-FALLSER-1Q5":      { kind:"races", key:"fallen_seraphite" },
+  "EOZ-PRIMDRA-9Z3":      { kind:"races", key:"primordial_draconian" },
+  "EOZ-NIGHTCH-4Y8":      { kind:"races", key:"night_child" },
+  "EOZ-ANTSILV-7U1":      { kind:"races", key:"ancient_silvan" },
+  "EOZ-ATLANT-2D6":       { kind:"races", key:"atlantean" },
+  "EOZ-LIVMIRR-5E4":      { kind:"races", key:"living_mirror" },
+};

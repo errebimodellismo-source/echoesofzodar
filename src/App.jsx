@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "./supabase";
-import { CLASSES, RACES, SECRET_UNLOCK_KEY, SECRET_PASSWORD, MAGIC_CLASSES as DATA_MAGIC_CLASSES } from "./data/characterData";
+import { CLASSES, RACES, SECRET_UNLOCK_KEY, SECRET_PASSWORD, PROMO_CODES, MAGIC_CLASSES as DATA_MAGIC_CLASSES } from "./data/characterData";
 import { SPELL_SLOTS, SPELLS } from "./data/spellsData";
 import { DEFAULT_QUESTS } from "./data/questsData";
 import { DEFAULT_MONSTERS } from "./data/monstersData";
@@ -6712,15 +6712,29 @@ function CreateChar({ setScreen, goGame, authUser }) {
   }
 
   function tryUnlock() {
-    if (secretInput.trim().toLowerCase() === SECRET_PASSWORD) {
+    const raw = secretInput.trim();
+    if (raw.toLowerCase() === SECRET_PASSWORD) {
       localStorage.setItem(SECRET_UNLOCK_KEY, "1");
       setSecretUnlocked(true);
       setSecretError(false);
       setSecretInput("");
-    } else {
-      setSecretError(true);
-      setTimeout(() => setSecretError(false), 2000);
+      return;
     }
+    const promo = PROMO_CODES[raw.toUpperCase()];
+    if (promo) {
+      const current = getStoredCharacterCardUnlocks(authUser?.id);
+      const list = current[promo.kind] || [];
+      if (!list.includes(promo.key)) {
+        const updated = { ...current, [promo.kind]: [...list, promo.key] };
+        saveStoredCharacterCardUnlocks(authUser?.id, updated);
+        setCardUnlocks(updated);
+      }
+      setSecretError(false);
+      setSecretInput("");
+      return;
+    }
+    setSecretError(true);
+    setTimeout(() => setSecretError(false), 2000);
   }
 
   async function create() {
