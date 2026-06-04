@@ -18518,6 +18518,9 @@ ${stepText(step)}`, "quest","Master");
             <div style={{ marginTop:"0.7rem", padding:"0.4rem 0.5rem", borderLeft:"2px solid #7c3aed", fontSize:"0.55rem", color:"#64748b", fontStyle:"italic", lineHeight:1.6 }}>
               "Osserva ogni guerra, ogni morte, ogni scelta."
             </div>
+            <button onClick={toggleAfk} title={isAfk ? "Sei in modalità AFK — non partecipi alle battaglie. Clicca per tornare attivo." : "Sei attivo — clicca per passare in modalità AFK e non essere incluso nelle battaglie."} style={{ marginTop:6, width:"100%", padding:"0.3rem 0.4rem", background: isAfk ? "rgba(239,68,68,0.15)" : "rgba(109,40,217,0.15)", border:`1px solid ${isAfk ? "#7f1d1d" : "#4c1d95"}`, borderRadius:4, color: isAfk ? "#f87171" : "#a78bfa", fontSize:"0.62rem", cursor:"pointer", letterSpacing:"0.06em", textAlign:"center" }}>
+              {isAfk ? "⏸ AFK — Non in battaglia" : "✅ Attivo — Pronto a combattere"}
+            </button>
             <MusicToggleBtn />
             <VoiceChat myId={myId} myName={me?.name || "Avventuriero"} partyCode={code} supabase={supabase} hasCrystal={equippedItems?.amulet?.id === "crystal_sintonia"} />
           </div>
