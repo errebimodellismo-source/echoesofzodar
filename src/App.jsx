@@ -6806,7 +6806,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
   }
 
   const canContinueFromName = name.trim() && realPlayerName.trim();
-  const steps = [t("create.steps.names"),t("create.steps.class"),t("create.steps.raceGender"),t("create.steps.appearance"),t("create.steps.party")];
+  const steps = [t("create.steps.names"),t("create.steps.class"),t("create.steps.raceGender"),t("create.steps.party")];
   const classPreviewValue = CLASSES[classPreviewKey] || CLASSES[cls] || CLASSES.warrior;
   const racePreviewValue = RACES[racePreviewKey] || RACES[race] || RACES.human;
   const classPreviewUnlocked = isCharacterOptionUnlocked("classes", classPreviewKey, classPreviewValue);
@@ -6943,11 +6943,11 @@ function CreateChar({ setScreen, goGame, authUser }) {
           </div>
           <div style={{ display:"flex", gap:8, marginTop:"1rem" }}>
             <SmallBtn onClick={()=>setStep(1)}>🔙 {t("common.back")}</SmallBtn>
-            <BigBtn onClick={()=>setStep(3)} gold>{t("common.next")} ⏩</BigBtn>
+            <BigBtn onClick={()=>setStep(4)} gold>{t("common.next")} ⏩</BigBtn>
           </div>
         </Card>
       )}
-      {step===3 && (
+      {false && step===3 && (
         <Card title={`🎨 ${t("create.appearanceTitle")}`}>
           {/* Anteprima manichino con viso sovrapposto */}
           <div style={{ display:"flex", justifyContent:"center", marginBottom:"1.2rem" }}>
@@ -7088,7 +7088,7 @@ function CreateChar({ setScreen, goGame, authUser }) {
           <input style={inputStyle} value={code} onChange={e=>setCode(e.target.value.toUpperCase())} placeholder={t("create.partyCodePlaceholder")} maxLength={8} />
           <p style={{ color:"#64748b", fontSize:"0.75rem", margin:"6px 0 0", lineHeight:1.5 }}>{t("create.partyHelp")}</p>
           <div style={{ display:"flex", gap:8, marginTop:"1.5rem" }}>
-            <SmallBtn onClick={()=>setStep(3)}>🔙 {t("common.back")}</SmallBtn>
+            <SmallBtn onClick={()=>setStep(2)}>🔙 {t("common.back")}</SmallBtn>
             <BigBtn onClick={create} gold icon="⭐" disabled={loading}>{loading?t("create.creating"):t("create.confirmEnter")}</BigBtn>
           </div>
         </Card>
@@ -12302,8 +12302,8 @@ function EquipmentView({ me, equippedItems, equippedWeapon, activeCosmetics, own
   return (
     <div style={{ flex:1, display:"flex", flexDirection:isMobile ? "column" : "row", overflow:isMobile ? "auto" : "hidden", height:"100%", minHeight:0 }}>
 
-      {/* ══ LEFT — mannequin + slots ══ */}
-      <div style={{ width: isMobile ? "100%" : "50%", flexShrink:0, display:"flex", flexDirection:"column", borderRight:isMobile ? "none" : "1px solid rgba(255,255,255,0.07)", borderBottom:isMobile ? "1px solid rgba(255,255,255,0.07)" : "none", background:"rgba(5,8,18,0.6)", minHeight:isMobile ? 500 : 0 }}>
+      {/* ══ LEFT — mannequin + slots (nascosto) ══ */}
+      <div style={{ display:"none" }}>
 
         {/* Stats bar */}
         <div style={{ display:"flex", gap:isMobile ? 8 : 12, padding:isMobile ? "0.5rem 0.7rem" : "0.6rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.06)", flexWrap:"wrap", justifyContent:isMobile ? "center" : "flex-start" }}>
@@ -12371,7 +12371,7 @@ function EquipmentView({ me, equippedItems, equippedWeapon, activeCosmetics, own
       </div>
 
       {/* ══ RIGHT — inventory grid ══ */}
-      <div style={{ flex:isMobile ? "0 0 auto" : 1, display:"flex", flexDirection:"column", overflow:isMobile ? "visible" : "hidden", minHeight:isMobile ? 520 : 0 }}>
+      <div style={{ flex:1, display:"flex", flexDirection:"column", overflow:isMobile ? "visible" : "hidden", minHeight:isMobile ? 520 : 0 }}>
 
         {/* Item detail panel */}
         <div style={{ minHeight: isMobile ? 0 : 236, flexShrink:0, display:"grid", gridTemplateColumns: isMobile ? "96px minmax(0,1fr)" : "152px minmax(0,1fr) auto", gap:isMobile ? 10 : 14, padding:isMobile ? "0.75rem" : "0.9rem 1rem", borderBottom:"1px solid rgba(255,255,255,0.07)", background:"linear-gradient(135deg, rgba(15,23,42,0.95), rgba(20,14,35,0.92))", alignItems:"stretch", overflow:"hidden" }}>
