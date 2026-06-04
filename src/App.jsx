@@ -14985,7 +14985,8 @@ function GameScreen({ myId, setScreen, authUser }) {
     const c = qs?.combat;
     if(!c?.active) { setTurnTimeLeft(null); return; }
     const actor = (c.combatants||[])[c.turn % Math.max(1,(c.combatants||[]).length)];
-    if(!actor?.isPlayer || actor?.isSummon || c.pendingLog) { setTurnTimeLeft(null); return; }
+    if(actor?.isSummon || c.pendingLog) { setTurnTimeLeft(null); return; }
+    if(!actor?.isPlayer) { setTurnTimeLeft(null); return; } // turno mostro — nessun countdown giocatore
     currentActorIdRef.current = actor.id;
     let timeLeft = TURN_TIMEOUT_S;
     setTurnTimeLeft(timeLeft);
@@ -20133,27 +20134,31 @@ ${stepText(step)}`, "quest","Master");
                     </div>
                   </div>
                   {(() => {
-                    const actor = combat.combatants?.[combat.turn % Math.max(1, combat.combatants.length)];
+                    const cbs = combat.combatants || [];
+                    const actor = cbs.length ? cbs[combat.turn % cbs.length] : null;
                     const actorIsPlayer = actor?.isPlayer && !actor?.isSummon;
-                    const urgent = turnTimeLeft !== null && turnTimeLeft <= 5;
-                    const timerColor = turnTimeLeft === null ? "#94a3b8" : turnTimeLeft <= 5 ? "#ef4444" : turnTimeLeft <= 10 ? "#f97316" : "#4ade80";
+                    const tl = turnTimeLeft;
+                    const urgent = tl !== null && tl <= 5;
+                    const timerColor = tl === null ? "#94a3b8" : tl <= 5 ? "#ef4444" : tl <= 10 ? "#f97316" : "#4ade80";
                     return (
-                      <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:6, minWidth:120 }}>
+                      <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:5, minWidth:130 }}>
                         {actor && (
-                          <span style={{ padding:"0.35rem 0.85rem", background: myTurn ? "rgba(239,68,68,0.24)" : "rgba(30,41,59,0.7)", border:`1px solid ${myTurn ? "#ef4444" : "#334155"}`, borderRadius:999, color: myTurn ? "#fee2e2" : "#94a3b8", fontSize:"0.8rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.06em", whiteSpace:"nowrap" }}>
+                          <span style={{ padding:"0.35rem 0.85rem", background: myTurn ? "rgba(239,68,68,0.24)" : "rgba(30,41,59,0.7)", border:`1px solid ${myTurn ? "#ef4444" : "#334155"}`, borderRadius:999, color: myTurn ? "#fee2e2" : "#94a3b8", fontSize:"0.78rem", fontFamily:"'Cinzel',serif", letterSpacing:"0.05em", whiteSpace:"nowrap" }}>
                             {myTurn ? (myDeathTurn ? (lang==="en"?"🕯️ SAVE":"🕯️ SALVEZZA") : (lang==="en"?"⚔️ YOUR TURN":"⚔️ TUO TURNO")) : `${actorIsPlayer ? "⚔️" : "👹"} ${actor.name}`}
                           </span>
                         )}
-                        {turnTimeLeft !== null && (
+                        {tl !== null ? (
                           <div style={{ display:"flex", flexDirection:"column", alignItems:"flex-end", gap:3, width:"100%" }}>
-                            <span style={{ fontSize: urgent ? "1.4rem" : "1rem", fontWeight:900, color:timerColor, fontVariantNumeric:"tabular-nums", transition:"all 0.3s" }}>
-                              {urgent && "⚠️ "}{turnTimeLeft}s
+                            <span style={{ fontSize: urgent ? "1.3rem" : "0.95rem", fontWeight:900, color:timerColor, fontVariantNumeric:"tabular-nums", transition:"color 0.3s" }}>
+                              {urgent ? "⚠️ " : "⏱ "}{tl}s
                             </span>
-                            <div style={{ width:100, height:4, background:"rgba(30,41,59,0.7)", borderRadius:3, overflow:"hidden" }}>
-                              <div style={{ height:"100%", width:`${(turnTimeLeft/30)*100}%`, background:timerColor, borderRadius:3, transition:"width 1s linear, background 0.3s" }}/>
+                            <div style={{ width:110, height:5, background:"rgba(30,41,59,0.8)", borderRadius:3, overflow:"hidden" }}>
+                              <div style={{ height:"100%", width:`${(tl/30)*100}%`, background:timerColor, borderRadius:3, transition:"width 1s linear, background 0.3s" }}/>
                             </div>
                           </div>
-                        )}
+                        ) : actor && !actorIsPlayer ? (
+                          <span style={{ fontSize:"0.68rem", color:"#475569" }}>👹 {lang==="en"?"Monster turn...":"Turno mostro..."}</span>
+                        ) : null}
                       </div>
                     );
                   })()}
