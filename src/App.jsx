@@ -12636,13 +12636,29 @@ function BattleBanner({ onEnter, onDecline, startedAt }) {
   const COUNTDOWN = 30;
   const elapsed = Math.floor((Date.now() - (startedAt || Date.now())) / 1000);
   const [secs, setSecs] = useState(Math.max(0, COUNTDOWN - elapsed));
+  const enteredRef = useRef(false);
 
   useEffect(() => {
     const t = setInterval(() => {
-      setSecs(s => Math.max(0, s - 1));
+      setSecs(s => {
+        const next = Math.max(0, s - 1);
+        if(next === 0 && !enteredRef.current) {
+          enteredRef.current = true;
+          clearInterval(t);
+          onEnter();
+        }
+        return next;
+      });
     }, 1000);
     return () => clearInterval(t);
   }, []);
+
+  useEffect(() => {
+    if(secs === 0 && !enteredRef.current) {
+      enteredRef.current = true;
+      onEnter();
+    }
+  }, [secs]);
 
   const pct = Math.max(0, (secs / COUNTDOWN) * 100);
   const urgent = secs <= 10;
@@ -17744,10 +17760,13 @@ ${lq.desc}
   }
 
   async function getOnlinePartyPlayersForCombat() {
-    const userMeta = await dbGetUserMasterMeta();
+    const [freshPlayers, userMeta] = await Promise.all([
+      dbGetPlayers(code),
+      dbGetUserMasterMeta(),
+    ]);
     const nowMs = Date.now();
     const myAccountId = authUser?.id || null;
-    const onlinePlayers = partyPlayers.filter(player => {
+    const onlinePlayers = (freshPlayers || []).filter(player => {
       if(player.id === myId) return true;
       // Zodar entra sempre e comunque, senza restrizioni di account
       if(CLASSES[player.class]?._zodar) return true;
@@ -17756,7 +17775,7 @@ ${lq.desc}
       if(player.accountId === myAccountId) return false;
       return isPartyPlayerOnline(player, userMeta, nowMs);
     });
-    return onlinePlayers.length ? onlinePlayers : partyPlayers.filter(player => player.id === myId);
+    return onlinePlayers.length ? onlinePlayers : (freshPlayers || []).filter(player => player.id === myId);
   }
 
   async function postQuestStepMessage(q, stepIndex) {
