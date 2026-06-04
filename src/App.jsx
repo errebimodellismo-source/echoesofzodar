@@ -6308,8 +6308,8 @@ function LandingHeroCard({ character, onPlay, onDelete }) {
         <div style={{ marginTop:"auto", paddingTop:"1rem", display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
           {!dead && <BigBtn onClick={onPlay} gold icon="⚔️">{t("common.play")}</BigBtn>}
           {!dead && (
-            <button onClick={toggleAfk} title={isAfk ? "AFK — clicca per tornare attivo" : "Attivo — clicca per AFK"} style={{ padding:"0.45rem 0.8rem", background:isAfk ? "rgba(245,158,11,0.18)" : "rgba(34,197,94,0.1)", border:`1px solid ${isAfk ? "#78350f" : "#14532d"}`, borderRadius:8, color:isAfk ? "#fbbf24" : "#4ade80", fontSize:"0.78rem", cursor:"pointer", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>
-              {isAfk ? "⏸ AFK" : "✅ Pronto"}
+            <button onClick={toggleAfk} title={isAfk ? "Non pronto — clicca per tornare pronto" : "Pronto — clicca per segnalarti non pronto"} style={{ padding:"0.45rem 0.8rem", background:isAfk ? "rgba(245,158,11,0.18)" : "rgba(34,197,94,0.1)", border:`1px solid ${isAfk ? "#78350f" : "#14532d"}`, borderRadius:8, color:isAfk ? "#fbbf24" : "#4ade80", fontSize:"0.78rem", cursor:"pointer", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>
+              {isAfk ? "⏸ Non pronto" : "✅ Pronto"}
             </button>
           )}
           <SmallBtn red onClick={onDelete}>🗑️ {t("common.delete")}</SmallBtn>
@@ -18569,7 +18569,7 @@ ${stepText(step)}`, "quest","Master");
               "Osserva ogni guerra, ogni morte, ogni scelta."
             </div>
             <button onClick={toggleAfk} title={isAfk ? "Sei in modalità AFK — non partecipi alle battaglie. Clicca per tornare attivo." : "Sei attivo — clicca per passare in modalità AFK e non essere incluso nelle battaglie."} style={{ marginTop:6, width:"100%", padding:"0.3rem 0.4rem", background: isAfk ? "rgba(239,68,68,0.15)" : "rgba(109,40,217,0.15)", border:`1px solid ${isAfk ? "#7f1d1d" : "#4c1d95"}`, borderRadius:4, color: isAfk ? "#f87171" : "#a78bfa", fontSize:"0.62rem", cursor:"pointer", letterSpacing:"0.06em", textAlign:"center" }}>
-              {isAfk ? "⏸ AFK — Non in battaglia" : "✅ Attivo — Pronto a combattere"}
+              {isAfk ? "⏸ Non pronto" : "✅ Pronto per la battaglia"}
             </button>
             <MusicToggleBtn />
             <VoiceChat myId={myId} myName={me?.name || "Avventuriero"} partyCode={code} supabase={supabase} hasCrystal={equippedItems?.amulet?.id === "crystal_sintonia"} />
@@ -18608,7 +18608,7 @@ ${stepText(step)}`, "quest","Master");
               <span style={{ fontSize:"0.74rem", color:"#fbbf24", fontWeight:700 }}>💰 {me.gold || 0} oro</span>
             </div>
             <button onClick={toggleAfk} title={isAfk ? "Sei in modalità AFK — non partecipi alle battaglie. Clicca per tornare attivo." : "Sei attivo — clicca per passare in modalità AFK e non essere incluso nelle battaglie."} style={{ marginTop:6, width:"100%", padding:"0.3rem 0.4rem", background: isAfk ? "rgba(239,68,68,0.15)" : "rgba(34,197,94,0.1)", border:`1px solid ${isAfk ? "#7f1d1d" : "#14532d"}`, borderRadius:4, color: isAfk ? "#f87171" : "#4ade80", fontSize:"0.62rem", cursor:"pointer", letterSpacing:"0.06em", textAlign:"center" }}>
-              {isAfk ? "⏸ AFK — Non in battaglia" : "✅ Attivo — Pronto a combattere"}
+              {isAfk ? "⏸ Non pronto" : "✅ Pronto per la battaglia"}
             </button>
             <MusicToggleBtn />
             <VoiceChat myId={myId} myName={me?.name || "Avventuriero"} partyCode={code} supabase={supabase} hasCrystal={equippedItems?.amulet?.id === "crystal_sintonia"} />
