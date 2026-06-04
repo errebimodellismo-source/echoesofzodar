@@ -12636,29 +12636,13 @@ function BattleBanner({ onEnter, onDecline, startedAt }) {
   const COUNTDOWN = 30;
   const elapsed = Math.floor((Date.now() - (startedAt || Date.now())) / 1000);
   const [secs, setSecs] = useState(Math.max(0, COUNTDOWN - elapsed));
-  const enteredRef = useRef(false);
 
   useEffect(() => {
     const t = setInterval(() => {
-      setSecs(s => {
-        const next = Math.max(0, s - 1);
-        if(next === 0 && !enteredRef.current) {
-          enteredRef.current = true;
-          clearInterval(t);
-          onEnter();
-        }
-        return next;
-      });
+      setSecs(s => Math.max(0, s - 1));
     }, 1000);
     return () => clearInterval(t);
   }, []);
-
-  useEffect(() => {
-    if(secs === 0 && !enteredRef.current) {
-      enteredRef.current = true;
-      onEnter();
-    }
-  }, [secs]);
 
   const pct = Math.max(0, (secs / COUNTDOWN) * 100);
   const urgent = secs <= 10;
@@ -15147,6 +15131,7 @@ function GameScreen({ myId, setScreen, authUser }) {
     const c = qs?.combat;
     const isNowMyTurn = !!(c?.active && !c.pendingLog && c.combatants?.[c.turn % Math.max(1, c.combatants.length)]?.id === myId);
     if (isNowMyTurn && !prevMyTurnRef.current) {
+      audioManager.playSFX("turnAlert");
       // Notify whenever the user is not watching the combat tab
       const awayFromCombat = document.hidden || tab !== "combat";
       if (awayFromCombat) {
@@ -16715,6 +16700,22 @@ function GameScreen({ myId, setScreen, authUser }) {
       }
       if(actor && !actor.isPlayer && actor.hp > 0) {
         await doMonsterTurnRef.current?.();
+        return;
+      }
+      // Auto-attacco base per il giocatore AFK invece di saltare il turno
+      const enemies = combatants.filter(c => !c.isPlayer && c.hp > 0);
+      if(actor?.isPlayer && !actor.dead && !actor.stable && !actor.dying && enemies.length) {
+        const target = enemies[0];
+        const tidx = combatants.indexOf(target);
+        const weapon = { name: lang === "en" ? "Weapon" : "Arma", weapon_die: getCombatDamageDie(actor) };
+        const resolved = await performAsyncAttack(actor, target, weapon.weapon_die, weapon);
+        const finalDmg = resolved.hit ? Math.max(1, resolved.damage) : 0;
+        combatants[tidx] = { ...target, hp: Math.max(0, target.hp - finalDmg) };
+        const { nextTurn, nextRound } = getNextCombatTurn(combatants, latestCombat.turn, latestCombat.round);
+        const log = formatWeaponAttackLog(actor, target, resolved, weapon.name, combatants[tidx].hp, target.maxHp, { lang }) + (lang === "en" ? "\n_(auto-attack — AFK)_" : "\n_(colpo automatico — AFK)_");
+        const newCombat = { ...latestCombat, combatants, turn: nextTurn, round: nextRound, pendingLog: log };
+        await dbSavePartyState(code, { ...latestQs, combat: newCombat });
+        setQs(prev => ({ ...prev, combat: newCombat }));
         return;
       }
       const { nextTurn, nextRound } = getNextCombatTurn(combatants, latestCombat.turn, latestCombat.round);

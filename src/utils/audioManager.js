@@ -19,6 +19,7 @@ class AudioManager {
       magicCast:  new Howl({ src: ['https://actions.google.com/sounds/v1/science_fiction/laser_pew.ogg'], volume: 0.5, preload: false }),
       monsterRoar:new Howl({ src: ['https://actions.google.com/sounds/v1/animals/dinosaur_roar.ogg'],   volume: 0.7, preload: false }),
       heal:       new Howl({ src: ['https://actions.google.com/sounds/v1/water/water_drop.ogg'],        volume: 0.8, preload: false }),
+      turnAlert:  new Howl({ src: ['https://actions.google.com/sounds/v1/cartoon/cartoon_cowbell.ogg'], volume: 0.9, preload: false }),
     };
 
     this.bgmUrls = {
