@@ -6217,6 +6217,15 @@ function LandingHeroCard({ character, onPlay, onDelete }) {
   const hpPct = Math.max(0, Math.min(100, Math.round((hp / maxHp) * 100)));
   const accent = dead ? "#ef4444" : (cls.color || "#fbbf24");
   const status = dead ? "Morto" : hpPct <= 30 ? "Ferito" : "Pronto";
+  const [isAfk, setIsAfk] = useState(() => localStorage.getItem(`afk_${character.id}`) === "1");
+  function toggleAfk(e) {
+    e.stopPropagation();
+    setIsAfk(prev => {
+      const next = !prev;
+      localStorage.setItem(`afk_${character.id}`, next ? "1" : "0");
+      return next;
+    });
+  }
 
   return (
     <div style={{
@@ -6298,6 +6307,11 @@ function LandingHeroCard({ character, onPlay, onDelete }) {
 
         <div style={{ marginTop:"auto", paddingTop:"1rem", display:"flex", gap:8, justifyContent:"center", flexWrap:"wrap" }}>
           {!dead && <BigBtn onClick={onPlay} gold icon="⚔️">{t("common.play")}</BigBtn>}
+          {!dead && (
+            <button onClick={toggleAfk} title={isAfk ? "AFK — clicca per tornare attivo" : "Attivo — clicca per AFK"} style={{ padding:"0.45rem 0.8rem", background:isAfk ? "rgba(245,158,11,0.18)" : "rgba(34,197,94,0.1)", border:`1px solid ${isAfk ? "#78350f" : "#14532d"}`, borderRadius:8, color:isAfk ? "#fbbf24" : "#4ade80", fontSize:"0.78rem", cursor:"pointer", fontFamily:"'Cinzel',serif", letterSpacing:"0.04em" }}>
+              {isAfk ? "⏸ AFK" : "✅ Pronto"}
+            </button>
+          )}
           <SmallBtn red onClick={onDelete}>🗑️ {t("common.delete")}</SmallBtn>
         </div>
       </div>
