@@ -7068,17 +7068,11 @@ function CreateChar({ setScreen, goGame, authUser }) {
       {step===4 && (
         <Card title={`👥 ${t("create.confirmTitle")}`}>
           <div style={{ background:"rgba(10,14,23,0.8)", border:"1px solid #374151", borderRadius:6, padding:"1.2rem", marginBottom:"1rem", display:"flex", flexDirection:"column", alignItems:"center", gap:15 }}>
-            <CharacterPortrait
-              cls={cls}
-              race={race}
-              gender={gender}
-              face={faceVariant}
-              hair={proceduralAppearanceRace ? 0 : hairVariant}
-              eyes={proceduralAppearanceRace ? 1 : eyesVariant}
-              scar={proceduralAppearanceRace ? 0 : scarVariant}
-              beard={proceduralAppearanceRace ? 0 : beardVariant}
+            <ArtThumb
+              src={getCharacterChoiceArt("classes", cls, c, gender)}
+              alt={name || cls}
               size={140}
-              radius="50%"
+              radius={999}
               style={{ border:'3px solid #fbbf24', boxShadow:'0 0 20px rgba(251,191,36,0.3)' }}
             />
             <div style={{ textAlign: 'center' }}>
