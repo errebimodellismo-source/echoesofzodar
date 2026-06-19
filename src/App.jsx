@@ -1,6 +1,7 @@
 ﻿import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { supabase } from "./supabase";
 import { CLASSES, RACES, SECRET_UNLOCK_KEY, SECRET_PASSWORD, PROMO_CODES, MAGIC_CLASSES as DATA_MAGIC_CLASSES } from "./data/characterData";
+import { PORTRAIT_ASSET_KEYS } from "./data/portraitManifest";
 import { SPELL_SLOTS, SPELLS } from "./data/spellsData";
 import { DEFAULT_QUESTS } from "./data/questsData";
 import { DEFAULT_MONSTERS } from "./data/monstersData";
@@ -1593,6 +1594,19 @@ function getRacePortraitPath(race, gender) {
 }
 function getClassPortraitPath(cls, gender) {
   return `/assets/portraits/${cls}_${gender}.png`;
+}
+const PORTRAIT_ASSET_SET = new Set(PORTRAIT_ASSET_KEYS);
+function hasPortraitAsset(key) {
+  return PORTRAIT_ASSET_SET.has(String(key || "").replace(/^\/assets\/portraits\//, "").replace(/\.png$/i, ""));
+}
+function getBestStaticPortraitPath(cls, race, gender) {
+  const candidates = [
+    `${cls}_${race}_${gender}`,
+    `${race}_${gender}`,
+    `${cls}_${gender}`,
+  ];
+  const found = candidates.find(hasPortraitAsset);
+  return found ? `/assets/portraits/${found}.png` : "";
 }
 function keyToAssetSlug(key) {
   return String(key || "").replaceAll("_", "-");
@@ -4632,12 +4646,14 @@ function getPlayerPortrait(player) {
   // Razze segrete con card art — usala come portrait
   const raceData = RACES[race];
   if(raceData?._cardUnlock) {
-    if(gender === "female") return getRacePortraitPath(race, gender);
+    if(gender === "female" && hasPortraitAsset(`${race}_${gender}`)) return getRacePortraitPath(race, gender);
     return `/assets/cards/art/unlock/race-${keyToAssetSlug(race)}.png`;
   }
   // Razze segrete senza card art (minotaur, angel, succubus)
   if(['minotaur','angel','succubus'].includes(race)) {
-    return getRacePortraitPath(race, gender);
+    const racePortrait = getBestStaticPortraitPath(cls, race, gender);
+    if(racePortrait) return racePortrait;
+    return getGeneratedPortrait(cls, race, gender, player.portrait_face || 1);
   }
 
   // Classi segrete con card art — usala come portrait
@@ -4649,8 +4665,9 @@ function getPlayerPortrait(player) {
   // Classe senza portrait dedicato → fallback classe base + razza, poi solo classe base
   const effectiveCls  = SECRET_CLASS_BASE_FALLBACK[cls]  || cls;
   const effectiveRace = SECRET_RACE_BASE_FALLBACK[race] || race;
-  // Prova classe+razza, poi classe generica
-  return getPortraitPath(effectiveCls, effectiveRace, gender);
+  const staticPortrait = getBestStaticPortraitPath(effectiveCls, effectiveRace, gender);
+  if(staticPortrait) return staticPortrait;
+  return getGeneratedPortrait(cls, race, gender, player.portrait_face || 1);
 }
 
 function hasGeneratedAppearance(player) {
@@ -7298,7 +7315,7 @@ function MasterPanel({ setScreen, authUser }) {
     return ()=>{ alive = false; clearInterval(timer); };
   }, [tab]);
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"questbuilder",l:"⚔️ Quest Builder"},{k:"stories",l:"📖 Storie"},{k:"editor",l:"✏️ Editor"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"cardpacks",l:"📦 Pacchetti"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"online",l:"👁️ Online"},{k:"users",l:"📊 Report"}];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"questbuilder",l:"⚔️ Quest Builder"},{k:"stories",l:"📖 Storie"},{k:"editor",l:"✏️ Editor"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"cardpacks",l:"📦 Pacchetti"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"online",l:"👁️ Online"},{k:"users",l:"📊 Report"},{k:"accounts",l:"🔑 Account"}];
   const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
   const visibleQuests = quests.filter(q => {
     const term = questSearch.trim().toLowerCase();
@@ -7795,6 +7812,7 @@ function MasterPanel({ setScreen, authUser }) {
       {tab==="market" && <MarketView />}
       {tab==="online" && <OnlineView />}
       {tab==="users" && <UsersView authUser={authUser} />}
+      {tab==="accounts" && <AccountsView authUser={authUser} />}
       {tab==="dungeon" && <MasterDungeonView />}
       {tab==="leaderboard" && <GlobalLeaderboardView />}
       {tab==="worldevent" && <MasterWorldEventView />}
@@ -9318,6 +9336,149 @@ function UsersView({ authUser }) {
             </div>
           </div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function AccountsView({ authUser }) {
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [search, setSearch] = useState("");
+  const [resetStatus, setResetStatus] = useState({});
+
+  useEffect(() => {
+    let active = true;
+    async function load() {
+      setLoading(true);
+      const [{ data: players }, userMeta, playerMeta] = await Promise.all([
+        supabase.from("players").select("id,name,party_code,account_id,class,race,level,xp,gold,dead,updated_at").order("updated_at",{ascending:false}),
+        dbGetUserMasterMeta().catch(()=>({})),
+        dbGetPlayerMasterMeta().catch(()=>({})),
+      ]);
+      if(!active) return;
+      const byAccount = {};
+      for(const meta of Object.values(userMeta||{})) {
+        byAccount[meta.userId] = { userId:meta.userId, email:meta.email||"", registeredAt:meta.registeredAt||"", lastSeenAt:meta.lastSeenAt||"", characters:[] };
+      }
+      for(const p of (players||[])) {
+        const aid = p.account_id || `no_account:${p.id}`;
+        if(!byAccount[aid]) byAccount[aid] = { userId:aid, email:"", registeredAt:"", lastSeenAt:"", characters:[] };
+        byAccount[aid].characters.push({ ...p, realPlayerName: playerMeta?.[p.id]?.realPlayerName||"" });
+      }
+      const sorted = Object.values(byAccount).sort((a,b)=>(b.lastSeenAt||b.registeredAt||"").localeCompare(a.lastSeenAt||a.registeredAt||""));
+      if(active) { setRows(sorted); setLoading(false); }
+    }
+    load();
+    return ()=>{ active=false; };
+  },[]);
+
+  async function sendReset(email, userId) {
+    if(!email) { alert("Nessuna email associata a questo account."); return; }
+    if(!window.confirm(`Inviare email di reset password a:\n${email}`)) return;
+    setResetStatus(s=>({...s,[userId]:"sending"}));
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo: window.location.origin });
+    if(error) {
+      setResetStatus(s=>({...s,[userId]:"error"}));
+      alert("Errore invio reset: " + error.message);
+    } else {
+      setResetStatus(s=>({...s,[userId]:"sent"}));
+      setTimeout(()=>setResetStatus(s=>{const n={...s};delete n[userId];return n;}), 5000);
+    }
+  }
+
+  const term = search.trim().toLowerCase();
+  const visible = rows.filter(u=>{
+    if(!term) return true;
+    if(u.email?.toLowerCase().includes(term)) return true;
+    if(u.userId?.toLowerCase().includes(term)) return true;
+    if(u.characters.some(c=>(c.name||"").toLowerCase().includes(term)||(c.realPlayerName||"").toLowerCase().includes(term)||(c.party_code||"").toLowerCase().includes(term))) return true;
+    return false;
+  });
+
+  return (
+    <div>
+      {!canAccessMasterPanel(authUser) && (
+        <div style={{ background:"rgba(127,29,29,0.78)", border:"1px solid #fca5a5", color:"#fff1f2", borderRadius:6, padding:"0.8rem 1rem", marginBottom:"1rem", fontSize:"0.82rem" }}>
+          Per vedere le email e inviare reset devi accedere con l'account Master autorizzato.
+        </div>
+      )}
+      <div style={{ display:"flex", gap:10, marginBottom:"1rem", alignItems:"center", flexWrap:"wrap" }}>
+        <input
+          style={{ flex:1, minWidth:180, background:"rgba(15,23,42,0.9)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", padding:"0.5rem 0.8rem", fontSize:"0.85rem" }}
+          placeholder="Cerca per email, nome PG, nome giocatore, party…"
+          value={search} onChange={e=>setSearch(e.target.value)}
+        />
+        <div style={{ color:"#64748b", fontSize:"0.78rem", whiteSpace:"nowrap" }}>{visible.length} account</div>
+      </div>
+      {loading && <div style={{ color:"#94a3b8" }}>Caricamento...</div>}
+      {!loading && !visible.length && <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun account trovato.</div>}
+      <div style={{ display:"flex", flexDirection:"column", gap:10 }}>
+        {visible.map(u=>{
+          const status = resetStatus[u.userId];
+          return (
+            <div key={u.userId} style={{ background:"rgba(15,23,42,0.88)", border:"1px solid #334155", borderRadius:8, padding:"0.9rem 1rem" }}>
+              <div style={{ display:"flex", alignItems:"flex-start", gap:12, flexWrap:"wrap" }}>
+                <div style={{ flex:1, minWidth:0 }}>
+                  <div style={{ display:"flex", alignItems:"center", gap:8, flexWrap:"wrap" }}>
+                    <span style={{ fontFamily:"'Cinzel',serif", color:u.email?"#e2d9c5":"#fca5a5", fontWeight:700, fontSize:"0.95rem", wordBreak:"break-word" }}>
+                      {u.email || "⚠ Email non disponibile"}
+                    </span>
+                    {u.registeredAt && (
+                      <span style={{ color:"#475569", fontSize:"0.7rem" }}>
+                        registrato {new Date(u.registeredAt).toLocaleDateString("it-IT")}
+                      </span>
+                    )}
+                    {u.lastSeenAt && (
+                      <span style={{ color:"#475569", fontSize:"0.7rem" }}>
+                        · visto {new Date(u.lastSeenAt).toLocaleDateString("it-IT")}
+                      </span>
+                    )}
+                  </div>
+                  <div style={{ color:"#475569", fontSize:"0.65rem", marginTop:2, wordBreak:"break-all" }}>{u.userId}</div>
+                  <div style={{ marginTop:8, display:"flex", flexDirection:"column", gap:5 }}>
+                    {!u.characters.length && <div style={{ color:"#64748b", fontSize:"0.76rem", fontStyle:"italic" }}>Nessun personaggio creato.</div>}
+                    {u.characters.map(ch=>(
+                      <div key={ch.id} style={{ background:"rgba(2,6,23,0.55)", border:"1px solid #1e293b", borderRadius:5, padding:"0.5rem 0.7rem", display:"flex", justifyContent:"space-between", flexWrap:"wrap", gap:6 }}>
+                        <div>
+                          <strong style={{ color:"#f8fafc", fontSize:"0.85rem" }}>{ch.name}</strong>
+                          {ch.realPlayerName && <span style={{ color:"#94a3b8", fontSize:"0.75rem" }}> — {ch.realPlayerName}</span>}
+                          <div style={{ color:"#94a3b8", fontSize:"0.72rem", marginTop:2 }}>
+                            {RACES[ch.race]?.name||ch.race||"?"} · {CLASSES[ch.class]?.name||ch.class||"?"} · Lv.{displayLevel(ch)}
+                            {ch.dead ? " · 💀 MORTO" : ""}
+                          </div>
+                        </div>
+                        <div style={{ textAlign:"right" }}>
+                          <span style={{ color:"#fbbf24", fontSize:"0.72rem", fontFamily:"monospace", background:"rgba(251,191,36,0.1)", border:"1px solid rgba(251,191,36,0.2)", borderRadius:4, padding:"2px 6px" }}>
+                            {ch.party_code||"NO PARTY"}
+                          </span>
+                          <div style={{ color:"#64748b", fontSize:"0.68rem", marginTop:3 }}>
+                            {ch.xp||0} XP · {ch.gold||0} oro
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ flexShrink:0 }}>
+                  <button
+                    onClick={()=>sendReset(u.email, u.userId)}
+                    disabled={!u.email || status==="sending"}
+                    style={{
+                      padding:"0.45rem 0.9rem", borderRadius:6, border:"none", cursor:u.email?"pointer":"not-allowed",
+                      background: status==="sent"?"#065f46": status==="error"?"#7f1d1d": u.email?"#1e3a5f":"#1f2937",
+                      color: status==="sent"?"#6ee7b7": status==="error"?"#fca5a5": u.email?"#93c5fd":"#4b5563",
+                      fontSize:"0.78rem", fontFamily:"'Cinzel',serif", fontWeight:700, whiteSpace:"nowrap",
+                      transition:"all 0.2s"
+                    }}
+                  >
+                    {status==="sending"?"Invio…": status==="sent"?"✓ Inviata!": status==="error"?"✗ Errore":"📧 Reset password"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
