@@ -7315,7 +7315,7 @@ function MasterPanel({ setScreen, authUser }) {
     return ()=>{ alive = false; clearInterval(timer); };
   }, [tab]);
 
-  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"questbuilder",l:"⚔️ Quest Builder"},{k:"stories",l:"📖 Storie"},{k:"editor",l:"✏️ Editor"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"cardpacks",l:"📦 Pacchetti"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"online",l:"👁️ Online"},{k:"users",l:"📊 Report"},{k:"accounts",l:"🔑 Account"}];
+  const TABS = [{k:"world",l:"🌍 Mondo"},{k:"quests",l:"📜 Missioni"},{k:"questbuilder",l:"⚔️ Quest Builder"},{k:"stories",l:"📖 Storie"},{k:"editor",l:"✏️ Editor"},{k:"monsters",l:"👾 Bestiari"},{k:"players",l:"👥 Giocatori"},{k:"cardpacks",l:"📦 Pacchetti"},{k:"party",l:"🏰 Party"},{k:"dungeon",l:"🗺️ Dungeon"},{k:"guilds",l:"🏛️ Gilde"},{k:"worldevent",l:"🌋 Evento Mondiale"},{k:"leaderboard",l:"🏆 Classifiche"},{k:"chat",l:"📣 Broadcast"},{k:"market",l:"🏪 Market"},{k:"online",l:"👁️ Online"},{k:"users",l:"📊 Report"},{k:"accounts",l:"🔑 Account"},{k:"unlocks",l:"🗝️ Codici Sblocco"}];
   const EMOJIS=["🗡️","🛡️","🏹","🪄","🔮","💀","🧌","🐉","🧛","💪","⚔️","⭐","🐺","🦅","🌿","🔥","🧙","👹","🗿","😈"];
   const visibleQuests = quests.filter(q => {
     const term = questSearch.trim().toLowerCase();
@@ -7813,6 +7813,7 @@ function MasterPanel({ setScreen, authUser }) {
       {tab==="online" && <OnlineView />}
       {tab==="users" && <UsersView authUser={authUser} />}
       {tab==="accounts" && <AccountsView authUser={authUser} />}
+      {tab==="unlocks" && <UnlockCodesView />}
       {tab==="dungeon" && <MasterDungeonView />}
       {tab==="leaderboard" && <GlobalLeaderboardView />}
       {tab==="worldevent" && <MasterWorldEventView />}
@@ -9480,6 +9481,114 @@ function AccountsView({ authUser }) {
           );
         })}
       </div>
+    </div>
+  );
+}
+
+function UnlockCodesView() {
+  const [copied, setCopied] = useState(null);
+  const [search, setSearch] = useState("");
+
+  function copyText(text, id) {
+    navigator.clipboard.writeText(text).then(()=>{
+      setCopied(id);
+      setTimeout(()=>setCopied(null), 1800);
+    });
+  }
+
+  const secretPasswordEntry = { code: SECRET_PASSWORD, label: "🌍 Password universale (tutte le razze/classi segrete senza carta)", kind: "master", emoji: "🔓", color: "#fbbf24" };
+
+  const classEntries = Object.entries(PROMO_CODES)
+    .filter(([,v])=>v.kind==="classes")
+    .map(([code,v])=>{
+      const cls = CLASSES[v.key];
+      return { code, key:v.key, label:cls?.name||v.key, emoji:cls?.emoji||"⚔️", color:cls?.color||"#94a3b8", desc:cls?.desc||"" };
+    })
+    .sort((a,b)=>a.label.localeCompare(b.label,"it"));
+
+  const raceEntries = Object.entries(PROMO_CODES)
+    .filter(([,v])=>v.kind==="races")
+    .map(([code,v])=>{
+      const race = RACES[v.key];
+      return { code, key:v.key, label:race?.name||v.key, emoji:race?.emoji||"🧬", color:"#818cf8", desc:race?.desc||"" };
+    })
+    .sort((a,b)=>a.label.localeCompare(b.label,"it"));
+
+  const term = search.trim().toLowerCase();
+
+  function filterEntries(entries) {
+    if(!term) return entries;
+    return entries.filter(e=>e.label.toLowerCase().includes(term)||e.code.toLowerCase().includes(term)||e.key.toLowerCase().includes(term));
+  }
+
+  const CodeCard = ({ code, label, emoji, color, desc, id }) => (
+    <div style={{ background:"rgba(15,23,42,0.9)", border:`1px solid ${copied===id?"#4ade80":"#334155"}`, borderRadius:8, padding:"0.75rem 0.9rem", display:"flex", alignItems:"center", gap:10, transition:"border-color 0.2s" }}>
+      <span style={{ fontSize:"1.4rem", flexShrink:0 }}>{emoji}</span>
+      <div style={{ flex:1, minWidth:0 }}>
+        <div style={{ color: color||"#e2e8f0", fontFamily:"'Cinzel',serif", fontWeight:700, fontSize:"0.88rem" }}>{label}</div>
+        {desc && <div style={{ color:"#64748b", fontSize:"0.68rem", marginTop:1, whiteSpace:"nowrap", overflow:"hidden", textOverflow:"ellipsis" }}>{desc}</div>}
+        <div style={{ fontFamily:"monospace", color:"#a5b4fc", fontSize:"0.82rem", marginTop:4, letterSpacing:"0.05em", background:"rgba(99,102,241,0.1)", border:"1px solid rgba(99,102,241,0.2)", borderRadius:4, padding:"2px 7px", display:"inline-block" }}>
+          {code}
+        </div>
+      </div>
+      <button
+        onClick={()=>copyText(code,id)}
+        style={{ flexShrink:0, padding:"0.4rem 0.75rem", background:copied===id?"rgba(74,222,128,0.15)":"rgba(99,102,241,0.15)", border:`1px solid ${copied===id?"#4ade80":"#6366f1"}`, borderRadius:6, color:copied===id?"#4ade80":"#a5b4fc", cursor:"pointer", fontSize:"0.75rem", fontFamily:"'Cinzel',serif", fontWeight:700, transition:"all 0.2s" }}
+      >
+        {copied===id?"✓ Copiato":"📋 Copia"}
+      </button>
+    </div>
+  );
+
+  const visibleClasses = filterEntries(classEntries);
+  const visibleRaces = filterEntries(raceEntries);
+  const showMaster = !term || "universale".includes(term) || "master".includes(term) || SECRET_PASSWORD.includes(term);
+
+  return (
+    <div>
+      <div style={{ background:"rgba(120,53,15,0.18)", border:"1px solid rgba(251,191,36,0.25)", borderRadius:8, padding:"0.8rem 1rem", marginBottom:"1rem", fontSize:"0.8rem", color:"#fcd34d", lineHeight:1.5 }}>
+        <strong>⚠ Uso riservato al Master.</strong> Questi codici permettono ai giocatori di sbloccare razze e classi segrete durante la creazione del personaggio. Ogni codice sblocca solo quella specifica opzione (tranne la password universale che le sblocca tutte).
+      </div>
+      <div style={{ display:"flex", gap:10, marginBottom:"1.2rem" }}>
+        <input
+          style={{ flex:1, background:"rgba(15,23,42,0.9)", border:"1px solid #334155", borderRadius:6, color:"#e2e8f0", padding:"0.5rem 0.8rem", fontSize:"0.85rem" }}
+          placeholder="Cerca per nome o codice…"
+          value={search} onChange={e=>setSearch(e.target.value)}
+        />
+      </div>
+
+      {showMaster && (
+        <div style={{ marginBottom:"1.5rem" }}>
+          <div style={{ color:"#fbbf24", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:8 }}>🔓 Password Universale</div>
+          <CodeCard code={SECRET_PASSWORD} label="Sblocca TUTTO — tutte le razze e classi segrete" emoji="🔓" color="#fbbf24" desc="Usare solo per test o giocatori speciali" id="master_secret" />
+        </div>
+      )}
+
+      {visibleClasses.length > 0 && (
+        <div style={{ marginBottom:"1.5rem" }}>
+          <div style={{ color:"#c4b5fd", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:8 }}>
+            ⚔️ Codici Classi Segrete ({visibleClasses.length})
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+            {visibleClasses.map(e=><CodeCard key={e.code} {...e} id={e.code} />)}
+          </div>
+        </div>
+      )}
+
+      {visibleRaces.length > 0 && (
+        <div style={{ marginBottom:"1.5rem" }}>
+          <div style={{ color:"#818cf8", fontFamily:"'Cinzel',serif", fontSize:"0.78rem", fontWeight:700, textTransform:"uppercase", letterSpacing:"0.1em", marginBottom:8 }}>
+            🧬 Codici Razze Segrete ({visibleRaces.length})
+          </div>
+          <div style={{ display:"flex", flexDirection:"column", gap:6 }}>
+            {visibleRaces.map(e=><CodeCard key={e.code} {...e} id={e.code} />)}
+          </div>
+        </div>
+      )}
+
+      {!showMaster && visibleClasses.length===0 && visibleRaces.length===0 && (
+        <div style={{ color:"#64748b", textAlign:"center", padding:"3rem", border:"1px dashed #1f2937", borderRadius:6 }}>Nessun codice trovato per "{search}".</div>
+      )}
     </div>
   );
 }
